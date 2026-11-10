@@ -1,0 +1,8 @@
+docs/
+ignore/
+dist/
+coverage/
+package-lock.json
+server/uploads/
+.claude/
+CLAUDE.md

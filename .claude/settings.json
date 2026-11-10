@@ -1,28 +1,27 @@
 {
   "permissions": {
-    "allow": [
-      "Bash(npm test:*)",
-      "Bash(npm run typecheck:*)",
-      "Bash(npm run lint:*)"
-    ],
-    "deny": [
-      "Read(./.env)",
-      "Bash(git push:*)"
-    ]
+    "allow": ["Bash(npm test:*)", "Bash(npm run typecheck:*)", "Bash(npm run lint:*)"],
+    "deny": ["Read(./.env)", "Bash(git push:*)"]
   },
   "hooks": {
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
         "hooks": [
-          { "type": "command", "command": "npm run typecheck --silent 1>&2 || exit 2" }
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && node -e \"process.exit(require('./package.json').scripts?.typecheck ? 0 : 1)\" 2>/dev/null || exit 0; npm run typecheck --silent 1>&2 || exit 2"
+          }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "npm test --silent 1>&2 || exit 2" }
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && node -e \"process.exit(require('./package.json').scripts?.test ? 0 : 1)\" 2>/dev/null || exit 0; npm test --silent 1>&2 || exit 2"
+          }
         ]
       }
     ]

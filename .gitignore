@@ -1,2 +1,7 @@
 ignore/
 .env
+node_modules/
+dist/
+coverage/
+server/uploads/
+backups/

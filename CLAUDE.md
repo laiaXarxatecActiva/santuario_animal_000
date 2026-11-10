@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Todavía no existe código de la aplicación**: el repositorio solo contiene especificaciones en `docs/`. Estas especificaciones son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
+Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Fase 1 en curso**: está montado el esqueleto del monorepo (Express con `/api/health` y el `errorHandler`, cliente React con i18n, constantes compartidas), pero aún no hay base de datos conectada ni casos de uso implementados. Las especificaciones de `docs/` son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
 
 - `docs/TECH_SPEC.md`: stack, arquitectura, estructura del repo, convenciones, API, jobs, fases y preguntas abiertas (el §18 recoge decisiones provisionales que hay que aplicar).
 - `docs/USE_CASES.md`: casos de uso `CU-xx` y reglas de negocio.
@@ -10,7 +10,23 @@ Aplicación web para un santuario de animales (apadrinamiento simbólico de buit
 - `docs/ux-ui/DESIGN_SYSTEM.md` (tokens y componentes; no inventes colores, tamaños ni componentes que no estén definidos ahí: añádelos antes al documento) y `docs/ux-ui/SCREENS.md` (diseño de cada pantalla).
 - `ignore/` está en el `.gitignore` (borrador del diseño funcional y anexo de "producción real").
 
-Notas del repositorio: la raíz de git es el directorio padre (`Entregable_Final/`) y la rama es `master`. La especificación prevé mover los archivos SQL a `database/`; por ahora están en `docs/`.
+Notas del repositorio: la raíz de git es este directorio (`SantuarioAnimal/`), con remoto en GitHub (`origin`). La especificación prevé mover los archivos SQL a `database/`; por ahora están en `docs/`.
+
+## Ramas de Git
+
+Estas reglas sustituyen a la de TECH_SPEC §7.4 («rama principal `main`»).
+
+| Rama             | Quién la usa                                                             | ¿Claude puede modificarla?                                                      |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `master`         | La usuaria; ella decide qué entra                                        | **No.** Nunca hacer commit, merge, push, rebase ni reset sobre ella.            |
+| `untouched`      | Copia de seguridad de `master` en su estado original                     | **Nunca.** No se actualiza jamás, ni siquiera para sincronizarla.               |
+| `develop`        | Integración de lo terminado en `claude`                                  | Sí: se fusiona aquí el trabajo de `claude` cuando esté listo y los tests pasen. |
+| `claude`         | Rama de trabajo de Claude                                                | Sí: aquí se hace todo el trabajo.                                               |
+| Ramas auxiliares | Opcionales, creadas desde `claude` (p. ej. `feature/cu-13-adopt-animal`) | Sí; se fusionan de vuelta en `claude`.                                          |
+
+- Antes de editar, comprobar con `git branch --show-current` que no se está en `master` ni en `untouched`.
+- Flujo: rama auxiliar (opcional) → `claude` → `develop`. Hacia `master` solo pasa la usuaria.
+- Hacer push a GitHub publica los cambios: subir solo `claude`, `develop` o ramas auxiliares, y nunca con `--force` sobre `develop`.
 
 ## Forma de trabajar
 
@@ -23,22 +39,31 @@ Notas del repositorio: la raíz de git es el directorio padre (`Entregable_Final
 - Instalar: `npm install`
 - Tests: `npm test` (Vitest + Supertest)
 - Comprobar tipos: `npm run typecheck`
-- Lint: `npm run lint`
+- Lint: `npm run lint` · Formato: `npm run format` (Prettier)
+- Desarrollo: `npm run dev` (API en http://localhost:3000 con `tsx watch` + Vite en http://localhost:5173, que reenvía `/api` y `/uploads` a la API)
+- Un solo workspace: `npm test -w server`; un solo archivo: `npm test -w server -- tests/reloj.test.ts`; por nombre: `npm test -w server -- -t "CU-13"`
+
+`npm test` y `npm run typecheck` de la raíz ejecutan el script de cada workspace (`shared`, `server`, `client`). Los hooks de `.claude/settings.json` ejecutan `typecheck` tras cada edición y `npm test` al terminar cada respuesta.
 
 Otros scripts previstos en la raíz (TECH_SPEC §4, §14.3), que hay que crear:
 
-- `npm run dev`: API con `tsx watch` + Vite.
 - `npm run build` / `npm start`.
 - `npm run db:reset` / `npm run db:reset:test`: ejecutan el esquema y después los datos de prueba mediante `pg`, sin `psql`.
 - `npm run job -- <jobName>`: ejecuta un job a mano.
 - `npm run test:e2e`: Playwright.
-- `npm run format`.
 
 ## Estructura
 
-- `src/dominio/`: entidades y reglas de negocio, sin dependencias externas.
-- `src/servicios/`: casos de uso que orquestan el dominio.
-- `tests/`: un archivo de test por cada archivo de `src/`.
+Monorepo con npm workspaces:
+
+- `shared/`: esquemas Zod, tipos de la API y constantes (`src/constants/` replica los `CHECK` de `seedsql.sql`; si cambia uno, cambia el otro). Se importa como `@sanctuary/shared` directamente desde el código TypeScript, sin compilar.
+- `server/src/dominio/`: entidades y reglas de negocio, sin dependencias externas (aquí está la interfaz `Reloj`).
+- `server/src/servicios/`: casos de uso que orquestan el dominio.
+- `server/src/{config,errors,middlewares,...}`: resto de capas según TECH_SPEC §6.
+- `client/`: React + Vite.
+- `tests/` dentro de cada workspace: un archivo de test por cada archivo de `src/`.
+
+Módulos: `shared` y `server` usan `NodeNext`, así que los imports relativos llevan extensión `.js` (`import { x } from './reloj.js'`). El cliente usa `Bundler` y va sin extensión.
 
 ## Stack
 
