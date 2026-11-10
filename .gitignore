@@ -1,2 +1,6 @@
 ignore/
+server/
+shared/
+client/
 .env
+node_modules
