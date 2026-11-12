@@ -1,8 +1,8 @@
 import { isWorkerRole, type SessionUser } from '@sanctuary/shared';
 
-// Destinos tras iniciar sesión (CU-09 paso 5). Provisionales hasta que existan
-// «Mis animales» (CU-15: /my-animals) y el escritorio del panel (CU-27: /admin).
-export const ADOPTER_HOME = '/animals';
+// Destinos tras iniciar sesión (CU-09 paso 5). El del trabajador es provisional
+// hasta que exista el escritorio del panel (CU-27: /admin).
+export const ADOPTER_HOME = '/my-animals';
 export const WORKER_HOME = '/';
 
 /** Solo rutas internas de la aplicación: evita redirecciones a otras webs (`//web`, `https://…`). */

@@ -4,6 +4,7 @@ import { isWorkerRole } from '@sanctuary/shared';
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, useLocation } from 'react-router';
+import { useUnreadCount } from '../hooks/useFeed';
 import { useLogout, useSession } from '../hooks/useSession';
 import { ButtonLink } from './Button';
 import iconStyles from './IconButton.module.css';
@@ -47,6 +48,8 @@ export function PublicHeader() {
   const logout = useLogout();
 
   const trabajador = user !== null && isWorkerRole(user.role);
+  // CU-17 5: contador de novedades sin leer junto a «Novedades».
+  const sinLeer = useUnreadCount(user?.role === 'adopter').data ?? 0;
   const enlaces = user === null ? VISITANTE : trabajador ? TRABAJADOR : ADOPTANTE;
   const menuUsuario = trabajador ? MENU_TRABAJADOR : MENU_ADOPTANTE;
   const cerrar = () => setAbierto(false);
@@ -63,13 +66,26 @@ export function PublicHeader() {
   }, [abierto]);
 
   const lista = (items: readonly MenuLink[], onClick?: () => void) =>
-    items.map(({ to, key }) => (
-      <li key={to}>
-        <NavLink to={to} className={styles.link} onClick={onClick}>
-          {t(key)}
-        </NavLink>
-      </li>
-    ));
+    items.map(({ to, key }) => {
+      const contador = to === '/feed' && sinLeer > 0;
+      return (
+        <li key={to}>
+          <NavLink
+            to={to}
+            className={styles.link}
+            onClick={onClick}
+            aria-label={contador ? t('nav.feedUnread', { count: sinLeer }) : undefined}
+          >
+            {t(key)}
+            {contador && (
+              <span className={styles.counter} aria-hidden="true">
+                {sinLeer > 9 ? '9+' : sinLeer}
+              </span>
+            )}
+          </NavLink>
+        </li>
+      );
+    });
 
   return (
     <header className={styles.header}>

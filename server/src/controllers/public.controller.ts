@@ -13,13 +13,14 @@ export function createPublicController(service: PublicCatalogService) {
     res.json(await service.listCatalog(validated(res, 'query', catalogQuerySchema)));
   };
 
-  const getAnimal: RequestHandler = async (_req, res) => {
-    res.json(await service.getAnimal(validated(res, 'params', idParamsSchema).id));
+  // La sesión es opcional: con ella se añade el contenido exclusivo (CU-16).
+  const getAnimal: RequestHandler = async (req, res) => {
+    res.json(await service.getAnimal(validated(res, 'params', idParamsSchema).id, req.user));
   };
 
-  const listUpdates: RequestHandler = async (_req, res) => {
+  const listUpdates: RequestHandler = async (req, res) => {
     const { id } = validated(res, 'params', idParamsSchema);
-    res.json(await service.listUpdates(id, validated(res, 'query', paginationQuerySchema)));
+    res.json(await service.listUpdates(id, validated(res, 'query', paginationQuerySchema), req.user));
   };
 
   const listSpecies: RequestHandler = async (_req, res) => {

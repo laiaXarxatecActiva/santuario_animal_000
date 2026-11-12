@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCurrency, formatList, formatLongDate, formatYear } from '../src/utils/format';
+import { formatCurrency, formatDate, formatList, formatLongDate, formatYear } from '../src/utils/format';
 
 describe('format', () => {
   it('importes en formato español a partir del string de la API', () => {
@@ -18,5 +18,10 @@ describe('format', () => {
   it('listas con «y»', () => {
     expect(formatList(['Lucía'])).toBe('Lucía');
     expect(formatList(['Lucía', 'Elena', 'Irene'])).toBe('Lucía, Elena e Irene');
+  });
+
+  it('formatDate da formato a un DATE sin saltos de zona horaria', () => {
+    expect(formatDate('2026-11-29')).toBe('29 de noviembre de 2026');
+    expect(formatDate('2026-01-01')).toBe('1 de enero de 2026');
   });
 });

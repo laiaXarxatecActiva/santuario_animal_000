@@ -26,7 +26,8 @@
     "myContributions": "Mis aportaciones",
     "profile": "Mi perfil",
     "logout": "Cerrar sesión",
-    "userMenu": "Menú de {{name}}"
+    "userMenu": "Menú de {{name}}",
+    "feedUnread": "Novedades, {{count}} sin leer"
   },
   "theme": {
     "toDark": "Activar modo oscuro",
@@ -147,7 +148,10 @@
     "latestNews": "Últimas noticias",
     "noNews": "Todavía no hay noticias públicas de {{name}}.",
     "errorLoading": "No hemos podido cargar la ficha",
-    "errorLoadingNews": "No hemos podido cargar las noticias"
+    "errorLoadingNews": "No hemos podido cargar las noticias",
+    "showPhotoExclusive": "Ver foto {{n}} de {{total}} (solo adoptantes)",
+    "alreadyAdopting": "Ya adoptas a {{name}}",
+    "seeFullProfile": "Ver su ficha completa"
   },
   "howItWorks": {
     "title": "Cómo funciona la adopción simbólica",
@@ -301,5 +305,77 @@
     "succeed": "Simular pago correcto",
     "fail": "Simular pago fallido",
     "processing": "Procesando el pago…"
+  },
+  "forbidden": {
+    "title": "No tienes acceso a esta página"
+  },
+  "adoption": {
+    "status": {
+      "active": "Activa",
+      "pending": "Pendiente de pago",
+      "paused": "Pausada",
+      "cancelled": "Cancelada",
+      "finished": "Finalizada"
+    },
+    "closedOn": {
+      "cancelled": "Cancelada el {{date}}",
+      "finished": "Finalizada el {{date}}"
+    },
+    "endReason": {
+      "user_cancelled": "Te diste de baja.",
+      "payment_not_completed": "El pago no se completó a tiempo.",
+      "payment_failed": "No se pudo regularizar la cuota pendiente.",
+      "animal_deceased": "{{name}} nos ha dejado.",
+      "animal_transferred": "{{name}} se ha trasladado a otro centro.",
+      "admin_cancelled": "La cerró el santuario.",
+      "account_deleted": "Se cerró al eliminar la cuenta."
+    },
+    "plan": "Plan {{plan}} · {{amount}}/mes",
+    "planSince": "Plan {{plan}} · {{amount}}/mes · desde el {{date}}",
+    "since": "Desde el {{date}}",
+    "nextPlan": "Desde la próxima cuota: plan {{plan}} ({{amount}}/mes)",
+    "nextUpdate": "Próxima noticia prevista: hacia el {{date}}",
+    "activeUntil": "Activa hasta el {{date}}. No se te volverá a cobrar.",
+    "paymentExpired": "El plazo para pagar esta adopción ha terminado y se cancelará en breve. Podrás volver a adoptar a {{name}} cuando quieras."
+  },
+  "myAnimals": {
+    "title": "Mis animales",
+    "empty": "Todavía no has adoptado a ningún animal",
+    "seeAnimals": "Ver animales",
+    "seeProfile": "Ver la ficha de {{name}}",
+    "history": "Historial",
+    "continueWithOther": "¿Quieres continuar con otro animal?",
+    "errorLoading": "No hemos podido cargar tus adopciones"
+  },
+  "adoptedAnimal": {
+    "yourAdoption": "Tu adopción",
+    "backToMyAnimals": "Ver mis animales",
+    "health": "Su salud",
+    "news": "Noticias",
+    "noNews": "Todavía no hay noticias de {{name}}.",
+    "pendingNotice": "Cuando completes el pago, verás aquí las noticias y fotos exclusivas de {{name}}.",
+    "pausedNotice": "Tu adopción de {{name}} está pausada porque no hemos podido cobrar la última cuota. Cuando la regularices, volverás a ver su contenido exclusivo.",
+    "noAdoptionNotice": "No tienes una adopción activa de {{name}}. Aquí ves su ficha pública.",
+    "seePublic": "Ver su ficha pública",
+    "errorLoading": "No hemos podido cargar los datos de tu adopción"
+  },
+  "updates": {
+    "new": "Nuevo",
+    "adoptersOnly": "Solo adoptantes",
+    "markRead": "Marcar como leída",
+    "markUnread": "Marcar como no leída",
+    "photos": "Fotos de «{{title}}»"
+  },
+  "feed": {
+    "title": "Novedades",
+    "show": "Mostrar",
+    "all": "Todas",
+    "unread": "Sin leer",
+    "animal": "Animal",
+    "allAnimals": "Todos",
+    "empty": "Aún no hay novedades de tus animales",
+    "emptyUnread": "Ya has leído todas las novedades",
+    "loadMore": "Cargar más",
+    "errorLoading": "No hemos podido cargar las novedades"
   }
 }

@@ -20,11 +20,15 @@ export function createAdoptionController(service: AdoptionService) {
     res.json({ data: await service.listMine(usuario(req).id, validated(res, 'query', myAdoptionsQuerySchema)) });
   };
 
+  const getMine: RequestHandler = async (req, res) => {
+    res.json(await service.getMine(usuario(req).id, validated(res, 'params', idParamsSchema).id));
+  };
+
   const pay: RequestHandler = async (req, res) => {
     const { id } = validated(res, 'params', idParamsSchema);
     const { simulatedOutcome } = validated(res, 'body', payAdoptionSchema);
     res.json(await service.pay(usuario(req).id, id, simulatedOutcome));
   };
 
-  return { create, listMine, pay };
+  return { create, listMine, getMine, pay };
 }

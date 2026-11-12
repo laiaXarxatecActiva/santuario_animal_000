@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { animal, page, plans, update } from './helpers/fixtures';
+import { animal, page, plans, sessionUser, update } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 
 function api(overrides: Parameters<typeof animal>[0] = {}, updates = [update]) {
@@ -107,5 +107,18 @@ describe('CU-03 Consultar la ficha pública de un animal', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Este animal no está disponible' }),
     ).toBeInTheDocument();
+  });
+
+  it('CU-16: si ya lo adopta, enlaza a su ficha completa en lugar de adoptar', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/animals/1': { body: animal({ exclusiveAccess: true, healthSummary: 'Bien.' }) },
+      '/api/animals/1/updates': { body: page([]) },
+      '/api/plans': { body: { data: plans } },
+    });
+    renderRoute('/animals/1');
+    expect(await screen.findByText('Ya adoptas a Rufo')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver su ficha completa' })).toHaveAttribute('href', '/my-animals/1');
+    expect(screen.queryByRole('link', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
   });
 });

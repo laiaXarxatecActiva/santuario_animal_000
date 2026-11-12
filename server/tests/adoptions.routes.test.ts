@@ -1,6 +1,7 @@
+import type { AdoptionDto } from '@sanctuary/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { periodoCuota, sumarMeses } from '../src/dominio/adopcion.js';
+import { periodoCuota, sumarDias, sumarMeses } from '../src/dominio/adopcion.js';
 import { prepararApp, type TestApp } from './helpers/test-app.js';
 
 let t: TestApp;
@@ -16,6 +17,7 @@ type Agent = ReturnType<typeof request.agent>;
 const sesiones = new Map<string, Agent>();
 const CLAVES: Record<string, string> = {
   'lucia.martinez@correo.test': 'Lucia.buitres1',
+  'pablo.garcia@correo.test': 'Pablo2024!',
   'elena.rubio@correo.test': 'elenita_88',
   'irene.dominguez@correo.test': 'Irene2025ok',
   'hector.benet@correo.test': 'Hector1234',
@@ -79,10 +81,15 @@ describe('CU-13 Adoptar un animal', () => {
     expect(creada.body).toEqual({
       id: expect.any(Number),
       status: 'pending',
-      animal: { id: 4, name: 'Olmo' },
+      animal: { id: 4, name: 'Olmo', species: 'Buitre leonado', coverPhoto: expect.objectContaining({ id: 4 }) },
       plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+      nextPlan: null,
       startDate: null,
+      endDate: null,
       nextBillingDate: null,
+      cancelRequested: false,
+      endReason: null,
+      nextUpdateExpected: null,
       createdAt: expect.any(String),
       canPay: true,
     });
@@ -302,5 +309,67 @@ describe('GET /api/me/adoptions', () => {
   it('sin sesión 401 y trabajadores 403', async () => {
     expect((await request(t.app).get('/api/me/adoptions')).status).toBe(401);
     expect((await (await como('nuria.peris@santuario.test')).get('/api/me/adoptions')).status).toBe(403);
+  });
+});
+
+describe('CU-15 Consultar «Mis animales»', () => {
+  const mias = async (email: string) => {
+    const res = await (await como(email)).get('/api/me/adoptions');
+    expect(res.status).toBe(200);
+    return res.body.data as AdoptionDto[];
+  };
+
+  it('2: cada adopción trae foto, especie, plan, plan siguiente, estado y fechas', async () => {
+    const pablo = await mias('pablo.garcia@correo.test');
+    expect(pablo.map((a) => [a.id, a.status])).toEqual([
+      [4, 'active'],
+      [20, 'cancelled'],
+      [5, 'active'],
+    ]);
+    const greta = pablo.find((a) => a.id === 5);
+    expect(greta).toMatchObject({
+      animal: { id: 2, name: 'Greta', species: 'Buitre leonado', coverPhoto: { id: 2, visibility: 'public' } },
+      plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+      nextPlan: { id: 3, name: 'Extraordinaria', monthlyAmount: '12.00' },
+      endDate: null,
+      cancelRequested: false,
+      endReason: null,
+      canPay: false,
+    });
+    expect(greta?.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('2: la próxima actualización prevista es la última del animal + 14 días (RN-14)', async () => {
+    const pablo = await mias('pablo.garcia@correo.test');
+    // Greta: última actualización hace 1 día; Rufo: hace 3 días.
+    expect(pablo.find((a) => a.id === 5)?.nextUpdateExpected).toBe(sumarDias(t.hoy, 13));
+    expect(pablo.find((a) => a.id === 4)?.nextUpdateExpected).toBe(sumarDias(t.hoy, 11));
+    expect(pablo.find((a) => a.id === 20)?.nextUpdateExpected).toBeNull();
+  });
+
+  it('2b: una adopción con la baja solicitada indica hasta cuándo sigue activa', async () => {
+    const res = await (await como('sergio.llorens@correo.test')).get('/api/me/adoptions/9');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: 9, status: 'active', cancelRequested: true, nextBillingDate: null });
+    expect(res.body.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('2c: una adopción cerrada por fallecimiento indica el motivo', async () => {
+    const res = await (await como('lucia.martinez@correo.test')).get('/api/me/adoptions/3');
+    expect(res.body).toMatchObject({
+      status: 'finished',
+      endReason: 'animal_deceased',
+      endDate: sumarDias(t.hoy, -20),
+      animal: { name: 'Faro' },
+    });
+  });
+
+  it('el detalle de una adopción ajena o inexistente no existe (404)', async () => {
+    const lucia = await como('lucia.martinez@correo.test');
+    expect((await lucia.get('/api/me/adoptions/5')).status).toBe(404);
+    expect((await lucia.get('/api/me/adoptions/9999')).status).toBe(404);
+    expect((await lucia.get('/api/me/adoptions/abc')).status).toBe(400);
+    expect((await request(t.app).get('/api/me/adoptions/3')).status).toBe(401);
+    expect((await (await como('nuria.peris@santuario.test')).get('/api/me/adoptions/3')).status).toBe(403);
   });
 });

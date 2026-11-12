@@ -1,5 +1,7 @@
 import type {
   AdoptionDto,
+  FeedItemDto,
+  FeedResponse,
   AdoptionPlanDto,
   AnimalCardDto,
   AnimalUpdateDto,
@@ -28,6 +30,7 @@ export function card(overrides: Partial<AnimalCardDto> = {}): AnimalCardDto {
       url: '/uploads/animals/1/cover.jpg',
       thumbnailUrl: '/uploads/animals/1/thumb_cover.jpg',
       altText: 'Rufo, buitre leonado, posado en una rampa de madera',
+      visibility: 'public',
     },
     ...overrides,
   };
@@ -52,8 +55,10 @@ export function animal(overrides: Partial<PublicAnimalDto> = {}): PublicAnimalDt
         url: '/uploads/animals/1/02.jpg',
         thumbnailUrl: '/uploads/animals/1/thumb_02.jpg',
         altText: 'Rufo comiendo junto a otros buitres',
+        visibility: 'public',
       },
     ],
+    exclusiveAccess: false,
     ...overrides,
   };
 }
@@ -97,10 +102,15 @@ export function adoption(overrides: Partial<AdoptionDto> = {}): AdoptionDto {
   return {
     id: 40,
     status: 'pending',
-    animal: { id: 1, name: 'Rufo' },
+    animal: { id: 1, name: 'Rufo', species: 'Buitre leonado', coverPhoto: card().coverPhoto },
     plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+    nextPlan: null,
     startDate: null,
+    endDate: null,
     nextBillingDate: null,
+    cancelRequested: false,
+    endReason: null,
+    nextUpdateExpected: null,
     createdAt: '2026-11-12T10:00:00.000Z',
     canPay: true,
     ...overrides,
@@ -118,3 +128,44 @@ export function payment(overrides: Partial<PaymentDto> = {}): PaymentDto {
     ...overrides,
   };
 }
+
+/** Adopción activa de Rufo desde el 5 de septiembre de 2025. */
+export function activeAdoption(overrides: Partial<AdoptionDto> = {}): AdoptionDto {
+  return adoption({
+    id: 1,
+    status: 'active',
+    startDate: '2025-09-05',
+    nextBillingDate: '2026-12-05',
+    nextUpdateExpected: '2026-11-24',
+    canPay: false,
+    ...overrides,
+  });
+}
+
+export function feedItem(overrides: Partial<FeedItemDto> = {}): FeedItemDto {
+  return {
+    id: 2,
+    title: 'Revisión del ala: todo en orden',
+    body: 'La veterinaria ha confirmado que el ala está bien.',
+    visibility: 'adopters',
+    publishedAt: '2026-11-09T11:30:00.000Z',
+    photos: [],
+    isRead: false,
+    animal: { id: 1, name: 'Rufo', coverPhoto: card().coverPhoto },
+    ...overrides,
+  };
+}
+
+export const feedPage = (data: FeedItemDto[], meta: Partial<FeedResponseMeta> = {}) => ({
+  data,
+  meta: {
+    page: 1,
+    pageSize: 10,
+    total: data.length,
+    totalPages: data.length === 0 ? 0 : 1,
+    unreadCount: data.filter((u) => !u.isRead).length,
+    ...meta,
+  },
+});
+
+type FeedResponseMeta = FeedResponse['meta'];

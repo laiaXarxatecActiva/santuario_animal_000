@@ -1,5 +1,6 @@
 import {
   FEATURED_ANIMALS_LIMIT,
+  isWorkerRole,
   type AdoptionPlanDto,
   type AnimalCardDto,
   type AnimalUpdateDto,
@@ -8,6 +9,7 @@ import {
   type Paginated,
   type PaginationQuery,
   type PublicAnimalDto,
+  type SessionUser,
   type SpeciesSummary,
 } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
@@ -29,7 +31,7 @@ export interface PublicCatalogDeps {
 
 const meta = ({ page, pageSize, total, totalPages }: Pagina) => ({ page, pageSize, total, totalPages });
 
-// Casos de uso de la web pública: CU-01, CU-02, CU-03 y CU-04.
+// Casos de uso de la web pública: CU-01, CU-02, CU-03 y CU-04 (y la parte ampliada de CU-16).
 export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
   const aTarjeta = (animal: animalModel.PublicAnimal, hoy: string): AnimalCardDto => ({
     id: animal.id,
@@ -48,6 +50,16 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
     const animal = await animalModel.findPublicById(db, id);
     if (!animal) throw new AnimalNotAvailableError();
     return animal;
+  }
+
+  /**
+   * RN-15: ven el contenido exclusivo los trabajadores y los adoptantes con
+   * una adopción activa del animal (TECH_SPEC §18.2: no las pausadas).
+   */
+  async function veExclusivo(user: SessionUser | undefined, animalId: number): Promise<boolean> {
+    if (!user) return false;
+    if (isWorkerRole(user.role)) return true;
+    return adoptionModel.hasActive(db, user.id, animalId);
   }
 
   return {
@@ -89,11 +101,15 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
       return { data: animales.map((a) => aTarjeta(a, hoy)), meta: meta(pagina) };
     },
 
-    /** CU-03: ficha pública con galería y adoptantes que aceptan aparecer. */
-    async getAnimal(id: number): Promise<PublicAnimalDto> {
+    /**
+     * CU-03: ficha pública con galería y adoptantes que aceptan aparecer.
+     * CU-16: con acceso exclusivo, añade el resumen de salud y las fotos `adopters`.
+     */
+    async getAnimal(id: number, user?: SessionUser): Promise<PublicAnimalDto> {
       const animal = await animalPublico(id);
+      const exclusiveAccess = await veExclusivo(user, id);
       const [photos, publicAdopterNames] = await Promise.all([
-        photoModel.listPublicGallery(db, id),
+        photoModel.listGallery(db, id, { includeAdopters: exclusiveAccess }),
         adoptionModel.listPublicAdopterNames(db, id),
       ]);
       return {
@@ -106,20 +122,37 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
         specialNeeds: animal.specialNeeds,
         publicAdopterNames,
         photos,
+        exclusiveAccess,
+        ...(exclusiveAccess ? { healthSummary: animal.healthSummary } : {}),
       };
     },
 
-    /** CU-03: últimas actualizaciones públicas del animal. */
-    async listUpdates(animalId: number, query: PaginationQuery): Promise<Paginated<AnimalUpdateDto>> {
+    /**
+     * CU-03: últimas actualizaciones públicas del animal. CU-16: con acceso
+     * exclusivo, todas; a los adoptantes se les indica cuáles han leído.
+     */
+    async listUpdates(
+      animalId: number,
+      query: PaginationQuery,
+      user?: SessionUser,
+    ): Promise<Paginated<AnimalUpdateDto>> {
       await animalPublico(animalId);
-      const pagina = paginar(query, await updateModel.countPublicByAnimal(db, animalId));
+      const includeAdopters = await veExclusivo(user, animalId);
+      const readerId = includeAdopters && user?.role === 'adopter' ? user.id : undefined;
+      const pagina = paginar(query, await updateModel.countByAnimal(db, animalId, { includeAdopters }));
       const actualizaciones =
         pagina.total === 0
           ? []
-          : await updateModel.listPublicByAnimal(db, animalId, { limit: pagina.pageSize, offset: pagina.offset });
-      const fotos = await photoModel.listPublicByUpdates(
+          : await updateModel.listByAnimal(db, animalId, {
+              includeAdopters,
+              readerId,
+              limit: pagina.pageSize,
+              offset: pagina.offset,
+            });
+      const fotos = await photoModel.listByUpdates(
         db,
         actualizaciones.map((u) => u.id),
+        { includeAdopters },
       );
       return {
         data: actualizaciones.map((u) => ({ ...u, photos: fotos.get(u.id) ?? [] })),

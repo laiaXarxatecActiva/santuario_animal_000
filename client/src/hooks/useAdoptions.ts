@@ -10,3 +10,7 @@ export const useMyAdoptionsOf = (animalId: number | undefined, enabled: boolean)
     queryFn: () => adoptionsApi.mine(animalId),
     enabled: enabled && animalId !== undefined,
   });
+
+/** CU-15: todas mis adopciones. */
+export const useMyAdoptions = () =>
+  useQuery({ queryKey: [...MY_ADOPTIONS_KEY, 'all'], queryFn: () => adoptionsApi.mine() });

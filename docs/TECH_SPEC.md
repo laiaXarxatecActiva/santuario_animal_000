@@ -494,8 +494,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | --- | --- | --- | --- | --- |
 | GET | `/api/home` | Público | Animales destacados y número de animales acogidos | CU-01 |
 | GET | `/api/animals` | Público | Catálogo. Filtros: `speciesId`, `sex`, `minAge`, `maxAge`, `adoptable`, `q` (nombre). Orden: `-arrivalDate` (más recientes), `name`, `adopterCount` (menos adoptantes). Solo animales publicados en estado `in_sanctuary` o `in_treatment`. | CU-02 |
-| GET | `/api/animals/:id` | Público | Ficha pública. Si el usuario tiene una adopción activa del animal, incluye los datos ampliados. | CU-03, CU-16 |
-| GET | `/api/animals/:id/updates` | Público | Actualizaciones públicas, o todas si el usuario es adoptante activo del animal | CU-03, CU-16 |
+| GET | `/api/animals/:id` | Público | Ficha pública. `exclusiveAccess` indica si quien consulta es adoptante activo del animal o trabajador; en ese caso incluye `healthSummary` y las fotos `adopters` (con su `visibility`). | CU-03, CU-16 |
+| GET | `/api/animals/:id/updates` | Público | Actualizaciones públicas, o todas si el usuario es adoptante activo del animal o trabajador; al adoptante se le indica `isRead` | CU-03, CU-16 |
 | GET | `/api/animals/memorial` | Público | Animales con `show_in_memorial = TRUE` (Fase 3) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
@@ -513,7 +513,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio) | CU-20 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja de la cuota mensual | CU-21 |
 | GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) | CU-22 |
-| GET | `/api/me/feed` | Muro de actualizaciones de mis animales, con `isRead`. Filtro `?unread=true`. | CU-17 |
+| GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
 | GET | `/api/me/contributions` | Historial de cuotas y donaciones con mi cuenta | CU-19 |

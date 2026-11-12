@@ -7,6 +7,7 @@ import {
   type SpeciesSummary,
 } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
+import { COLUMNAS_PORTADA, JOIN_PORTADA, mapCover, type CoverRow } from './photo.model.js';
 
 // Animal tal como lo ve la web pública. La edad la calcula el servicio con el Reloj.
 export interface PublicAnimal {
@@ -21,12 +22,14 @@ export interface PublicAnimal {
   rescueStory: string | null;
   temperament: string | null;
   specialNeeds: string | null;
+  /** Solo para adoptantes activos y trabajadores (RN-15): el servicio decide si se muestra. */
+  healthSummary: string | null;
   isAdoptable: boolean;
   adopterCount: number;
   coverPhoto: PhotoDto | null;
 }
 
-interface AnimalRow {
+interface AnimalRow extends CoverRow {
   id: number;
   name: string;
   species_id: number;
@@ -40,13 +43,9 @@ interface AnimalRow {
   rescue_story: string | null;
   temperament: string | null;
   special_needs: string | null;
+  health_summary: string | null;
   is_adoptable: boolean;
   adopter_count: number;
-  cover_id: number | null;
-  cover_media_type: 'image' | 'video' | null;
-  cover_url: string | null;
-  cover_thumbnail_url: string | null;
-  cover_alt_text: string | null;
 }
 
 export function mapRow(row: AnimalRow): PublicAnimal {
@@ -62,18 +61,10 @@ export function mapRow(row: AnimalRow): PublicAnimal {
     rescueStory: row.rescue_story,
     temperament: row.temperament,
     specialNeeds: row.special_needs,
+    healthSummary: row.health_summary,
     isAdoptable: row.is_adoptable,
     adopterCount: row.adopter_count,
-    coverPhoto:
-      row.cover_id === null || row.cover_url === null
-        ? null
-        : {
-            id: row.cover_id,
-            mediaType: row.cover_media_type ?? 'image',
-            url: row.cover_url,
-            thumbnailUrl: row.cover_thumbnail_url,
-            altText: row.cover_alt_text ?? '',
-          },
+    coverPhoto: mapCover(row),
   };
 }
 
@@ -83,12 +74,11 @@ export function mapRow(row: AnimalRow): PublicAnimal {
 const SELECT_PUBLICO = `
   SELECT a.id, a.name, a.species_id, s.name AS species_name, s.scientific_name AS species_scientific_name,
          a.breed, a.sex, a.status, a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament,
-         a.special_needs, a.is_adoptable, ac.adopter_count,
-         cp.id AS cover_id, cp.media_type AS cover_media_type, cp.url AS cover_url,
-         cp.thumbnail_url AS cover_thumbnail_url, cp.alt_text AS cover_alt_text
+         a.special_needs, a.health_summary, a.is_adoptable, ac.adopter_count,
+         ${COLUMNAS_PORTADA}
     FROM animals a
     JOIN species s ON s.id = a.species_id
-    LEFT JOIN photos cp ON cp.id = a.cover_photo_id AND cp.visibility = 'public'
+    ${JOIN_PORTADA('a')}
    CROSS JOIN LATERAL (
          SELECT count(*)::int AS adopter_count
            FROM adoptions ad

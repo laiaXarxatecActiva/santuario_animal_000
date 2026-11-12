@@ -52,3 +52,10 @@
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }
+
+/* Actualización no leída: terracota relleno (DESIGN_SYSTEM §8.6). */
+.new {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}

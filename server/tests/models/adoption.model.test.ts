@@ -5,6 +5,7 @@ import {
   create,
   findOpenByUserAndAnimal,
   findOwnedById,
+  hasActive,
   listByUser,
   listPublicAdopterNames,
 } from '../../src/models/adoption.model.js';
@@ -82,5 +83,30 @@ describe('adopciones del adoptante (CU-13, CU-14)', () => {
     const antes = await findOwnedById(db.pool, 8, 7);
     await activate(db.pool, 7, { startDate: '2026-11-12', nextBillingDate: '2027-01-01' });
     expect(await findOwnedById(db.pool, 8, 7)).toMatchObject({ status: 'active', startDate: antes!.startDate });
+  });
+});
+
+describe('RN-15 hasActive', () => {
+  it('solo una adopción activa del animal cuenta', async () => {
+    expect(await hasActive(db.pool, 8, 2)).toBe(true); // Elena con Greta
+    expect(await hasActive(db.pool, 10, 5)).toBe(false); // Irene con Brisa, pendiente
+    expect(await hasActive(db.pool, 11, 3)).toBe(false); // Héctor con Turia, cancelada
+    expect(await hasActive(db.pool, 6, 12)).toBe(false); // Lucía con Faro, finalizada
+  });
+});
+
+describe('CU-15 datos de la adopción', () => {
+  it('incluye especie, portada, plan siguiente, cierre y última actualización', async () => {
+    const greta = await findOwnedById(db.pool, 7, 5);
+    expect(greta).toMatchObject({
+      animal: { id: 2, name: 'Greta', species: 'Buitre leonado', coverPhoto: { id: 2 } },
+      nextPlan: { id: 3, name: 'Extraordinaria', monthlyAmount: '12.00' },
+      endDate: null,
+      cancelRequestedAt: null,
+      endReason: null,
+    });
+    expect(greta?.lastUpdateDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    const faro = await findOwnedById(db.pool, 6, 3);
+    expect(faro).toMatchObject({ status: 'finished', endReason: 'animal_deceased', nextPlan: null });
   });
 });

@@ -8,7 +8,7 @@ import {
 } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import { withTransaction } from '../db/transaction.js';
-import { esAdoptable, periodoCuota, puedePagar } from '../dominio/adopcion.js';
+import { esAdoptable, periodoCuota, proximaActualizacionPrevista, puedePagar } from '../dominio/adopcion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import {
   AdoptionAlreadyOpenError,
@@ -41,7 +41,7 @@ export interface AdoptionServiceDeps {
   logEmailError?: (error: unknown) => void;
 }
 
-// Casos de uso de la adopción: CU-13 y CU-14 (y la lista básica de CU-15).
+// Casos de uso de la adopción: CU-13, CU-14 y CU-15.
 export function createAdoptionService({
   db,
   reloj,
@@ -55,8 +55,13 @@ export function createAdoptionService({
     status: adopcion.status,
     animal: adopcion.animal,
     plan: adopcion.plan,
+    nextPlan: adopcion.nextPlan,
     startDate: adopcion.startDate,
+    endDate: adopcion.endDate,
     nextBillingDate: adopcion.nextBillingDate,
+    cancelRequested: adopcion.cancelRequestedAt !== null,
+    endReason: adopcion.endReason,
+    nextUpdateExpected: proximaActualizacionPrevista(adopcion, adopcion.lastUpdateDate),
     createdAt: adopcion.createdAt.toISOString(),
     canPay: puedePagar(adopcion, reloj.ahora()),
   });
@@ -79,8 +84,16 @@ export function createAdoptionService({
     return toDto(await adoptionModel.create(db, { userId: user.id, animalId, planId }));
   }
 
+  /** CU-15: mis adopciones, las más recientes primero. */
   async function listMine(userId: number, filtro: { animalId?: number }): Promise<AdoptionDto[]> {
     return (await adoptionModel.listByUser(db, userId, filtro)).map(toDto);
+  }
+
+  /** CU-15: detalle de una adopción propia; una ajena no existe (404). */
+  async function getMine(userId: number, adoptionId: number): Promise<AdoptionDto> {
+    const adopcion = await adoptionModel.findOwnedById(db, userId, adoptionId);
+    if (!adopcion) throw new NotFoundError();
+    return toDto(adopcion);
   }
 
   /** Comprueba que la adopción tiene una cuota pendiente que se pueda pagar ahora. */
@@ -174,7 +187,7 @@ export function createAdoptionService({
     return { adoption: toDto(actualizada), payment };
   }
 
-  return { create, listMine, pay };
+  return { create, listMine, getMine, pay };
 }
 
 export type AdoptionService = ReturnType<typeof createAdoptionService>;

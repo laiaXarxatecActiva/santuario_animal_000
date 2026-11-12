@@ -18,14 +18,18 @@ export function useSetSession(): (user: SessionUser | null) => void {
   return (user) => queryClient.setQueryData(SESSION_KEY, user);
 }
 
-/** CU-11: cierra la sesión y vuelve al inicio (también si la sesión ya había caducado). */
+/**
+ * CU-11: cierra la sesión y vuelve al inicio (también si la sesión ya había
+ * caducado). Se vacía la caché para no conservar datos del área privada.
+ */
 export function useLogout() {
-  const setSession = useSetSession();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   return useMutation({
     mutationFn: authApi.logout,
     onSettled: () => {
-      setSession(null);
+      queryClient.clear();
+      queryClient.setQueryData(SESSION_KEY, null);
       void navigate('/');
     },
   });

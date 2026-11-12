@@ -480,6 +480,7 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | **Galería** | Foto principal 4:3 y miniaturas cuadradas debajo; al pulsar, se abre el visor ([§8.4](#84-ventanas-emergentes-modal)). En móvil, las miniaturas se desplazan en horizontal. |
 | **Estado vacío** | Icono grande en `--color-text-muted`, una frase amable y, si procede, un botón de acción. Ejemplo: «Todavía no has adoptado a ningún animal» + «Ver animales». |
 | **Carga** | Bloques «esqueleto» con la forma del contenido (por ejemplo, tarjetas vacías en `--color-surface-alt`) con un pulso muy suave. Para acciones cortas, el botón en estado «Cargando». No se usan pantallas de carga a página completa. |
+| **Tarjeta de actualización** (`UpdateCard`) | Fondo `--color-surface`, borde fino y `--radius-lg`. Arriba, la fecha (`newspaper`) o, en el muro, la miniatura cuadrada y el nombre del animal; a la derecha, las insignias «Solo adoptantes» y «Nuevo». Título h2/h3, texto y fotos 4:3 (dos columnas desde `md`). Las no leídas llevan el borde en `--color-primary`; en el muro, botón `ghost` «Marcar como leída / no leída» abajo a la derecha. |
 | **Migas de pan** | En la ficha del animal y en el panel: «Animales › Rufo». `--font-size-sm`. |
 | **Separador decorativo** | Línea fina caramelo (`--color-accent`) de 48 px bajo los títulos de sección de la página de inicio. Solo decorativa. |
 

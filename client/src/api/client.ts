@@ -54,3 +54,21 @@ export function apiPost<T = void>(path: string, body: object = {}): Promise<T> {
     body: JSON.stringify(body),
   });
 }
+
+/** PUT a la API (también con JSON, aunque no haya cuerpo). */
+export function apiPut<T = void>(path: string, body: object = {}): Promise<T> {
+  return peticion<T>(path, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+/** DELETE a la API (también con JSON, para la protección CSRF). */
+export function apiDelete<T = void>(path: string): Promise<T> {
+  return peticion<T>(path, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+}

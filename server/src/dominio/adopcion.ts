@@ -3,6 +3,8 @@ import { PUBLIC_ANIMAL_STATUSES, type AdoptionStatus, type AnimalStatus } from '
 // Reglas de las adopciones (RN-06, RN-07) y de las fechas de sus cuotas.
 
 export const DIAS_PARA_COMPLETAR_PAGO = 7;
+/** RN-14: compromiso de una actualización cada 14 días. */
+export const DIAS_ENTRE_ACTUALIZACIONES = 14;
 const DIA_MS = 24 * 60 * 60 * 1000;
 
 /** RN-06: disponible para adoptar y en el santuario o en tratamiento (la publicación la filtra la consulta). */
@@ -26,13 +28,35 @@ export function sumarMeses(fecha: string, meses: number): string {
   return aFecha(y, m - 1 + meses, Math.min(d, ultimoDia));
 }
 
-function restarDia(fecha: string): string {
+/** Suma (o resta) días a una fecha `YYYY-MM-DD`. */
+export function sumarDias(fecha: string, dias: number): string {
   const [y = 0, m = 1, d = 1] = fecha.split('-').map(Number);
-  return aFecha(y, m - 1, d - 1);
+  return aFecha(y, m - 1, d + dias);
 }
+
+const restarDia = (fecha: string) => sumarDias(fecha, -1);
 
 /** Mes que cubre una cuota que empieza en `inicio` y fecha del siguiente cobro. */
 export function periodoCuota(inicio: string): { periodStart: string; periodEnd: string; nextBillingDate: string } {
   const nextBillingDate = sumarMeses(inicio, 1);
   return { periodStart: inicio, periodEnd: restarDia(nextBillingDate), nextBillingDate };
+}
+
+/** RN-15 y TECH_SPEC §18.2: solo una adopción activa da acceso al contenido exclusivo. */
+export function veContenidoExclusivo(status: AdoptionStatus): boolean {
+  return status === 'active';
+}
+
+/**
+ * CU-15: fecha prevista de la próxima actualización (RN-14): la última del
+ * animal + 14 días o, si no hay ninguna, el inicio de la adopción + 14 días.
+ * Solo se muestra en las adopciones activas.
+ */
+export function proximaActualizacionPrevista(
+  adopcion: { status: AdoptionStatus; startDate: string | null },
+  ultimaActualizacion: string | null,
+): string | null {
+  if (!veContenidoExclusivo(adopcion.status)) return null;
+  const desde = ultimaActualizacion ?? adopcion.startDate;
+  return desde === null ? null : sumarDias(desde, DIAS_ENTRE_ACTUALIZACIONES);
 }

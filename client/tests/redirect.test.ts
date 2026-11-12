@@ -16,6 +16,7 @@ describe('redirecciones tras entrar', () => {
   it('CU-09 paso 5: el adoptante vuelve a la página de origen o a su inicio', () => {
     expect(homeFor(sessionUser(), '/animals/3')).toBe('/animals/3');
     expect(homeFor(sessionUser(), undefined)).toBe(ADOPTER_HOME);
+    expect(ADOPTER_HOME).toBe('/my-animals');
   });
 
   it('CU-09 paso 5: el trabajador va siempre a su inicio', () => {

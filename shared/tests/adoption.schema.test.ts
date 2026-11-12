@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createAdoptionSchema,
-  myAdoptionsQuerySchema,
-  payAdoptionSchema,
-} from '../src/schemas/adoption.schema.js';
+import { createAdoptionSchema, myAdoptionsQuerySchema, payAdoptionSchema } from '../src/schemas/adoption.schema.js';
 
 describe('CU-13 createAdoptionSchema', () => {
   it('exige el animal y el plan como enteros positivos', () => {

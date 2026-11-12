@@ -116,3 +116,15 @@ button.link {
     display: none;
   }
 }
+
+/* Contador de no leídas (DESIGN_SYSTEM §8.8): terracota, máximo «9+». */
+.counter {
+  min-width: 1.5em;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  text-align: center;
+}

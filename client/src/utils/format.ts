@@ -10,6 +10,8 @@ const fechaLarga = new Intl.DateTimeFormat('es-ES', {
   year: 'numeric',
   timeZone: ZONA_SANTUARIO,
 });
+// Los DATE (`YYYY-MM-DD`) se formatean en UTC para que el día no cambie.
+const fechaDia = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 const lista = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' });
 
 /** `'5.00'` → `'5,00 €'`. */
@@ -25,6 +27,11 @@ export function formatYear(date: string): string {
 /** Instante ISO → «13 de octubre de 2026» en la zona del santuario. */
 export function formatLongDate(isoInstant: string): string {
   return fechaLarga.format(new Date(isoInstant));
+}
+
+/** `'2026-11-29'` → «29 de noviembre de 2026». */
+export function formatDate(date: string): string {
+  return fechaDia.format(new Date(`${date}T00:00:00Z`));
 }
 
 /** `['Lucía', 'Elena', 'Irene']` → «Lucía, Elena e Irene». */

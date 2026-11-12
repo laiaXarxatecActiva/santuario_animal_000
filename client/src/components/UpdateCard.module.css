@@ -1,0 +1,95 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+@media (min-width: 1024px) {
+  .card {
+    padding: var(--space-5);
+  }
+}
+
+/* No leída: borde terracota (SCREENS §4.4). */
+.unread {
+  border-color: var(--color-primary);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.animal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.animal > :first-child {
+  width: 40px;
+  border-radius: var(--radius-sm);
+}
+
+.animalName {
+  font-weight: 600;
+}
+
+.date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.title {
+  font-size: var(--font-size-h3);
+}
+
+.text {
+  white-space: pre-line;
+}
+
+.media {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .media {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.media > li > * {
+  border-radius: var(--radius-md);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--color-surface-alt);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}

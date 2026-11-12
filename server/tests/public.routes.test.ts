@@ -58,6 +58,7 @@ describe('CU-02 Consultar el catálogo de animales', () => {
         url: '/uploads/animals/1/cover.jpg',
         thumbnailUrl: '/uploads/animals/1/thumb_cover.jpg',
         altText: 'Rufo, buitre leonado, posado en una rampa de madera',
+        visibility: 'public',
       },
     });
   });
@@ -236,6 +237,76 @@ describe('CU-03 Últimas actualizaciones públicas', () => {
   it('responde 404 si el animal no es público', async () => {
     const res = await request(t.app).get('/api/animals/13/updates');
     expect(res.status).toBe(404);
+  });
+});
+
+describe('CU-16 Consultar la ficha ampliada de un animal adoptado', () => {
+  const entrar = async (email: string, password: string) => {
+    const agent = request.agent(t.app);
+    expect((await agent.post('/api/auth/login').send({ email, password })).status).toBe(200);
+    return agent;
+  };
+  let lucia: ReturnType<typeof request.agent>;
+  let elena: ReturnType<typeof request.agent>;
+  let nuria: ReturnType<typeof request.agent>;
+  beforeAll(async () => {
+    lucia = await entrar('lucia.martinez@correo.test', 'Lucia.buitres1');
+    elena = await entrar('elena.rubio@correo.test', 'elenita_88');
+    nuria = await entrar('nuria.peris@santuario.test', 'NuriaPeris26#!');
+  });
+
+  it('un visitante no tiene acceso al contenido exclusivo', async () => {
+    const res = await request(t.app).get('/api/animals/1');
+    expect(res.body.exclusiveAccess).toBe(false);
+    expect(res.body.photos.map((p: { visibility: string }) => p.visibility)).toEqual(['public', 'public']);
+  });
+
+  it('2: un adoptante activo ve el resumen de salud y las fotos exclusivas de la galería', async () => {
+    const res = await lucia.get('/api/animals/1');
+    expect(res.status).toBe(200);
+    const rufo: PublicAnimalDto = res.body;
+    expect(rufo.exclusiveAccess).toBe(true);
+    expect(rufo.healthSummary).toMatch(/^Rufo está bien de salud/);
+    expect(rufo.photos.map((p) => [p.id, p.visibility])).toEqual([
+      [1, 'public'],
+      [16, 'public'],
+      [17, 'adopters'],
+    ]);
+  });
+
+  it('2: un adoptante activo ve todas las actualizaciones, con sus fotos y si las ha leído', async () => {
+    const res = await lucia.get('/api/animals/1/updates');
+    const actualizaciones: AnimalUpdateDto[] = res.body.data;
+    expect(actualizaciones.map((u) => [u.id, u.visibility, u.isRead])).toEqual([
+      [2, 'adopters', true],
+      [1, 'public', true],
+    ]);
+    expect(actualizaciones[0]?.photos.map((p) => p.id)).toEqual([19]);
+    expect(res.body.meta.total).toBe(2);
+  });
+
+  it('1a: con la adopción pausada solo ve la ficha pública (TECH_SPEC §18.2)', async () => {
+    const ficha = await elena.get('/api/animals/11');
+    expect(ficha.body.exclusiveAccess).toBe(false);
+    expect(ficha.body).not.toHaveProperty('healthSummary');
+    const actualizaciones = await elena.get('/api/animals/11/updates');
+    expect(actualizaciones.body.data.map((u: AnimalUpdateDto) => [u.id, u.isRead])).toEqual([[7, undefined]]);
+  });
+
+  it('un adoptante sin adopción del animal solo ve lo público', async () => {
+    const res = await elena.get('/api/animals/1');
+    expect(res.body.exclusiveAccess).toBe(false);
+    expect(res.body.photos.map((p: { id: number }) => p.id)).toEqual([1, 16]);
+  });
+
+  it('RN-15: los trabajadores ven el contenido exclusivo, sin marcas de leído', async () => {
+    const ficha = await nuria.get('/api/animals/1');
+    expect(ficha.body).toMatchObject({ exclusiveAccess: true, healthSummary: expect.any(String) });
+    const actualizaciones = await nuria.get('/api/animals/1/updates');
+    expect(actualizaciones.body.data.map((u: AnimalUpdateDto) => [u.id, u.isRead])).toEqual([
+      [2, undefined],
+      [1, undefined],
+    ]);
   });
 });
 

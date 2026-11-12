@@ -1,7 +1,7 @@
-import { faFeather, faHandHoldingHeart, faNewspaper, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faFeather, faHandHoldingHeart, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { AdoptionPlanDto, PublicAnimalDto } from '@sanctuary/shared';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { ApiError } from '../../api/client';
@@ -10,8 +10,10 @@ import { AnimalPhoto } from '../../components/AnimalPhoto';
 import { Badge } from '../../components/Badge';
 import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
+import { UpdateCard } from '../../components/UpdateCard';
 import { useAnimal, useAnimalUpdates, usePlans } from '../../hooks/usePublicData';
-import { formatCurrency, formatList, formatLongDate, formatYear } from '../../utils/format';
+import { useSession } from '../../hooks/useSession';
+import { formatCurrency, formatList, formatYear } from '../../utils/format';
 import { parseId } from '../../utils/routeParams';
 import styles from './AnimalPage.module.css';
 
@@ -76,10 +78,31 @@ export function AnimalPage() {
     );
   }
 
-  return <Ficha animal={animal.data} />;
+  return (
+    <AnimalProfile
+      animal={animal.data}
+      breadcrumb={{ to: '/animals', label: t('nav.animals') }}
+      aside={<TarjetaAdoptar animal={animal.data} />}
+      news={<UltimasNoticias animal={animal.data} />}
+    />
+  );
 }
 
-function Ficha({ animal }: { animal: PublicAnimalDto }) {
+interface AnimalProfileProps {
+  animal: PublicAnimalDto;
+  /** Primer nivel de las migas de pan («Animales» o «Mis animales»). */
+  breadcrumb: { to: string; label: string };
+  /** Aviso bajo las migas de pan. */
+  notice?: ReactNode;
+  /** Tarjeta junto a la foto: «Adoptar» (CU-03) o «Tu adopción» (CU-16). */
+  aside: ReactNode;
+  /** Secciones tras el carácter y las necesidades (p. ej., «Su salud»). */
+  extra?: ReactNode;
+  news: ReactNode;
+}
+
+/** Estructura de la ficha del animal, común a la pública (CU-03) y a la ampliada (CU-16). */
+export function AnimalProfile({ animal, breadcrumb, notice, aside, extra, news }: AnimalProfileProps) {
   const { t } = useTranslation();
   const sep = t('common.listSeparator');
 
@@ -99,12 +122,14 @@ function Ficha({ animal }: { animal: PublicAnimalDto }) {
       <nav aria-label={t('animalPage.breadcrumb')} className={styles.breadcrumb}>
         <ol>
           <li>
-            <Link to="/animals">{t('nav.animals')}</Link>
+            <Link to={breadcrumb.to}>{breadcrumb.label}</Link>
           </li>
           <li aria-hidden="true">›</li>
           <li aria-current="page">{animal.name}</li>
         </ol>
       </nav>
+
+      {notice && <div className={styles.notice}>{notice}</div>}
 
       <div className={styles.top}>
         <Galeria animal={animal} />
@@ -133,7 +158,7 @@ function Ficha({ animal }: { animal: PublicAnimalDto }) {
             </div>
           </div>
 
-          <TarjetaAdoptar animal={animal} />
+          {aside}
         </div>
       </div>
 
@@ -161,7 +186,9 @@ function Ficha({ animal }: { animal: PublicAnimalDto }) {
         </div>
       )}
 
-      <UltimasNoticias animal={animal} />
+      {extra}
+
+      {news}
     </article>
   );
 }
@@ -175,6 +202,11 @@ function Galeria({ animal }: { animal: PublicAnimalDto }) {
   return (
     <div className={styles.gallery}>
       <AnimalPhoto photo={principal} lazy={false} className={styles.mainPhoto} />
+      {principal?.visibility === 'adopters' && (
+        <div className={styles.exclusiveBadge}>
+          <Badge tone="primary">{t('updates.adoptersOnly')}</Badge>
+        </div>
+      )}
       {fotos.length > 1 && (
         <ul className={styles.thumbs} aria-label={t('animalPage.gallery', { name: animal.name })}>
           {fotos.map((foto, i) => (
@@ -182,7 +214,10 @@ function Galeria({ animal }: { animal: PublicAnimalDto }) {
               <button
                 type="button"
                 className={styles.thumb}
-                aria-label={t('animalPage.showPhoto', { n: i + 1, total: fotos.length })}
+                aria-label={t(
+                  foto.visibility === 'adopters' ? 'animalPage.showPhotoExclusive' : 'animalPage.showPhoto',
+                  { n: i + 1, total: fotos.length },
+                )}
                 aria-pressed={i === actual}
                 onClick={() => setActual(i)}
               >
@@ -198,8 +233,21 @@ function Galeria({ animal }: { animal: PublicAnimalDto }) {
 
 function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
   const { t } = useTranslation();
+  const { user } = useSession();
   const planes = usePlans();
   const desde = planMasBarato(planes.data);
+
+  // Variante «Ya adoptas a Rufo» (SCREENS §3.3): el servidor indica si tiene acceso.
+  if (user?.role === 'adopter' && animal.exclusiveAccess) {
+    return (
+      <div className={styles.adoptCard}>
+        <h2 className={styles.adoptTitle}>{t('animalPage.alreadyAdopting', { name: animal.name })}</h2>
+        <ButtonLink to={`/my-animals/${animal.id}`} block>
+          {t('animalPage.seeFullProfile')}
+        </ButtonLink>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.adoptCard}>
@@ -236,14 +284,7 @@ function UltimasNoticias({ animal }: { animal: PublicAnimalDto }) {
         <ul className={styles.news}>
           {noticias.data.data.map((noticia) => (
             <li key={noticia.id}>
-              <article className={styles.newsCard}>
-                <p className={styles.newsDate}>
-                  <FontAwesomeIcon icon={faNewspaper} aria-hidden="true" />
-                  <time dateTime={noticia.publishedAt}>{formatLongDate(noticia.publishedAt)}</time>
-                </p>
-                <h3>{noticia.title}</h3>
-                <p className={`reading ${styles.text}`}>{noticia.body}</p>
-              </article>
+              <UpdateCard update={noticia} headingLevel={3} />
             </li>
           ))}
         </ul>

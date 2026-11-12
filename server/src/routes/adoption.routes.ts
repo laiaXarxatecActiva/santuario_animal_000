@@ -13,6 +13,7 @@ export function createAdoptionRoutes(service: AdoptionService): Router {
   // El caso del trabajador (RN-03) lo resuelve el servicio, con su propio mensaje.
   router.post('/adoptions', requireAuth, requireVerifiedEmail, validate({ body: createAdoptionSchema }), c.create);
   router.get('/me/adoptions', requireRole('adopter'), validate({ query: myAdoptionsQuerySchema }), c.listMine);
+  router.get('/me/adoptions/:id', requireRole('adopter'), validate({ params: idParamsSchema }), c.getMine);
   router.post(
     '/me/adoptions/:id/pay',
     requireRole('adopter'),

@@ -104,4 +104,32 @@ describe('PublicHeader', () => {
     expect((await screen.findAllByRole('link', { name: 'Entrar' }))[0]).toBeInTheDocument();
     expect(pedidas('/api/auth/logout')).toHaveLength(1);
   });
+
+  it('CU-17 5: «Novedades» muestra el número de actualizaciones sin leer', async () => {
+    const { pedidas } = mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/me/feed': { body: { data: [], meta: { page: 1, pageSize: 1, total: 4, totalPages: 4, unreadCount: 3 } } },
+    });
+    pintar();
+    const enlace = await within(navegacion()).findByRole('link', { name: 'Novedades, 3 sin leer' });
+    expect(enlace).toHaveAttribute('href', '/feed');
+    expect(enlace).toHaveTextContent('3');
+    expect(pedidas('/api/me/feed')[0]?.searchParams.get('pageSize')).toBe('1');
+  });
+
+  it('CU-17 5: sin nada por leer no hay contador, y el trabajador no lo pide', async () => {
+    const adoptante = mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/me/feed': { body: { data: [], meta: { page: 1, pageSize: 1, total: 0, totalPages: 0, unreadCount: 0 } } },
+    });
+    const { unmount } = pintar();
+    await waitFor(() => expect(adoptante.pedidas('/api/me/feed')).toHaveLength(1));
+    expect(within(navegacion()).getByRole('link', { name: 'Novedades' })).toBeInTheDocument();
+    unmount();
+
+    const trabajador = mockApi({ '/api/auth/me': { body: { user: sessionUser({ role: 'admin' }) } } });
+    pintar();
+    await screen.findByRole('link', { name: 'Panel' });
+    expect(trabajador.pedidas('/api/me/feed')).toHaveLength(0);
+  });
 });

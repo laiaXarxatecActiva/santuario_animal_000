@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import styles from './Badge.module.css';
 
 // Insignias de estado (DESIGN_SYSTEM §8.6).
-export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'primary';
+export type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'primary' | 'new';
 
 export function Badge({
   tone = 'neutral',
