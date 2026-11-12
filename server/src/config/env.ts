@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+const postgresUrl = z.url({ protocol: /^postgres(ql)?$/, error: 'Debe ser una URL postgres://' });
+
 // Variables de entorno que el servidor usa por ahora. Se irán añadiendo las de
-// TECH_SPEC §14.2 (DATABASE_URL, SESSION_SECRET, SMTP…) a medida que se necesiten.
+// TECH_SPEC §14.2 (SESSION_SECRET, SMTP…) a medida que se necesiten.
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   CLIENT_URL: z.url().default('http://localhost:5173'),
+  DATABASE_URL: postgresUrl,
+  TEST_DATABASE_URL: postgresUrl.optional(),
 });
 
 export type Config = z.infer<typeof envSchema>;

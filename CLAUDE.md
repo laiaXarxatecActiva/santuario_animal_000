@@ -2,15 +2,15 @@
 
 ## Estado actual
 
-Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Fase 1 en curso**: está montado el esqueleto del monorepo (Express con `/api/health` y el `errorHandler`, cliente React con i18n, constantes compartidas), pero aún no hay base de datos conectada ni casos de uso implementados. Las especificaciones de `docs/` son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
+Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Fase 1 en curso**: está montado el esqueleto del monorepo (Express con `/api/health`, `errorHandler` y logs con pino; pool de `pg`, `withTransaction` y `db:reset`; cliente React con i18n; constantes compartidas), pero aún no hay casos de uso implementados. Las especificaciones de `docs/` son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
 
 - `docs/TECH_SPEC.md`: stack, arquitectura, estructura del repo, convenciones, API, jobs, fases y preguntas abiertas (el §18 recoge decisiones provisionales que hay que aplicar).
 - `docs/USE_CASES.md`: casos de uso `CU-xx` y reglas de negocio.
-- `docs/seedsql.sql` (esquema; borra y recrea todo) y `docs/TEST_DATA.sql` (vacía e inserta; fechas relativas al día de carga; los usuarios de prueba y sus contraseñas están en su cabecera).
+- `database/seedsql.sql` (esquema; borra y recrea todo) y `database/TEST_DATA.sql` (vacía e inserta; fechas relativas al día de carga; los usuarios de prueba y sus contraseñas están en su cabecera).
 - `docs/ux-ui/DESIGN_SYSTEM.md` (tokens y componentes; no inventes colores, tamaños ni componentes que no estén definidos ahí: añádelos antes al documento) y `docs/ux-ui/SCREENS.md` (diseño de cada pantalla).
 - `ignore/` está en el `.gitignore` (borrador del diseño funcional y anexo de "producción real").
 
-Notas del repositorio: la raíz de git es este directorio (`SantuarioAnimal/`), con remoto en GitHub (`origin`). La especificación prevé mover los archivos SQL a `database/`; por ahora están en `docs/`.
+Notas del repositorio: la raíz de git es este directorio (`SantuarioAnimal/`), con remoto en GitHub (`origin`). Los archivos SQL están en `database/`.
 
 ## Ramas de Git
 
@@ -37,6 +37,7 @@ Estas reglas sustituyen a la de TECH_SPEC §7.4 («rama principal `main`»).
 ## Comandos
 
 - Instalar: `npm install`
+- Reiniciar la BD: `npm run db:reset` (desarrollo) / `npm run db:reset:test` (pruebas); ejecutan `database/seedsql.sql` y `database/TEST_DATA.sql` con `pg`, sin `psql`
 - Tests: `npm test` (Vitest + Supertest)
 - Comprobar tipos: `npm run typecheck`
 - Lint: `npm run lint` · Formato: `npm run format` (Prettier)
@@ -48,7 +49,6 @@ Estas reglas sustituyen a la de TECH_SPEC §7.4 («rama principal `main`»).
 Otros scripts previstos en la raíz (TECH_SPEC §4, §14.3), que hay que crear:
 
 - `npm run build` / `npm start`.
-- `npm run db:reset` / `npm run db:reset:test`: ejecutan el esquema y después los datos de prueba mediante `pg`, sin `psql`.
 - `npm run job -- <jobName>`: ejecuta un job a mano.
 - `npm run test:e2e`: Playwright.
 

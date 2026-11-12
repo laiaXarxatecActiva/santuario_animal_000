@@ -1,5 +1,6 @@
 import { createApp } from './app.js';
 import { loadConfig } from './config/env.js';
+import { createLogger } from './utils/logger.js';
 
 // Carga el .env de la raíz del proyecto si existe (Node 22+).
 try {
@@ -9,8 +10,9 @@ try {
 }
 
 const config = loadConfig();
-const app = createApp();
+const logger = createLogger(config.NODE_ENV);
+const app = createApp({ logger });
 
 app.listen(config.PORT, () => {
-  console.log(`API escuchando en http://localhost:${config.PORT} (${config.NODE_ENV})`);
+  logger.info(`API escuchando en http://localhost:${config.PORT} (${config.NODE_ENV})`);
 });
