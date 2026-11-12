@@ -2,13 +2,13 @@
 
 ## Estado actual
 
-Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Fase 1 en curso**: está montado el esqueleto del monorepo (Express con `/api/health`, `errorHandler` y logs con pino; pool de `pg`, `withTransaction` y `db:reset`; cliente React con i18n; constantes compartidas), pero aún no hay casos de uso implementados. Las especificaciones de `docs/` son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
+Aplicación web para un santuario de animales (apadrinamiento simbólico de buitres, donaciones, panel para el personal). **Fase 1 en curso**: está montado el esqueleto del monorepo (Express con `/api/health`, `errorHandler` y logs con pino; pool de `pg`, `withTransaction` y `db:reset`; cliente React con i18n; constantes compartidas), y la API de la web pública (CU-01 a CU-04: `/api/home`, `/api/animals`, `/api/animals/:id`, `/api/animals/:id/updates`, `/api/species`, `/api/plans`). Faltan sus pantallas en el cliente y el resto de casos de uso. Las especificaciones de `docs/` son la fuente de verdad; lee la sección correspondiente antes de implementar nada:
 
 - `docs/TECH_SPEC.md`: stack, arquitectura, estructura del repo, convenciones, API, jobs, fases y preguntas abiertas (el §18 recoge decisiones provisionales que hay que aplicar).
 - `docs/USE_CASES.md`: casos de uso `CU-xx` y reglas de negocio.
 - `database/seedsql.sql` (esquema; borra y recrea todo) y `database/TEST_DATA.sql` (vacía e inserta; fechas relativas al día de carga; los usuarios de prueba y sus contraseñas están en su cabecera).
 - `docs/ux-ui/DESIGN_SYSTEM.md` (tokens y componentes; no inventes colores, tamaños ni componentes que no estén definidos ahí: añádelos antes al documento) y `docs/ux-ui/SCREENS.md` (diseño de cada pantalla).
-- `ignore/` está en el `.gitignore` (borrador del diseño funcional y anexo de "producción real").
+- `ignore/` está en el `.gitignore` (borrador del diseño funcional, anexo de "producción real" y `test-images/`: fotos de ejemplo por especie que `db:reset` copia en `server/uploads/`; no se suben a git porque sus derechos no están comprobados y el repositorio es público).
 
 Notas del repositorio: la raíz de git es este directorio (`SantuarioAnimal/`), con remoto en GitHub (`origin`). Los archivos SQL están en `database/`.
 

@@ -10,7 +10,12 @@ describe('loadConfig', () => {
       PORT: 3000,
       CLIENT_URL: 'http://localhost:5173',
       DATABASE_URL,
+      UPLOADS_DIR: './uploads',
     });
+  });
+
+  it('acepta otra carpeta de archivos subidos', () => {
+    expect(loadConfig({ DATABASE_URL, UPLOADS_DIR: '/srv/uploads' }).UPLOADS_DIR).toBe('/srv/uploads');
   });
 
   it('convierte PORT a número', () => {

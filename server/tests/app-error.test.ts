@@ -32,3 +32,16 @@ describe('errores de la aplicación', () => {
     expect(error.details).toEqual([{ field: 'email', message: 'Obligatorio' }]);
   });
 });
+
+describe('AnimalNotAvailableError', () => {
+  it('CU-03 1a: es un 404 con su propio código', async () => {
+    const { AnimalNotAvailableError, NotFoundError } = await import('../src/errors/app-error.js');
+    const error = new AnimalNotAvailableError();
+    expect(error).toBeInstanceOf(NotFoundError);
+    expect([error.status, error.code, error.message]).toEqual([
+      404,
+      'ANIMAL_NOT_AVAILABLE',
+      'Este animal no está disponible.',
+    ]);
+  });
+});

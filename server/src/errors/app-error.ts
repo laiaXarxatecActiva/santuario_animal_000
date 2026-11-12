@@ -53,3 +53,11 @@ export class BusinessRuleError extends AppError {
     super(422, code, message);
   }
 }
+
+// CU-03 1a: no existe, no está publicado o está fallecido o trasladado.
+export class AnimalNotAvailableError extends NotFoundError {
+  override readonly code = 'ANIMAL_NOT_AVAILABLE';
+  constructor() {
+    super('Este animal no está disponible.');
+  }
+}

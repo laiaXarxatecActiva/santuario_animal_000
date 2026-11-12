@@ -8,3 +8,6 @@ pg.types.setTypeParser(pg.types.builtins.DATE, (valor) => valor);
 export function createPool(connectionString: string): pg.Pool {
   return new pg.Pool({ connectionString });
 }
+
+/** Cualquier cosa que ejecute consultas: el pool o un cliente de una transacción. */
+export type Queryable = Pick<pg.Pool, 'query'>;

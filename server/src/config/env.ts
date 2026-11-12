@@ -10,6 +10,8 @@ const envSchema = z.object({
   CLIENT_URL: z.url().default('http://localhost:5173'),
   DATABASE_URL: postgresUrl,
   TEST_DATABASE_URL: postgresUrl.optional(),
+  // Relativa a la carpeta `server/` si no es absoluta.
+  UPLOADS_DIR: z.string().min(1).default('./uploads'),
 });
 
 export type Config = z.infer<typeof envSchema>;
