@@ -1,5 +1,7 @@
 import type {
+  AdminAnimalDto,
   DashboardDto,
+  SpeciesAdminDto,
   AdoptionDto,
   FeedItemDto,
   FeedResponse,
@@ -200,6 +202,37 @@ export function dashboard(overrides: Partial<DashboardDto> = {}): DashboardDto {
       { animal: { id: 3, name: 'Turia' }, daysWithoutUpdate: 16, level: 'error', activeAdopters: 1 },
       { animal: { id: 9, name: 'Ébano' }, daysWithoutUpdate: 12, level: 'warning', activeAdopters: 1 },
     ],
+    ...overrides,
+  };
+}
+
+export const adminSpecies: SpeciesAdminDto[] = [
+  { id: 3, name: 'Alimoche común', scientificName: 'Neophron percnopterus', description: null, animalCount: 2 },
+  { id: 1, name: 'Buitre leonado', scientificName: 'Gyps fulvus', description: 'El más común.', animalCount: 9 },
+  { id: 5, name: 'Lince ibérico', scientificName: null, description: null, animalCount: 0 },
+];
+
+export function adminAnimal(overrides: Partial<AdminAnimalDto> = {}): AdminAnimalDto {
+  return {
+    id: 1,
+    name: 'Rufo',
+    species: { id: 1, name: 'Buitre leonado' },
+    breed: null,
+    sex: 'male',
+    approxBirthDate: '2014-11-12',
+    arrivalDate: '2021-08-12',
+    rescueStory: 'Llegó tras electrocutarse.',
+    temperament: 'Tranquilo.',
+    specialNeeds: null,
+    healthSummary: 'Bien.',
+    status: 'in_sanctuary',
+    statusChangedAt: null,
+    isAdoptable: true,
+    isPublished: true,
+    activeAdopters: 2,
+    openAdoptions: 2,
+    hasAdoptionHistory: true,
+    coverPhoto: null,
     ...overrides,
   };
 }

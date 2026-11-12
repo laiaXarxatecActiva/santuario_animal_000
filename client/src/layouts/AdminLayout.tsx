@@ -1,15 +1,24 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { faArrowUpRightFromSquare, faBars, faGauge, faXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowUpRightFromSquare,
+  faBars,
+  faFeather,
+  faGauge,
+  faTags,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { Role } from '@sanctuary/shared';
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
+import { Alert } from '../components/Alert';
 import iconStyles from '../components/IconButton.module.css';
 import { Logo } from '../components/Logo';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { UserMenu } from '../components/UserMenu';
 import { useLogout, useSession } from '../hooks/useSession';
+import { readFlash } from '../utils/flash';
 import styles from './AdminLayout.module.css';
 
 interface Enlace {
@@ -28,7 +37,16 @@ interface Grupo {
 }
 
 // Secciones del menú (SCREENS §5.1). Cada una aparece cuando está implementada.
-const GRUPOS: readonly Grupo[] = [{ links: [{ to: '/admin', key: 'admin.nav.dashboard', icon: faGauge, end: true }] }];
+const GRUPOS: readonly Grupo[] = [
+  { links: [{ to: '/admin', key: 'admin.nav.dashboard', icon: faGauge, end: true }] },
+  {
+    key: 'admin.nav.groupAnimals',
+    links: [
+      { to: '/admin/animals', key: 'admin.nav.animals', icon: faFeather },
+      { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
+    ],
+  },
+];
 
 const MENU_USUARIO = [{ to: '/profile', key: 'nav.profile' }] as const;
 
@@ -38,8 +56,12 @@ export function AdminLayout() {
   const { t } = useTranslation();
   const { user } = useSession();
   const logout = useLogout();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const [abierto, setAbierto] = useState(false);
+  // El aviso de la navegación se cierra solo para esta entrada del historial.
+  const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
+  const flash = flashCerrado === location.key ? undefined : readFlash(location.state);
   const menuId = useId();
 
   useEffect(() => setAbierto(false), [pathname]);
@@ -106,6 +128,13 @@ export function AdminLayout() {
         </nav>
       </aside>
       <main id="main" tabIndex={-1} className={styles.main}>
+        {flash && (
+          <div className={styles.flash}>
+            <Alert type={flash.type} onClose={() => setFlashCerrado(location.key)}>
+              {flash.message}
+            </Alert>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

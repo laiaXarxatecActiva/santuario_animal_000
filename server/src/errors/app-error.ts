@@ -200,3 +200,54 @@ export class PasswordUnchangedError extends BusinessRuleError {
     { field: 'newPassword', message: 'La nueva contraseña debe ser distinta de la actual.' },
   ];
 }
+
+// Error de negocio sobre un campo concreto del formulario (422 con detalle).
+export class FieldRuleError extends AppError {
+  constructor(code: string, field: string, message: string) {
+    super(422, code, message, [{ field, message }]);
+  }
+}
+
+// CU-30 4a.
+export class SpeciesAlreadyExistsError extends AppError {
+  constructor() {
+    super(409, 'SPECIES_ALREADY_EXISTS', 'Esta especie ya existe.', [
+      { field: 'name', message: 'Esta especie ya existe.' },
+    ]);
+  }
+}
+
+// CU-30 A1.
+export class SpeciesInUseError extends ConflictError {
+  constructor(animales: number) {
+    super(
+      'SPECIES_IN_USE',
+      animales === 1 ? 'Hay 1 animal de esta especie.' : `Hay ${animales} animales de esta especie.`,
+    );
+  }
+}
+
+// CU-28 A4 y RN-17.
+export class AnimalHasAdoptionsError extends ConflictError {
+  constructor() {
+    super('ANIMAL_HAS_ADOPTIONS', 'Este animal tiene historial de adopciones; archívalo cambiando su estado.');
+  }
+}
+
+// CU-28 2b (CHECK animals_archived_not_adoptable).
+export class ArchivedAnimalNotAdoptableError extends FieldRuleError {
+  constructor() {
+    super(
+      'ARCHIVED_ANIMAL_NOT_ADOPTABLE',
+      'isAdoptable',
+      'Un animal fallecido o trasladado no puede admitir adopciones.',
+    );
+  }
+}
+
+// CU-33 (precondición): un animal fallecido o trasladado ya no cambia de estado.
+export class AnimalArchivedError extends BusinessRuleError {
+  constructor() {
+    super('ANIMAL_ARCHIVED', 'Este animal está archivado (fallecido o trasladado) y su estado ya no se puede cambiar.');
+  }
+}

@@ -3,6 +3,7 @@ export * from './constants/auth.js';
 export * from './constants/roles.js';
 export * from './constants/status.js';
 export * from './constants/users.js';
+export * from './schemas/admin.schema.js';
 export * from './schemas/adoption.schema.js';
 export * from './schemas/animal.schema.js';
 export * from './schemas/auth.schema.js';

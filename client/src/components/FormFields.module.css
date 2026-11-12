@@ -87,3 +87,13 @@
 .checkbox label {
   cursor: pointer;
 }
+
+.select {
+  cursor: pointer;
+}
+
+.textarea {
+  padding-block: var(--space-2);
+  resize: vertical;
+  line-height: 1.5;
+}

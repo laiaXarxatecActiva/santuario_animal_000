@@ -1,3 +1,4 @@
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import type { DashboardDto, UpdateAlertDto } from '@sanctuary/shared';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -64,6 +65,15 @@ function Contenido({ datos }: { datos: DashboardDto }) {
         ) : (
           datos.updateAlerts.map((alerta) => <AlertaActualizacion key={alerta.animal.id} alerta={alerta} />)
         )}
+      </section>
+
+      <section className={styles.quickLinks} aria-labelledby="accesos">
+        <h2 id="accesos">{t('admin.dashboard.quickLinks')}</h2>
+        <div className={styles.quickLinksList}>
+          <ButtonLink to="/admin/animals/new" variant="outline" icon={faPlus}>
+            {t('admin.dashboard.newAnimal')}
+          </ButtonLink>
+        </div>
       </section>
     </>
   );

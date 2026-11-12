@@ -5,7 +5,12 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
+import { AnimalDataTab } from './pages/admin/AnimalDataTab';
+import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
+import { NewAnimalPage } from './pages/admin/NewAnimalPage';
+import { SpeciesAdminPage } from './pages/admin/SpeciesAdminPage';
 import { AdoptedAnimalPage } from './pages/adopter/AdoptedAnimalPage';
 import { AdoptPage } from './pages/adopter/AdoptPage';
 import { FeedPage } from './pages/adopter/FeedPage';
@@ -29,7 +34,18 @@ export const routes: RouteObject[] = [
     children: [
       {
         element: <AdminLayout />,
-        children: [{ index: true, element: <DashboardPage /> }],
+        children: [
+          { index: true, element: <DashboardPage /> },
+          { path: 'animals', element: <AnimalsAdminPage /> },
+          { path: 'animals/new', element: <NewAnimalPage /> },
+          {
+            path: 'animals/:id',
+            element: <AnimalAdminPage />,
+            children: [{ index: true, element: <AnimalDataTab /> }],
+          },
+          { path: 'species', element: <SpeciesAdminPage /> },
+          { path: '*', element: <NotFoundPage /> },
+        ],
       },
     ],
   },

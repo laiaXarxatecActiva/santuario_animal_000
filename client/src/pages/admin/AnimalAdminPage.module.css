@@ -1,0 +1,70 @@
+/* Pestañas (DESIGN_SYSTEM §8.9): línea inferior terracota en la activa; en
+   móvil se desplazan en horizontal dentro de su barra. */
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--size-touch);
+  border-bottom: 3px solid transparent;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--color-primary);
+}
+
+.tab[aria-current='page'] {
+  border-bottom-color: var(--color-primary);
+}
+
+.menu {
+  position: relative;
+}
+
+.menuPanel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 11;
+  width: 220px;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  list-style: none;
+  animation: slide-in var(--duration-base) ease-out;
+}
+
+.menuItem {
+  display: flex;
+  width: 100%;
+  min-height: var(--size-touch);
+  align-items: center;
+  padding-inline: var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menuItem:hover {
+  background: var(--color-surface-alt);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}

@@ -1,6 +1,14 @@
 import { faCircleExclamation, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useId, useState, type InputHTMLAttributes, type ReactNode, type Ref } from 'react';
+import {
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type Ref,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './FormFields.module.css';
 
@@ -105,6 +113,73 @@ export function Checkbox({ label, error, id, ...rest }: CheckboxProps) {
         />
         <label htmlFor={inputId}>{label}</label>
       </div>
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </div>
+  );
+}
+
+interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  error?: string;
+  help?: ReactNode;
+  ref?: Ref<HTMLSelectElement>;
+}
+
+/** Desplegable nativo con el mismo aspecto que los campos de texto. */
+export function SelectField({ label, error, help, id, className, children, ...rest }: SelectFieldProps) {
+  const { inputId, helpId, errorId, describedBy } = useIds(id, help, error);
+  return (
+    <div className={`${styles.field} ${className ?? ''}`}>
+      <label htmlFor={inputId} className={styles.label}>
+        {label}
+      </label>
+      <select
+        id={inputId}
+        className={`${styles.input} ${styles.select}`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        {...rest}
+      >
+        {children}
+      </select>
+      {help && (
+        <p id={helpId} className={styles.help}>
+          {help}
+        </p>
+      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </div>
+  );
+}
+
+interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string;
+  error?: string;
+  help?: ReactNode;
+  ref?: Ref<HTMLTextAreaElement>;
+}
+
+/** Área de texto: al menos 6 líneas, con ajuste vertical (DESIGN_SYSTEM §8.5). */
+export function TextAreaField({ label, error, help, id, className, rows = 6, ...rest }: TextAreaFieldProps) {
+  const { inputId, helpId, errorId, describedBy } = useIds(id, help, error);
+  return (
+    <div className={`${styles.field} ${className ?? ''}`}>
+      <label htmlFor={inputId} className={styles.label}>
+        {label}
+      </label>
+      <textarea
+        id={inputId}
+        rows={rows}
+        className={`${styles.input} ${styles.textarea}`}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        {...rest}
+      />
+      {help && (
+        <p id={helpId} className={styles.help}>
+          {help}
+        </p>
+      )}
       {error && <FieldError id={errorId}>{error}</FieldError>}
     </div>
   );

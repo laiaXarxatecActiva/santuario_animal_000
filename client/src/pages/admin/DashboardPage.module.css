@@ -58,3 +58,15 @@
     opacity: 0.5;
   }
 }
+
+.quickLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quickLinksList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}

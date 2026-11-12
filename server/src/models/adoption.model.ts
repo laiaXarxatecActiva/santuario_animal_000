@@ -188,3 +188,26 @@ export async function activate(
     [id, fechas.startDate, fechas.nextBillingDate],
   );
 }
+
+/**
+ * CU-33 5.2 (también CU-28 A3): cierra las adopciones abiertas de un animal.
+ * Las activas y pausadas pasan a `finished` y las pendientes a `cancelled`.
+ * `end_date` nunca queda antes del inicio (`adoptions_dates_order`).
+ */
+export async function closeOpenForAnimal(
+  db: Queryable,
+  animalId: number,
+  cierre: { reason: AdoptionEndReason; date: string },
+): Promise<number> {
+  const { rowCount } = await db.query(
+    `UPDATE adoptions
+        SET status = CASE WHEN status = 'pending' THEN 'cancelled' ELSE 'finished' END,
+            end_reason = $2,
+            end_date = GREATEST($3::date, COALESCE(start_date, $3::date)),
+            next_billing_date = NULL,
+            next_plan_id = NULL
+      WHERE animal_id = $1 AND status IN ('pending', 'active', 'paused')`,
+    [animalId, cierre.reason, cierre.date],
+  );
+  return rowCount ?? 0;
+}

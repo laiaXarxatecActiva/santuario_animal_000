@@ -17,10 +17,12 @@ import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
+import { createAnimalAdminService } from './servicios/animal-admin.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
+import { createSpeciesAdminService } from './servicios/species-admin.service.js';
 
 export interface AppOptions {
   db: Pool;
@@ -93,7 +95,14 @@ export function createApp(options: AppOptions): Express {
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
   app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
-  app.use('/api/admin', createAdminRoutes({ dashboard: createDashboardService({ db, reloj }) }));
+  app.use(
+    '/api/admin',
+    createAdminRoutes({
+      dashboard: createDashboardService({ db, reloj }),
+      species: createSpeciesAdminService({ db }),
+      animals: createAnimalAdminService({ db, reloj }),
+    }),
+  );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));
 
   // Los errores de cliente de express.static (archivo inexistente, ruta

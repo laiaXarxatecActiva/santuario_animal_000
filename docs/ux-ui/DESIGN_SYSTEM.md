@@ -255,6 +255,10 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Mostrar / ocultar contraseña | `eye` / `eye-slash` |
 | Desplegar un menú | `chevron-down` |
 | Descargar | `download` |
+| Crear (nuevo animal, especie, actualización) | `plus` |
+| Escritorio del panel | `gauge` |
+| Especies (menú del panel) | `tags` |
+| Abrir en la web pública | `arrow-up-right-from-square` |
 
 ### 6.2 Logo provisional
 
