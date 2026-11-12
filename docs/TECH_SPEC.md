@@ -81,6 +81,8 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | Formularios | `react-hook-form` + `@hookform/resolvers` | Validación con los mismos esquemas Zod del servidor |
 | Textos e idiomas | `i18next` + `react-i18next` | Desde la Fase 1 con solo `es`, para añadir idiomas sin rehacer la interfaz |
 | Estilos | CSS Modules + variables CSS | Sin frameworks de pago; tema y contraste centralizados |
+| Iconos | `@fortawesome/fontawesome-svg-core`, `@fortawesome/free-solid-svg-icons`, `@fortawesome/react-fontawesome` | Font Awesome Free (`DESIGN_SYSTEM.md` §6.1) |
+| Fuentes | `@fontsource-variable/fraunces`, `@fontsource-variable/nunito-sans` | Instaladas en el proyecto, sin Google Fonts (`DESIGN_SYSTEM.md` §4) |
 
 ### 4.4 Herramientas de desarrollo
 

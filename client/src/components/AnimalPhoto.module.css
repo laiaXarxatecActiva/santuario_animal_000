@@ -1,0 +1,32 @@
+.frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  background: var(--color-surface-alt);
+}
+
+.landscape {
+  aspect-ratio: 4 / 3;
+}
+
+.square {
+  aspect-ratio: 1 / 1;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform var(--duration-base) ease-out;
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--color-text-muted);
+}
+
+.icon {
+  font-size: var(--font-size-h1);
+}

@@ -1,0 +1,114 @@
+/* Tokens del sistema de diseño (docs/ux-ui/DESIGN_SYSTEM.md §12.2). */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Superficies y texto */
+  --color-bg: #faf6f0;
+  --color-surface: #fffdf9;
+  --color-surface-alt: #f3ebdf;
+  --color-border: #dccdb8;
+  --color-border-strong: #9a846e;
+  --color-text: #3b2f26;
+  --color-text-muted: #6b5a4b;
+
+  /* Marca */
+  --color-primary: #a9532f;
+  --color-primary-hover: #8e4426;
+  --color-primary-soft: #f6e3d8;
+  --color-on-primary: #fffdf9;
+  --color-secondary: #5e6b2f;
+  --color-secondary-hover: #4c5726;
+  --color-secondary-soft: #ecefdc;
+  --color-accent: #c8963e;
+  --color-focus: #a9532f;
+
+  /* Avisos */
+  --color-info: #4f7290;
+  --color-info-bg: #eef3f7;
+  --color-success: #4f7d41;
+  --color-success-bg: #eef5ea;
+  --color-warning: #a97b1e;
+  --color-warning-bg: #fbf4e2;
+  --color-error: #b04436;
+  --color-error-bg: #fbedea;
+
+  --color-overlay: rgba(30, 25, 21, 0.55);
+
+  /* Tipografía */
+  --font-heading: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-body: 'Nunito Sans Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-size-display: clamp(2rem, 1.4rem + 3vw, 3rem);
+  --font-size-h1: clamp(1.75rem, 1.4rem + 1.5vw, 2.25rem);
+  --font-size-h2: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem);
+  --font-size-h3: 1.25rem;
+  --font-size-lg: 1.125rem;
+  --font-size-base: 1rem;
+  --font-size-sm: 0.875rem;
+  --font-size-xs: 0.75rem;
+
+  /* Espaciado */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --radius-round: 50%;
+
+  /* Tamaños (§5.4) */
+  --size-touch: 44px;
+  --size-header: 64px;
+  --content-max: 1200px;
+  --reading-max: 70ch;
+
+  /* Movimiento */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #1e1915;
+  --color-surface: #28211c;
+  --color-surface-alt: #322922;
+  --color-border: #4a3e34;
+  --color-border-strong: #7a6a5b;
+  --color-text: #efe6da;
+  --color-text-muted: #bfb1a0;
+
+  --color-primary: #e0956e;
+  --color-primary-hover: #ebaa88;
+  --color-primary-soft: #3d2a20;
+  --color-on-primary: #1e1915;
+  --color-secondary: #aab874;
+  --color-secondary-hover: #bcc98a;
+  --color-secondary-soft: #2c3020;
+  --color-accent: #d9ae5f;
+  --color-focus: #e0956e;
+
+  --color-info: #86a9c7;
+  --color-info-bg: #1e2830;
+  --color-success: #8fbb7e;
+  --color-success-bg: #212e1f;
+  --color-warning: #d8b45e;
+  --color-warning-bg: #332d19;
+  --color-error: #e38778;
+  --color-error-bg: #38211d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+}

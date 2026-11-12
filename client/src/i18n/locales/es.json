@@ -1,6 +1,177 @@
 {
   "app": {
     "name": "Santuario de Animales",
-    "underConstruction": "Estamos preparando la web. Muy pronto podrás conocer a nuestros buitres."
+    "shortName": "Santuario"
+  },
+  "common": {
+    "skipToContent": "Saltar al contenido",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "listSeparator": " · "
+  },
+  "nav": {
+    "main": "Navegación principal",
+    "animals": "Animales",
+    "howItWorks": "Cómo funciona",
+    "donate": "Donar",
+    "about": "Sobre el santuario",
+    "aboutShort": "Sobre",
+    "login": "Entrar",
+    "register": "Registrarse",
+    "openMenu": "Abrir el menú",
+    "closeMenu": "Cerrar el menú"
+  },
+  "theme": {
+    "toDark": "Activar modo oscuro",
+    "toLight": "Activar modo claro"
+  },
+  "footer": {
+    "tagline": "Un hogar para siempre para buitres que no pueden volver a volar.",
+    "explore": "Explorar",
+    "info": "Información",
+    "contact": "Contacto",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "note": "Proyecto académico · Los pagos son simulados"
+  },
+  "animal": {
+    "sex": {
+      "male": "Macho",
+      "female": "Hembra",
+      "unknown": "Sexo desconocido"
+    },
+    "inTreatment": "En tratamiento",
+    "notAdoptable": "No disponible para adoptar",
+    "adopters_one": "{{count}} adoptante",
+    "adopters_other": "{{count}} adoptantes",
+    "noAdopters": "Sin adoptantes todavía",
+    "noPhoto": "Sin foto"
+  },
+  "home": {
+    "title": "Un hogar para siempre para los buitres",
+    "intro": "Cuidamos a buitres que no pueden volver a la naturaleza. Puedes acompañarlos adoptándolos a distancia.",
+    "ctaAdopt": "Adopta a distancia",
+    "ctaDonate": "Haz una donación",
+    "sheltered_one": "<strong>{{count}}</strong> animal acogido",
+    "sheltered_other": "<strong>{{count}}</strong> animales acogidos",
+    "featuredTitle": "Conoce a quienes viven aquí",
+    "seeAll": "Ver todos",
+    "seeAllAnimals": "Ver todos los animales",
+    "stepsTitle": "¿Cómo funciona la adopción simbólica?",
+    "learnMore": "Saber más",
+    "errorLoading": "No hemos podido cargar los animales destacados"
+  },
+  "steps": {
+    "choose": "Elige un animal",
+    "plan": "Elige tu plan",
+    "news": "Recibe noticias cada dos semanas"
+  },
+  "catalog": {
+    "title": "Animales",
+    "intro": "Todos ellos viven en el santuario y puedes adoptarlos a distancia.",
+    "filtersLabel": "Filtros del catálogo",
+    "search": "Buscar por nombre",
+    "species": "Especie",
+    "allSpecies": "Todas las especies",
+    "sex": "Sexo",
+    "anySex": "Cualquier sexo",
+    "sexOptions": {
+      "male": "Macho",
+      "female": "Hembra",
+      "unknown": "Desconocido"
+    },
+    "age": "Edad",
+    "anyAge": "Cualquier edad",
+    "ageRanges": {
+      "young": "Menos de 5 años",
+      "adult": "De 5 a 15 años",
+      "senior": "Más de 15 años"
+    },
+    "adoptable": "Disponibles para adoptar",
+    "sort": "Ordenar",
+    "sorts": {
+      "-arrivalDate": "Más recientes",
+      "name": "Por nombre",
+      "adopterCount": "Menos adoptantes"
+    },
+    "filters": "Filtros",
+    "filtersCount": "Filtros ({{count}})",
+    "showResults_one": "Ver {{count}} animal",
+    "showResults_other": "Ver {{count}} animales",
+    "activeFilters": "Filtros activos:",
+    "searchFilter": "«{{q}}»",
+    "removeFilter": "Quitar el filtro {{label}}",
+    "clearFilters": "Limpiar filtros",
+    "results_one": "{{count}} animal",
+    "results_other": "{{count}} animales",
+    "empty": "No hay animales con estos filtros",
+    "errorLoading": "No hemos podido cargar los animales"
+  },
+  "pagination": {
+    "label": "Paginación",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {{page}}",
+    "pageOf": "Página {{page}} de {{total}}"
+  },
+  "animalPage": {
+    "breadcrumb": "Migas de pan",
+    "approxAgeUnderOne": "Menos de un año",
+    "approxAge_one": "Alrededor de {{count}} año",
+    "approxAge_other": "Unos {{count}} años",
+    "inSanctuarySince": "En el santuario desde {{year}}",
+    "adopterCount_one": "{{count}} persona adopta a {{name}}",
+    "adopterCount_other": "{{count}} personas adoptan a {{name}}",
+    "supportedBy": "Con el apoyo de {{names}}",
+    "noAdopters": "Todavía nadie ha adoptado a {{name}}. ¿Quieres ser el primero?",
+    "adoptCardTitle": "Adopción simbólica",
+    "adoptCardText": "{{name}} seguirá viviendo aquí y recibirás noticias suyas cada dos semanas.",
+    "fromAmount": "Desde {{amount}} al mes.",
+    "adopt": "Adoptar a {{name}}",
+    "notAdoptable": "Ahora mismo no admite adopciones.",
+    "notAvailable": "Este animal no está disponible",
+    "notAvailableText": "Puede que ya no viva en el santuario o que todavía no esté publicado.",
+    "backToCatalog": "Ver el catálogo",
+    "gallery": "Fotos de {{name}}",
+    "showPhoto": "Ver foto {{n}} de {{total}}",
+    "story": "Su historia",
+    "temperament": "Carácter",
+    "specialNeeds": "Necesidades especiales",
+    "latestNews": "Últimas noticias",
+    "noNews": "Todavía no hay noticias públicas de {{name}}.",
+    "errorLoading": "No hemos podido cargar la ficha",
+    "errorLoadingNews": "No hemos podido cargar las noticias"
+  },
+  "howItWorks": {
+    "title": "Cómo funciona la adopción simbólica",
+    "intro": "Adoptar a distancia (o apadrinar) es una forma de acompañar a uno de nuestros buitres y de ayudarnos a cuidarlo.",
+    "symbolicTitle": "Es una adopción simbólica",
+    "symbolicText": "El animal sigue viviendo en el santuario, con los cuidados que necesita. Tú lo acompañas desde casa.",
+    "stepsTitle": "Tres pasos",
+    "stepChooseText": "Mira el catálogo y elige al buitre que quieras acompañar.",
+    "stepPlanText": "Escoge una cuota mensual. Todos los planes dan acceso a lo mismo.",
+    "stepNewsText": "Recibirás una actualización con fotos y noticias suyas al menos cada dos semanas.",
+    "plansTitle": "Los planes",
+    "perMonth": "{{amount}} al mes",
+    "mostCommon": "La más habitual",
+    "plansError": "No hemos podido cargar los planes",
+    "faqTitle": "Preguntas frecuentes",
+    "faq": {
+      "manyAdoptersQ": "¿Un animal puede tener varios adoptantes?",
+      "manyAdoptersA": "Sí. Un mismo buitre puede tener tantos adoptantes como quieran acompañarlo, y tú puedes adoptar a varios animales.",
+      "changePlanQ": "¿Puedo cambiar de plan?",
+      "changePlanA": "Sí, cuando quieras. El nuevo importe se aplica a partir de la siguiente cuota.",
+      "cancelQ": "¿Cómo me doy de baja?",
+      "cancelA": "Desde «Mis animales», en cualquier momento. La adopción sigue activa hasta el final del mes que ya has pagado.",
+      "passedAwayQ": "¿Qué pasa si el animal fallece?",
+      "passedAwayA": "Te lo contaremos con cariño, la adopción se cerrará sin más cobros y podrás seguir con otro animal si lo deseas."
+    },
+    "seeAnimals": "Ver animales"
+  },
+  "notFound": {
+    "title": "Esta página ha volado lejos",
+    "text": "No encontramos lo que buscas. Puede que el enlace haya cambiado.",
+    "home": "Volver al inicio",
+    "animals": "Ver animales"
   }
 }

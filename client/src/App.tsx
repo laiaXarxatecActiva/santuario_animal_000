@@ -1,12 +1,14 @@
-import { useTranslation } from 'react-i18next';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useState } from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router';
+import { routes } from './router';
 
 export function App() {
-  const { t } = useTranslation();
-
+  const [queryClient] = useState(() => new QueryClient());
+  const [router] = useState(() => createBrowserRouter(routes));
   return (
-    <main>
-      <h1>{t('app.name')}</h1>
-      <p>{t('app.underConstruction')}</p>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
   );
 }

@@ -1,0 +1,61 @@
+/* Utilidades mínimas (DESIGN_SYSTEM §12.1). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Contenedor centrado a 1200 px con los márgenes laterales de §7. */
+.container {
+  width: 100%;
+  max-width: calc(var(--content-max) + 2 * var(--space-4));
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 600px) {
+  .container {
+    max-width: calc(var(--content-max) + 2 * var(--space-5));
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: calc(var(--content-max) + 2 * var(--space-6));
+    padding-inline: var(--space-6);
+  }
+}
+
+.stack > * + * {
+  margin-top: var(--space-4);
+}
+
+/* Cuadrícula de tarjetas (§7). */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-5);
+  padding: 0;
+  list-style: none;
+}
+
+/* Separador decorativo caramelo bajo los títulos de la página de inicio (§8.9). */
+.decorative-rule {
+  width: 48px;
+  height: 2px;
+  margin-block: var(--space-3);
+  border: 0;
+  background: var(--color-accent);
+}
+
+/* Párrafos largos a 70 caracteres (§4.1). */
+.reading {
+  max-width: var(--reading-max);
+}

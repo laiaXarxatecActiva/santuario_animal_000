@@ -1,0 +1,120 @@
+.hero {
+  display: grid;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+/* En móvil: título, foto, texto y botones (SCREENS §3.1). */
+.heroText {
+  display: contents;
+}
+
+.display {
+  font-size: var(--font-size-display);
+  line-height: 1.15;
+}
+
+.heroPhoto {
+  order: 1;
+  border-radius: var(--radius-lg);
+}
+
+.intro,
+.ctas {
+  order: 2;
+}
+
+.intro {
+  max-width: 45ch;
+  font-size: var(--font-size-lg);
+}
+
+.ctas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-7);
+  }
+
+  .heroText {
+    display: block;
+  }
+
+  .heroText > * + * {
+    margin-top: var(--space-4);
+  }
+
+  .ctas {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.band {
+  margin-top: var(--space-7);
+  border-block: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+}
+
+.counter {
+  padding-block: var(--space-6);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h2);
+  text-align: center;
+}
+
+.counter strong {
+  font-size: var(--font-size-display);
+  font-weight: 600;
+}
+
+.section {
+  margin-top: var(--space-8);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.seeAll {
+  display: none;
+  align-items: center;
+  min-height: var(--size-touch);
+  font-weight: 600;
+}
+
+/* En móvil, máximo 4 destacados y botón «Ver todos los animales» debajo. */
+.featured > li:nth-child(n + 5) {
+  display: none;
+}
+
+.seeAllMobile {
+  margin-top: var(--space-5);
+}
+
+@media (min-width: 600px) {
+  .seeAll {
+    display: inline-flex;
+  }
+
+  .featured > li:nth-child(n + 5) {
+    display: block;
+  }
+
+  .seeAllMobile {
+    display: none;
+  }
+}
+
+.learnMore {
+  margin-top: var(--space-5);
+}

@@ -1,0 +1,38 @@
+.steps {
+  display: grid;
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 768px) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.icon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  flex-shrink: 0;
+  border-radius: var(--radius-round);
+  background: var(--color-secondary-soft);
+  color: var(--color-secondary);
+}
+
+.title {
+  font-size: var(--font-size-h3);
+}
+
+.number {
+  color: var(--color-text-muted);
+}

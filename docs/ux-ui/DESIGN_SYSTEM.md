@@ -552,8 +552,11 @@ client/src/styles/
 ├── tokens.css        variables de color (claro y oscuro), tipografía, espaciado, radios
 ├── reset.css         normalización mínima
 ├── global.css        estilos base: body, títulos, enlaces, foco, selección de texto
-└── utilities.css     clases utilitarias mínimas (visually-hidden, container, stack)
+└── utilities.css     clases utilitarias mínimas (visually-hidden, container, stack,
+                      card-grid, decorative-rule, reading)
 ```
+
+`tokens.css` incluye también los tamaños de letra de §4.1 (`--font-size-*`) y las fuentes (`--font-heading`, `--font-body`).
 
 Cada componente tiene su propio `NombreComponente.module.css`, que solo usa variables de `tokens.css`.
 
@@ -601,7 +604,13 @@ Cada componente tiene su propio `NombreComponente.module.css`, que solo usa vari
   --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
 
   /* Radios */
-  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px; --radius-round: 50%;
+
+  /* Tamaños (§5.4, §8.7, §4.1): nombres para valores ya definidos en este documento */
+  --size-touch: 44px;      /* zona táctil mínima, altura de botones y campos */
+  --size-header: 64px;     /* altura de la cabecera */
+  --content-max: 1200px;   /* ancho máximo del contenido */
+  --reading-max: 70ch;     /* ancho máximo de los párrafos largos */
 
   /* Movimiento */
   --duration-fast: 150ms;
