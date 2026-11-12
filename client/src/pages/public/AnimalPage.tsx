@@ -12,13 +12,10 @@ import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { useAnimal, useAnimalUpdates, usePlans } from '../../hooks/usePublicData';
 import { formatCurrency, formatList, formatLongDate, formatYear } from '../../utils/format';
+import { parseId } from '../../utils/routeParams';
 import styles from './AnimalPage.module.css';
 
 const ULTIMAS_NOTICIAS = 3;
-
-function idValido(valor: string | undefined): number | undefined {
-  return valor && /^\d+$/.test(valor) && Number(valor) > 0 ? Number(valor) : undefined;
-}
 
 /** Plan más barato, para «Desde 1,00 € al mes». Solo compara; no suma importes. */
 function planMasBarato(planes: AdoptionPlanDto[] | undefined): AdoptionPlanDto | undefined {
@@ -31,7 +28,7 @@ function planMasBarato(planes: AdoptionPlanDto[] | undefined): AdoptionPlanDto |
 // CU-03 Consultar la ficha pública de un animal (SCREENS §3.3).
 export function AnimalPage() {
   const { t } = useTranslation();
-  const id = idValido(useParams().id);
+  const id = parseId(useParams().id);
   const animal = useAnimal(id);
 
   const noDisponible = id === undefined || (animal.error instanceof ApiError && animal.error.status === 404);

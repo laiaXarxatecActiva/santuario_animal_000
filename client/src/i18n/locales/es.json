@@ -192,7 +192,16 @@
     "INVALID_TOKEN": "El enlace no es válido o ha caducado.",
     "TOO_MANY_REQUESTS": "Demasiados intentos; espera unos minutos.",
     "EMAIL_ALREADY_VERIFIED": "Tu email ya estaba verificado.",
-    "VALIDATION_ERROR": "Revisa los campos marcados."
+    "VALIDATION_ERROR": "Revisa los campos marcados.",
+    "WORKER_CANNOT_ADOPT": "Las cuentas de trabajador no pueden adoptar.",
+    "EMAIL_NOT_VERIFIED": "Verifica tu email para adoptar.",
+    "ANIMAL_NOT_ADOPTABLE": "Este animal ya no admite adopciones.",
+    "ANIMAL_NOT_AVAILABLE": "Este animal no está disponible.",
+    "PLAN_NOT_AVAILABLE": "Este plan ya no está disponible. Elige otro.",
+    "ADOPTION_PAYMENT_EXPIRED": "Han pasado más de 7 días sin completar el pago. Puedes empezar una adopción nueva.",
+    "ADOPTION_NOT_PAYABLE": "Esta adopción no tiene ningún pago pendiente.",
+    "ADOPTION_CLOSED": "Esta adopción ya está cerrada.",
+    "PAYMENT_ALREADY_COMPLETED": "Esta cuota ya está pagada."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -253,5 +262,44 @@
       "success": "Contraseña cambiada. Ya puedes iniciar sesión.",
       "requestAnother": "Pedir otro enlace"
     }
+  },
+  "modal": {
+    "close": "Cerrar"
+  },
+  "adopt": {
+    "breadcrumb": "Adoptar",
+    "title": "Adoptar a {{name}}",
+    "symbolic": "Es una adopción simbólica: {{name}} seguirá viviendo en el santuario y puede tener otros adoptantes. Recibirás noticias suyas cada dos semanas.",
+    "choosePlan": "Elige tu plan",
+    "perMonth": "{{amount}}/mes",
+    "planNote": "Puedes cambiar de plan o darte de baja cuando quieras.",
+    "summary": "Resumen",
+    "summaryPlan": "{{name}} · Plan {{plan}}",
+    "summaryAmount": "{{amount}} al mes. Primer cobro hoy.",
+    "back": "Volver",
+    "continue": "Continuar con el pago",
+    "continuing": "Preparando el pago…",
+    "workerCannotAdopt": "Las cuentas de trabajador no pueden adoptar.",
+    "verifyFirst": "Verifica tu email para adoptar.",
+    "alreadyOpen": "Ya tienes una adopción en curso de {{name}}.",
+    "pendingPayment": "Tu adopción de {{name}} está pendiente de pago.",
+    "pausedPayment": "No hemos podido cobrar la última cuota de {{name}}.",
+    "payNow": "Pagar ahora",
+    "seeAnimal": "Ver la ficha de {{name}}",
+    "notAdoptable": "Este animal ya no admite adopciones.",
+    "paymentFailed": "El pago no se ha completado. Puedes intentarlo de nuevo ahora o desde «Mis animales» durante 7 días.",
+    "success": "¡Ya adoptas a {{name}}! Te hemos enviado un email de bienvenida.",
+    "paid": "Cuota de {{name}} pagada. ¡Gracias!",
+    "errorLoading": "No hemos podido cargar los datos de la adopción"
+  },
+  "payment": {
+    "title": "Pago simulado",
+    "concept": "Concepto",
+    "conceptValue": "Adopción de {{name}} · Plan {{plan}}",
+    "amount": "Importe",
+    "notice": "Pago simulado: no se realizará ningún cargo real.",
+    "succeed": "Simular pago correcto",
+    "fail": "Simular pago fallido",
+    "processing": "Procesando el pago…"
   }
 }

@@ -1,7 +1,9 @@
 import type {
+  AdoptionDto,
   AdoptionPlanDto,
   AnimalCardDto,
   AnimalUpdateDto,
+  PaymentDto,
   PublicAnimalDto,
   SessionUser,
   SpeciesSummary,
@@ -87,6 +89,32 @@ export function sessionUser(overrides: Partial<SessionUser> = {}): SessionUser {
     email: 'lucia.martinez@correo.test',
     role: 'adopter',
     emailVerified: true,
+    ...overrides,
+  };
+}
+
+export function adoption(overrides: Partial<AdoptionDto> = {}): AdoptionDto {
+  return {
+    id: 40,
+    status: 'pending',
+    animal: { id: 1, name: 'Rufo' },
+    plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+    startDate: null,
+    nextBillingDate: null,
+    createdAt: '2026-11-12T10:00:00.000Z',
+    canPay: true,
+    ...overrides,
+  };
+}
+
+export function payment(overrides: Partial<PaymentDto> = {}): PaymentDto {
+  return {
+    id: 90,
+    status: 'completed',
+    amount: '5.00',
+    periodStart: '2026-11-12',
+    periodEnd: '2026-12-11',
+    failureReason: null,
     ...overrides,
   };
 }

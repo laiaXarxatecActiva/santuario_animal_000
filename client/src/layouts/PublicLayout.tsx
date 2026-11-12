@@ -18,9 +18,14 @@ export function PublicLayout() {
   const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
   const flash = flashCerrado === location.key ? undefined : readFlash(location.state);
 
-  // Aviso de página (SCREENS §2.2). En /verify-email ya está el botón de reenviar.
+  // Aviso de página (SCREENS §2.2). En /verify-email y /adopt/… la página ya
+  // tiene su propio botón de reenviar.
   const sinVerificar =
-    user !== null && user.role === 'adopter' && !user.emailVerified && location.pathname !== '/verify-email';
+    user !== null &&
+    user.role === 'adopter' &&
+    !user.emailVerified &&
+    location.pathname !== '/verify-email' &&
+    !location.pathname.startsWith('/adopt/');
 
   return (
     <>

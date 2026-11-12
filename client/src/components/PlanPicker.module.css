@@ -1,0 +1,80 @@
+/* Tarjetas de plan (DESIGN_SYSTEM §8.5, «Selección de plan»). */
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: var(--space-3);
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h3);
+  font-weight: 600;
+}
+
+.cards {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (min-width: 768px) {
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.card:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Borde de 2 px; el relleno pierde 1 px para que el contenido no se mueva. */
+.selected {
+  padding: calc(var(--space-4) - 1px);
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.head {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--size-touch);
+}
+
+.head input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--color-primary);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.amount {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.description,
+.note {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.note {
+  margin-top: var(--space-3);
+}
