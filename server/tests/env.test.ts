@@ -16,6 +16,8 @@ describe('loadConfig', () => {
       SMTP_HOST: 'localhost',
       SMTP_PORT: 1025,
       MAIL_FROM: 'Santuario <no-reply@santuario.test>',
+      PAYMENT_SIMULATION_MODE: 'always_succeed',
+      PAYMENT_SIMULATION_FAILURE_RATE: 0.2,
     });
   });
 
@@ -59,6 +61,21 @@ describe('loadConfig', () => {
   it('rechaza valores no válidos con un mensaje que nombra la variable', () => {
     expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, NODE_ENV: 'staging', PORT: 'abc' })).toThrow(
       /NODE_ENV[\s\S]*PORT/,
+    );
+  });
+});
+
+describe('pasarela simulada', () => {
+  it('lee el modo y la tasa de fallos', () => {
+    const config = loadConfig({
+      DATABASE_URL,
+      SESSION_SECRET,
+      PAYMENT_SIMULATION_MODE: 'random',
+      PAYMENT_SIMULATION_FAILURE_RATE: '0.5',
+    });
+    expect(config).toMatchObject({ PAYMENT_SIMULATION_MODE: 'random', PAYMENT_SIMULATION_FAILURE_RATE: 0.5 });
+    expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, PAYMENT_SIMULATION_MODE: 'a_veces' })).toThrow(
+      /PAYMENT_SIMULATION_MODE/,
     );
   });
 });

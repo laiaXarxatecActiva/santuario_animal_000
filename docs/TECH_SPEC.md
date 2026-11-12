@@ -506,10 +506,10 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 
 | Método | Ruta | Descripción | CU |
 | --- | --- | --- | --- |
-| POST | `/api/adoptions` | `{ animalId, planId, simulatedOutcome? }`: crea la adopción `pending` y realiza el primer pago | CU-13 |
-| GET | `/api/me/adoptions` | Mis adopciones con animal, plan, estado, fechas y próxima actualización prevista | CU-15 |
+| POST | `/api/adoptions` | `{ animalId, planId }`: crea la adopción `pending` (CU-13 paso 5). El primer pago se hace después con `/api/me/adoptions/:id/pay`, así que si se abandona la ventana de pago la adopción queda pendiente (6b) | CU-13 |
+| GET | `/api/me/adoptions` | Mis adopciones con animal, plan, estado, fechas, `canPay` y próxima actualización prevista. Filtro `?animalId=` (lo usa la pantalla «Adoptar» para el caso 5a) | CU-15 |
 | GET | `/api/me/adoptions/:id` | Detalle de una adopción | CU-15 |
-| POST | `/api/me/adoptions/:id/pay` | Reintentar el pago de una adopción `pending` o `paused` | CU-14 |
+| POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`. Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
 | PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio) | CU-20 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja de la cuota mensual | CU-21 |
 | GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) | CU-22 |

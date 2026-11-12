@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   AccountInactiveError,
+  AdoptionAlreadyOpenError,
+  AdoptionClosedError,
+  AdoptionNotPayableError,
+  AdoptionPaymentExpiredError,
+  AnimalNotAdoptableError,
+  PaymentAlreadyCompletedError,
+  PlanNotAvailableError,
+  WorkerCannotAdoptError,
   AppError,
   EmailAlreadyRegisteredError,
   EmailAlreadyVerifiedError,
@@ -66,6 +74,27 @@ describe('errores de autenticación (CU-07 a CU-10)', () => {
     [new UnsupportedMediaTypeError(), 415, 'UNSUPPORTED_MEDIA_TYPE', 'La petición debe enviarse en formato JSON.'],
   ])('%s', (error, status, code, message) => {
     expect(error).toBeInstanceOf(AppError);
+    expect({ status: error.status, code: error.code, message: error.message }).toEqual({ status, code, message });
+  });
+});
+
+describe('errores de las adopciones (CU-13, CU-14)', () => {
+  it.each([
+    [new WorkerCannotAdoptError(), 403, 'WORKER_CANNOT_ADOPT', 'Las cuentas de trabajador no pueden adoptar.'],
+    [new AnimalNotAdoptableError(), 422, 'ANIMAL_NOT_ADOPTABLE', 'Este animal ya no admite adopciones.'],
+    [new PlanNotAvailableError(), 422, 'PLAN_NOT_AVAILABLE', 'Este plan ya no está disponible. Elige otro.'],
+    [new AdoptionAlreadyOpenError('Rufo'), 409, 'ADOPTION_ALREADY_OPEN', 'Ya tienes una adopción en curso de Rufo.'],
+    [new AdoptionAlreadyOpenError(), 409, 'ADOPTION_ALREADY_OPEN', 'Ya tienes una adopción en curso de este animal.'],
+    [
+      new AdoptionPaymentExpiredError(),
+      422,
+      'ADOPTION_PAYMENT_EXPIRED',
+      'Han pasado más de 7 días sin completar el pago. Puedes empezar una adopción nueva.',
+    ],
+    [new AdoptionNotPayableError(), 422, 'ADOPTION_NOT_PAYABLE', 'Esta adopción no tiene ningún pago pendiente.'],
+    [new AdoptionClosedError(), 422, 'ADOPTION_CLOSED', 'Esta adopción ya está cerrada.'],
+    [new PaymentAlreadyCompletedError(), 409, 'PAYMENT_ALREADY_COMPLETED', 'Esta cuota ya está pagada.'],
+  ])('%s', (error, status, code, message) => {
     expect({ status: error.status, code: error.code, message: error.message }).toEqual({ status, code, message });
   });
 });

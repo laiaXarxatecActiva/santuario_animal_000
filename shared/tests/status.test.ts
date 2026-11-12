@@ -12,3 +12,22 @@ describe('estados de adopción', () => {
     expect(isOpenAdoptionStatus('finished')).toBe(false);
   });
 });
+
+describe('constantes de pagos y notificaciones', () => {
+  it('coinciden con los CHECK de seedsql.sql', async () => {
+    const { NOTIFICATION_TYPES, SIMULATED_OUTCOMES } = await import('../src/constants/status.js');
+    expect(NOTIFICATION_TYPES).toEqual([
+      'new_update',
+      'adoption_welcome',
+      'payment_completed',
+      'payment_failed',
+      'plan_changed',
+      'adoption_cancelled',
+      'adoption_closed',
+      'donation_thanks',
+      'update_reminder',
+      'system',
+    ]);
+    expect(SIMULATED_OUTCOMES).toEqual(['success', 'failure']);
+  });
+});

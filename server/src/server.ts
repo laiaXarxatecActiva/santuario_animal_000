@@ -5,6 +5,7 @@ import { loadConfig } from './config/env.js';
 import { createPool } from './db/pool.js';
 import { relojSistema } from './dominio/reloj.js';
 import { createEmailService, createSmtpMailer } from './services/email/email.service.js';
+import { createSimulatedGateway } from './services/payment/simulated.gateway.js';
 import { createLogger } from './utils/logger.js';
 
 // Carga el .env de la raíz del proyecto si existe (Node 22+).
@@ -30,6 +31,11 @@ const app = createApp({
   sessionSecret: config.SESSION_SECRET,
   clientUrl: config.CLIENT_URL,
   email: createEmailService({ mailer, from: config.MAIL_FROM }),
+  payments: createSimulatedGateway({
+    mode: config.PAYMENT_SIMULATION_MODE,
+    failureRate: config.PAYMENT_SIMULATION_FAILURE_RATE,
+    reloj: relojSistema,
+  }),
   production: config.NODE_ENV === 'production',
   pruneSessions: true,
   logger,

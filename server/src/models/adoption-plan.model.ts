@@ -29,3 +29,19 @@ export async function listActive(db: Queryable): Promise<AdoptionPlanDto[]> {
   );
   return rows.map(mapRow);
 }
+
+export interface PlanForAdoption {
+  id: number;
+  name: string;
+  monthlyAmount: string;
+}
+
+/** Plan que se ofrece ahora; `null` si no existe o está desactivado (CU-13 5c). */
+export async function findActiveById(db: Queryable, id: number): Promise<PlanForAdoption | null> {
+  const { rows } = await db.query<{ id: number; name: string; monthly_amount: string }>(
+    'SELECT id, name, monthly_amount FROM adoption_plans WHERE id = $1 AND is_active',
+    [id],
+  );
+  const row = rows[0];
+  return row ? { id: row.id, name: row.name, monthlyAmount: row.monthly_amount } : null;
+}

@@ -7,9 +7,12 @@ import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { requireJson } from './middlewares/require-json.js';
 import { createSessionMiddleware } from './middlewares/session.js';
+import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
+import type { PaymentGateway } from './services/payment/payment.service.js';
+import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 
@@ -23,6 +26,8 @@ export interface AppOptions {
   /** URL del cliente, para los enlaces de los emails. */
   clientUrl: string;
   email: EmailService;
+  /** Pasarela de pago (simulada; TECH_SPEC §11.1). */
+  payments: PaymentGateway;
   /** Producción: cookie `secure` y `trust proxy` (TECH_SPEC §13). */
   production?: boolean;
   /** Borra periódicamente las sesiones caducadas. Desactivado en las pruebas. */
@@ -44,12 +49,23 @@ export function createApp(options: AppOptions): Express {
     app.use(pinoHttp({ logger }));
   }
 
+  const logEmailError = logger
+    ? (error: unknown) => logger.error({ err: error }, 'No se ha podido enviar un email')
+    : undefined;
   const authService = createAuthService({
     db,
     reloj,
     email: options.email,
     clientUrl: options.clientUrl,
-    logEmailError: logger ? (error) => logger.error({ err: error }, 'No se ha podido enviar un email') : undefined,
+    logEmailError,
+  });
+  const adoptionService = createAdoptionService({
+    db,
+    reloj,
+    payments: options.payments,
+    email: options.email,
+    clientUrl: options.clientUrl,
+    logEmailError,
   });
 
   app.use('/api', express.json({ limit: '100kb' }), requireJson);
@@ -68,6 +84,7 @@ export function createApp(options: AppOptions): Express {
     res.json({ status: 'ok' });
   });
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
+  app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));
 
   // Los errores de cliente de express.static (archivo inexistente, ruta

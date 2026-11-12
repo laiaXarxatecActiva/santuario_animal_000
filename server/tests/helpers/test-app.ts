@@ -5,6 +5,7 @@ import { createPool } from '../../src/db/pool.js';
 import { resetDatabase } from '../../src/db/reset.js';
 import { relojFijo, type Reloj } from '../../src/dominio/reloj.js';
 import { createEmailService, createMemoryMailer, type MemoryMailer } from '../../src/services/email/email.service.js';
+import { createSimulatedGateway } from '../../src/services/payment/simulated.gateway.js';
 import { databaseDir, testDatabaseUrl } from './test-db.js';
 
 export interface TestApp {
@@ -20,8 +21,13 @@ export interface TestApp {
 export const TEST_CLIENT_URL = 'http://localhost:5173';
 
 /** Opciones comunes de la app en las pruebas (sin base de datos ni reloj). */
-export function opcionesDePrueba(mailer: MemoryMailer = createMemoryMailer()) {
+export function opcionesDePrueba(
+  mailer: MemoryMailer = createMemoryMailer(),
+  reloj: Reloj = relojFijo('2026-11-12T12:00:00Z'),
+) {
   return {
+    // PAYMENT_SIMULATION_MODE=always_succeed en las pruebas (TECH_SPEC §15).
+    payments: createSimulatedGateway({ mode: 'always_succeed', reloj }),
     uploadsDir: databaseDir,
     logError: () => {},
     sessionSecret: 'secreto-de-pruebas-de-al-menos-32-caracteres',
@@ -41,7 +47,7 @@ export async function prepararApp(): Promise<TestApp> {
   const hoy = rows[0]?.hoy ?? '';
   const reloj = relojFijo(`${hoy}T12:00:00Z`);
   const mailer = createMemoryMailer();
-  const app = createApp({ db: pool, reloj, ...opcionesDePrueba(mailer) });
+  const app = createApp({ db: pool, reloj, ...opcionesDePrueba(mailer, reloj) });
   return { app, pool, reloj, hoy, mailer };
 }
 

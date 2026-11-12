@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { adoptionWelcomeEmail } from '../../../src/services/email/templates/adoption-welcome.js';
+import { paymentCompletedEmail } from '../../../src/services/email/templates/payment-completed.js';
 import { resetPasswordEmail } from '../../../src/services/email/templates/reset-password.js';
 import { verifyEmailEmail } from '../../../src/services/email/templates/verify-email.js';
 
@@ -25,5 +27,35 @@ describe('plantillas de email', () => {
     expect(email.html).toContain('&lt;b&gt;Ana&lt;/b&gt; &amp; co');
     expect(email.html).toContain('href="http://x/?a=1&amp;b=2"');
     expect(email.html).not.toContain('<b>Ana</b>');
+  });
+});
+
+describe('plantillas de pagos (CU-13, CU-14)', () => {
+  const recibo = {
+    firstName: 'Irene',
+    animalName: 'Brisa',
+    planName: 'Usual',
+    amount: '5.00',
+    periodStart: '2026-11-12',
+    periodEnd: '2026-12-11',
+    reference: 'SIM-20261112-ABCDEF0123',
+    url: 'http://localhost:5173/my-animals',
+  };
+
+  it('adoption-welcome incluye el recibo de la primera cuota', () => {
+    const email = adoptionWelcomeEmail(recibo);
+    expect(email.subject).toBe('¡Ya adoptas a Brisa!');
+    for (const texto of ['Hola, Irene', 'Plan Usual', '5,00', '12/11/2026', '11/12/2026', 'SIM-20261112-ABCDEF0123']) {
+      expect(email.text).toContain(texto);
+      expect(email.html).toContain(texto);
+    }
+    expect(email.text).toContain('Pago simulado');
+  });
+
+  it('payment-completed confirma la cuota cobrada', () => {
+    const email = paymentCompletedEmail(recibo);
+    expect(email.subject).toBe('Cuota cobrada: Brisa');
+    expect(email.text).toContain('SIM-20261112-ABCDEF0123');
+    expect(email.html).toContain('href="http://localhost:5173/my-animals"');
   });
 });

@@ -36,3 +36,22 @@ export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const VISIBILITIES = ['public', 'adopters'] as const;
 export type Visibility = (typeof VISIBILITIES)[number];
+
+// Tipos de notificación. Deben coincidir con el CHECK de notifications.type.
+export const NOTIFICATION_TYPES = [
+  'new_update',
+  'adoption_welcome',
+  'payment_completed',
+  'payment_failed',
+  'plan_changed',
+  'adoption_cancelled',
+  'adoption_closed',
+  'donation_thanks',
+  'update_reminder',
+  'system',
+] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+// Resultado que se pide a la pasarela simulada (TECH_SPEC §11.1).
+export const SIMULATED_OUTCOMES = ['success', 'failure'] as const;
+export type SimulatedOutcome = (typeof SIMULATED_OUTCOMES)[number];

@@ -116,3 +116,62 @@ export class EmailNotVerifiedError extends AppError {
     super(403, 'EMAIL_NOT_VERIFIED', 'Verifica tu email para poder adoptar.');
   }
 }
+
+// RN-03 (CU-13 2a).
+export class WorkerCannotAdoptError extends AppError {
+  constructor() {
+    super(403, 'WORKER_CANNOT_ADOPT', 'Las cuentas de trabajador no pueden adoptar.');
+  }
+}
+
+// RN-06 (CU-13 5b).
+export class AnimalNotAdoptableError extends BusinessRuleError {
+  constructor() {
+    super('ANIMAL_NOT_ADOPTABLE', 'Este animal ya no admite adopciones.');
+  }
+}
+
+// CU-13 5c.
+export class PlanNotAvailableError extends BusinessRuleError {
+  constructor() {
+    super('PLAN_NOT_AVAILABLE', 'Este plan ya no está disponible. Elige otro.');
+  }
+}
+
+// RN-05 (CU-13 5a).
+export class AdoptionAlreadyOpenError extends ConflictError {
+  constructor(animalName?: string) {
+    super('ADOPTION_ALREADY_OPEN', `Ya tienes una adopción en curso de ${animalName ?? 'este animal'}.`);
+  }
+}
+
+// RN-07 (CU-14 1a).
+export class AdoptionPaymentExpiredError extends BusinessRuleError {
+  constructor() {
+    super(
+      'ADOPTION_PAYMENT_EXPIRED',
+      'Han pasado más de 7 días sin completar el pago. Puedes empezar una adopción nueva.',
+    );
+  }
+}
+
+// CU-14: la adopción está al día.
+export class AdoptionNotPayableError extends BusinessRuleError {
+  constructor() {
+    super('ADOPTION_NOT_PAYABLE', 'Esta adopción no tiene ningún pago pendiente.');
+  }
+}
+
+// CU-14 4a: cerrada (por ejemplo, porque el animal ha fallecido o se ha trasladado).
+export class AdoptionClosedError extends BusinessRuleError {
+  constructor() {
+    super('ADOPTION_CLOSED', 'Esta adopción ya está cerrada.');
+  }
+}
+
+// Índice `payments_one_valid_per_period`: dos pagos a la vez del mismo mes.
+export class PaymentAlreadyCompletedError extends ConflictError {
+  constructor() {
+    super('PAYMENT_ALREADY_COMPLETED', 'Esta cuota ya está pagada.');
+  }
+}

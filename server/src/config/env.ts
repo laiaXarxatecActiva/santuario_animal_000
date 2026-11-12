@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PAYMENT_SIMULATION_MODES } from '../services/payment/simulated.gateway.js';
 
 const postgresUrl = z.url({ protocol: /^postgres(ql)?$/, error: 'Debe ser una URL postgres://' });
 
@@ -24,6 +25,9 @@ const envSchema = databaseEnvSchema.extend({
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Santuario <no-reply@santuario.test>'),
+  // Pasarela simulada (TECH_SPEC §11.1).
+  PAYMENT_SIMULATION_MODE: z.enum(PAYMENT_SIMULATION_MODES).default('always_succeed'),
+  PAYMENT_SIMULATION_FAILURE_RATE: z.coerce.number().min(0).max(1).default(0.2),
 });
 
 export type Config = z.infer<typeof envSchema>;
