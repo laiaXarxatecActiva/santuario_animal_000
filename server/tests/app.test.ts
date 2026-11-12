@@ -5,13 +5,14 @@ import { createApp, type AppOptions } from '../src/app.js';
 import { createPool } from '../src/db/pool.js';
 import { relojFijo } from '../src/dominio/reloj.js';
 import { createLogger } from '../src/utils/logger.js';
-import { databaseDir, testDatabaseUrl } from './helpers/test-db.js';
+import { opcionesDePrueba } from './helpers/test-app.js';
+import { testDatabaseUrl } from './helpers/test-db.js';
 
 // El pool no se conecta hasta la primera consulta; estas pruebas no la hacen.
 const base: AppOptions = {
   db: createPool(testDatabaseUrl()),
   reloj: relojFijo('2026-11-12T12:00:00Z'),
-  uploadsDir: databaseDir,
+  ...opcionesDePrueba(),
 };
 
 describe('app', () => {

@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AccountInactiveError,
   AppError,
+  EmailAlreadyRegisteredError,
+  EmailAlreadyVerifiedError,
+  EmailNotVerifiedError,
+  InvalidCredentialsError,
+  InvalidTokenError,
+  TooManyRequestsError,
+  UnsupportedMediaTypeError,
   BusinessRuleError,
   ConflictError,
   ForbiddenError,
@@ -43,5 +51,21 @@ describe('AnimalNotAvailableError', () => {
       'ANIMAL_NOT_AVAILABLE',
       'Este animal no está disponible.',
     ]);
+  });
+});
+
+describe('errores de autenticación (CU-07 a CU-10)', () => {
+  it.each([
+    [new EmailAlreadyRegisteredError(), 409, 'EMAIL_ALREADY_REGISTERED', 'Ya existe una cuenta con este email.'],
+    [new InvalidCredentialsError(), 401, 'INVALID_CREDENTIALS', 'Email o contraseña incorrectos.'],
+    [new AccountInactiveError(), 403, 'ACCOUNT_INACTIVE', 'Esta cuenta no está activa. Contacta con el santuario.'],
+    [new InvalidTokenError(), 422, 'INVALID_TOKEN', 'El enlace no es válido o ha caducado.'],
+    [new EmailAlreadyVerifiedError(), 409, 'EMAIL_ALREADY_VERIFIED', 'Tu email ya estaba verificado.'],
+    [new EmailNotVerifiedError(), 403, 'EMAIL_NOT_VERIFIED', 'Verifica tu email para poder adoptar.'],
+    [new TooManyRequestsError(), 429, 'TOO_MANY_REQUESTS', 'Demasiados intentos; espera unos minutos.'],
+    [new UnsupportedMediaTypeError(), 415, 'UNSUPPORTED_MEDIA_TYPE', 'La petición debe enviarse en formato JSON.'],
+  ])('%s', (error, status, code, message) => {
+    expect(error).toBeInstanceOf(AppError);
+    expect({ status: error.status, code: error.code, message: error.message }).toEqual({ status, code, message });
   });
 });

@@ -1,17 +1,32 @@
 import express, { type Express } from 'express';
+import type { Pool } from 'pg';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
-import type { Queryable } from './db/pool.js';
 import type { Reloj } from './dominio/reloj.js';
+import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
+import { requireJson } from './middlewares/require-json.js';
+import { createSessionMiddleware } from './middlewares/session.js';
+import { createAuthRoutes } from './routes/auth.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
+import type { EmailService } from './services/email/email.service.js';
+import { createAuthService } from './servicios/auth.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 
 export interface AppOptions {
-  db: Queryable;
+  db: Pool;
   reloj: Reloj;
   /** Carpeta de los archivos subidos, servida en `/uploads`. */
   uploadsDir: string;
+  /** Firma de la cookie de sesión (SESSION_SECRET). */
+  sessionSecret: string;
+  /** URL del cliente, para los enlaces de los emails. */
+  clientUrl: string;
+  email: EmailService;
+  /** Producción: cookie `secure` y `trust proxy` (TECH_SPEC §13). */
+  production?: boolean;
+  /** Borra periódicamente las sesiones caducadas. Desactivado en las pruebas. */
+  pruneSessions?: boolean;
   /** Registra las peticiones y los errores inesperados. */
   logger?: Logger;
   /** Sustituye el registro de errores inesperados (500). */
@@ -20,18 +35,39 @@ export interface AppOptions {
 
 // Configuración de Express sin `listen`, para que Supertest pueda importarla.
 export function createApp(options: AppOptions): Express {
-  const { db, reloj, uploadsDir, logger } = options;
+  const { db, reloj, uploadsDir, logger, production = false } = options;
   const app = express();
 
   app.disable('x-powered-by');
+  if (production) app.set('trust proxy', 1);
   if (logger) {
     app.use(pinoHttp({ logger }));
   }
-  app.use(express.json({ limit: '100kb' }));
+
+  const authService = createAuthService({
+    db,
+    reloj,
+    email: options.email,
+    clientUrl: options.clientUrl,
+    logEmailError: logger ? (error) => logger.error({ err: error }, 'No se ha podido enviar un email') : undefined,
+  });
+
+  app.use('/api', express.json({ limit: '100kb' }), requireJson);
+  app.use(
+    '/api',
+    createSessionMiddleware({
+      pool: db,
+      secret: options.sessionSecret,
+      secure: production,
+      prune: options.pruneSessions ?? false,
+    }),
+    createLoadUser(authService.findSessionUser),
+  );
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
+  app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));
 
   // Los errores de cliente de express.static (archivo inexistente, ruta

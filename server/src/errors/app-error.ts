@@ -61,3 +61,58 @@ export class AnimalNotAvailableError extends NotFoundError {
     super('Este animal no está disponible.');
   }
 }
+
+export class TooManyRequestsError extends AppError {
+  constructor(message = 'Demasiados intentos; espera unos minutos.') {
+    super(429, 'TOO_MANY_REQUESTS', message);
+  }
+}
+
+// TECH_SPEC §13 (CSRF): las peticiones que modifican datos solo se aceptan en JSON.
+export class UnsupportedMediaTypeError extends AppError {
+  constructor() {
+    super(415, 'UNSUPPORTED_MEDIA_TYPE', 'La petición debe enviarse en formato JSON.');
+  }
+}
+
+// CU-07 3a.
+export class EmailAlreadyRegisteredError extends ConflictError {
+  constructor() {
+    super('EMAIL_ALREADY_REGISTERED', 'Ya existe una cuenta con este email.');
+  }
+}
+
+// CU-09 3a: no se indica si falla el email o la contraseña.
+export class InvalidCredentialsError extends AppError {
+  constructor() {
+    super(401, 'INVALID_CREDENTIALS', 'Email o contraseña incorrectos.');
+  }
+}
+
+// CU-09 3b.
+export class AccountInactiveError extends AppError {
+  constructor() {
+    super(403, 'ACCOUNT_INACTIVE', 'Esta cuenta no está activa. Contacta con el santuario.');
+  }
+}
+
+// CU-08 2a y CU-10 5a: token caducado, usado o inexistente.
+export class InvalidTokenError extends BusinessRuleError {
+  constructor() {
+    super('INVALID_TOKEN', 'El enlace no es válido o ha caducado.');
+  }
+}
+
+// CU-08 3a, al pedir un reenvío.
+export class EmailAlreadyVerifiedError extends ConflictError {
+  constructor() {
+    super('EMAIL_ALREADY_VERIFIED', 'Tu email ya estaba verificado.');
+  }
+}
+
+// RN-21: acciones que exigen el email verificado (requireVerifiedEmail).
+export class EmailNotVerifiedError extends AppError {
+  constructor() {
+    super(403, 'EMAIL_NOT_VERIFIED', 'Verifica tu email para poder adoptar.');
+  }
+}
