@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadConfig } from '../src/config/env.js';
+import { loadConfig, loadDatabaseConfig } from '../src/config/env.js';
 
 const DATABASE_URL = 'postgres://sanctuary:sanctuary@localhost:5432/sanctuary';
 const SESSION_SECRET = 'a'.repeat(32);
@@ -60,5 +60,19 @@ describe('loadConfig', () => {
     expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, NODE_ENV: 'staging', PORT: 'abc' })).toThrow(
       /NODE_ENV[\s\S]*PORT/,
     );
+  });
+});
+
+describe('loadDatabaseConfig', () => {
+  it('los scripts de base de datos no necesitan SESSION_SECRET', () => {
+    expect(loadDatabaseConfig({ DATABASE_URL })).toEqual({
+      NODE_ENV: 'development',
+      DATABASE_URL,
+      UPLOADS_DIR: './uploads',
+    });
+  });
+
+  it('sigue exigiendo DATABASE_URL', () => {
+    expect(() => loadDatabaseConfig({})).toThrow(/DATABASE_URL/);
   });
 });

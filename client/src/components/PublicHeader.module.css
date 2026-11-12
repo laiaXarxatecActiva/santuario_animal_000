@@ -26,12 +26,22 @@
 
 .link {
   display: inline-flex;
+  gap: var(--space-2);
   align-items: center;
   min-height: var(--size-touch);
   border-bottom: 2px solid transparent;
   color: var(--color-text);
   font-weight: 600;
   text-decoration: none;
+}
+
+button.link {
+  border-top: 0;
+  border-inline: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .link:hover {
@@ -73,6 +83,10 @@
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 6px;
+}
+
+.mobileUser {
+  border-top: 1px solid var(--color-border);
 }
 
 .mobileAuth {

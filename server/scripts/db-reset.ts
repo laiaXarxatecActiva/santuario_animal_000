@@ -2,7 +2,7 @@
 //      npm run db:reset -- --test  → TEST_DATABASE_URL
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadConfig } from '../src/config/env.js';
+import { loadDatabaseConfig } from '../src/config/env.js';
 import { resetDatabase } from '../src/db/reset.js';
 import { copyTestImages } from '../src/db/test-images.js';
 
@@ -13,7 +13,7 @@ try {
 }
 
 const useTest = process.argv.includes('--test');
-const config = loadConfig();
+const config = loadDatabaseConfig();
 const url = useTest ? config.TEST_DATABASE_URL : config.DATABASE_URL;
 if (!url) {
   console.error('Falta TEST_DATABASE_URL en el .env.');

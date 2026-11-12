@@ -1,6 +1,6 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { Link, type LinkProps } from 'react-router';
 import styles from './Button.module.css';
 
@@ -33,7 +33,7 @@ export function Button({
   className,
   type = 'button',
   ...rest
-}: Comunes & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: Comunes & ButtonHTMLAttributes<HTMLButtonElement> & { ref?: Ref<HTMLButtonElement> }) {
   return (
     <button type={type} className={clases(variant, block, className)} {...rest}>
       <Contenido icon={icon}>{children}</Contenido>

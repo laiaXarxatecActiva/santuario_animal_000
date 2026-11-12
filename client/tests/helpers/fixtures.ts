@@ -3,6 +3,7 @@ import type {
   AnimalCardDto,
   AnimalUpdateDto,
   PublicAnimalDto,
+  SessionUser,
   SpeciesSummary,
 } from '@sanctuary/shared';
 
@@ -77,3 +78,15 @@ export const page = <T>(
   data,
   meta: { page: 1, pageSize: 12, total: data.length, totalPages: data.length === 0 ? 0 : 1, ...meta },
 });
+
+export function sessionUser(overrides: Partial<SessionUser> = {}): SessionUser {
+  return {
+    id: 6,
+    firstName: 'Lucía',
+    lastName: 'Martínez Navarro',
+    email: 'lucia.martinez@correo.test',
+    role: 'adopter',
+    emailVerified: true,
+    ...overrides,
+  };
+}

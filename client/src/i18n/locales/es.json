@@ -19,7 +19,14 @@
     "login": "Entrar",
     "register": "Registrarse",
     "openMenu": "Abrir el menú",
-    "closeMenu": "Cerrar el menú"
+    "closeMenu": "Cerrar el menú",
+    "myAnimals": "Mis animales",
+    "feed": "Novedades",
+    "admin": "Panel",
+    "myContributions": "Mis aportaciones",
+    "profile": "Mi perfil",
+    "logout": "Cerrar sesión",
+    "userMenu": "Menú de {{name}}"
   },
   "theme": {
     "toDark": "Activar modo oscuro",
@@ -173,5 +180,78 @@
     "text": "No encontramos lo que buscas. Puede que el enlace haya cambiado.",
     "home": "Volver al inicio",
     "animals": "Ver animales"
+  },
+  "alert": {
+    "close": "Cerrar aviso"
+  },
+  "errors": {
+    "generic": "Algo ha ido mal; inténtalo de nuevo.",
+    "EMAIL_ALREADY_REGISTERED": "Ya existe una cuenta con este email.",
+    "INVALID_CREDENTIALS": "Email o contraseña incorrectos.",
+    "ACCOUNT_INACTIVE": "Esta cuenta no está activa. Contacta con el santuario.",
+    "INVALID_TOKEN": "El enlace no es válido o ha caducado.",
+    "TOO_MANY_REQUESTS": "Demasiados intentos; espera unos minutos.",
+    "EMAIL_ALREADY_VERIFIED": "Tu email ya estaba verificado.",
+    "VALIDATION_ERROR": "Revisa los campos marcados."
+  },
+  "form": {
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Contraseña",
+    "login": {
+      "title": "Iniciar sesión",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "forgot": "¿Has olvidado tu contraseña?",
+      "noAccount": "¿No tienes cuenta?",
+      "register": "Regístrate"
+    },
+    "register": {
+      "title": "Crear una cuenta",
+      "intro": "Con tu cuenta podrás adoptar a distancia y recibir noticias de tus animales.",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "passwordHelp": "Mínimo 8 caracteres.",
+      "passwordConfirm": "Repite la contraseña",
+      "privacy": "He leído y acepto la <0>política de privacidad</0>.",
+      "submit": "Crear cuenta",
+      "submitting": "Creando la cuenta…",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "login": "Inicia sesión",
+      "forgot": "He olvidado mi contraseña",
+      "success": "Te hemos enviado un email para verificar tu cuenta."
+    },
+    "verify": {
+      "title": "Verificar el email",
+      "checking": "Comprobando el enlace…",
+      "verified": "Email verificado. Ya puedes adoptar.",
+      "alreadyVerified": "Tu email ya estaba verificado.",
+      "invalid": "El enlace no es válido o ha caducado.",
+      "seeAnimals": "Ver animales",
+      "notice": "Verifica tu email para poder adoptar.",
+      "resend": "Reenviar email",
+      "resending": "Enviando…",
+      "resent": "Te hemos enviado un nuevo email de verificación."
+    },
+    "forgot": {
+      "title": "Recuperar la contraseña",
+      "intro": "Escribe el email de tu cuenta y te enviaremos un enlace para elegir una contraseña nueva.",
+      "submit": "Enviar enlace",
+      "submitting": "Enviando…",
+      "sent": "Si existe una cuenta con ese email, recibirás un enlace.",
+      "backToLogin": "Volver a iniciar sesión"
+    },
+    "reset": {
+      "title": "Nueva contraseña",
+      "password": "Nueva contraseña",
+      "passwordConfirm": "Repite la contraseña",
+      "submit": "Guardar contraseña",
+      "submitting": "Guardando…",
+      "success": "Contraseña cambiada. Ya puedes iniciar sesión.",
+      "requestAnother": "Pedir otro enlace"
+    }
   }
 }

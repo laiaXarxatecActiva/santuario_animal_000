@@ -24,7 +24,14 @@ const texto = (max: number, obligatorio: string) =>
 
 const coinciden = <T extends { password: string; passwordConfirm: string }>(datos: T) =>
   datos.password === datos.passwordConfirm;
-const errorCoinciden = { path: ['passwordConfirm'], message: 'Las contraseñas no coinciden.' };
+// Se comprueba aunque otros campos tengan errores (para mostrarlo a la vez en el
+// formulario), siempre que las dos contraseñas sean válidas por sí mismas.
+const errorCoinciden = {
+  path: ['passwordConfirm'],
+  message: 'Las contraseñas no coinciden.',
+  when: (payload: { issues: readonly { path?: readonly PropertyKey[] }[] }) =>
+    !payload.issues.some((issue) => issue.path?.[0] === 'password' || issue.path?.[0] === 'passwordConfirm'),
+};
 
 // CU-07. Cualquier otro campo (como `role`) se descarta (RN-02).
 export const registerSchema = z

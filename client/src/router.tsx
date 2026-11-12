@@ -1,6 +1,11 @@
 import type { RouteObject } from 'react-router';
 import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { AnimalPage } from './pages/public/AnimalPage';
 import { CatalogPage } from './pages/public/CatalogPage';
 import { HomePage } from './pages/public/HomePage';
@@ -15,6 +20,11 @@ export const routes: RouteObject[] = [
       { path: 'animals', element: <CatalogPage /> },
       { path: 'animals/:id', element: <AnimalPage /> },
       { path: 'how-it-works', element: <HowItWorksPage /> },
+      { path: 'register', element: <RegisterPage /> },
+      { path: 'login', element: <LoginPage /> },
+      { path: 'verify-email', element: <VerifyEmailPage /> },
+      { path: 'forgot-password', element: <ForgotPasswordPage /> },
+      { path: 'reset-password', element: <ResetPasswordPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

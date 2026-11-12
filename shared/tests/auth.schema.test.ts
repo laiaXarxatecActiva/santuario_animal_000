@@ -63,6 +63,21 @@ describe('CU-07 registerSchema', () => {
     expect(r.error?.issues[0]?.message).toBe('Las contraseñas no coinciden.');
   });
 
+  it('avisa de que no coinciden aunque haya otros campos con errores', () => {
+    const r = registerSchema.safeParse({
+      ...registroValido,
+      firstName: '',
+      passwordConfirm: 'otra',
+      privacyAccepted: false,
+    });
+    expect(camposConError(r)).toEqual(['firstName', 'privacyAccepted', 'passwordConfirm']);
+  });
+
+  it('no compara las contraseñas si falta alguna', () => {
+    const { passwordConfirm: _omitida, ...sinConfirmacion } = registroValido;
+    expect(camposConError(registerSchema.safeParse(sinConfirmacion))).toEqual(['passwordConfirm']);
+  });
+
   it('3c: hay que aceptar la política de privacidad', () => {
     expect(camposConError(registerSchema.safeParse({ ...registroValido, privacyAccepted: false }))).toEqual([
       'privacyAccepted',

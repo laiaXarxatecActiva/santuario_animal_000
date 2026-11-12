@@ -252,6 +252,8 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Subir foto | `camera` |
 | Perfil | `circle-user` |
 | Cerrar sesión | `right-from-bracket` |
+| Mostrar / ocultar contraseña | `eye` / `eye-slash` |
+| Desplegar un menú | `chevron-down` |
 | Descargar | `download` |
 
 ### 6.2 Logo provisional
@@ -456,6 +458,7 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 - **Desde `lg` (1024 px):** enlaces visibles. El enlace activo está subrayado con una línea terracota de 2 px.
 - **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **botón de tema y la campana siguen visibles** fuera del menú.
 - **Menú de hamburguesa:** panel que se despliega bajo la cabecera a todo el ancho, con fondo `--color-surface`. Enlaces en lista con zona pulsable de 48 px. Se cierra con Esc, con ✕ o al elegir un enlace. El botón tiene `aria-expanded` y `aria-controls`.
+- **Menú de usuario** (con sesión, desde `lg`): botón `outline` con el icono `circle-user`, el nombre y `chevron-down`, con `aria-expanded` y `aria-controls`. Despliega bajo el botón un panel alineado a la derecha, de 240 px, con fondo `--color-surface`, borde fino y `--radius-md`; enlaces en lista con zona pulsable de 44 px y, al final, separado por una línea, «Cerrar sesión» (`right-from-bracket`). Se cierra con Esc, al pulsar fuera o al elegir una opción. Por debajo de `lg`, sus opciones van al final del menú de hamburguesa.
 
 **Pie:** fondo `--color-surface-alt`, borde superior fino. Enlaces informativos, contacto, aviso de privacidad y la nota «Proyecto académico — pagos simulados».
 
