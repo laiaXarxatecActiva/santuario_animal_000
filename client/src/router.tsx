@@ -1,8 +1,11 @@
+import { WORKER_ROLES } from '@sanctuary/shared';
 import type { RouteObject } from 'react-router';
 import { RequireRole } from './components/RequireRole';
+import { AdminLayout } from './layouts/AdminLayout';
 import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { DashboardPage } from './pages/admin/DashboardPage';
 import { AdoptedAnimalPage } from './pages/adopter/AdoptedAnimalPage';
 import { AdoptPage } from './pages/adopter/AdoptPage';
 import { FeedPage } from './pages/adopter/FeedPage';
@@ -19,6 +22,17 @@ import { HowItWorksPage } from './pages/public/HowItWorksPage';
 
 // Rutas del navegador (TECH_SPEC §12.1). Las demás llegarán con sus casos de uso.
 export const routes: RouteObject[] = [
+  {
+    // Panel de gestión (SCREENS §5), solo para trabajadores.
+    path: 'admin',
+    element: <RequireRole roles={WORKER_ROLES} />,
+    children: [
+      {
+        element: <AdminLayout />,
+        children: [{ index: true, element: <DashboardPage /> }],
+      },
+    ],
+  },
   {
     element: <PublicLayout />,
     children: [

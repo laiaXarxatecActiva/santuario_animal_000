@@ -1,4 +1,5 @@
 import type {
+  DashboardDto,
   AdoptionDto,
   FeedItemDto,
   FeedResponse,
@@ -169,3 +170,36 @@ export const feedPage = (data: FeedItemDto[], meta: Partial<FeedResponseMeta> = 
 });
 
 type FeedResponseMeta = FeedResponse['meta'];
+
+export const caretaker = (overrides: Partial<SessionUser> = {}): SessionUser =>
+  sessionUser({
+    id: 3,
+    firstName: 'Nuria',
+    lastName: 'Peris Gómez',
+    email: 'nuria.peris@santuario.test',
+    role: 'caretaker',
+    ...overrides,
+  });
+
+export const admin = (overrides: Partial<SessionUser> = {}): SessionUser =>
+  sessionUser({
+    id: 1,
+    firstName: 'Marta',
+    lastName: 'Soler Vidal',
+    email: 'marta.soler@santuario.test',
+    role: 'admin',
+    ...overrides,
+  });
+
+export function dashboard(overrides: Partial<DashboardDto> = {}): DashboardDto {
+  return {
+    animalsByStatus: { in_sanctuary: 10, in_treatment: 3, deceased: 1, transferred: 1 },
+    activeAdoptions: 11,
+    pendingAdoptions: 2,
+    updateAlerts: [
+      { animal: { id: 3, name: 'Turia' }, daysWithoutUpdate: 16, level: 'error', activeAdopters: 1 },
+      { animal: { id: 9, name: 'Ébano' }, daysWithoutUpdate: 12, level: 'warning', activeAdopters: 1 },
+    ],
+    ...overrides,
+  };
+}

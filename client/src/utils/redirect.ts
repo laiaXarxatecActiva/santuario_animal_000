@@ -1,9 +1,8 @@
 import { isWorkerRole, type SessionUser } from '@sanctuary/shared';
 
-// Destinos tras iniciar sesión (CU-09 paso 5). El del trabajador es provisional
-// hasta que exista el escritorio del panel (CU-27: /admin).
+// Destinos tras iniciar sesión (CU-09 paso 5): el trabajador va al escritorio del panel (CU-27).
 export const ADOPTER_HOME = '/my-animals';
-export const WORKER_HOME = '/';
+export const WORKER_HOME = '/admin';
 
 /** Solo rutas internas de la aplicación: evita redirecciones a otras webs (`//web`, `https://…`). */
 export function safeNext(valor: string | null | undefined): string | undefined {

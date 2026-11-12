@@ -15,3 +15,4 @@ export type * from './types/auth.js';
 export type * from './types/feed.js';
 export type * from './types/profile.js';
 export type * from './types/public.js';
+export type * from './types/admin.js';

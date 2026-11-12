@@ -421,5 +421,35 @@
       "submitting": "Cambiando…",
       "changed": "Contraseña cambiada"
     }
+  },
+  "admin": {
+    "nav": {
+      "label": "Menú del panel",
+      "title": "Panel",
+      "dashboard": "Escritorio",
+      "groupAnimals": "Animales",
+      "groupAdmin": "Administración",
+      "viewSite": "Ver la web"
+    },
+    "dashboard": {
+      "title": "Hola, {{name}}",
+      "summary": "Resumen",
+      "animals_one": "animal",
+      "animals_other": "animales",
+      "inTreatment": "{{count}} en tratamiento",
+      "activeAdoptions_one": "adopción activa",
+      "activeAdoptions_other": "adopciones activas",
+      "pendingAdoptions": "pendientes de pago",
+      "alertsTitle": "Noticias pendientes",
+      "adopters_one": "{{count}} adoptante",
+      "adopters_other": "{{count}} adoptantes",
+      "alertError": "{{name}} lleva {{days}} días sin actualización ({{adopters}})",
+      "alertWarning_one": "A {{name}} le queda {{count}} día para cumplir 14 sin actualización ({{adopters}})",
+      "alertWarning_other": "A {{name}} le quedan {{count}} días para cumplir 14 sin actualización ({{adopters}})",
+      "publishUpdate": "Publicar actualización",
+      "allUpToDate": "Todos los animales con adoptantes están al día",
+      "loadError": "No hemos podido cargar el escritorio",
+      "quickLinks": "Accesos rápidos"
+    }
   }
 }

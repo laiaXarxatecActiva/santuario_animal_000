@@ -7,6 +7,7 @@ import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { requireJson } from './middlewares/require-json.js';
 import { createSessionMiddleware } from './middlewares/session.js';
+import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
@@ -16,6 +17,7 @@ import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
+import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
@@ -91,6 +93,7 @@ export function createApp(options: AppOptions): Express {
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
   app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
+  app.use('/api/admin', createAdminRoutes({ dashboard: createDashboardService({ db, reloj }) }));
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));
 
   // Los errores de cliente de express.static (archivo inexistente, ruta
