@@ -55,13 +55,21 @@ export function apiPost<T = void>(path: string, body: object = {}): Promise<T> {
   });
 }
 
-/** PUT a la API (también con JSON, aunque no haya cuerpo). */
-export function apiPut<T = void>(path: string, body: object = {}): Promise<T> {
-  return peticion<T>(path, {
-    method: 'PUT',
+const conJson = <T>(method: string, path: string, body: object) =>
+  peticion<T>(path, {
+    method,
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+
+/** PUT a la API (también con JSON, aunque no haya cuerpo). */
+export function apiPut<T = void>(path: string, body: object = {}): Promise<T> {
+  return conJson<T>('PUT', path, body);
+}
+
+/** PATCH a la API. */
+export function apiPatch<T = void>(path: string, body: object): Promise<T> {
+  return conJson<T>('PATCH', path, body);
 }
 
 /** DELETE a la API (también con JSON, para la protección CSRF). */

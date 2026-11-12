@@ -10,12 +10,14 @@ import { createSessionMiddleware } from './middlewares/session.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
+import { createProfileRoutes } from './routes/profile.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createFeedService } from './servicios/feed.service.js';
+import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 
 export interface AppOptions {
@@ -88,6 +90,7 @@ export function createApp(options: AppOptions): Express {
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
+  app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));
 
   // Los errores de cliente de express.static (archivo inexistente, ruta

@@ -1,4 +1,5 @@
 import { faFeather } from '@fortawesome/free-solid-svg-icons';
+import type { Role } from '@sanctuary/shared';
 import { useTranslation } from 'react-i18next';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { useSession } from '../hooks/useSession';
@@ -6,11 +7,11 @@ import { ButtonLink } from './Button';
 import { EmptyState } from './EmptyState';
 
 /**
- * Rutas del área del adoptante. Sin sesión se inicia sesión y se vuelve aquí;
- * con otro rol, «Sin permiso» (SCREENS §6). Solo oculta interfaz: los permisos
- * los comprueba siempre el servidor (RN-18).
+ * Rutas que exigen sesión y, si se indican, unos roles. Sin sesión se inicia
+ * sesión y se vuelve aquí; con otro rol, «Sin permiso» (SCREENS §6). Solo
+ * oculta interfaz: los permisos los comprueba siempre el servidor (RN-18).
  */
-export function AdopterRoute() {
+export function RequireRole({ roles }: { roles?: readonly Role[] }) {
   const { t } = useTranslation();
   const location = useLocation();
   const { user, isLoading } = useSession();
@@ -26,7 +27,7 @@ export function AdopterRoute() {
     const origen = `${location.pathname}${location.search}`;
     return <Navigate to={`/login?next=${encodeURIComponent(origen)}`} replace />;
   }
-  if (user.role !== 'adopter') {
+  if (roles && !roles.includes(user.role)) {
     return (
       <div className="container">
         <EmptyState

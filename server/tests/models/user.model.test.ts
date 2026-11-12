@@ -4,10 +4,12 @@ import {
   create,
   findByEmail,
   findById,
+  findProfile,
   mapRow,
   markEmailVerified,
   updateLastLogin,
   updatePassword,
+  updateProfile,
 } from '../../src/models/user.model.js';
 import { usarBaseDeDatos } from '../helpers/db-fixture.js';
 
@@ -91,5 +93,34 @@ describe('user.model', () => {
     await updateLastLogin(db.pool, 6, new Date('2026-11-12T09:30:00Z'));
     const { rows } = await db.pool.query('SELECT last_login_at FROM users WHERE id = 6');
     expect(rows[0].last_login_at.toISOString()).toBe('2026-11-12T09:30:00.000Z');
+  });
+
+  it('CU-23 lee el perfil sin el hash de la contraseña', async () => {
+    expect(await findProfile(db.pool, 8)).toEqual({
+      firstName: 'Elena',
+      lastName: 'Rubio Sanz',
+      email: 'elena.rubio@correo.test',
+      phone: '611222008',
+      role: 'adopter',
+      emailNotifications: true,
+      emailFrequency: 'monthly_digest',
+      showPublicName: true,
+    });
+    expect(await findProfile(db.pool, 9999)).toBeNull();
+  });
+
+  it('CU-23 actualiza solo los campos enviados', async () => {
+    await updateProfile(db.pool, 8, { lastName: 'Rubio', phone: null, showPublicName: false });
+    expect(await findProfile(db.pool, 8)).toMatchObject({
+      firstName: 'Elena',
+      lastName: 'Rubio',
+      phone: null,
+      showPublicName: false,
+      emailFrequency: 'monthly_digest',
+    });
+  });
+
+  it('CU-23 la base de datos rechaza un teléfono con otro formato', async () => {
+    await expect(db.pool.query("UPDATE users SET phone = '+34 612 345 678' WHERE id = 8")).rejects.toThrow();
   });
 });

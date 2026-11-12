@@ -175,3 +175,28 @@ export class PaymentAlreadyCompletedError extends ConflictError {
     super('PAYMENT_ALREADY_COMPLETED', 'Esta cuota ya está pagada.');
   }
 }
+
+// CU-23: preferencias que solo tienen los adoptantes (RN-16, RN-19).
+export class AdopterOnlyPreferenceError extends AppError {
+  constructor() {
+    super(403, 'ADOPTER_ONLY_PREFERENCE', 'Estas preferencias solo están disponibles para los adoptantes.');
+  }
+}
+
+// CU-24 2a. El detalle permite mostrarlo junto al campo.
+export class InvalidCurrentPasswordError extends BusinessRuleError {
+  constructor() {
+    super('INVALID_CURRENT_PASSWORD', 'La contraseña actual no es correcta.');
+  }
+  override readonly details = [{ field: 'currentPassword', message: 'La contraseña actual no es correcta.' }];
+}
+
+// CU-24: la nueva contraseña coincide con la actual.
+export class PasswordUnchangedError extends BusinessRuleError {
+  constructor() {
+    super('PASSWORD_UNCHANGED', 'La nueva contraseña debe ser distinta de la actual.');
+  }
+  override readonly details = [
+    { field: 'newPassword', message: 'La nueva contraseña debe ser distinta de la actual.' },
+  ];
+}

@@ -100,7 +100,9 @@ CREATE TABLE users (
     last_login_at         TIMESTAMPTZ,
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    CONSTRAINT users_anonymized_inactive CHECK (anonymized_at IS NULL OR is_active = FALSE)
+    CONSTRAINT users_anonymized_inactive CHECK (anonymized_at IS NULL OR is_active = FALSE),
+    -- Móvil español de 9 dígitos, sin prefijo ni separadores.
+    CONSTRAINT users_phone_format CHECK (phone IS NULL OR phone ~ '^[67][0-9]{8}$')
 );
 
 -- Email único sin distinguir mayúsculas y minúsculas.

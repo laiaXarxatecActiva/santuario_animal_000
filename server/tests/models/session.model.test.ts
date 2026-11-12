@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deleteByUserId } from '../../src/models/session.model.js';
+import { deleteByUserId, deleteOthersByUserId } from '../../src/models/session.model.js';
 import { usarBaseDeDatos } from '../helpers/db-fixture.js';
 
 const db = usarBaseDeDatos();
@@ -19,5 +19,14 @@ describe('session.model', () => {
     await deleteByUserId(db.pool, 7);
     const { rows } = await db.pool.query('SELECT sid FROM user_sessions ORDER BY sid');
     expect(rows.map((r: { sid: string }) => r.sid)).toEqual(['c', 'd']);
+  });
+
+  it('CU-24 borra las demás sesiones del usuario y mantiene la actual', async () => {
+    await sesion('e', { cookie: {}, userId: 9 });
+    await sesion('f', { cookie: {}, userId: 9 });
+    await sesion('g', { cookie: {}, userId: 9 });
+    await deleteOthersByUserId(db.pool, 9, 'f');
+    const { rows } = await db.pool.query("SELECT sid FROM user_sessions WHERE sess ->> 'userId' = '9'");
+    expect(rows.map((r: { sid: string }) => r.sid)).toEqual(['f']);
   });
 });

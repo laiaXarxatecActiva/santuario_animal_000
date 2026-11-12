@@ -205,11 +205,16 @@
     "ADOPTION_PAYMENT_EXPIRED": "Han pasado más de 7 días sin completar el pago. Puedes empezar una adopción nueva.",
     "ADOPTION_NOT_PAYABLE": "Esta adopción no tiene ningún pago pendiente.",
     "ADOPTION_CLOSED": "Esta adopción ya está cerrada.",
-    "PAYMENT_ALREADY_COMPLETED": "Esta cuota ya está pagada."
+    "PAYMENT_ALREADY_COMPLETED": "Esta cuota ya está pagada.",
+    "INVALID_CURRENT_PASSWORD": "La contraseña actual no es correcta.",
+    "PASSWORD_UNCHANGED": "La nueva contraseña debe ser distinta de la actual.",
+    "ADOPTER_ONLY_PREFERENCE": "Estas preferencias solo están disponibles para los adoptantes."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña"
+    "hidePassword": "Ocultar contraseña",
+    "yes": "Sí",
+    "no": "No"
   },
   "auth": {
     "email": "Email",
@@ -377,5 +382,44 @@
     "emptyUnread": "Ya has leído todas las novedades",
     "loadMore": "Cargar más",
     "errorLoading": "No hemos podido cargar las novedades"
+  },
+  "profile": {
+    "title": "Mi perfil",
+    "saved": "Cambios guardados",
+    "saving": "Guardando…",
+    "save": "Guardar",
+    "errorLoading": "No hemos podido cargar tu perfil",
+    "data": {
+      "title": "Tus datos",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "phone": "Teléfono (opcional)",
+      "phoneHelp": "Móvil español de 9 dígitos, sin el prefijo +34.",
+      "email": "Email",
+      "emailHelp": "Si necesitas cambiarlo, escríbenos y lo haremos por ti.",
+      "submit": "Guardar cambios"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "receive": "Recibir emails",
+      "frequency": "¿Cada cuánto?",
+      "perUpdate": "Un email por cada novedad",
+      "monthlyDigest": "Un resumen al mes"
+    },
+    "privacy": {
+      "title": "Privacidad",
+      "showName": "Mostrar mi nombre en la ficha de los animales que adopto",
+      "showNameHelp": "Solo se verá tu nombre de pila («Con el apoyo de Lucía»), mientras tu adopción esté activa."
+    },
+    "password": {
+      "title": "Contraseña",
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "newHelp": "Al menos 8 caracteres, distinta de la actual. Se cerrarán tus otras sesiones abiertas.",
+      "confirm": "Repite la nueva contraseña",
+      "submit": "Cambiar contraseña",
+      "submitting": "Cambiando…",
+      "changed": "Contraseña cambiada"
+    }
   }
 }

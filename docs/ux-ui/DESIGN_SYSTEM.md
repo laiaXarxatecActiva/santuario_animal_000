@@ -427,7 +427,8 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 - **Ayuda:** texto `--font-size-sm` `--color-text-muted` debajo del campo.
 - **Áreas de texto** (historia, actualizaciones): altura mínima de 6 líneas, con ajuste vertical.
 - **Casillas y botones de opción:** nativos con `accent-color: var(--color-primary)`, con zona pulsable de 44 px que incluye la etiqueta.
-- **Interruptores** (sí/no en preferencias): forma de píldora, con el texto del estado al lado («Sí» / «No»).
+- **Interruptores** (`Switch`, sí/no en preferencias): casilla nativa con `role="switch"` en forma de píldora de 48 × 28 px; apagado con fondo `--color-surface-alt` y círculo `--color-text-muted`, encendido con fondo `--color-primary` y círculo `--color-on-primary`. Etiqueta a la izquierda y el texto del estado al lado («Sí» / «No»).
+- **Teléfono:** campo numérico que solo admite dígitos (como mucho 9) y añade los guiones solo mientras se escribe: `612-34-56-78`. Ayuda: «Móvil español de 9 dígitos, sin el prefijo +34».
 - **Selección de plan** (adoptar): tres tarjetas seleccionables (radio) con nombre, importe y descripción; la seleccionada lleva borde `--color-primary` de 2 px y fondo `--color-primary-soft`. El plan Usual viene marcado.
 - **Subida de fotos:** zona de arrastrar y soltar con borde discontinuo `--color-border-strong`, `--radius-lg`, icono `camera` y el botón «Elegir archivos» (para quien no puede arrastrar).
 - Los errores del servidor se muestran igual que los del cliente.

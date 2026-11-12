@@ -530,8 +530,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/me/notifications/read-all` | Marcar todas como leídas | CU-18 |
 | DELETE | `/api/me/notifications/:id` | Borrar una notificación | CU-18 |
 | GET | `/api/me/profile` | Perfil | CU-23 |
-| PATCH | `/api/me/profile` | Nombre, apellidos, teléfono, preferencias, `showPublicName` (este último solo para adoptantes) | CU-23 |
-| PUT | `/api/me/password` | `{ currentPassword, newPassword }` | CU-24 |
+| PATCH | `/api/me/profile` | Cambios parciales: nombre, apellidos, teléfono (móvil español de 9 dígitos, sin +34; se guarda sin separadores), preferencias de email y `showPublicName` (estos tres, solo para adoptantes: 403 `ADOPTER_ONLY_PREFERENCE`). El email no se puede cambiar | CU-23 |
+| PUT | `/api/me/password` | `{ currentPassword, newPassword }`. La nueva debe ser distinta de la actual. Cierra las demás sesiones y anula los enlaces de recuperación pendientes. 5 intentos fallidos por usuario cada 15 minutos | CU-24 |
 | DELETE | `/api/me` | Baja y anonimización (solo adoptantes) | CU-25 |
 
 ### 10.6 Panel: cuidador y administrador (`/api/admin`)

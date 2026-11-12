@@ -7,3 +7,8 @@ import type { Queryable } from '../db/pool.js';
 export async function deleteByUserId(db: Queryable, userId: number): Promise<void> {
   await db.query("DELETE FROM user_sessions WHERE (sess ->> 'userId')::int = $1", [userId]);
 }
+
+/** CU-24 paso 3: cierra las demás sesiones del usuario y mantiene la actual. */
+export async function deleteOthersByUserId(db: Queryable, userId: number, currentSid: string): Promise<void> {
+  await db.query("DELETE FROM user_sessions WHERE (sess ->> 'userId')::int = $1 AND sid <> $2", [userId, currentSid]);
+}

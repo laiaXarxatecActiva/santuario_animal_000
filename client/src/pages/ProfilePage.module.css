@@ -1,0 +1,60 @@
+/* Una columna de 560 px como máximo (SCREENS §4.6). */
+.page {
+  max-width: 560px;
+}
+
+.section {
+  margin-top: var(--space-7);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.section h2 {
+  margin-bottom: var(--space-4);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.label {
+  font-weight: 600;
+}
+
+.help {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.readOnly {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset:disabled {
+  opacity: 0.6;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--size-touch);
+  cursor: pointer;
+}
+
+.radio input {
+  accent-color: var(--color-primary);
+}

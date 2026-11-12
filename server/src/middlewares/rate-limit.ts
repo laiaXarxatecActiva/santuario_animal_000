@@ -37,3 +37,16 @@ export function createResendVerificationLimiter(): RequestHandler {
     handler: rechazar,
   });
 }
+
+/** CU-24: 5 intentos fallidos de cambio de contraseña por usuario cada 15 minutos. Va después de requireAuth. */
+export function createChangePasswordLimiter(): RequestHandler {
+  return rateLimit({
+    windowMs: 15 * MINUTO_MS,
+    limit: 5,
+    skipSuccessfulRequests: true,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    keyGenerator: (req) => `usuario:${req.user?.id ?? ''}`,
+    handler: rechazar,
+  });
+}

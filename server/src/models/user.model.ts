@@ -1,4 +1,4 @@
-import type { Role } from '@sanctuary/shared';
+import type { EmailFrequency, ProfileDto, Role, UpdateProfileInput } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { esErrorPg, PG_UNIQUE_VIOLATION } from '../db/pg-errors.js';
 import { EmailAlreadyRegisteredError } from '../errors/app-error.js';
@@ -89,4 +89,64 @@ export async function updatePassword(db: Queryable, id: number, passwordHash: st
 
 export async function updateLastLogin(db: Queryable, id: number, instante: Date): Promise<void> {
   await db.query('UPDATE users SET last_login_at = $2 WHERE id = $1', [id, instante]);
+}
+
+// ----------------------------------------------------------------------------
+// Perfil (CU-23)
+// ----------------------------------------------------------------------------
+
+interface ProfileRow {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  role: Role;
+  email_notifications: boolean;
+  email_frequency: EmailFrequency;
+  show_public_name: boolean;
+}
+
+export function mapProfileRow(row: ProfileRow): ProfileDto {
+  return {
+    firstName: row.first_name,
+    lastName: row.last_name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    emailNotifications: row.email_notifications,
+    emailFrequency: row.email_frequency,
+    showPublicName: row.show_public_name,
+  };
+}
+
+export async function findProfile(db: Queryable, id: number): Promise<ProfileDto | null> {
+  const { rows } = await db.query<ProfileRow>(
+    `SELECT first_name, last_name, email, phone, role, email_notifications, email_frequency, show_public_name
+       FROM users WHERE id = $1`,
+    [id],
+  );
+  return rows[0] ? mapProfileRow(rows[0]) : null;
+}
+
+// Lista blanca: cada campo editable con su columna.
+const COLUMNAS_PERFIL: Record<keyof UpdateProfileInput, string> = {
+  firstName: 'first_name',
+  lastName: 'last_name',
+  phone: 'phone',
+  emailNotifications: 'email_notifications',
+  emailFrequency: 'email_frequency',
+  showPublicName: 'show_public_name',
+};
+
+/** Actualiza solo los campos presentes. */
+export async function updateProfile(db: Queryable, id: number, cambios: UpdateProfileInput): Promise<void> {
+  const params: unknown[] = [id];
+  const asignaciones: string[] = [];
+  for (const [campo, columna] of Object.entries(COLUMNAS_PERFIL) as [keyof UpdateProfileInput, string][]) {
+    if (cambios[campo] === undefined) continue;
+    params.push(cambios[campo]);
+    asignaciones.push(`${columna} = $${params.length}`);
+  }
+  if (asignaciones.length === 0) return;
+  await db.query(`UPDATE users SET ${asignaciones.join(', ')} WHERE id = $1`, params);
 }

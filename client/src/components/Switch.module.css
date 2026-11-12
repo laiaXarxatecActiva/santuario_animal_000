@@ -1,0 +1,89 @@
+/* Interruptor en forma de píldora (DESIGN_SYSTEM §8.5). */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--size-touch);
+}
+
+.label {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.input {
+  position: relative;
+  width: 48px;
+  height: 28px;
+  margin: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  cursor: pointer;
+  appearance: none;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.input::before {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  content: '';
+  transition: transform var(--duration-fast) ease;
+}
+
+.input:checked {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.input:checked::before {
+  background: var(--color-on-primary);
+  transform: translateX(20px);
+}
+
+.input:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.state {
+  min-width: 2ch;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.help {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .input::before {
+    transition: none;
+  }
+}

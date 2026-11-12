@@ -1,7 +1,8 @@
 import type { RouteObject } from 'react-router';
-import { AdopterRoute } from './components/AdopterRoute';
+import { RequireRole } from './components/RequireRole';
 import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { AdoptedAnimalPage } from './pages/adopter/AdoptedAnimalPage';
 import { AdoptPage } from './pages/adopter/AdoptPage';
 import { FeedPage } from './pages/adopter/FeedPage';
@@ -28,12 +29,17 @@ export const routes: RouteObject[] = [
       { path: 'adopt/:animalId', element: <AdoptPage /> },
       {
         // Área del adoptante (SCREENS §4).
-        element: <AdopterRoute />,
+        element: <RequireRole roles={['adopter']} />,
         children: [
           { path: 'my-animals', element: <MyAnimalsPage /> },
           { path: 'my-animals/:animalId', element: <AdoptedAnimalPage /> },
           { path: 'feed', element: <FeedPage /> },
         ],
+      },
+      {
+        // Cualquier usuario con sesión.
+        element: <RequireRole />,
+        children: [{ path: 'profile', element: <ProfilePage /> }],
       },
       { path: 'register', element: <RegisterPage /> },
       { path: 'login', element: <LoginPage /> },
