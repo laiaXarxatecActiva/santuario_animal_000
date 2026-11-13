@@ -87,7 +87,7 @@ Flujo de una petición: cookie de sesión `sid` → `loadUser` (usuario y rol se
 - `app.ts` contiene la configuración de Express sin `listen`, para que Supertest pueda importarlo. `server.ts` hace el `listen` y arranca los jobs.
 
 ## Convenciones
-
+- Una vez escrito un test que funciona, no puedes cambiarlo. Si crees que es indispensable cambiarlo, explicame el motivo y si yo te doy permiso, entonces podrás hacerlo.
 - **TypeScript**: estricto. Prohibido `any`.
 - **Idioma**: textos de la interfaz, documentación, comentarios de código y comentarios SQL en castellano. Los nombres del dominio, en castellano. El resto de identificadores, el SQL, los nombres de archivo, las rutas de la API y los valores de estado, en inglés. Todos los textos de la interfaz pasan por i18next (`t('clave')`, `locales/es.json`); nada de texto fijo en el código.
 - **Nombres de archivo**: en el servidor, `kebab-case.<capa>.ts` (`animal-update.model.ts`). Componentes React en `PascalCase.tsx` con CSS Modules. Rutas de la API en kebab-case y sustantivos en plural. Los estados son `VARCHAR` + `CHECK`, no ENUM.
