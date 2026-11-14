@@ -1,5 +1,6 @@
 export * from './constants/animals.js';
 export * from './constants/auth.js';
+export * from './constants/media.js';
 export * from './constants/roles.js';
 export * from './constants/status.js';
 export * from './constants/users.js';

@@ -259,6 +259,9 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Escritorio del panel | `gauge` |
 | Especies (menú del panel) | `tags` |
 | Abrir en la web pública | `arrow-up-right-from-square` |
+| Portada de un animal | `star` |
+| Mover arriba / abajo (orden de las fotos) | `arrow-up` / `arrow-down` |
+| Vídeo | `video` |
 
 ### 6.2 Logo provisional
 
@@ -487,6 +490,8 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | **Carga** | Bloques «esqueleto» con la forma del contenido (por ejemplo, tarjetas vacías en `--color-surface-alt`) con un pulso muy suave. Para acciones cortas, el botón en estado «Cargando». No se usan pantallas de carga a página completa. |
 | **Tarjeta de actualización** (`UpdateCard`) | Fondo `--color-surface`, borde fino y `--radius-lg`. Arriba, la fecha (`newspaper`) o, en el muro, la miniatura cuadrada y el nombre del animal; a la derecha, las insignias «Solo adoptantes» y «Nuevo». Título h2/h3, texto y fotos 4:3 (dos columnas desde `md`). Las no leídas llevan el borde en `--color-primary`; en el muro, botón `ghost` «Marcar como leída / no leída» abajo a la derecha. |
 | **Migas de pan** | En la ficha del animal y en el panel: «Animales › Rufo». `--font-size-sm`. |
+| **Zona de subida** (`MediaUploader`) | Recuadro con borde discontinuo `--color-border` y `--radius-lg`, fondo `--color-surface-alt` al arrastrar archivos encima. Dentro: icono `camera`, «Arrastra aquí las fotos o vídeos», botón `outline` «Elegir archivos» y la ayuda con los formatos y tamaños. Debajo, un grupo por archivo (nombre del archivo como leyenda) con el campo «Texto alternativo» (obligatorio), el desplegable «Visibilidad» si procede y el botón `icon` «Quitar». Si se eligen más de 10 archivos, aviso `warning`. |
+| **Cuadrícula de fotos** (`PhotoGrid`) | Miniaturas cuadradas en rejilla (2 columnas en móvil, 4 desde `md`), con borde fino y `--radius-md`. Bajo cada una: insignias «Portada» (`primary`), «Pública» o «Solo adoptantes» (`neutral`/`info`) y «Vídeo»; y una fila de botones `icon` compactos: portada (`star`, con `aria-pressed`; desactivado si no puede ser portada), subir y bajar, editar y borrar. En escritorio, además, se arrastran para ordenarlas; la miniatura que se arrastra baja su opacidad. |
 | **Separador decorativo** | Línea fina caramelo (`--color-accent`) de 48 px bajo los títulos de sección de la página de inicio. Solo decorativa. |
 
 ### 8.10 Panel de gestión

@@ -29,3 +29,9 @@ export const useAdminAnimal = (id: number | undefined) =>
     queryFn: () => adminApi.animals.get(id ?? 0),
     enabled: id !== undefined,
   });
+
+export const adminPhotosKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'photos', animalId] as const;
+
+/** CU-29: galería del animal en el panel. */
+export const useAdminPhotos = (animalId: number) =>
+  useQuery({ queryKey: adminPhotosKey(animalId), queryFn: () => adminApi.photos.list(animalId).then((r) => r.data) });

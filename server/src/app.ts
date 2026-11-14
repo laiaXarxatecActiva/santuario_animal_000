@@ -15,11 +15,14 @@ import { createProfileRoutes } from './routes/profile.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
+import { createLocalStorage } from './services/storage/local.storage.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
+import { createMediaUploader } from './servicios/media-upload.service.js';
+import { createPhotoAdminService } from './servicios/photo-admin.service.js';
 import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 import { createSpeciesAdminService } from './servicios/species-admin.service.js';
@@ -76,6 +79,12 @@ export function createApp(options: AppOptions): Express {
     logEmailError,
   });
 
+  // Fotos y vídeos (TECH_SPEC §11.3), en la carpeta que se sirve en /uploads.
+  const media = createMediaUploader(
+    createLocalStorage(uploadsDir),
+    logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
+  );
+
   app.use('/api', express.json({ limit: '100kb' }), requireJson);
   app.use(
     '/api',
@@ -101,6 +110,7 @@ export function createApp(options: AppOptions): Express {
       dashboard: createDashboardService({ db, reloj }),
       species: createSpeciesAdminService({ db }),
       animals: createAnimalAdminService({ db, reloj }),
+      photos: createPhotoAdminService({ db, media }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

@@ -2,24 +2,32 @@ import {
   adminAnimalsQuerySchema,
   animalBodySchema,
   animalStatusBodySchema,
+  coverBodySchema,
   idParamsSchema,
+  photoOrderBodySchema,
+  photoPatchBodySchema,
+  photoUploadBodySchema,
   speciesBodySchema,
   WORKER_ROLES,
 } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
+import { createPhotoAdminController } from '../controllers/photo-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
+import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
+import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
 
 export interface AdminRoutesDeps {
   dashboard: DashboardService;
   species: SpeciesAdminService;
   animals: AnimalAdminService;
+  photos: PhotoAdminService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -49,6 +57,25 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     animales.changeStatus,
   );
   router.delete('/animals/:id', soloAdmin, conId, animales.remove);
+
+  // CU-29: la galería de cada animal.
+  const fotos = createPhotoAdminController(deps.photos);
+  router.get('/animals/:id/photos', conId, fotos.list);
+  router.post(
+    '/animals/:id/photos',
+    conId,
+    uploadFiles(),
+    validate({ params: idParamsSchema, body: photoUploadBodySchema }),
+    fotos.upload,
+  );
+  router.put(
+    '/animals/:id/photos/order',
+    validate({ params: idParamsSchema, body: photoOrderBodySchema }),
+    fotos.reorder,
+  );
+  router.put('/animals/:id/cover', validate({ params: idParamsSchema, body: coverBodySchema }), fotos.setCover);
+  router.patch('/photos/:id', validate({ params: idParamsSchema, body: photoPatchBodySchema }), fotos.update);
+  router.delete('/photos/:id', conId, fotos.remove);
 
   return router;
 }

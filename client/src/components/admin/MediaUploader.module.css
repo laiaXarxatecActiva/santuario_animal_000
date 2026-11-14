@@ -1,0 +1,91 @@
+/* Zona de subida (DESIGN_SYSTEM §8.9). */
+.uploader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-5) var(--space-4);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.over {
+  background: var(--color-surface-alt);
+}
+
+.icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-h2);
+}
+
+.choose {
+  cursor: pointer;
+}
+
+/* El campo de archivo está oculto: el foco se ve en su etiqueta con forma de botón. */
+.zone:has(input:focus-visible) .choose {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.help {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+  align-items: end;
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.fileName {
+  padding: 0 var(--space-1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.item > :not(legend, .remove) {
+  grid-column: 1;
+}
+
+.remove {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+@media (min-width: 768px) {
+  .item {
+    grid-template-columns: 2fr 1fr auto;
+  }
+
+  .item > :not(legend, .remove) {
+    grid-column: auto;
+  }
+
+  .remove {
+    grid-column: 3;
+  }
+}

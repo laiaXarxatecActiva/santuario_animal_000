@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ANIMAL_SEXES } from '../constants/animals.js';
-import { ANIMAL_STATUSES } from '../constants/status.js';
+import { ALT_TEXT_MAX_LENGTH, MAX_FILES_PER_UPLOAD } from '../constants/media.js';
+import { ANIMAL_STATUSES, VISIBILITIES } from '../constants/status.js';
 import { textoObligatorio } from './fields.js';
 import { paginationQuerySchema } from './pagination.schema.js';
 
@@ -81,3 +82,43 @@ export const animalStatusBodySchema = z.object({
   date: fecha('La fecha no es válida.').optional(),
 });
 export type AnimalStatusBody = z.infer<typeof animalStatusBodySchema>;
+
+// CU-29: fotos y vídeos de la galería de un animal.
+const FALTAN_DATOS_ARCHIVOS = 'Faltan los datos de los archivos.';
+
+/** Campo de texto de un formulario multipart que contiene JSON. */
+const jsonDeTexto = z.string({ error: FALTAN_DATOS_ARCHIVOS }).transform((texto, ctx) => {
+  try {
+    return JSON.parse(texto) as unknown;
+  } catch {
+    ctx.addIssue({ code: 'custom', message: FALTAN_DATOS_ARCHIVOS });
+    return z.NEVER;
+  }
+});
+
+const altText = textoObligatorio(ALT_TEXT_MAX_LENGTH, 'Escribe el texto alternativo.');
+const visibilidad = z.enum(VISIBILITIES, { error: 'Elige la visibilidad.' });
+
+/** Datos de un archivo subido (paso 3): texto alternativo y visibilidad. */
+export const photoMetaSchema = z.object({ altText, visibility: visibilidad.default('public') });
+export type PhotoMeta = z.infer<typeof photoMetaSchema>;
+
+/**
+ * Campos de texto de la subida (`multipart/form-data`): `meta` es un JSON con
+ * los datos de cada archivo, en el mismo orden que los archivos.
+ */
+export const photoUploadBodySchema = z.object({
+  meta: jsonDeTexto.pipe(z.array(photoMetaSchema, { error: FALTAN_DATOS_ARCHIVOS }).max(MAX_FILES_PER_UPLOAD)),
+});
+
+// A1: edición.
+export const photoPatchBodySchema = z.object({ altText, visibility: visibilidad });
+export type PhotoPatchBody = z.infer<typeof photoPatchBodySchema>;
+
+// Pasos 5-6: orden y portada.
+const idPositivo = z.number().int().positive();
+export const photoOrderBodySchema = z.object({ photoIds: z.array(idPositivo).min(1).max(500) });
+export type PhotoOrderBody = z.infer<typeof photoOrderBodySchema>;
+
+export const coverBodySchema = z.object({ photoId: idPositivo });
+export type CoverBody = z.infer<typeof coverBodySchema>;

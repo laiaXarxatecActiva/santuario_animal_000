@@ -1,7 +1,7 @@
 import type { AdminAnimalDto, AdminAnimalSort, AnimalData, AnimalSex, AnimalStatus } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { esErrorPg, PG_CHECK_VIOLATION } from '../db/pg-errors.js';
-import { ArchivedAnimalNotAdoptableError, FieldRuleError } from '../errors/app-error.js';
+import { ArchivedAnimalNotAdoptableError, FieldRuleError, InvalidCoverError } from '../errors/app-error.js';
 import { COLUMNAS_PORTADA, JOIN_PORTADA, mapCover, type CoverRow } from './photo.model.js';
 
 // Animales tal como los ve el panel (CU-28): todos, también ocultos y archivados.
@@ -227,4 +227,21 @@ export async function updateStatus(
 /** A4: borra el animal; sus fotos, actualizaciones y lecturas caen en cascada. */
 export async function remove(db: Queryable, id: number): Promise<void> {
   await db.query('DELETE FROM animals WHERE id = $1', [id]);
+}
+
+/** CU-29 pasos 5-6. La regla está en el dominio; el trigger `animals_check_cover_photo` es la red de seguridad. */
+export async function setCover(db: Queryable, id: number, photoId: number): Promise<void> {
+  try {
+    await db.query('UPDATE animals SET cover_photo_id = $2 WHERE id = $1', [id, photoId]);
+  } catch (error) {
+    if (esErrorPg(error, PG_CHECK_VIOLATION)) throw new InvalidCoverError();
+    throw error;
+  }
+}
+
+export async function exists(db: Queryable, id: number, opciones: { forUpdate?: boolean } = {}): Promise<boolean> {
+  const { rowCount } = await db.query(`SELECT 1 FROM animals WHERE id = $1${opciones.forUpdate ? ' FOR UPDATE' : ''}`, [
+    id,
+  ]);
+  return rowCount === 1;
 }

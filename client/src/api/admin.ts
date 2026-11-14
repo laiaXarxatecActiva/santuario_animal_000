@@ -1,5 +1,8 @@
 import type {
   AdminAnimalDto,
+  AdminPhotoDto,
+  PhotoPatchBody,
+  PhotoUploadResultDto,
   AdminAnimalsQuery,
   AnimalBody,
   DashboardDto,
@@ -8,7 +11,7 @@ import type {
   SpeciesBody,
   AnimalStatusBody,
 } from '@sanctuary/shared';
-import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from './client';
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './client';
 
 export type AdminAnimalsParams = Partial<AdminAnimalsQuery>;
 
@@ -31,5 +34,17 @@ export const adminApi = {
     changeStatus: (id: number, body: AnimalStatusBody) =>
       apiPatch<AdminAnimalDto>(`/api/admin/animals/${id}/status`, body),
     remove: (id: number) => apiDelete(`/api/admin/animals/${id}`),
+  },
+
+  // CU-29: galería de un animal.
+  photos: {
+    list: (animalId: number) => apiGet<{ data: AdminPhotoDto[] }>(`/api/admin/animals/${animalId}/photos`),
+    upload: (animalId: number, datos: FormData) =>
+      apiUpload<PhotoUploadResultDto>(`/api/admin/animals/${animalId}/photos`, datos),
+    update: (id: number, body: PhotoPatchBody) => apiPatch<AdminPhotoDto>(`/api/admin/photos/${id}`, body),
+    reorder: (animalId: number, photoIds: number[]) =>
+      apiPut(`/api/admin/animals/${animalId}/photos/order`, { photoIds }),
+    setCover: (animalId: number, photoId: number) => apiPut(`/api/admin/animals/${animalId}/cover`, { photoId }),
+    remove: (id: number) => apiDelete(`/api/admin/photos/${id}`),
   },
 };

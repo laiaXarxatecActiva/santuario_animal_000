@@ -545,7 +545,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PUT | `/api/admin/animals/:id` | Cuidador, admin | Edición, incluidos `isPublished` e `isAdoptable` | CU-28 |
 | PATCH | `/api/admin/animals/:id/status` | Cuidador, admin | Cambio de estado; si es `deceased` o `transferred`, cierra las adopciones abiertas | CU-28, CU-33 |
 | DELETE | `/api/admin/animals/:id` | Admin | Borrado físico; solo si nunca ha tenido adopciones | CU-28 |
-| POST | `/api/admin/animals/:id/photos` | Cuidador, admin | Subida múltiple (`multipart/form-data`) | CU-29 |
+| GET | `/api/admin/animals/:id/photos` | Cuidador, admin | Galería del animal (todas las visibilidades, sin las fotos de actualizaciones), en su orden | CU-29 |
+| POST | `/api/admin/animals/:id/photos` | Cuidador, admin | Subida múltiple (`multipart/form-data`: archivos en `files` y, en `meta`, un JSON con el texto alternativo y la visibilidad de cada uno). Responde `{ created, rejected }`: 201 si se ha guardado alguno, 200 si se han rechazado todos | CU-29 |
 | PATCH | `/api/admin/photos/:id` | Cuidador, admin | Texto alternativo, visibilidad | CU-29 |
 | PUT | `/api/admin/animals/:id/photos/order` | Cuidador, admin | `{ photoIds: [...] }` | CU-29 |
 | PUT | `/api/admin/animals/:id/cover` | Cuidador, admin | `{ photoId }` | CU-29 |

@@ -58,3 +58,22 @@ export interface AdminAnimalDto extends AdminAnimalListItemDto {
   /** Ha tenido alguna adopción: entonces no se puede borrar (RN-17). */
   hasAdoptionHistory: boolean;
 }
+
+/** Foto o vídeo de la galería en el panel (CU-29). */
+export interface AdminPhotoDto extends PhotoDto {
+  sortOrder: number;
+  isCover: boolean;
+}
+
+/** CU-29 2a: archivo rechazado en una subida. */
+export interface RejectedFileDto {
+  fileName: string;
+  code: 'UNSUPPORTED_FORMAT' | 'IMAGE_TOO_LARGE' | 'VIDEO_TOO_LARGE' | 'INVALID_FILE';
+  message: string;
+}
+
+/** POST /api/admin/animals/:id/photos: los creados y los rechazados. */
+export interface PhotoUploadResultDto {
+  created: AdminPhotoDto[];
+  rejected: RejectedFileDto[];
+}

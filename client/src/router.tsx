@@ -7,6 +7,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
 import { AnimalDataTab } from './pages/admin/AnimalDataTab';
+import { AnimalPhotosTab } from './pages/admin/AnimalPhotosTab';
 import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { NewAnimalPage } from './pages/admin/NewAnimalPage';
@@ -41,7 +42,10 @@ export const routes: RouteObject[] = [
           {
             path: 'animals/:id',
             element: <AnimalAdminPage />,
-            children: [{ index: true, element: <AnimalDataTab /> }],
+            children: [
+              { index: true, element: <AnimalDataTab /> },
+              { path: 'photos', element: <AnimalPhotosTab /> },
+            ],
           },
           { path: 'species', element: <SpeciesAdminPage /> },
           { path: '*', element: <NotFoundPage /> },

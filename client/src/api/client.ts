@@ -80,3 +80,16 @@ export function apiDelete<T = void>(path: string): Promise<T> {
     body: '{}',
   });
 }
+
+/**
+ * Subida de archivos (`multipart/form-data`). El navegador pone el
+ * `Content-Type` con su separador; la cabecera `X-Requested-With` es la
+ * protección CSRF de las subidas (TECH_SPEC §13).
+ */
+export function apiUpload<T>(path: string, datos: FormData, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
+  return peticion<T>(path, {
+    method,
+    headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: datos,
+  });
+}

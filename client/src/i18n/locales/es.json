@@ -216,7 +216,18 @@
     "ARRIVAL_IN_FUTURE": "La fecha de llegada no puede ser futura.",
     "DATE_IN_FUTURE": "La fecha no puede ser futura.",
     "SPECIES_NOT_FOUND": "Esta especie no existe.",
-    "FORBIDDEN": "No tienes permiso para esta acción."
+    "FORBIDDEN": "No tienes permiso para esta acción.",
+    "COVER_MUST_BE_PUBLIC": "La portada no puede ser solo para adoptantes. Elige antes otra portada.",
+    "INVALID_COVER": "La portada tiene que ser una foto pública de la galería del animal (no un vídeo ni una foto solo para adoptantes).",
+    "INVALID_PHOTO_ORDER": "El orden de las fotos ha cambiado mientras tanto. Vuelve a intentarlo.",
+    "PHOTO_BELONGS_TO_UPDATE": "Esta foto es de una actualización; cámbiala desde la actualización.",
+    "NO_FILES": "Elige al menos un archivo.",
+    "TOO_MANY_FILES": "Puedes subir como máximo 10 archivos a la vez.",
+    "FILE_TOO_LARGE": "Algún archivo supera los 50 MB.",
+    "UNSUPPORTED_FORMAT": "Formato no permitido: solo JPEG, PNG, WebP o MP4.",
+    "IMAGE_TOO_LARGE": "La imagen supera los 5 MB.",
+    "VIDEO_TOO_LARGE": "El vídeo supera los 50 MB.",
+    "INVALID_FILE": "El archivo está dañado o no corresponde a su formato."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -570,7 +581,46 @@
       "confirmDeleteText": "Se borrarán también sus fotos y actualizaciones. Esta acción no se puede deshacer.",
       "deleted": "{{name}} se ha borrado",
       "statusSince": "Desde el {{date}}",
-      "sexUnknown": "Desconocido"
+      "sexUnknown": "Desconocido",
+      "tabPhotos": "Fotos"
+    },
+    "media": {
+      "dropHere": "Arrastra aquí las fotos o vídeos",
+      "choose": "Elegir archivos",
+      "help": "JPEG, PNG o WebP de hasta 5 MB y MP4 de hasta 50 MB. Como máximo 10 archivos.",
+      "tooMany": "Puedes subir como máximo 10 archivos a la vez.",
+      "altText": "Texto alternativo",
+      "visibility": "Visibilidad",
+      "visibility_public": "Pública",
+      "visibility_adopters": "Solo adoptantes",
+      "remove": "Quitar {{name}}"
+    },
+    "photos": {
+      "gallery": "Galería",
+      "uploadTitle": "Subir fotos y vídeos",
+      "upload_one": "Subir {{count}} archivo",
+      "upload_other": "Subir {{count}} archivos",
+      "uploading": "Subiendo…",
+      "uploaded_one": "Se ha subido {{count}} archivo.",
+      "uploaded_other": "Se han subido {{count}} archivos.",
+      "rejectedTitle": "No se han podido subir estos archivos:",
+      "rejected": "{{name}}: {{message}}",
+      "empty": "Este animal todavía no tiene fotos.",
+      "loadError": "No hemos podido cargar las fotos",
+      "cover": "Portada",
+      "video": "Vídeo",
+      "isCover": "Portada: {{name}}",
+      "setCover": "Elegir como portada: {{name}}",
+      "moveUp": "Subir {{name}}",
+      "moveDown": "Bajar {{name}}",
+      "coverChanged": "Portada actualizada.",
+      "editTitle": "Editar foto",
+      "saved": "Foto guardada.",
+      "confirmDelete": "¿Borrar esta foto?",
+      "confirmDeleteText": "Se borrarán la foto y sus archivos. Esta acción no se puede deshacer.",
+      "deleteCoverWarning": "Es la portada: el animal se quedará sin portada.",
+      "deleted": "Foto borrada.",
+      "deletedCover": "Foto borrada. El animal se ha quedado sin portada: elige otra."
     }
   }
 }

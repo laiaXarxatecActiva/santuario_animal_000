@@ -36,3 +36,15 @@ describe('requireJson (TECH_SPEC §13, CSRF)', () => {
     expect(sinTipo.body.error.code).toBe('UNSUPPORTED_MEDIA_TYPE');
   });
 });
+
+describe('requireJson: subidas multipart (CU-29, TECH_SPEC §13)', () => {
+  it('acepta multipart solo con la cabecera X-Requested-With', async () => {
+    const conCabecera = await request(app())
+      .post('/')
+      .set('X-Requested-With', 'XMLHttpRequest')
+      .attach('files', Buffer.from('x'), 'a.jpg');
+    expect(conCabecera.status).toBe(200);
+    const sinCabecera = await request(app()).post('/').attach('files', Buffer.from('x'), 'a.jpg');
+    expect(sinCabecera.status).toBe(415);
+  });
+});

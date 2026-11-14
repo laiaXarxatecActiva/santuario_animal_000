@@ -251,3 +251,59 @@ export class AnimalArchivedError extends BusinessRuleError {
     super('ANIMAL_ARCHIVED', 'Este animal está archivado (fallecido o trasladado) y su estado ya no se puede cambiar.');
   }
 }
+
+// CU-29 A1: la portada debe seguir siendo pública.
+export class CoverMustBePublicError extends FieldRuleError {
+  constructor() {
+    super(
+      'COVER_MUST_BE_PUBLIC',
+      'visibility',
+      'La portada no puede ser solo para adoptantes. Elige antes otra portada.',
+    );
+  }
+}
+
+// CU-29 5a.
+export class InvalidCoverError extends BusinessRuleError {
+  constructor() {
+    super(
+      'INVALID_COVER',
+      'La portada tiene que ser una foto pública de la galería del animal (no un vídeo ni una foto solo para adoptantes).',
+    );
+  }
+}
+
+// CU-29 paso 5: el orden no coincide con las fotos de la galería.
+export class InvalidPhotoOrderError extends BusinessRuleError {
+  constructor() {
+    super('INVALID_PHOTO_ORDER', 'El orden debe incluir todas las fotos de la galería, una sola vez cada una.');
+  }
+}
+
+// CU-29: las fotos de una actualización se gestionan desde ella (CU-32).
+export class PhotoBelongsToUpdateError extends BusinessRuleError {
+  constructor() {
+    super('PHOTO_BELONGS_TO_UPDATE', 'Esta foto es de una actualización; cámbiala desde la actualización.');
+  }
+}
+
+// CU-29 paso 2: sin archivos.
+export class NoFilesError extends AppError {
+  constructor() {
+    super(400, 'NO_FILES', 'Elige al menos un archivo.');
+  }
+}
+
+// CU-29 paso 2: como máximo 10 archivos por subida.
+export class TooManyFilesError extends AppError {
+  constructor() {
+    super(400, 'TOO_MANY_FILES', 'Puedes subir como máximo 10 archivos a la vez.');
+  }
+}
+
+// CU-29 paso 2: un archivo supera el máximo de cualquier tipo (50 MB).
+export class FileTooLargeError extends AppError {
+  constructor() {
+    super(413, 'FILE_TOO_LARGE', 'Algún archivo supera los 50 MB.');
+  }
+}

@@ -6,8 +6,9 @@ const METODOS_QUE_MODIFICAN = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 /**
  * Protección CSRF junto con `sameSite=lax` (TECH_SPEC §13): las peticiones que
  * modifican datos solo se aceptan con `Content-Type: application/json`, que un
- * formulario de otra web no puede enviar. Las subidas `multipart` llegarán con
- * CU-29 y exigirán la cabecera `X-Requested-With`.
+ * formulario de otra web no puede enviar. Las subidas `multipart` (CU-29)
+ * exigen además la cabecera `X-Requested-With`, que tampoco puede añadir un
+ * formulario de otra web.
  */
 export const requireJson: RequestHandler = (req, _res, next) => {
   if (!METODOS_QUE_MODIFICAN.has(req.method)) {
@@ -15,5 +16,6 @@ export const requireJson: RequestHandler = (req, _res, next) => {
     return;
   }
   const tipo = req.headers['content-type']?.split(';')[0]?.trim().toLowerCase();
-  next(tipo === 'application/json' ? undefined : new UnsupportedMediaTypeError());
+  const subida = tipo === 'multipart/form-data' && Boolean(req.headers['x-requested-with']);
+  next(tipo === 'application/json' || subida ? undefined : new UnsupportedMediaTypeError());
 };
