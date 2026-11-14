@@ -1,0 +1,20 @@
+/* Fijo en la parte inferior, sin velo: no bloquea la página (SCREENS §2.4). */
+.notice {
+  position: fixed;
+  right: 0;
+  bottom: var(--space-4);
+  left: 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.notice > * > * {
+  pointer-events: auto;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+}

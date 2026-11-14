@@ -24,10 +24,13 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
+import { AboutPage } from './pages/public/AboutPage';
 import { AnimalPage } from './pages/public/AnimalPage';
 import { CatalogPage } from './pages/public/CatalogPage';
+import { CookiesPage } from './pages/public/CookiesPage';
 import { HomePage } from './pages/public/HomePage';
 import { HowItWorksPage } from './pages/public/HowItWorksPage';
+import { PrivacyPage } from './pages/public/PrivacyPage';
 
 // Rutas del navegador (TECH_SPEC §12.1). Las demás llegarán con sus casos de uso.
 export const routes: RouteObject[] = [
@@ -67,6 +70,9 @@ export const routes: RouteObject[] = [
       { path: 'animals', element: <CatalogPage /> },
       { path: 'animals/:id', element: <AnimalPage /> },
       { path: 'how-it-works', element: <HowItWorksPage /> },
+      { path: 'about', element: <AboutPage /> },
+      { path: 'privacy', element: <PrivacyPage /> },
+      { path: 'cookies', element: <CookiesPage /> },
       { path: 'adopt/:animalId', element: <AdoptPage /> },
       {
         // Área del adoptante (SCREENS §4).

@@ -100,7 +100,7 @@ En móvil, las columnas se apilan. En el panel de gestión no hay pie.
 
 ### 2.4 Cookies
 
-Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la parte inferior de la pantalla (no una ventana emergente, porque no bloquea nada): «Solo usamos cookies técnicas para mantener tu sesión. [Más información] [Entendido]». Se recuerda en el navegador.
+Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la parte inferior de la pantalla (no una ventana emergente, porque no bloquea nada): «Solo usamos cookies técnicas para mantener tu sesión. [Más información] [Entendido]». Se recuerda en el navegador. «Más información» lleva a `/cookies` (§3.9); «Entendido» lo cierra y lo guarda en `localStorage` (`cookie-notice`). Si el navegador no deja guardar, el aviso vuelve a salir en la siguiente visita. No aparece en el panel de gestión.
 
 ## 3. Web pública
 
@@ -299,6 +299,8 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 
 Historia del santuario (texto con foto), ubicación (dirección en texto; sin mapas de servicios de terceros) y el formulario de contacto: nombre, email, asunto, mensaje y la casilla de privacidad. En escritorio, el texto y el formulario van en dos columnas; en móvil, apilados. Resultado con aviso en línea encima del formulario.
 
+**En la Fase 1** la página se publica sin el formulario (llega con CU-06 en la Fase 2): historia y ubicación en una columna de lectura, y al final [■ Ver animales]. Los textos están en `locales/es.json` (`about.*`) para que el santuario los sustituya por los reales.
+
 ### 3.7 En memoria (`/memorial`) — CU-12 (Fase 3)
 
 Introducción breve y respetuosa, y una cuadrícula de tarjetas como la del catálogo, sin contador de adoptantes y con las fechas «2022 – 2026». Tono sobrio: sin el separador decorativo caramelo ni botones de adopción.
@@ -333,6 +335,13 @@ Todas las pantallas de autenticación comparten el mismo esquema: **una tarjeta 
 | Verificar email (`/verify-email`) | Solo un aviso (éxito o error) y un botón: [Ir a Mis animales] o [Reenviar email] |
 | He olvidado mi contraseña (`/forgot-password`) | Email y [■ Enviar enlace]; después, aviso `info` con el mensaje neutro |
 | Nueva contraseña (`/reset-password`) | Nueva contraseña y repetirla, [■ Guardar contraseña]. También la usan los trabajadores invitados, con el título «Elige tu contraseña». |
+
+### 3.9 Privacidad (`/privacy`) y cookies (`/cookies`) — RGPD
+
+Dos páginas de lectura con el mismo esquema que «Cómo funciona» (§3.4): una columna de 70 caracteres de ancho máximo, título h1, fecha «Última actualización» en `--color-text-muted` y secciones con h2. Sin formularios ni botones, salvo los enlaces del texto. El aviso del pie «Proyecto académico · Los pagos son simulados» se repite al principio como aviso `info`.
+
+- **Privacidad** (enlazada desde el pie y desde la casilla del registro): quién es el responsable, qué datos se guardan (nombre, apellidos, email, teléfono opcional, adopciones y pagos simulados; nunca datos de tarjeta), para qué, cuánto tiempo, con quién se comparten (con nadie: todo en el servidor del santuario) y los derechos (acceso y rectificación desde «Mi perfil»; supresión, oposición y el resto, escribiendo al santuario).
+- **Cookies** (enlazada desde el pie y desde el aviso de cookies, §2.4): una tabla con las cookies y el almacenamiento del navegador que se usan (columnas: nombre, para qué sirve, duración, tipo), todas técnicas: la cookie de sesión `sid` (7 días desde la última visita), y en `localStorage` el tema elegido (`theme`) y si se ha cerrado el aviso de cookies (`cookie-notice`). Explica que no hay cookies de análisis ni de publicidad, y cómo borrarlas desde el navegador. En móvil, la tabla se convierte en una lista de tarjetas, como las del panel.
 
 ## 4. Área del adoptante
 
@@ -691,6 +700,7 @@ flowchart TD
 | Donar y agradecimiento | `/donate` | Pública | CU-05 | 2 |
 | Sobre el santuario y contacto | `/about` | Pública | CU-06 | 1 (contacto: 2) |
 | En memoria | `/memorial` | Pública | CU-12 | 3 |
+| Privacidad y cookies | `/privacy`, `/cookies` | Pública | — | 1 |
 | Registro, entrar, verificar, recuperar contraseña | `/register`, `/login`, `/verify-email`, `/forgot-password`, `/reset-password` | Pública | CU-07 a CU-10 | 1 |
 | Adoptar | `/adopt/:animalId` | Adoptante | CU-13, CU-14 | 1 |
 | Mis animales | `/my-animals` | Adoptante | CU-15, CU-20, CU-21, CU-22 | 1 |

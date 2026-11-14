@@ -31,9 +31,14 @@ interface AlertProps {
   action?: ReactNode;
   /** Si se indica, el aviso se puede cerrar (y el de éxito se cierra solo). */
   onClose?: () => void;
+  /**
+   * Avisos fijos que ya están al cargar la página (p. ej., el de cookies): se
+   * exponen como una región con este nombre en lugar de anunciarse en directo.
+   */
+  label?: string;
 }
 
-export function Alert({ type, title, children, action, onClose }: AlertProps) {
+export function Alert({ type, title, children, action, onClose, label }: AlertProps) {
   const { t } = useTranslation();
   const [pausado, setPausado] = useState(false);
   const cerrar = useRef(onClose);
@@ -51,7 +56,8 @@ export function Alert({ type, title, children, action, onClose }: AlertProps) {
   return (
     <div
       className={`${styles.alert} ${styles[type]}`}
-      role={type === 'error' ? 'alert' : 'status'}
+      role={label ? 'region' : type === 'error' ? 'alert' : 'status'}
+      aria-label={label}
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocus={() => setPausado(true)}

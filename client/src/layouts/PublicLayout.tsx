@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useLocation } from 'react-router';
 import { Alert } from '../components/Alert';
+import { CookieNotice } from '../components/CookieNotice';
 import { Footer } from '../components/Footer';
 import { PublicHeader } from '../components/PublicHeader';
 import { ResendVerificationButton } from '../components/ResendVerificationButton';
@@ -51,6 +52,7 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <CookieNotice />
     </>
   );
 }

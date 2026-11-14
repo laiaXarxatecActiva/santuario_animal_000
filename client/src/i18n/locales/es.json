@@ -151,7 +151,8 @@
     "errorLoadingNews": "No hemos podido cargar las noticias",
     "showPhotoExclusive": "Ver foto {{n}} de {{total}} (solo adoptantes)",
     "alreadyAdopting": "Ya adoptas a {{name}}",
-    "seeFullProfile": "Ver su ficha completa"
+    "seeFullProfile": "Ver su ficha completa",
+    "enlargePhoto": "Ver la foto {{n}} de {{total}} en grande"
   },
   "howItWorks": {
     "title": "Cómo funciona la adopción simbólica",
@@ -652,6 +653,65 @@
       "deleted": "Actualización borrada.",
       "confirmDelete": "¿Borrar «{{title}}»?",
       "confirmDeleteText": "Se borrarán también sus fotos. Esta acción no se puede deshacer."
+    }
+  },
+  "viewer": {
+    "previous": "Foto anterior",
+    "next": "Foto siguiente",
+    "counter": "{{n}} de {{total}}"
+  },
+  "cookieNotice": {
+    "label": "Aviso de cookies",
+    "text": "Solo usamos cookies técnicas para mantener tu sesión.",
+    "more": "Más información",
+    "accept": "Entendido"
+  },
+  "about": {
+    "title": "Sobre el santuario",
+    "intro": "Somos un pequeño santuario dedicado a los buitres que, por un accidente o una enfermedad, ya no pueden sobrevivir en libertad.",
+    "historyTitle": "Nuestra historia",
+    "historyText": "El santuario nació para dar un hogar definitivo a buitres rescatados tras electrocutarse en tendidos eléctricos, envenenarse o chocar con aerogeneradores. Cuando un centro de recuperación no puede devolverlos a la naturaleza, vienen aquí.\n\nCada buitre tiene su voladero, una alimentación adaptada y los cuidados veterinarios que necesita durante el resto de su vida. Las adopciones simbólicas y las donaciones pagan una parte de esos cuidados.",
+    "locationTitle": "Dónde estamos",
+    "locationText": "Dirección por confirmar.",
+    "visitsText": "El santuario no está abierto al público: así los animales viven tranquilos. Puedes conocerlos a través de sus fichas y de las noticias que publicamos.",
+    "seeAnimals": "Ver animales"
+  },
+  "legal": {
+    "lastUpdated": "Última actualización: {{date}}",
+    "academicNote": "Proyecto académico: el santuario es ficticio y los pagos son simulados.",
+    "privacy": {
+      "title": "Política de privacidad",
+      "responsibleTitle": "Quién es el responsable",
+      "responsibleText": "El responsable de tus datos es el Santuario de Animales. Puedes escribirnos con los datos de contacto de <0>Sobre el santuario</0>.",
+      "dataTitle": "Qué datos guardamos",
+      "dataText": "Al crear tu cuenta guardamos tu nombre, tus apellidos, tu email, tu contraseña cifrada y, si nos lo das, tu teléfono. Cuando adoptas, guardamos tus adopciones, el plan elegido y los pagos. Nunca guardamos datos de tarjetas: los pagos son simulados y, aunque no lo fueran, los gestionaría la pasarela de pago.",
+      "purposeTitle": "Para qué los usamos",
+      "purposeText": "Para gestionar tu cuenta y tus adopciones, enviarte las noticias de los animales que adoptas y los avisos de tus cuotas según las preferencias de tu perfil, y mostrar tu nombre en la ficha de un animal solo si lo activas.",
+      "retentionTitle": "Cuánto tiempo los guardamos",
+      "retentionText": "Mientras tengas la cuenta. Si pides darla de baja, borramos tus datos personales y solo conservamos, sin tu nombre, los pagos que la ley obliga a guardar.",
+      "sharingTitle": "Con quién los compartimos",
+      "sharingText": "Con nadie. Todo se guarda en el servidor del santuario y no usamos servicios de análisis ni de publicidad.",
+      "rightsTitle": "Tus derechos",
+      "rightsText": "Puedes consultar y corregir tus datos en <0>Mi perfil</0>. Para borrarlos, oponerte a su uso o pedir una copia, escríbenos. Si crees que no los tratamos bien, puedes reclamar ante la Agencia Española de Protección de Datos.",
+      "cookiesText": "Lo que guardamos en tu navegador se explica en la <0>política de cookies</0>."
+    },
+    "cookies": {
+      "title": "Política de cookies",
+      "intro": "Una cookie es un pequeño archivo que una web guarda en tu navegador. No usamos cookies de análisis ni de publicidad: solo las técnicas, imprescindibles para que la web funcione, que no necesitan tu permiso.",
+      "tableTitle": "Cookies y datos guardados en tu navegador",
+      "name": "Nombre",
+      "purpose": "Para qué sirve",
+      "duration": "Duración",
+      "type": "Tipo",
+      "sidPurpose": "Mantiene tu sesión iniciada.",
+      "sidDuration": "7 días desde tu última visita",
+      "sidType": "Cookie técnica",
+      "themePurpose": "Recuerda si prefieres el modo claro o el oscuro.",
+      "noticePurpose": "Recuerda que ya has cerrado el aviso de cookies.",
+      "untilDeleted": "Hasta que la borres",
+      "localStorage": "Almacenamiento local",
+      "deleteTitle": "Cómo borrarlas",
+      "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión."
     }
   }
 }
