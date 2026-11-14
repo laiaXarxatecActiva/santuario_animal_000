@@ -29,6 +29,31 @@
   border-radius: var(--radius-lg);
 }
 
+.enlarge {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+  cursor: zoom-in;
+}
+
+.enlargeIcon {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: var(--size-touch);
+  height: var(--size-touch);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-round);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
 .thumbs {
   display: flex;
   gap: var(--space-2);
@@ -150,4 +175,31 @@
 
 .exclusiveBadge {
   margin-top: var(--space-2);
+}
+
+/* Barra «Adoptar» fija abajo, solo en móvil y tablet (SCREENS §3.3). */
+.stickyBar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 15;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Hueco al final de la página para que la barra no tape el pie. */
+:global(body):has(.stickyBar) {
+  padding-bottom: calc(var(--size-touch) + 2 * var(--space-3));
+}
+
+@media (min-width: 1024px) {
+  .stickyBar {
+    display: none;
+  }
+
+  :global(body):has(.stickyBar) {
+    padding-bottom: 0;
+  }
 }

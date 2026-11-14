@@ -70,6 +70,10 @@
   --content-max: 1200px;
   --reading-max: 70ch;
 
+  /* Visor de fotos (§8.4): iguales en ambos modos, porque el fondo siempre es oscuro. */
+  --viewer-backdrop: rgba(30, 25, 21, 0.92);
+  --viewer-text: #fffdf9;
+
   /* Movimiento */
   --duration-fast: 150ms;
   --duration-base: 200ms;

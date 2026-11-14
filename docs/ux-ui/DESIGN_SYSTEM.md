@@ -262,6 +262,8 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Portada de un animal | `star` |
 | Mover arriba / abajo (orden de las fotos) | `arrow-up` / `arrow-down` |
 | Vídeo | `video` |
+| Anterior / siguiente (visor de fotos) | `chevron-left` / `chevron-right` |
+| Ampliar una foto | `expand` |
 
 ### 6.2 Logo provisional
 
@@ -418,7 +420,7 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 | Ancho | Máximo 560 px; en móvil, el ancho de la pantalla menos 16 px a cada lado |
 | Cabecera | Título (Fraunces, h2) y botón de cerrar `xmark` |
 | Pie | Botones alineados a la derecha en escritorio y apilados (ancho completo) en móvil; la acción principal la última en escritorio y la primera en móvil |
-| Visor de fotos | Fondo casi opaco, foto centrada al máximo tamaño posible, flechas laterales y contador «3 de 8» |
+| Visor de fotos | Fondo casi opaco (`--viewer-backdrop`, `rgba(30, 25, 21, 0.92)`, en ambos modos), foto centrada al máximo tamaño posible, flechas laterales (`chevron-left` / `chevron-right`, desactivadas en los extremos; también con las flechas del teclado), contador «3 de 8» arriba a la izquierda y ✕ arriba a la derecha. Texto y botones en `--viewer-text` (`#fffdf9`), con el borde de los botones al 50 % de opacidad. Con una sola foto, sin flechas ni contador |
 
 **Comportamiento:** el foco va al primer elemento útil al abrir (en confirmaciones destructivas, al botón **Cancelar**, nunca al de borrar); el foco queda atrapado dentro mientras está abierta; la tecla Esc y el botón ✕ la cierran (salvo durante un pago en curso); al cerrar, el foco vuelve al botón que la abrió.
 

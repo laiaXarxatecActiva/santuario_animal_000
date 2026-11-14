@@ -1,0 +1,66 @@
+/* Visor de fotos (DESIGN_SYSTEM §8.4): fondo casi opaco y la foto al máximo tamaño. */
+.viewer {
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--viewer-text);
+}
+
+.viewer[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.viewer::backdrop {
+  background: var(--viewer-backdrop);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.counter {
+  margin-right: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.media {
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-lg);
+}
+
+/* Botones claros sobre el fondo oscuro, en ambos modos. */
+.button {
+  border-color: color-mix(in srgb, var(--viewer-text) 50%, transparent);
+  color: var(--viewer-text);
+}
+
+.button:hover {
+  background: color-mix(in srgb, var(--viewer-text) 15%, transparent);
+}
+
+.button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

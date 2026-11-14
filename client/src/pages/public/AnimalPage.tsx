@@ -1,7 +1,7 @@
-import { faFeather, faHandHoldingHeart, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faExpand, faFeather, faHandHoldingHeart, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { AdoptionPlanDto, PublicAnimalDto } from '@sanctuary/shared';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { ApiError } from '../../api/client';
@@ -10,6 +10,7 @@ import { AnimalPhoto } from '../../components/AnimalPhoto';
 import { Badge } from '../../components/Badge';
 import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
+import { PhotoViewer } from '../../components/PhotoViewer';
 import { UpdateCard } from '../../components/UpdateCard';
 import { useAnimal, useAnimalUpdates, usePlans } from '../../hooks/usePublicData';
 import { useSession } from '../../hooks/useSession';
@@ -197,11 +198,35 @@ function Galeria({ animal }: { animal: PublicAnimalDto }) {
   const { t } = useTranslation();
   const fotos = animal.photos.length > 0 ? animal.photos : animal.coverPhoto ? [animal.coverPhoto] : [];
   const [actual, setActual] = useState(0);
+  const [visor, setVisor] = useState(false);
   const principal = fotos[actual] ?? null;
 
   return (
     <div className={styles.gallery}>
-      <AnimalPhoto photo={principal} lazy={false} className={styles.mainPhoto} />
+      {principal ? (
+        // Pulsar la foto abre el visor (SCREENS §3.3, DESIGN_SYSTEM §8.9).
+        <button
+          type="button"
+          className={styles.enlarge}
+          aria-label={t('animalPage.enlargePhoto', { n: actual + 1, total: fotos.length })}
+          onClick={() => setVisor(true)}
+        >
+          <AnimalPhoto photo={principal} lazy={false} className={styles.mainPhoto} />
+          <span className={styles.enlargeIcon} aria-hidden="true">
+            <FontAwesomeIcon icon={faExpand} />
+          </span>
+        </button>
+      ) : (
+        <AnimalPhoto photo={null} lazy={false} className={styles.mainPhoto} />
+      )}
+      {visor && (
+        <PhotoViewer
+          photos={fotos}
+          start={actual}
+          title={t('animalPage.gallery', { name: animal.name })}
+          onClose={() => setVisor(false)}
+        />
+      )}
       {principal?.visibility === 'adopters' && (
         <div className={styles.exclusiveBadge}>
           <Badge tone="primary">{t('updates.adoptersOnly')}</Badge>
@@ -231,14 +256,35 @@ function Galeria({ animal }: { animal: PublicAnimalDto }) {
   );
 }
 
+/**
+ * ¿La tarjeta ya ha quedado por encima de la pantalla? Sin IntersectionObserver
+ * (navegadores muy antiguos) la barra fija simplemente no aparece.
+ */
+function useYaPasada(ref: RefObject<HTMLElement | null>, activo: boolean): boolean {
+  const [pasada, setPasada] = useState(false);
+  useEffect(() => {
+    const elemento = ref.current;
+    if (!activo || !elemento || typeof IntersectionObserver === 'undefined') return;
+    const observador = new IntersectionObserver(([entrada]) => {
+      if (entrada) setPasada(!entrada.isIntersecting && entrada.boundingClientRect.top < 0);
+    });
+    observador.observe(elemento);
+    return () => observador.disconnect();
+  }, [ref, activo]);
+  return activo && pasada;
+}
+
 function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
   const { t } = useTranslation();
   const { user } = useSession();
   const planes = usePlans();
   const desde = planMasBarato(planes.data);
+  const tarjeta = useRef<HTMLDivElement>(null);
+  const yaAdopta = user?.role === 'adopter' && animal.exclusiveAccess;
+  const barraFija = useYaPasada(tarjeta, animal.isAdoptable && !yaAdopta);
 
   // Variante «Ya adoptas a Rufo» (SCREENS §3.3): el servidor indica si tiene acceso.
-  if (user?.role === 'adopter' && animal.exclusiveAccess) {
+  if (yaAdopta) {
     return (
       <div className={styles.adoptCard}>
         <h2 className={styles.adoptTitle}>{t('animalPage.alreadyAdopting', { name: animal.name })}</h2>
@@ -250,7 +296,7 @@ function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
   }
 
   return (
-    <div className={styles.adoptCard}>
+    <div className={styles.adoptCard} ref={tarjeta}>
       <h2 className={styles.adoptTitle}>{t('animalPage.adoptCardTitle')}</h2>
       <p>{t('animalPage.adoptCardText', { name: animal.name })}</p>
       {animal.isAdoptable ? (
@@ -264,6 +310,14 @@ function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
         </>
       ) : (
         <p className={styles.notAdoptable}>{t('animalPage.notAdoptable')}</p>
+      )}
+      {barraFija && (
+        // Barra fija en móvil al pasar la tarjeta, para no tener que volver arriba (SCREENS §3.3).
+        <div role="region" aria-label={t('animalPage.adopt', { name: animal.name })} className={styles.stickyBar}>
+          <ButtonLink to={`/adopt/${animal.id}`} icon={faHandHoldingHeart} block>
+            {t('animalPage.adopt', { name: animal.name })}
+          </ButtonLink>
+        </div>
       )}
     </div>
   );

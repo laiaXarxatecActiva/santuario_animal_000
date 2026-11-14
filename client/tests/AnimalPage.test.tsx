@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { animal, page, plans, sessionUser, update } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 
@@ -120,5 +120,78 @@ describe('CU-03 Consultar la ficha pública de un animal', () => {
     expect(await screen.findByText('Ya adoptas a Rufo')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver su ficha completa' })).toHaveAttribute('href', '/my-animals/1');
     expect(screen.queryByRole('link', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
+  });
+});
+
+/** Sustituto de IntersectionObserver: la tarjeta observada ya ha quedado por encima de la pantalla (o no). */
+function tarjetaAdoptar(pasada: boolean) {
+  class Observador {
+    constructor(private readonly callback: IntersectionObserverCallback) {}
+    observe(target: Element) {
+      const top = pasada ? -200 : 100;
+      this.callback(
+        [
+          {
+            isIntersecting: !pasada,
+            target,
+            boundingClientRect: { top } as DOMRectReadOnly,
+          } as IntersectionObserverEntry,
+        ],
+        this as unknown as IntersectionObserver,
+      );
+    }
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  vi.stubGlobal('IntersectionObserver', Observador);
+}
+
+describe('CU-03 Ficha del animal: visor de fotos y barra fija (SCREENS §3.3)', () => {
+  it('pulsar la foto principal abre el visor en esa foto', async () => {
+    api();
+    renderRoute('/animals/1');
+    await userEvent.click(await screen.findByRole('button', { name: 'Ver la foto 1 de 2 en grande' }));
+    const visor = screen.getByRole('dialog', { name: 'Fotos de Rufo' });
+    expect(
+      within(visor).getByRole('img', { name: 'Rufo, buitre leonado, posado en una rampa de madera' }),
+    ).toHaveAttribute('src', '/uploads/animals/1/cover.jpg');
+    expect(within(visor).getByText('1 de 2')).toBeInTheDocument();
+    await userEvent.click(within(visor).getByRole('button', { name: 'Cerrar' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('el visor se abre en la foto elegida con las miniaturas', async () => {
+    api();
+    renderRoute('/animals/1');
+    await userEvent.click(await screen.findByRole('button', { name: 'Ver foto 2 de 2' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Ver la foto 2 de 2 en grande' }));
+    expect(within(screen.getByRole('dialog')).getByText('2 de 2')).toBeInTheDocument();
+  });
+
+  it('al pasar la tarjeta «Adoptar», aparece la barra fija con el mismo enlace', async () => {
+    tarjetaAdoptar(true);
+    api();
+    renderRoute('/animals/1');
+    const barra = await screen.findByRole('region', { name: 'Adoptar a Rufo' });
+    expect(within(barra).getByRole('link', { name: 'Adoptar a Rufo' })).toHaveAttribute('href', '/adopt/1');
+  });
+
+  it('mientras la tarjeta está a la vista, no hay barra fija', async () => {
+    tarjetaAdoptar(false);
+    api();
+    renderRoute('/animals/1');
+    expect(await screen.findByRole('link', { name: 'Adoptar a Rufo' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
+  });
+
+  it('si no admite adopciones, nunca hay barra fija', async () => {
+    tarjetaAdoptar(true);
+    api({ isAdoptable: false });
+    renderRoute('/animals/1');
+    expect(await screen.findByText('Ahora mismo no admite adopciones.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
   });
 });
