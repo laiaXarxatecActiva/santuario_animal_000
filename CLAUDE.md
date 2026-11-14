@@ -38,6 +38,7 @@ Estas reglas sustituyen a la de TECH_SPEC §7.4 («rama principal `main`»).
 
 - Instalar: `npm install`
 - Reiniciar la BD: `npm run db:reset` (desarrollo) / `npm run db:reset:test` (pruebas); ejecutan `database/seedsql.sql` y `database/TEST_DATA.sql` con `pg`, sin `psql`
+- Usuarios para pruebas manuales: `npm run users:file` escribe `USUARIOS_PRUEBA.txt` en la raíz (está en el `.gitignore`) con los usuarios actuales de la BD de desarrollo y sus contraseñas de `TEST_DATA.sql` si no han cambiado. También se regenera con `db:reset` y al arrancar `dev`.
 - Tests: `npm test` (Vitest + Supertest)
 - Comprobar tipos: `npm run typecheck`
 - Lint: `npm run lint` · Formato: `npm run format` (Prettier)

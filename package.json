@@ -11,9 +11,11 @@
     "node": ">=22"
   },
   "scripts": {
+    "predev": "npm run users:file",
     "dev": "concurrently -n api,web -c yellow,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
     "db:reset": "npm run db:reset -w server",
     "db:reset:test": "npm run db:reset:test -w server",
+    "users:file": "npm run users:file -w server",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",

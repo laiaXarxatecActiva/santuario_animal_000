@@ -1,10 +1,12 @@
 // Uso: npm run db:reset            → DATABASE_URL
 //      npm run db:reset -- --test  → TEST_DATABASE_URL
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadDatabaseConfig } from '../src/config/env.js';
+import { relojSistema } from '../src/dominio/reloj.js';
 import { resetDatabase } from '../src/db/reset.js';
 import { copyTestImages } from '../src/db/test-images.js';
+import { writeTestUsersFile } from '../src/db/test-users.js';
 
 try {
   process.loadEnvFile(new URL('../../.env', import.meta.url));
@@ -36,6 +38,16 @@ try {
       ? `${copiadas} fotos de ejemplo copiadas en ${uploadsDir}.`
       : `Sin fotos de ejemplo: no se ha encontrado ninguna en ${imagesDir}.`,
   );
+  // La base de datos de pruebas se reinicia en cada test: el .txt solo refleja la de desarrollo.
+  if (!useTest) {
+    const total = await writeTestUsersFile(
+      url,
+      join(databaseDir, 'TEST_DATA.sql'),
+      ruta('../../USUARIOS_PRUEBA.txt'),
+      relojSistema,
+    );
+    console.log(`USUARIOS_PRUEBA.txt actualizado (${total} usuarios).`);
+  }
 } catch (error) {
   console.error(`No se pudo reiniciar «${nombre}»:`, error instanceof Error ? error.message : error);
   process.exit(1);

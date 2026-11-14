@@ -8,7 +8,8 @@
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json",
     "db:reset": "tsx scripts/db-reset.ts",
-    "db:reset:test": "tsx scripts/db-reset.ts --test"
+    "db:reset:test": "tsx scripts/db-reset.ts --test",
+    "users:file": "tsx scripts/test-users-file.ts"
   },
   "dependencies": {
     "@sanctuary/shared": "^0.0.0",

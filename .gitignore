@@ -6,3 +6,6 @@ coverage/
 server/uploads/
 backups/
 images_to_use/
+
+# Usuarios y contraseñas para pruebas manuales (lo genera npm run users:file)
+USUARIOS_PRUEBA.txt
