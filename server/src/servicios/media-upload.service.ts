@@ -15,6 +15,8 @@ export interface MedioGuardado {
 export interface ResultadoGuardado {
   guardados: MedioGuardado[];
   rechazados: RejectedFileDto[];
+  /** Posición en la subida de cada rechazado. */
+  indicesRechazados: number[];
 }
 
 export type MediaUploader = ReturnType<typeof createMediaUploader>;
@@ -64,17 +66,22 @@ export function createMediaUploader(storage: StorageService, logError: (error: u
     async guardar(animalId: number, archivos: readonly ArchivoSubido[]): Promise<ResultadoGuardado> {
       const guardados: MedioGuardado[] = [];
       const rechazados: RejectedFileDto[] = [];
+      const indicesRechazados: number[] = [];
       try {
         for (const [indice, archivo] of archivos.entries()) {
           const resultado = await guardarUno(animalId, archivo, indice);
-          if ('code' in resultado) rechazados.push(resultado);
-          else guardados.push(resultado);
+          if ('code' in resultado) {
+            rechazados.push(resultado);
+            indicesRechazados.push(indice);
+          } else {
+            guardados.push(resultado);
+          }
         }
       } catch (error) {
         await borrar(urlsDe(guardados));
         throw error;
       }
-      return { guardados, rechazados };
+      return { guardados, rechazados, indicesRechazados };
     },
     borrar,
   };

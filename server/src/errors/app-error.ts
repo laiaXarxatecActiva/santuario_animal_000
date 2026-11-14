@@ -307,3 +307,24 @@ export class FileTooLargeError extends AppError {
     super(413, 'FILE_TOO_LARGE', 'Algún archivo supera los 50 MB.');
   }
 }
+
+// CU-31 precondición.
+export class UpdateAnimalArchivedError extends BusinessRuleError {
+  constructor() {
+    super('UPDATE_ANIMAL_ARCHIVED', 'No se pueden publicar actualizaciones de un animal fallecido o trasladado.');
+  }
+}
+
+// CU-32 1a.
+export class NotUpdateAuthorError extends ForbiddenError {
+  constructor() {
+    super('Solo puedes modificar tus propias actualizaciones.');
+  }
+}
+
+// CU-31: los archivos de una actualización se publican todos o ninguno.
+export class FilesRejectedError extends AppError {
+  constructor(details: ErrorDetail[]) {
+    super(422, 'FILES_REJECTED', 'Algún archivo no se puede subir; revísalo o quítalo.', details);
+  }
+}

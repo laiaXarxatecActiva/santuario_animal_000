@@ -8,6 +8,9 @@ import { ProfilePage } from './pages/ProfilePage';
 import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
 import { AnimalDataTab } from './pages/admin/AnimalDataTab';
 import { AnimalPhotosTab } from './pages/admin/AnimalPhotosTab';
+import { AnimalUpdatesTab } from './pages/admin/AnimalUpdatesTab';
+import { UpdateFormPage } from './pages/admin/UpdateFormPage';
+import { UpdatesAdminPage } from './pages/admin/UpdatesAdminPage';
 import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { NewAnimalPage } from './pages/admin/NewAnimalPage';
@@ -45,9 +48,13 @@ export const routes: RouteObject[] = [
             children: [
               { index: true, element: <AnimalDataTab /> },
               { path: 'photos', element: <AnimalPhotosTab /> },
+              { path: 'updates', element: <AnimalUpdatesTab /> },
             ],
           },
           { path: 'species', element: <SpeciesAdminPage /> },
+          { path: 'updates', element: <UpdatesAdminPage /> },
+          { path: 'updates/new', element: <UpdateFormPage /> },
+          { path: 'updates/:id', element: <UpdateFormPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

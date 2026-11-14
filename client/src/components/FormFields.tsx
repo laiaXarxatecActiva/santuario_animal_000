@@ -184,3 +184,37 @@ export function TextAreaField({ label, error, help, id, className, rows = 6, ...
     </div>
   );
 }
+
+interface RadioGroupProps<T extends string> {
+  legend: string;
+  name: string;
+  options: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}
+
+/** Botones de opción nativos agrupados (DESIGN_SYSTEM §8.5), con zona pulsable de 44 px. */
+export function RadioGroup<T extends string>({ legend, name, options, value, onChange }: RadioGroupProps<T>) {
+  const base = useId();
+  return (
+    <fieldset className={styles.radioGroup}>
+      <legend className={styles.label}>{legend}</legend>
+      {options.map((opcion) => {
+        const id = `${base}-${opcion.value}`;
+        return (
+          <div key={opcion.value} className={styles.checkbox}>
+            <input
+              id={id}
+              type="radio"
+              name={name}
+              value={opcion.value}
+              checked={value === opcion.value}
+              onChange={() => onChange(opcion.value)}
+            />
+            <label htmlFor={id}>{opcion.label}</label>
+          </div>
+        );
+      })}
+    </fieldset>
+  );
+}

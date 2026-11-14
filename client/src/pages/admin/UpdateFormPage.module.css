@@ -1,0 +1,41 @@
+/* Nueva actualización y edición (SCREENS §5.5): una columna de 720 px como máximo. */
+.page {
+  max-width: 720px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.media {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.subtitle {
+  font-size: var(--font-size-h3);
+}
+
+.current {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.list {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-5);
+}

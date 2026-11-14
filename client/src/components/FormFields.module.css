@@ -97,3 +97,12 @@
   resize: vertical;
   line-height: 1.5;
 }
+
+/* Grupo de botones de opción (DESIGN_SYSTEM §8.5). */
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

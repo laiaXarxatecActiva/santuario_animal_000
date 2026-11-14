@@ -122,3 +122,56 @@ export type PhotoOrderBody = z.infer<typeof photoOrderBodySchema>;
 
 export const coverBodySchema = z.object({ photoId: idPositivo });
 export type CoverBody = z.infer<typeof coverBodySchema>;
+
+// CU-31 y CU-32: actualizaciones. Llegan en multipart (todo como texto, y las
+// listas como JSON) o en JSON si no llevan archivos.
+
+/** Lista que puede llegar como JSON dentro de un campo de texto; vacía si no se envía. */
+const listaJson = <T extends z.ZodType>(item: T, mensaje: string) =>
+  z.preprocess(
+    (valor) => {
+      if (valor === undefined || valor === '') return [];
+      if (typeof valor !== 'string') return valor;
+      try {
+        return JSON.parse(valor) as unknown;
+      } catch {
+        return valor;
+      }
+    },
+    z.array(item, { error: mensaje }),
+  );
+
+/** Archivo adjunto a una actualización: su visibilidad es la de la actualización. */
+export const updateMediaMetaSchema = z.object({ altText });
+
+const camposActualizacion = {
+  title: textoObligatorio(200, 'Escribe el título.'),
+  body: textoObligatorio(10000, 'Escribe el texto.'),
+  visibility: visibilidad.default('adopters'),
+  meta: listaJson(updateMediaMetaSchema, FALTAN_DATOS_ARCHIVOS).pipe(
+    z.array(updateMediaMetaSchema).max(MAX_FILES_PER_UPLOAD),
+  ),
+};
+
+// CU-31 paso 2.
+export const updateCreateBodySchema = z.object({
+  animalId: z.coerce.number({ error: 'Elige el animal.' }).int().positive({ error: 'Elige el animal.' }),
+  ...camposActualizacion,
+});
+export type UpdateCreateBody = z.input<typeof updateCreateBodySchema>;
+export type UpdateCreateData = z.infer<typeof updateCreateBodySchema>;
+
+// CU-32 paso 2: el animal no cambia; se pueden añadir y quitar fotos.
+export const updateEditBodySchema = z.object({
+  ...camposActualizacion,
+  removePhotoIds: listaJson(idPositivo, 'La lista de fotos no es válida.'),
+});
+export type UpdateEditData = z.infer<typeof updateEditBodySchema>;
+
+// CU-31: listado del panel.
+export const adminUpdatesQuerySchema = paginationQuerySchema.extend({
+  animalId: z.coerce.number().int().positive().optional(),
+  visibility: z.enum(VISIBILITIES).optional(),
+  authorId: z.coerce.number().int().positive().optional(),
+});
+export type AdminUpdatesQuery = z.infer<typeof adminUpdatesQuerySchema>;

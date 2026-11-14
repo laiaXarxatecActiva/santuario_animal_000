@@ -227,7 +227,10 @@
     "UNSUPPORTED_FORMAT": "Formato no permitido: solo JPEG, PNG, WebP o MP4.",
     "IMAGE_TOO_LARGE": "La imagen supera los 5 MB.",
     "VIDEO_TOO_LARGE": "El vídeo supera los 50 MB.",
-    "INVALID_FILE": "El archivo está dañado o no corresponde a su formato."
+    "INVALID_FILE": "El archivo está dañado o no corresponde a su formato.",
+    "UPDATE_ANIMAL_ARCHIVED": "No se pueden publicar actualizaciones de un animal fallecido o trasladado.",
+    "FILES_REJECTED": "Algún archivo no se puede subir; revísalo o quítalo.",
+    "ANIMAL_NOT_FOUND": "Este animal no existe."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -453,7 +456,8 @@
       "groupAdmin": "Administración",
       "viewSite": "Ver la web",
       "animals": "Animales",
-      "species": "Especies"
+      "species": "Especies",
+      "updates": "Actualizaciones"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -582,7 +586,8 @@
       "deleted": "{{name}} se ha borrado",
       "statusSince": "Desde el {{date}}",
       "sexUnknown": "Desconocido",
-      "tabPhotos": "Fotos"
+      "tabPhotos": "Fotos",
+      "tabUpdates": "Actualizaciones"
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -621,6 +626,32 @@
       "deleteCoverWarning": "Es la portada: el animal se quedará sin portada.",
       "deleted": "Foto borrada.",
       "deletedCover": "Foto borrada. El animal se ha quedado sin portada: elige otra."
+    },
+    "updates": {
+      "title": "Actualizaciones",
+      "new": "Nueva actualización",
+      "editTitle": "Editar actualización",
+      "date": "Fecha",
+      "animal": "Animal",
+      "chooseAnimal": "Elige un animal",
+      "titleColumn": "Título",
+      "titleField": "Título",
+      "body": "Texto",
+      "media": "Fotos y vídeos",
+      "author": "Autor",
+      "allAuthors": "Todos",
+      "mine": "Las mías",
+      "empty": "No hay actualizaciones con estos filtros.",
+      "loadError": "No hemos podido cargar las actualizaciones",
+      "notFound": "Esta actualización no existe.",
+      "cannotEdit": "Solo su autor o un administrador puede modificar esta actualización.",
+      "publish": "Publicar",
+      "save": "Guardar cambios",
+      "published": "Actualización publicada.",
+      "saved": "Actualización guardada.",
+      "deleted": "Actualización borrada.",
+      "confirmDelete": "¿Borrar «{{title}}»?",
+      "confirmDeleteText": "Se borrarán también sus fotos. Esta acción no se puede deshacer."
     }
   }
 }

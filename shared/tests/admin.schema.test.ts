@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adminUpdatesQuerySchema,
   coverBodySchema,
   photoOrderBodySchema,
   photoPatchBodySchema,
   photoUploadBodySchema,
+  updateCreateBodySchema,
+  updateEditBodySchema,
 } from '../src/schemas/admin.schema.js';
 
 const errores = (resultado: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) =>
@@ -59,5 +62,70 @@ describe('CU-29 esquemas de fotos y vídeos', () => {
     expect(photoOrderBodySchema.safeParse({ photoIds: [1, 'x'] }).success).toBe(false);
     expect(coverBodySchema.parse({ photoId: 4 })).toEqual({ photoId: 4 });
     expect(coverBodySchema.safeParse({ photoId: 0 }).success).toBe(false);
+  });
+});
+
+describe('CU-31 y CU-32 esquemas de las actualizaciones', () => {
+  it('CU-31 2: animal, título, texto y visibilidad (por defecto, solo adoptantes); en multipart llegan como texto', () => {
+    expect(
+      updateCreateBodySchema.parse({
+        animalId: '3',
+        title: ' Turia y la lluvia ',
+        body: 'Le encanta.',
+        meta: JSON.stringify([{ altText: 'Turia mojada' }]),
+      }),
+    ).toEqual({
+      animalId: 3,
+      title: 'Turia y la lluvia',
+      body: 'Le encanta.',
+      visibility: 'adopters',
+      meta: [{ altText: 'Turia mojada' }],
+    });
+  });
+
+  it('CU-31: también se acepta JSON, sin archivos', () => {
+    expect(updateCreateBodySchema.parse({ animalId: 1, title: 'Hola', body: 'Texto', visibility: 'public' })).toEqual({
+      animalId: 1,
+      title: 'Hola',
+      body: 'Texto',
+      visibility: 'public',
+      meta: [],
+    });
+  });
+
+  it('CU-31 3a: título o texto vacíos dan error en el campo; sin animal también', () => {
+    expect(errores(updateCreateBodySchema.safeParse({ title: ' ', body: '' }))).toEqual([
+      { field: 'animalId', message: 'Elige el animal.' },
+      { field: 'title', message: 'Escribe el título.' },
+      { field: 'body', message: 'Escribe el texto.' },
+    ]);
+    expect(errores(updateCreateBodySchema.safeParse({ animalId: 1, title: 'a'.repeat(201), body: 'x' }))).toEqual([
+      { field: 'title', message: 'No puede tener más de 200 caracteres.' },
+    ]);
+  });
+
+  it('CU-31 2: cada archivo adjunto lleva texto alternativo', () => {
+    const meta = JSON.stringify([{ altText: '' }]);
+    expect(errores(updateCreateBodySchema.safeParse({ animalId: 1, title: 'a', body: 'b', meta }))).toEqual([
+      { field: 'meta.0.altText', message: 'Escribe el texto alternativo.' },
+    ]);
+  });
+
+  it('CU-32 2: la edición no cambia el animal y puede quitar fotos', () => {
+    expect(
+      updateEditBodySchema.parse({ title: 'T', body: 'B', visibility: 'public', removePhotoIds: '[19, 20]' }),
+    ).toEqual({ title: 'T', body: 'B', visibility: 'public', meta: [], removePhotoIds: [19, 20] });
+    expect(updateEditBodySchema.parse({ title: 'T', body: 'B' })).toMatchObject({ removePhotoIds: [] });
+    expect(updateEditBodySchema.safeParse({ title: 'T', body: 'B', removePhotoIds: '[0]' }).success).toBe(false);
+  });
+
+  it('el listado se filtra por animal, visibilidad y autor', () => {
+    expect(adminUpdatesQuerySchema.parse({ animalId: '1', visibility: 'public', authorId: '3' })).toMatchObject({
+      animalId: 1,
+      visibility: 'public',
+      authorId: 3,
+      page: 1,
+    });
+    expect(adminUpdatesQuerySchema.safeParse({ visibility: 'secret' }).success).toBe(false);
   });
 });

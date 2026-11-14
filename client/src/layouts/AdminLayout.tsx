@@ -4,6 +4,7 @@ import {
   faBars,
   faFeather,
   faGauge,
+  faNewspaper,
   faTags,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
@@ -43,6 +44,7 @@ const GRUPOS: readonly Grupo[] = [
     key: 'admin.nav.groupAnimals',
     links: [
       { to: '/admin/animals', key: 'admin.nav.animals', icon: faFeather },
+      { to: '/admin/updates', key: 'admin.nav.updates', icon: faNewspaper },
       { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
     ],
   },

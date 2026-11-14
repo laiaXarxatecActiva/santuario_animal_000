@@ -245,3 +245,9 @@ export async function exists(db: Queryable, id: number, opciones: { forUpdate?: 
   ]);
   return rowCount === 1;
 }
+
+/** Estado del animal (CU-31), o `null` si no existe. Lo bloquea para que no cambie mientras se publica. */
+export async function findStatus(db: Queryable, id: number): Promise<AnimalStatus | null> {
+  const { rows } = await db.query<{ status: AnimalStatus }>('SELECT status FROM animals WHERE id = $1 FOR SHARE', [id]);
+  return rows[0]?.status ?? null;
+}

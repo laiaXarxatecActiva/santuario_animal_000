@@ -1,6 +1,9 @@
 import type {
   AdminAnimalDto,
   AdminPhotoDto,
+  AdminUpdateDto,
+  AdminUpdateListItemDto,
+  AdminUpdatesQuery,
   PhotoPatchBody,
   PhotoUploadResultDto,
   AdminAnimalsQuery,
@@ -14,6 +17,7 @@ import type {
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './client';
 
 export type AdminAnimalsParams = Partial<AdminAnimalsQuery>;
+export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
@@ -46,5 +50,14 @@ export const adminApi = {
       apiPut(`/api/admin/animals/${animalId}/photos/order`, { photoIds }),
     setCover: (animalId: number, photoId: number) => apiPut(`/api/admin/animals/${animalId}/cover`, { photoId }),
     remove: (id: number) => apiDelete(`/api/admin/photos/${id}`),
+  },
+
+  // CU-31 y CU-32: actualizaciones (multipart, por si llevan archivos).
+  updates: {
+    list: (params: AdminUpdatesParams) => apiGet<Paginated<AdminUpdateListItemDto>>('/api/admin/updates', params),
+    get: (id: number) => apiGet<AdminUpdateDto>(`/api/admin/updates/${id}`),
+    create: (datos: FormData) => apiUpload<AdminUpdateDto>('/api/admin/updates', datos),
+    update: (id: number, datos: FormData) => apiUpload<AdminUpdateDto>(`/api/admin/updates/${id}`, datos, 'PUT'),
+    remove: (id: number) => apiDelete(`/api/admin/updates/${id}`),
   },
 };

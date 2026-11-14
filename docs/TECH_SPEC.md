@@ -555,8 +555,9 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PUT | `/api/admin/species/:id` | Cuidador, admin | Edición | CU-30 |
 | DELETE | `/api/admin/species/:id` | Admin | Solo si ningún animal la usa | CU-30 |
 | GET | `/api/admin/updates` | Cuidador, admin | Listado; filtro `?animalId=` | CU-31 |
-| POST | `/api/admin/updates` | Cuidador, admin | Publica y notifica a los adoptantes activos | CU-31 |
-| PUT | `/api/admin/updates/:id` | Autor, admin | Edición | CU-32 |
+| GET | `/api/admin/updates/:id` | Cuidador, admin | Detalle con el texto y las fotos; `canEdit` indica si quien consulta puede editarla | CU-32 |
+| POST | `/api/admin/updates` | Cuidador, admin | Publica y notifica a los adoptantes activos (la notificación llega en la Fase 2). JSON o, con fotos, `multipart/form-data` (`files` + `meta` con el texto alternativo de cada una); las fotos heredan la visibilidad de la actualización y, si alguna no es válida, no se publica nada (422 `FILES_REJECTED`) | CU-31 |
+| PUT | `/api/admin/updates/:id` | Autor, admin | Edición (sin volver a notificar): título, texto, visibilidad, fotos nuevas y `removePhotoIds` | CU-32 |
 | DELETE | `/api/admin/updates/:id` | Autor, admin | Borrado (y sus fotos) | CU-32 |
 | GET / POST | `/api/admin/animals/:id/vet-records` | Cuidador, admin | Historial veterinario (Fase 3) | CU-34 |
 | PUT | `/api/admin/vet-records/:id` | Cuidador, admin | Edición (Fase 3) | CU-34 |

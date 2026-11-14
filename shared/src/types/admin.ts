@@ -1,5 +1,5 @@
 import type { AnimalSex } from '../constants/animals.js';
-import type { AnimalStatus } from '../constants/status.js';
+import type { AnimalStatus, Visibility } from '../constants/status.js';
 import type { PhotoDto } from './public.js';
 
 export type UpdateAlertLevel = 'warning' | 'error';
@@ -76,4 +76,24 @@ export interface RejectedFileDto {
 export interface PhotoUploadResultDto {
   created: AdminPhotoDto[];
   rejected: RejectedFileDto[];
+}
+
+/** Fila del listado de actualizaciones del panel (CU-31, CU-32). */
+export interface AdminUpdateListItemDto {
+  id: number;
+  animal: { id: number; name: string };
+  author: { id: number; name: string };
+  title: string;
+  visibility: Visibility;
+  publishedAt: string;
+  photoCount: number;
+  /** El usuario puede editarla o borrarla (autor o administrador). Solo orienta la interfaz. */
+  canEdit: boolean;
+}
+
+/** Actualización completa en el panel. */
+export interface AdminUpdateDto extends AdminUpdateListItemDto {
+  body: string;
+  updatedAt: string;
+  photos: AdminPhotoDto[];
 }

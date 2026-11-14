@@ -1,5 +1,6 @@
 import {
   adminAnimalsQuerySchema,
+  adminUpdatesQuerySchema,
   animalBodySchema,
   animalStatusBodySchema,
   coverBodySchema,
@@ -8,6 +9,8 @@ import {
   photoPatchBodySchema,
   photoUploadBodySchema,
   speciesBodySchema,
+  updateCreateBodySchema,
+  updateEditBodySchema,
   WORKER_ROLES,
 } from '@sanctuary/shared';
 import { Router } from 'express';
@@ -15,6 +18,7 @@ import { createAnimalAdminController } from '../controllers/animal-admin.control
 import { createDashboardController } from '../controllers/dashboard.controller.js';
 import { createPhotoAdminController } from '../controllers/photo-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
+import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
@@ -22,12 +26,14 @@ import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
+import type { UpdateAdminService } from '../servicios/update-admin.service.js';
 
 export interface AdminRoutesDeps {
   dashboard: DashboardService;
   species: SpeciesAdminService;
   animals: AnimalAdminService;
   photos: PhotoAdminService;
+  updates: UpdateAdminService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -76,6 +82,21 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.put('/animals/:id/cover', validate({ params: idParamsSchema, body: coverBodySchema }), fotos.setCover);
   router.patch('/photos/:id', validate({ params: idParamsSchema, body: photoPatchBodySchema }), fotos.update);
   router.delete('/photos/:id', conId, fotos.remove);
+
+  // CU-31 y CU-32: actualizaciones (en multipart si llevan archivos). Editar y
+  // borrar exige ser el autor o administrador: lo comprueba el caso de uso.
+  const actualizaciones = createUpdateAdminController(deps.updates);
+  router.get('/updates', validate({ query: adminUpdatesQuerySchema }), actualizaciones.list);
+  router.post('/updates', uploadFiles(), validate({ body: updateCreateBodySchema }), actualizaciones.create);
+  router.get('/updates/:id', conId, actualizaciones.get);
+  router.put(
+    '/updates/:id',
+    conId,
+    uploadFiles(),
+    validate({ params: idParamsSchema, body: updateEditBodySchema }),
+    actualizaciones.update,
+  );
+  router.delete('/updates/:id', conId, actualizaciones.remove);
 
   return router;
 }

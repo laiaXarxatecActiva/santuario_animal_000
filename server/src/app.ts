@@ -26,6 +26,7 @@ import { createPhotoAdminService } from './servicios/photo-admin.service.js';
 import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 import { createSpeciesAdminService } from './servicios/species-admin.service.js';
+import { createUpdateAdminService } from './servicios/update-admin.service.js';
 
 export interface AppOptions {
   db: Pool;
@@ -111,6 +112,7 @@ export function createApp(options: AppOptions): Express {
       species: createSpeciesAdminService({ db }),
       animals: createAnimalAdminService({ db, reloj }),
       photos: createPhotoAdminService({ db, media }),
+      updates: createUpdateAdminService({ db, reloj, media }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

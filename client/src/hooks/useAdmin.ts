@@ -1,5 +1,6 @@
+import { ARCHIVED_ANIMAL_STATUSES, type AnimalStatus } from '@sanctuary/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { adminApi, type AdminAnimalsParams } from '../api/admin';
+import { adminApi, type AdminAnimalsParams, type AdminUpdatesParams } from '../api/admin';
 
 export const ADMIN_KEY = ['admin'] as const;
 export const ADMIN_SPECIES_KEY = [...ADMIN_KEY, 'species'] as const;
@@ -35,3 +36,29 @@ export const adminPhotosKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'phot
 /** CU-29: galería del animal en el panel. */
 export const useAdminPhotos = (animalId: number) =>
   useQuery({ queryKey: adminPhotosKey(animalId), queryFn: () => adminApi.photos.list(animalId).then((r) => r.data) });
+
+export const ADMIN_UPDATES_KEY = [...ADMIN_KEY, 'updates'] as const;
+
+/** CU-31: listado de actualizaciones con filtros y páginas. */
+export const useAdminUpdates = (params: AdminUpdatesParams) =>
+  useQuery({
+    queryKey: [...ADMIN_UPDATES_KEY, 'list', params],
+    queryFn: () => adminApi.updates.list(params),
+    placeholderData: keepPreviousData,
+  });
+
+/** CU-32: una actualización para editarla. */
+export const useAdminUpdate = (id: number | undefined) =>
+  useQuery({
+    queryKey: [...ADMIN_UPDATES_KEY, 'detail', id ?? 0],
+    queryFn: () => adminApi.updates.get(id ?? 0),
+    enabled: id !== undefined,
+  });
+
+/** Animales que admiten actualizaciones (CU-31): ni fallecidos ni trasladados. */
+export const useAnimalsForUpdates = () =>
+  useQuery({
+    queryKey: [...ADMIN_ANIMALS_KEY, 'list', { pageSize: 100, sort: 'name' }],
+    queryFn: () => adminApi.animals.list({ pageSize: 100, sort: 'name' }),
+    select: (r) => r.data.filter((a) => !(ARCHIVED_ANIMAL_STATUSES as readonly AnimalStatus[]).includes(a.status)),
+  });

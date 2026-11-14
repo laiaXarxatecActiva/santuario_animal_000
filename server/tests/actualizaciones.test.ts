@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { diasEntre, nivelAlertaActualizacion } from '../src/dominio/actualizaciones.js';
+import {
+  fotosQuitadasValidas,
+  puedeModificarActualizacion,
+  puedePublicarActualizacion,
+} from '../src/dominio/actualizaciones.js';
 
 describe('diasEntre', () => {
   it('cuenta los días naturales entre dos fechas YYYY-MM-DD', () => {
@@ -25,5 +30,27 @@ describe('CU-27 nivelAlertaActualizacion (RN-14)', () => {
   it('alerta en rojo desde los 14 días', () => {
     expect(nivelAlertaActualizacion(14)).toBe('error');
     expect(nivelAlertaActualizacion(40)).toBe('error');
+  });
+});
+
+describe('CU-31 y CU-32 reglas de publicación y edición', () => {
+  it('CU-31 precondición: no se publica sobre un animal fallecido o trasladado', () => {
+    expect(puedePublicarActualizacion('in_sanctuary')).toBe(true);
+    expect(puedePublicarActualizacion('in_treatment')).toBe(true);
+    expect(puedePublicarActualizacion('deceased')).toBe(false);
+    expect(puedePublicarActualizacion('transferred')).toBe(false);
+  });
+
+  it('CU-32 1a: un cuidador solo modifica las suyas; el administrador, cualquiera', () => {
+    expect(puedeModificarActualizacion({ id: 3, role: 'caretaker' }, 3)).toBe(true);
+    expect(puedeModificarActualizacion({ id: 3, role: 'caretaker' }, 4)).toBe(false);
+    expect(puedeModificarActualizacion({ id: 1, role: 'admin' }, 4)).toBe(true);
+    expect(puedeModificarActualizacion({ id: 6, role: 'adopter' }, 6)).toBe(false);
+  });
+
+  it('CU-32 2: solo se pueden quitar fotos de la propia actualización', () => {
+    expect(fotosQuitadasValidas([19, 22], [19])).toBe(true);
+    expect(fotosQuitadasValidas([19, 22], [])).toBe(true);
+    expect(fotosQuitadasValidas([19, 22], [20])).toBe(false);
   });
 });
