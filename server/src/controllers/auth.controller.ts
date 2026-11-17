@@ -1,11 +1,14 @@
 import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, tokenSchema } from '@sanctuary/shared';
 import type { Request, RequestHandler } from 'express';
 import { UnauthorizedError } from '../errors/app-error.js';
-import { cookieOptions, destroySession, regenerateSession, SESSION_COOKIE } from '../middlewares/session.js';
+import { cookieOptions, destroySession, regenerateSession, sessionCookieName } from '../middlewares/session.js';
 import { validated } from '../middlewares/validate.js';
 import type { AuthService } from '../servicios/auth.service.js';
 
 export const FORGOT_PASSWORD_MESSAGE = 'Si existe una cuenta con ese email, recibirás un enlace.';
+
+/** CU-07: la misma respuesta tanto si el email es nuevo como si ya tenía cuenta. */
+export const REGISTER_MESSAGE = 'Te hemos enviado un email. Revisa tu bandeja de entrada para continuar.';
 
 // Controladores de la cuenta: llaman al caso de uso y gestionan la sesión.
 export function createAuthController(service: AuthService, { secureCookies }: { secureCookies: boolean }) {
@@ -14,10 +17,10 @@ export function createAuthController(service: AuthService, { secureCookies }: { 
     req.session.userId = userId;
   }
 
-  const register: RequestHandler = async (req, res) => {
-    const user = await service.register(validated(res, 'body', registerSchema));
-    await iniciarSesion(req, user.id);
-    res.status(201).json({ user });
+  const register: RequestHandler = async (_req, res) => {
+    // No abre sesión: hacerlo revelaría que el email no tenía cuenta.
+    await service.register(validated(res, 'body', registerSchema));
+    res.status(202).json({ message: REGISTER_MESSAGE });
   };
 
   const verifyEmail: RequestHandler = async (_req, res) => {
@@ -38,7 +41,7 @@ export function createAuthController(service: AuthService, { secureCookies }: { 
 
   const logout: RequestHandler = async (req, res) => {
     await destroySession(req);
-    res.clearCookie(SESSION_COOKIE, cookieOptions(secureCookies));
+    res.clearCookie(sessionCookieName(secureCookies), cookieOptions(secureCookies));
     res.status(204).end();
   };
 

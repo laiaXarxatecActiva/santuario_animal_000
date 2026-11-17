@@ -2,9 +2,10 @@ import { z } from 'zod';
 
 // Campos comunes a varios formularios.
 
-// Contraseñas (TECH_SPEC §9.2). bcrypt solo tiene en cuenta los primeros 72 bytes.
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 72;
+// Contraseñas (TECH_SPEC §9.2). El máximo evita que se use un texto enorme para
+// cargar el servidor con el cálculo del hash.
+export const PASSWORD_MIN_LENGTH = 10;
+export const PASSWORD_MAX_LENGTH = 128;
 
 export const nuevaPassword = z
   .string()

@@ -23,11 +23,11 @@ describe('createProfileService', () => {
     );
   });
 
-  it('CU-24: rechaza una nueva que bcrypt considera igual a la actual (más de 72 bytes)', async () => {
+  it('CU-24: rechaza una nueva igual a la actual', async () => {
     const actual = 'a'.repeat(72);
     await db.pool.query('UPDATE users SET password_hash = $1 WHERE id = 7', [await hashPassword(actual)]);
     await expect(
-      servicio().changePassword(7, 'sid', { currentPassword: actual, newPassword: `${actual}b` }),
+      servicio().changePassword(7, 'sid', { currentPassword: actual, newPassword: actual }),
     ).rejects.toBeInstanceOf(PasswordUnchangedError);
   });
 });

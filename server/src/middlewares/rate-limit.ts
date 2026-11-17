@@ -25,6 +25,24 @@ export function createLoginLimiter(): RequestHandler {
   });
 }
 
+/**
+ * CU-07: como máximo 20 registros por hora desde una IP y 3 por hora con el
+ * mismo email. Cada registro envía un email, así que sin límite el formulario
+ * serviría para inundar el buzón de otra persona.
+ */
+export function createRegisterLimiter(): RequestHandler[] {
+  const comun = {
+    windowMs: 60 * MINUTO_MS,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    handler: rechazar,
+  } as const;
+  return [
+    rateLimit({ ...comun, limit: 20, keyGenerator: (req) => `ip:${ipKeyGenerator(req.ip ?? '')}` }),
+    rateLimit({ ...comun, limit: 3, keyGenerator: (req) => `email:${emailDelCuerpo(req)}` }),
+  ];
+}
+
 /** CU-08 A1: como máximo 3 reenvíos del email de verificación por hora y usuario. Va después de requireAuth. */
 export function createResendVerificationLimiter(): RequestHandler {
   return rateLimit({

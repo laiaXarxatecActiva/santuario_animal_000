@@ -18,6 +18,21 @@ const base: AppOptions = {
 describe('app', () => {
   const app = createApp({ ...base, logError: () => {} });
 
+  it('añade las cabeceras de seguridad de helmet (TECH_SPEC §13)', async () => {
+    const res = await request(app).get('/api/health');
+    expect(res.headers['content-security-policy']).toContain("default-src 'self'");
+    expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(res.headers['referrer-policy']).toBe('no-referrer');
+    expect(res.headers['x-powered-by']).toBeUndefined();
+  });
+
+  it('rechaza las modificaciones que llegan desde otro origen (CSRF)', async () => {
+    const res = await request(app).post('/api/auth/logout').set('Origin', 'https://malicioso.test').send({});
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('ORIGIN_NOT_ALLOWED');
+  });
+
   it('GET /api/health responde que el servidor está en marcha', async () => {
     const res = await request(app).get('/api/health');
     expect(res.status).toBe(200);

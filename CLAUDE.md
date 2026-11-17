@@ -6,6 +6,7 @@ Aplicación web para un santuario de animales (apadrinamiento simbólico de buit
 
 - `docs/TECH_SPEC.md`: stack, arquitectura, estructura del repo, convenciones, API, jobs, fases y preguntas abiertas (el §18 recoge decisiones provisionales que hay que aplicar).
 - `docs/USE_CASES.md`: casos de uso `CU-xx` y reglas de negocio.
+- `docs/AUTHENTICATION_SESSIONS_AND_SECURITY.md`: política de seguridad (contraseñas, sesiones, cookies, CSRF, autorización), dónde está implementada cada pieza y qué tests la comprueban. Léelo antes de tocar autenticación, sesiones, permisos o rutas nuevas, y actualízalo si cambia algo.
 - `database/seedsql.sql` (esquema; borra y recrea todo) y `database/TEST_DATA.sql` (vacía e inserta; fechas relativas al día de carga; los usuarios de prueba y sus contraseñas están en su cabecera).
 - `docs/ux-ui/DESIGN_SYSTEM.md` (tokens y componentes; no inventes colores, tamaños ni componentes que no estén definidos ahí: añádelos antes al documento) y `docs/ux-ui/SCREENS.md` (diseño de cada pantalla).
 - `ignore/` está en el `.gitignore` (borrador del diseño funcional, anexo de "producción real" y `test-images/`: fotos de ejemplo por especie que `db:reset` copia en `server/uploads/`; no se suben a git porque sus derechos no están comprobados y el repositorio es público).
@@ -69,13 +70,13 @@ Módulos: `shared` y `server` usan `NodeNext`, así que los imports relativos ll
 ## Stack
 
 - Compartido: esquemas Zod, tipos de la API y constantes.
-- Servidor: Express 5 + TypeScript, `pg` sin ORM, express-session + connect-pg-simple.
+- Servidor: Express 5 + TypeScript, `pg` sin ORM, express-session con un store propio en PostgreSQL que guarda el SHA-256 del identificador.
 - Cliente: React 19 + Vite, React Query, react-hook-form, i18next.
-- Requisitos: Node 22+, PostgreSQL 14+ y Mailpit (SMTP en el 1025, interfaz en http://localhost:8025). `docker-compose.yml` (opcional) levanta Postgres 16, con `sanctuary` y `sanctuary_test` (`database/docker-init.sql`), y Mailpit.
+- Requisitos: Node 24.7+ (por `crypto.argon2`), PostgreSQL 14+ y Mailpit (SMTP en el 1025, interfaz en http://localhost:8025). `docker-compose.yml` (opcional) levanta Postgres 16, con `sanctuary` y `sanctuary_test` (`database/docker-init.sql`), y Mailpit.
 
 ## Arquitectura
 
-Flujo de una petición: cookie de sesión `sid` → `loadUser` (usuario y rol se releen de la BD en cada petición) → `requireAuth` / `requireRole(...)` / `requireVerifiedEmail` → `validate(zodSchema)` → controlador → servicio (caso de uso) → dominio y modelos → JSON en camelCase → `errorHandler` central.
+Flujo de una petición: cookie de sesión `sid` (`__Host-sid` en producción) → `loadUser` (usuario y rol se releen de la BD en cada petición) → `requireAuth` / `requireRole(...)` / `requireVerifiedEmail` → `validate(zodSchema)` → controlador → servicio (caso de uso) → dominio y modelos → JSON en camelCase → `errorHandler` central.
 
 - **Rutas y middlewares**: solo conexión, autenticación y validación.
 - **Controladores**: llaman al caso de uso. Sin SQL y sin reglas de negocio.

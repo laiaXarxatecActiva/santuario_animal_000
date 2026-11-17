@@ -75,6 +75,14 @@ export class UnsupportedMediaTypeError extends AppError {
   }
 }
 
+// CSRF: petición que modifica datos enviada desde otra web (TECH_SPEC §13).
+export class OriginNotAllowedError extends ForbiddenError {
+  override readonly code = 'ORIGIN_NOT_ALLOWED';
+  constructor() {
+    super('La petición no procede de la web del santuario.');
+  }
+}
+
 // CU-07 3a.
 export class EmailAlreadyRegisteredError extends ConflictError {
   constructor() {

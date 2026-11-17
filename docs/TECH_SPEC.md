@@ -48,7 +48,7 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | Capa | Tecnología | Versión mínima | Motivo |
 | --- | --- | --- | --- |
 | Lenguaje | TypeScript | 5.x | Tipado en cliente y servidor; tipos compartidos |
-| Entorno de ejecución | Node.js (LTS) | 22 | Soporte nativo de `--env-file` y `fetch` |
+| Entorno de ejecución | Node.js (LTS) | 24.7 | Soporte nativo de `--env-file`, `fetch` y `crypto.argon2` (hash de contraseñas sin dependencias) |
 | Servidor | Express | 5.x | Gestiona errores de funciones `async` sin envoltorios |
 | Base de datos | PostgreSQL | 14 | Requisito del proyecto |
 | Cliente | React | 19 | Requisito del proyecto |
@@ -60,8 +60,8 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | Necesidad | Librería | Notas |
 | --- | --- | --- |
 | Acceso a datos | `pg` (node-postgres) | SQL escrito a mano y **siempre parametrizado** (`$1, $2…`). Sin ORM. |
-| Sesiones | `express-session` + `connect-pg-simple` | Sesiones guardadas en la tabla `user_sessions` |
-| Hash de contraseñas | `bcryptjs` | JavaScript puro, sin compilación nativa. Coste 10. Compatible con los hashes `$2a$` de `TEST_DATA.sql`. |
+| Sesiones | `express-session` + store propio (`middlewares/session.ts`) | Sesiones guardadas en la tabla `user_sessions`, solo con el SHA-256 del identificador |
+| Hash de contraseñas | `crypto.argon2` (nativo de Node) | Argon2id, el algoritmo recomendado por OWASP, sin dependencias ni compilación. |
 | Validación | `zod` | Esquemas compartidos con el cliente en `shared/` |
 | Subida de archivos | `multer` | Fotos y vídeos |
 | Procesado de imágenes | `sharp` | Redimensionado y miniaturas |
@@ -122,7 +122,7 @@ flowchart LR
 
 ### 5.2 Flujo de una petición
 
-1. El navegador envía la petición con la cookie de sesión (`sid`).
+1. El navegador envía la petición con la cookie de sesión (`sid`; `__Host-sid` en producción).
 2. `express-session` carga la sesión desde `user_sessions`, y el middleware `loadUser` carga el usuario.
 3. La ruta aplica `requireAuth` y `requireRole(...)` si corresponde.
 4. `validate(schema)` valida `body`, `params` y `query` con Zod. Si falla, responde con un error 400.
@@ -286,7 +286,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | Notificación | `notifications` | |
 | Registro_Actividad | `activity_logs` | Fase 3; la tabla existe desde el principio |
 | *(nuevo)* | `user_tokens` | Tokens de verificación de email y recuperación de contraseña |
-| *(nuevo)* | `user_sessions` | Sesiones (la gestiona `connect-pg-simple`) |
+| *(nuevo)* | `user_sessions` | Sesiones (las gestiona el store propio de `middlewares/session.ts`) |
 | *(nuevo)* | `update_reads` | Marca de «leído» del muro de actualizaciones |
 
 ### 8.2 Columnas añadidas y por qué
@@ -378,7 +378,7 @@ Las fechas de `TEST_DATA.sql` son relativas al día de carga, así que los escen
 
 ### 9.1 Decisión: sesiones con cookie
 
-Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` + `connect-pg-simple`) en lugar de JWT, porque:
+Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` con un store propio) en lugar de JWT, porque:
 
 - Es más sencillo: no hay que gestionar tokens de refresco ni listas de revocación.
 - Cerrar sesión, desactivar una cuenta o cambiar de rol tiene efecto inmediato (se borran o invalidan sus sesiones).
@@ -387,24 +387,27 @@ Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` + `c
 
 | Parámetro de la cookie | Valor |
 | --- | --- |
-| Nombre | `sid` |
+| Nombre | `sid` en local; `__Host-sid` en producción (el prefijo obliga al navegador a exigir `Secure`, `Path=/` y que no haya `Domain`) |
 | `httpOnly` | `true` |
 | `sameSite` | `lax` |
+| `path` | `/`, sin `Domain` |
 | `secure` | `true` en producción (HTTPS); `false` en local |
 | Duración | 7 días, renovada con cada petición (`rolling: true`) |
 | Secreto | `SESSION_SECRET` (variable de entorno, mínimo 32 caracteres aleatorios) |
+
+El store propio (`PgSessionStore`, en `server/src/middlewares/session.ts`; SQL en `models/session.model.ts`) guarda en `user_sessions` **solo el SHA-256 del identificador** (`sid_hash`), nunca el identificador: quien lea la tabla o una copia de seguridad no puede suplantar a nadie. Además, la cookie va firmada con `SESSION_SECRET`. La caducidad se comprueba en el servidor (`expire > NOW()`), no solo en la cookie, y las sesiones caducadas se borran cada 15 minutos. La columna `user_id` permite cerrar todas las sesiones de un usuario.
 
 Al iniciar sesión se regenera el identificador de sesión (`req.session.regenerate`) para evitar la fijación de sesión. La sesión guarda solo `userId`; el usuario y su rol se leen de la base de datos en cada petición, para que los cambios de rol o la desactivación se apliquen al momento.
 
 ### 9.2 Contraseñas y tokens
 
-- Hash con `bcryptjs`, coste 10.
-- Requisitos mínimos de contraseña para el registro: 8 caracteres. Las contraseñas de `TEST_DATA.sql` no se validan con esta regla.
+- Hash con **Argon2id** (`crypto.argon2` de Node), con los parámetros mínimos de OWASP: 19 MiB de memoria, 2 pasadas y paralelismo 1, sal aleatoria de 16 bytes y hash de 32 bytes. Se guarda en formato PHC (`$argon2id$v=19$m=19456,t=2,p=1$<sal>$<hash>`), de modo que se pueden subir los parámetros más adelante sin invalidar los hashes existentes. Los parámetros están en `server/src/utils/passwords.ts`.
+- Contraseñas de **10 a 128 caracteres**, sin reglas de composición (se permiten espacios, símbolos y pegar desde un gestor de contraseñas). El máximo evita que un texto enorme se use para cargar el servidor. Las contraseñas de `TEST_DATA.sql` no se validan con esta regla; sus hashes Argon2id ya vienen calculados en el archivo.
 - **Tokens de un solo uso** (`user_tokens`): 32 bytes aleatorios (`crypto.randomBytes`) enviados por email. En la base de datos se guarda su hash SHA-256.
   - Verificación de email: caduca en 24 horas.
   - Recuperación de contraseña: caduca en 1 hora. Al usarse, se cierran todas las sesiones del usuario.
-- La recuperación de contraseña responde siempre con el mismo mensaje, exista o no el email, para no revelar qué cuentas existen.
-- Límite de intentos: 5 intentos fallidos de login por IP y email cada 15 minutos (`express-rate-limit`).
+- **Sin enumeración de cuentas**: el registro y la recuperación de contraseña responden siempre igual, exista o no el email. En el registro, si el email ya tiene cuenta no se crea nada y se avisa por email a su dueño (CU-07 3a); el registro nunca abre sesión. El login responde con el mismo error para email inexistente y contraseña incorrecta, y compara con un hash ficticio cuando el email no existe, para que tarde lo mismo.
+- Límites de intentos (`express-rate-limit`, en memoria; con varias instancias habría que compartir los contadores): 5 intentos fallidos de login por IP y email cada 15 minutos; registro, 20 por hora por IP y 3 por hora por email; reenvío de la verificación, 3 por hora por usuario; cambio de contraseña, 5 intentos fallidos por usuario cada 15 minutos.
 
 ### 9.3 Creación de cuentas
 
@@ -479,7 +482,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 
 | Método | Ruta | Acceso | Descripción | CU |
 | --- | --- | --- | --- | --- |
-| POST | `/api/auth/register` | Visitante | Registro como adoptante; acepta la política de privacidad | CU-07 |
+| POST | `/api/auth/register` | Visitante | Registro como adoptante; acepta la política de privacidad. Responde siempre `202 { message }`, exista o no el email, y no abre sesión | CU-07 |
 | POST | `/api/auth/verify-email` | Público | `{ token }` | CU-08 |
 | POST | `/api/auth/resend-verification` | Autenticado | Reenvía el email de verificación | CU-08 |
 | POST | `/api/auth/login` | Visitante | `{ email, password }` | CU-09 |
@@ -675,7 +678,7 @@ export interface StorageService {
 | `monthly-digest` | Día 1, 09:00 | Email resumen para adoptantes con `monthly_digest` y novedades en el mes anterior | CU-46 |
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
 
-Las sesiones caducadas las elimina `connect-pg-simple` automáticamente. Los tokens caducados se borran en la tarea `expire-pending`.
+Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
 
 ### 11.5 Servicios de la Fase 3
 
@@ -726,8 +729,8 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 | Requisito | Implementación |
 | --- | --- |
-| **Seguridad HTTP** | `helmet`; cookies `httpOnly` y `sameSite=lax`; `app.set('trust proxy', 1)` en producción; límite de tamaño del cuerpo JSON (100 kB) |
-| **CSRF** | `sameSite=lax`, además de aceptar solo `application/json` en las peticiones que modifican datos (las subidas `multipart` exigen una cabecera `X-Requested-With`) |
+| **Seguridad HTTP** | `helmet` con su configuración por defecto (CSP, `nosniff`, `Referrer-Policy: no-referrer`, HSTS); cookies `httpOnly` y `sameSite=lax`; `app.set('trust proxy', 1)` en producción; límite de tamaño del cuerpo JSON (100 kB) |
+| **CSRF** | `sameSite=lax`; las peticiones que modifican datos se rechazan (403 `ORIGIN_NOT_ALLOWED`) si llegan con un `Origin` distinto de `CLIENT_URL` o con `Sec-Fetch-Site: cross-site` (`requireSameOrigin`), y solo se acepta `application/json` (las subidas `multipart` exigen una cabecera `X-Requested-With`). No hay CORS: cliente y API comparten origen, así que no se envía ninguna cabecera `Access-Control-Allow-*` |
 | **Inyección SQL** | Solo consultas parametrizadas; listas blancas para la ordenación |
 | **XSS** | React escapa por defecto; prohibido `dangerouslySetInnerHTML` con contenido del usuario. Los textos de las actualizaciones son texto plano con saltos de línea. |
 | **Autorización** | En el servidor, en cada ruta ([§9](#9-autenticación-y-autorización)) |
@@ -745,7 +748,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 ### 14.1 Requisitos
 
-- Node.js LTS (22 o superior).
+- Node.js LTS (24.7 o superior).
 - PostgreSQL 14 o superior, instalado en el ordenador **o** con Docker Compose.
 - Mailpit, como binario **o** con Docker Compose.
 
@@ -912,7 +915,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
    | Necesidad | Qué buscar |
    | --- | --- |
    | Servidor Node | Servicio web gratuito con HTTPS. Suelen «dormirse» tras un rato sin visitas. |
-   | PostgreSQL | Base de datos gestionada gratuita, versión 14 o superior, con `pgcrypto`. Comprobar si caduca a los X días. |
+   | PostgreSQL | Base de datos gestionada gratuita, versión 14 o superior. Comprobar si caduca a los X días. |
    | Archivos (fotos y vídeos) | Almacenamiento de objetos o servicio de imágenes gratuito, porque el disco de los servidores gratuitos suele borrarse al reiniciar |
    | Email | Servicio SMTP con cupo diario gratuito |
    | Tareas programadas | Si el servidor «se duerme», `node-cron` no es fiable: se usará un programador externo gratuito (por ejemplo, un flujo programado de GitHub Actions) que llame a `POST /api/admin/jobs/:jobName/run` con `JOBS_TRIGGER_TOKEN` |

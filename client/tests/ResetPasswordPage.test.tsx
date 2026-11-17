@@ -25,7 +25,7 @@ describe('CU-10 Nueva contraseña', () => {
     const { pedidas } = mockApi({});
     renderRoute('/reset-password?token=abc');
     await guardar('corta', 'corta');
-    expect(await screen.findByText('La contraseña debe tener al menos 8 caracteres.')).toBeInTheDocument();
+    expect(await screen.findByText('La contraseña debe tener al menos 10 caracteres.')).toBeInTheDocument();
     expect(pedidas('/api/auth/reset-password')).toHaveLength(0);
   });
 

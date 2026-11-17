@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { hashToken } from '../src/utils/tokens.js';
+import { hashPassword } from '../src/utils/passwords.js';
 import { prepararApp, TEST_CLIENT_URL, tokenDelEmail, type TestApp } from './helpers/test-app.js';
 
 let t: TestApp;
@@ -34,7 +35,7 @@ const usuario = async (email: string) => {
 };
 
 const sesionesDe = async (userId: number) => {
-  const { rows } = await t.pool.query("SELECT sid FROM user_sessions WHERE (sess ->> 'userId')::int = $1", [userId]);
+  const { rows } = await t.pool.query('SELECT 1 FROM user_sessions WHERE user_id = $1', [userId]);
   return rows.length;
 };
 
@@ -59,27 +60,19 @@ describe('GET /api/auth/me', () => {
 });
 
 describe('CU-07 Registrarse', () => {
-  it('crea un adoptante sin verificar, inicia la sesión y envía el email de verificación', async () => {
-    const agent = request.agent(t.app);
-    const res = await agent.post('/api/auth/register').send(registro());
-    expect(res.status).toBe(201);
-    expect(res.body).toEqual({
-      user: {
-        id: expect.any(Number),
-        firstName: 'Ana',
-        lastName: 'Ferrer Soler',
-        email: 'ana.ferrer@correo.test',
-        role: 'adopter',
-        emailVerified: false,
-      },
-    });
+  const MENSAJE = { message: 'Te hemos enviado un email. Revisa tu bandeja de entrada para continuar.' };
+
+  it('crea un adoptante sin verificar, no inicia la sesión y envía el email de verificación', async () => {
+    const res = await request(t.app).post('/api/auth/register').send(registro());
+    expect(res.status).toBe(202);
+    expect(res.body).toEqual(MENSAJE);
+    expect(cookieSid(res)).toBeUndefined();
 
     const fila = await usuario('ana.ferrer@correo.test');
     expect(fila).toMatchObject({ role: 'adopter', email_verified: false });
-    expect(fila.password_hash).toMatch(/^\$2[aby]\$10\$/);
+    expect(fila.password_hash).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
     expect(fila.privacy_accepted_at.toISOString()).toBe(t.reloj.ahora().toISOString());
-
-    expect((await agent.get('/api/auth/me')).body.user).toMatchObject({ email: 'ana.ferrer@correo.test' });
+    expect(await sesionesDe(fila.id)).toBe(0);
 
     expect(t.mailer.outbox).toHaveLength(1);
     expect(t.mailer.outbox[0]).toMatchObject({ to: 'ana.ferrer@correo.test', subject: 'Verifica tu email' });
@@ -97,36 +90,51 @@ describe('CU-07 Registrarse', () => {
         expires_at: new Date(t.reloj.ahora().getTime() + 24 * 3600_000),
       },
     ]);
-  });
 
-  it('la cookie de sesión es sid, httpOnly y SameSite=Lax', async () => {
-    const res = await request(t.app)
-      .post('/api/auth/register')
-      .send(registro({ email: 'cookie@correo.test' }));
-    const cookie = cookieSid(res);
-    expect(cookie).toMatch(/HttpOnly/);
-    expect(cookie).toMatch(/SameSite=Lax/);
-    expect(cookie).toMatch(/Expires=/);
+    // Con la contraseña elegida ya puede iniciar sesión, aunque no haya verificado el email.
+    const entrada = await login(request(t.app), 'ana.ferrer@correo.test', 'buitres-2026');
+    expect(entrada.status).toBe(200);
+    expect(entrada.body.user).toMatchObject({ email: 'ana.ferrer@correo.test', emailVerified: false });
   });
 
   it('ignora el campo role: siempre crea adoptantes (RN-02)', async () => {
     const res = await request(t.app)
       .post('/api/auth/register')
       .send(registro({ email: 'listo@correo.test', role: 'admin' }));
-    expect(res.status).toBe(201);
-    expect(res.body.user.role).toBe('adopter');
+    expect(res.status).toBe(202);
     expect((await usuario('listo@correo.test')).role).toBe('adopter');
   });
 
-  it('3a: el email ya está registrado (sin distinguir mayúsculas)', async () => {
+  it('3a: con un email ya registrado responde lo mismo y avisa por email a su dueño', async () => {
+    const antes = await usuario('lucia.martinez@correo.test');
     const res = await request(t.app)
       .post('/api/auth/register')
-      .send(registro({ email: 'Lucia.Martinez@correo.test' }));
-    expect(res.status).toBe(409);
-    expect(res.body.error).toMatchObject({
-      code: 'EMAIL_ALREADY_REGISTERED',
-      message: 'Ya existe una cuenta con este email.',
-    });
+      .send(registro({ email: 'Lucia.Martinez@correo.test', firstName: 'Intrusa' }));
+    expect(res.status).toBe(202);
+    expect(res.body).toEqual(MENSAJE);
+    expect(cookieSid(res)).toBeUndefined();
+
+    // No se crea nada ni se toca la cuenta existente.
+    expect(await usuario('lucia.martinez@correo.test')).toEqual(antes);
+    const { rows } = await t.pool.query('SELECT COUNT(*)::int AS n FROM user_tokens WHERE user_id = $1', [antes.id]);
+    expect(rows[0].n).toBe(0);
+
+    expect(t.mailer.outbox).toHaveLength(1);
+    const aviso = t.mailer.outbox[0];
+    expect(aviso).toMatchObject({ to: 'lucia.martinez@correo.test', subject: 'Ya tienes una cuenta en el santuario' });
+    expect(aviso?.text).toContain('Hola, Lucía:');
+    expect(aviso?.text).toContain(`${TEST_CLIENT_URL}/login`);
+    expect(aviso?.text).toContain(`${TEST_CLIENT_URL}/forgot-password`);
+    expect(aviso?.text).not.toContain('Intrusa');
+  });
+
+  it('3a: con el email de una cuenta desactivada responde lo mismo y no envía nada', async () => {
+    const res = await request(t.app)
+      .post('/api/auth/register')
+      .send(registro({ email: 'teresa.vicent@correo.test' }));
+    expect(res.status).toBe(202);
+    expect(res.body).toEqual(MENSAJE);
+    expect(t.mailer.outbox).toHaveLength(0);
   });
 
   it('3b y 3c: contraseñas que no coinciden y política sin aceptar', async () => {
@@ -144,7 +152,7 @@ describe('CU-07 Registrarse', () => {
       .send(registro({ email: 'corta@correo.test', password: 'corta', passwordConfirm: 'corta' }));
     expect(res.status).toBe(400);
     expect(res.body.error.details).toEqual([
-      { field: 'password', message: 'La contraseña debe tener al menos 8 caracteres.' },
+      { field: 'password', message: 'La contraseña debe tener al menos 10 caracteres.' },
     ]);
   });
 
@@ -153,9 +161,24 @@ describe('CU-07 Registrarse', () => {
     const res = await request(t.app)
       .post('/api/auth/register')
       .send(registro({ email: 'sin-correo@correo.test' }));
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(202);
     expect(await usuario('sin-correo@correo.test')).toMatchObject({ email_verified: false });
     expect(t.mailer.outbox).toHaveLength(0);
+  });
+
+  it('como máximo 3 registros por hora con el mismo email (evita inundar un buzón)', async () => {
+    for (let i = 0; i < 3; i++) {
+      const res = await request(t.app)
+        .post('/api/auth/register')
+        .send(registro({ email: 'raquel.font@correo.test' }));
+      expect(res.status).toBe(202);
+    }
+    const res = await request(t.app)
+      .post('/api/auth/register')
+      .send(registro({ email: ' Raquel.Font@correo.test' }));
+    expect(res.status).toBe(429);
+    expect(res.body.error.code).toBe('TOO_MANY_REQUESTS');
+    expect(t.mailer.outbox).toHaveLength(3);
   });
 
   it('solo acepta JSON en las peticiones que modifican datos (CSRF)', async () => {
@@ -172,6 +195,7 @@ describe('CU-08 Verificar el email', () => {
   it('verifica el email con el token del registro y lo marca como usado', async () => {
     const agent = request.agent(t.app);
     await agent.post('/api/auth/register').send(registro({ email: 'verifica@correo.test' }));
+    await login(agent, 'verifica@correo.test', 'buitres-2026');
     const token = tokenDelEmail(t.mailer, 'verifica@correo.test');
 
     const res = await request(t.app).post('/api/auth/verify-email').send({ token });
@@ -254,6 +278,7 @@ describe('CU-08 Verificar el email', () => {
     it('como máximo 3 reenvíos por hora', async () => {
       const agent = request.agent(t.app);
       await agent.post('/api/auth/register').send(registro({ email: 'reenvios@correo.test' }));
+      await login(agent, 'reenvios@correo.test', 'buitres-2026');
       for (let i = 0; i < 3; i++) {
         expect((await agent.post('/api/auth/resend-verification').send({})).status).toBe(204);
       }
@@ -323,7 +348,7 @@ describe('CU-09 Iniciar sesión', () => {
   });
 
   it('3b: una cuenta anonimizada no puede entrar', async () => {
-    await t.pool.query("UPDATE users SET password_hash = crypt('Clave-conocida1', gen_salt('bf', 4)) WHERE id = 15");
+    await t.pool.query('UPDATE users SET password_hash = $1 WHERE id = 15', [await hashPassword('Clave-conocida1')]);
     const res = await login(request(t.app), 'deleted-15@anonymized.invalid', 'Clave-conocida1');
     expect(res.status).toBe(403);
   });

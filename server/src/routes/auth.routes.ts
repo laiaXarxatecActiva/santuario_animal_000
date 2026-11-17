@@ -2,7 +2,11 @@ import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema,
 import { Router } from 'express';
 import { createAuthController } from '../controllers/auth.controller.js';
 import { requireAuth } from '../middlewares/auth.js';
-import { createLoginLimiter, createResendVerificationLimiter } from '../middlewares/rate-limit.js';
+import {
+  createLoginLimiter,
+  createRegisterLimiter,
+  createResendVerificationLimiter,
+} from '../middlewares/rate-limit.js';
 import { validate } from '../middlewares/validate.js';
 import type { AuthService } from '../servicios/auth.service.js';
 
@@ -11,7 +15,7 @@ export function createAuthRoutes(service: AuthService, options: { secureCookies:
   const c = createAuthController(service, options);
   const router = Router();
 
-  router.post('/register', validate({ body: registerSchema }), c.register);
+  router.post('/register', ...createRegisterLimiter(), validate({ body: registerSchema }), c.register);
   router.post('/verify-email', validate({ body: tokenSchema }), c.verifyEmail);
   router.post('/resend-verification', requireAuth, createResendVerificationLimiter(), c.resendVerification);
   router.post('/login', createLoginLimiter(), validate({ body: loginSchema }), c.login);

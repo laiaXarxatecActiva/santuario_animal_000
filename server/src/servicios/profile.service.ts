@@ -50,7 +50,6 @@ export function createProfileService({ db, reloj }: ProfileServiceDeps) {
     const user = await userModel.findById(db, userId);
     if (!user) throw new NotFoundError();
     if (!(await verifyPassword(currentPassword, user.passwordHash))) throw new InvalidCurrentPasswordError();
-    // bcrypt solo mira los 72 primeros bytes: dos textos distintos pueden dar la misma contraseña.
     if (await verifyPassword(newPassword, user.passwordHash)) throw new PasswordUnchangedError();
     const passwordHash = await hashPassword(newPassword);
     await withTransaction(db, async (client) => {

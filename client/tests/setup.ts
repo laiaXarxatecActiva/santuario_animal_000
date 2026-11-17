@@ -1,7 +1,11 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 import '../src/i18n';
+
+// Con todos los archivos en paralelo, 1 s (el valor por defecto) se queda corto
+// para las esperas de findBy* y waitFor.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

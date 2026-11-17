@@ -47,10 +47,10 @@ describe('CU-07 registerSchema', () => {
   it(`3b: la contraseña tiene al menos ${PASSWORD_MIN_LENGTH} caracteres`, () => {
     const r = registerSchema.safeParse({ ...registroValido, password: 'corta', passwordConfirm: 'corta' });
     expect(camposConError(r)).toEqual(['password']);
-    expect(r.error?.issues[0]?.message).toBe('La contraseña debe tener al menos 8 caracteres.');
+    expect(r.error?.issues[0]?.message).toBe('La contraseña debe tener al menos 10 caracteres.');
   });
 
-  it(`la contraseña no supera ${PASSWORD_MAX_LENGTH} caracteres (límite de bcrypt)`, () => {
+  it(`la contraseña no supera ${PASSWORD_MAX_LENGTH} caracteres`, () => {
     const larga = 'a'.repeat(PASSWORD_MAX_LENGTH + 1);
     expect(
       camposConError(registerSchema.safeParse({ ...registroValido, password: larga, passwordConfirm: larga })),
