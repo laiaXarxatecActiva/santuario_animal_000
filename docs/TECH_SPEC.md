@@ -309,6 +309,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `adoptions.gifted_by_user_id` | Adopción regalo (Fase 3) |
 | `adoptions.created_by`, `adoptions.notes` | Adopciones creadas a mano por un administrador |
 | `payments.period_start`, `payments.period_end` | Mes cubierto por cada cuota; evita cobros duplicados |
+| `payments.plan_id` | Plan con el que se cobró la cuota; el recibo lo muestra aunque la adopción cambie de plan después |
 | `payments.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Trazabilidad de fallos, cobros, devoluciones y pagos manuales |
 | `donations.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Igual que en `payments` |
 
@@ -520,7 +521,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
 | GET | `/api/me/contributions` | `{ payments, donations, totals: { allTime, years } }`: cuotas y donaciones con mi cuenta, las más recientes primero. `?year=` filtra los listados (no los totales); los totales solo suman lo cobrado | CU-19 |
-| GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`). El pago no guarda el plan: se muestra el de la adopción si el importe coincide o, si no, el plan con ese importe | CU-19 |
+| GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`), con el plan con el que se cobró (`payments.plan_id`) | CU-19 |
 | GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
 | POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
 

@@ -429,9 +429,10 @@ INSERT INTO adoptions (
 -- 8.1 Cuotas cobradas, generadas mes a mes desde start_date hasta:
 --     - next_billing_date (adopciones activas y pausadas), o
 --     - end_date (adopciones cerradas o con baja solicitada).
-INSERT INTO payments (adoption_id, amount, period_start, period_end, method, status, payment_reference, paid_at, recorded_by)
+INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status, payment_reference, paid_at, recorded_by)
 SELECT
     a.id,
+    a.plan_id,
     p.monthly_amount,
     s.period_start,
     (s.period_start + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
@@ -458,18 +459,18 @@ SET status = 'refunded',
 WHERE adoption_id = 20;
 
 -- 8.3 Cuotas fallidas
-INSERT INTO payments (adoption_id, amount, period_start, period_end, method, status, payment_reference, failure_reason, created_at) VALUES
+INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status, payment_reference, failure_reason, created_at) VALUES
 -- Adopción 7 (pausada): falló la cuota del mes actual.
-(7,  5.00, pg_temp.ago('4 months 15 days') + INTERVAL '4 months',
+(7,  2, 5.00, pg_temp.ago('4 months 15 days') + INTERVAL '4 months',
            (pg_temp.ago('4 months 15 days') + INTERVAL '5 months' - INTERVAL '1 day')::DATE,
      'simulated', 'failed', 'SIM-A0007-' || TO_CHAR(pg_temp.ago('4 months 15 days') + INTERVAL '4 months', 'YYYYMMDD') || '-F1',
      'Pago rechazado (simulado)', (pg_temp.ago('4 months 15 days') + INTERVAL '4 months')::DATE + TIME '03:00'),
 -- Adopción 11 (pendiente reciente): el primer intento de pago falló.
-(11, 5.00, pg_temp.ago('2 days'), (pg_temp.ago('2 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
+(11, 2, 5.00, pg_temp.ago('2 days'), (pg_temp.ago('2 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
      'simulated', 'failed', 'SIM-A0011-' || TO_CHAR(pg_temp.ago('2 days'), 'YYYYMMDD') || '-F1',
      'Pago rechazado (simulado)', pg_temp.ago_ts('2 days', '11:02')),
 -- Adopción 13 (cancelada): el pago nunca se completó.
-(13, 1.00, pg_temp.ago('40 days'), (pg_temp.ago('40 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
+(13, 1, 1.00, pg_temp.ago('40 days'), (pg_temp.ago('40 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
      'simulated', 'failed', 'SIM-A0013-' || TO_CHAR(pg_temp.ago('40 days'), 'YYYYMMDD') || '-F1',
      'Pago rechazado (simulado)', pg_temp.ago_ts('40 days', '16:01'));
 

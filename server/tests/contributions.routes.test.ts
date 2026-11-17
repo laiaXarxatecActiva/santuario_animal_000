@@ -146,6 +146,17 @@ describe('CU-19 Recibos', () => {
     });
   });
 
+  it('5: el recibo muestra el plan con el que se cobró, aunque después se cambie', async () => {
+    const id = await idPago(1, 'completed');
+    await t.pool.query('UPDATE adoptions SET plan_id = 3 WHERE id = 1');
+    try {
+      const res = await lucia.get(`/api/me/payments/${id}/receipt`);
+      expect(res.body.planName).toBe('Usual');
+    } finally {
+      await t.pool.query('UPDATE adoptions SET plan_id = 2 WHERE id = 1');
+    }
+  });
+
   it('4b: recibo de una cuota devuelta con su fecha de devolución', async () => {
     const pablo = await entrar('pablo.garcia@correo.test', 'Pablo2024!');
     const res = await pablo.get(`/api/me/payments/${await idPago(20, 'refunded')}/receipt`);

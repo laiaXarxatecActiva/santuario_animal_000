@@ -75,6 +75,13 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
     expect(t.mailer.outbox[0]?.text).toContain('12,00');
   });
 
+  it('1: el pago guarda el plan con el que se cobró (el nuevo)', async () => {
+    const { rows } = await t.pool.query<{ plan_id: number }>(
+      'SELECT plan_id FROM payments WHERE adoption_id = 5 ORDER BY id DESC LIMIT 2',
+    );
+    expect(rows.map((r) => r.plan_id)).toEqual([3, 2]);
+  });
+
   it('ejecutarla dos veces el mismo día no cobra ni avisa de nuevo (idempotente)', async () => {
     const antes = (await pagos(5)).length;
     expect(await runBilling(depsDePrueba(t))).toEqual({ charged: 0, failed: 0, alreadyPaid: 0, errors: 0 });

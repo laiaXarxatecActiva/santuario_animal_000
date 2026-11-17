@@ -158,22 +158,17 @@ export function mapReceiptRow(row: ReceiptRow): ReceiptRecord {
   };
 }
 
-/**
- * Cuota propia para su recibo. El pago no guarda el plan: se toma el plan de la
- * adopción si el importe coincide y, si no, el plan con ese importe.
- */
+/** Cuota propia para su recibo, con el plan con el que se cobró. */
 export async function findOwnPaymentReceipt(db: Queryable, userId: number, id: number): Promise<ReceiptRecord | null> {
   const { rows } = await db.query<ReceiptRow>(
     `SELECT p.id, p.payment_reference, p.amount, p.method, p.status, p.paid_at, p.refunded_at,
             an.name AS animal_name,
-            COALESCE(
-              (SELECT pl.name FROM adoption_plans pl WHERE pl.id = a.plan_id AND pl.monthly_amount = p.amount),
-              (SELECT pl.name FROM adoption_plans pl WHERE pl.monthly_amount = p.amount ORDER BY pl.sort_order LIMIT 1)
-            ) AS plan_name,
+            pl.name AS plan_name,
             p.period_start::text AS period_start, p.period_end::text AS period_end
        FROM payments p
        JOIN adoptions a ON a.id = p.adoption_id
        JOIN animals an ON an.id = a.animal_id
+       JOIN adoption_plans pl ON pl.id = p.plan_id
       WHERE p.id = $2 AND a.user_id = $1`,
     [userId, id],
   );
