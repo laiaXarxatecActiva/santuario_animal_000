@@ -1,0 +1,61 @@
+/* Notificación (DESIGN_SYSTEM §8.8). Las no leídas: punto terracota y fondo suave. */
+.row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row[data-unread='true'] {
+  background: var(--color-primary-soft);
+}
+
+.action {
+  display: flex;
+  flex: 1;
+  gap: var(--space-3);
+  align-items: flex-start;
+  min-height: var(--size-touch);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.icon {
+  margin-top: 0.2em;
+  color: var(--color-text-muted);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  margin-top: 0.45em;
+  border-radius: var(--radius-round);
+  background: var(--color-primary);
+}

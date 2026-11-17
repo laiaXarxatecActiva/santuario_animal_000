@@ -4,6 +4,7 @@ import { RequireRole } from './components/RequireRole';
 import { AdminLayout } from './layouts/AdminLayout';
 import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
 import { AnimalDataTab } from './pages/admin/AnimalDataTab';
@@ -86,7 +87,10 @@ export const routes: RouteObject[] = [
       {
         // Cualquier usuario con sesión.
         element: <RequireRole />,
-        children: [{ path: 'profile', element: <ProfilePage /> }],
+        children: [
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'notifications', element: <NotificationsPage /> },
+        ],
       },
       { path: 'register', element: <RegisterPage /> },
       { path: 'login', element: <LoginPage /> },

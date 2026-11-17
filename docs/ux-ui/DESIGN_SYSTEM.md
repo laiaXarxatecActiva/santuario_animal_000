@@ -479,6 +479,7 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 - Botón `icon` con `bell`; si hay notificaciones sin leer, un contador terracota (`--font-size-xs`, texto `--color-on-primary`) en la esquina superior derecha. Máximo «9+».
 - `aria-label` dinámico: «Notificaciones, 3 sin leer».
 - Al pulsar, se abre un panel desplegable (no una ventana emergente) de 360 px de ancho bajo la campana. En móvil ocupa todo el ancho bajo la cabecera. Lista de las 10 últimas, las no leídas con un punto terracota y fondo `--color-primary-soft`, y un enlace «Ver todas».
+- Cada notificación: icono según el tipo, mensaje y fecha relativa («hace 2 días», `--font-size-sm`, `--color-text-muted`). Pulsarla la marca como leída y lleva a su enlace. Iconos por tipo (de la tabla de iconos de referencia): `new_update` y `update_reminder` → `newspaper`; `adoption_welcome` → `hand-holding-heart`; `payment_completed` y `plan_changed` → `receipt`; `payment_failed` → `circle-exclamation`; `adoption_cancelled` → `circle-info`; `adoption_closed` → `feather`; `donation_thanks` → `heart`; `system` → `bell`.
 
 ### 8.9 Otros componentes
 

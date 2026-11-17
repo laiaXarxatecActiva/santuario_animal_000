@@ -172,6 +172,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - El cliente nunca ve ni guarda el token de sesión: lo gestiona el navegador con la cookie `HttpOnly`.
 - El usuario actual se obtiene de `GET /api/auth/me` (`useSession`). Todas las llamadas pasan por un único cliente HTTP (`client/src/api/client.ts`), que convierte cualquier error en `ApiError` y envía las cookies solo al mismo origen (`credentials: 'same-origin'`). Las rutas protegidas de React usan `RequireRole`.
 - Ocultar un botón no sustituye a la autorización del servidor.
+- **Sesión caducada**: si cualquier llamada fuera de `/api/auth/` responde 401 mientras había sesión, el cliente HTTP lo avisa (`onUnauthorized`) y `useSessionExpiry` (en las dos plantillas) vacía la caché y lleva a `/login?next=…` con el aviso «Tu sesión ha caducado».
 
 ## 11. Tests que lo comprueban
 
@@ -199,7 +200,6 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - **Fase 4 (producción)**: servir el cliente desde Express para que la CSP y la `Referrer-Policy` de helmet también protejan las páginas `/verify-email` y `/reset-password`, que llevan el token en la URL. En desarrollo esas páginas las sirve Vite, sin esas cabeceras. Al hacerlo, revisar la CSP para el cliente compilado.
 - **Fase 4**: la página `/cookies` muestra el nombre `sid`; en producción la cookie se llama `__Host-sid`.
 - **Si hay varias instancias del servidor**: llevar los contadores de los límites de intentos a un almacén compartido.
-- **Tratamiento centralizado del 401 en el cliente**: hoy, si la sesión caduca mientras se usa la web, cada pantalla muestra el error. Falta que el cliente HTTP, al recibir un 401, invalide `useSession` y lleve a `/login?next=…`.
 - **Contraseñas filtradas**: no se comprueba si una contraseña aparece en filtraciones conocidas, porque requeriría un servicio externo. Se puede valorar con una lista local.
 
 ## 13. Antes de dar por terminada una tarea de seguridad

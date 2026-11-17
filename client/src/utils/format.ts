@@ -38,3 +38,23 @@ export function formatDate(date: string): string {
 export function formatList(items: string[]): string {
   return lista.format(items);
 }
+
+// «hace 2 días» y no «anteayer» (SCREENS §4.7); solo el instante actual es «ahora».
+const relativa = new Intl.RelativeTimeFormat('es', { numeric: 'always' });
+const ahoraMismo = new Intl.RelativeTimeFormat('es', { numeric: 'auto' }).format(0, 'second');
+const UNIDADES: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['year', 365 * 24 * 3600],
+  ['month', 30 * 24 * 3600],
+  ['day', 24 * 3600],
+  ['hour', 3600],
+  ['minute', 60],
+];
+
+/** Instante ISO → «hace 2 días», «hace 3 horas», «ahora» (campana, CU-18). */
+export function formatRelative(isoInstant: string, ahora: Date = new Date()): string {
+  const segundos = Math.round((new Date(isoInstant).getTime() - ahora.getTime()) / 1000);
+  for (const [unidad, duracion] of UNIDADES) {
+    if (Math.abs(segundos) >= duracion) return relativa.format(Math.trunc(segundos / duracion), unidad);
+  }
+  return ahoraMismo;
+}

@@ -7,6 +7,7 @@ import { Footer } from '../components/Footer';
 import { PublicHeader } from '../components/PublicHeader';
 import { ResendVerificationButton } from '../components/ResendVerificationButton';
 import { useSession } from '../hooks/useSession';
+import { useSessionExpiry } from '../hooks/useSessionExpiry';
 import { readFlash } from '../utils/flash';
 import styles from './PublicLayout.module.css';
 
@@ -15,6 +16,7 @@ export function PublicLayout() {
   const { t } = useTranslation();
   const location = useLocation();
   const { user } = useSession();
+  useSessionExpiry();
   // El aviso de la navegación se cierra solo para esta entrada del historial.
   const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
   const flash = flashCerrado === location.key ? undefined : readFlash(location.state);

@@ -1,0 +1,68 @@
+.bell {
+  position: relative;
+}
+
+.bell > button {
+  position: relative;
+}
+
+/* Contador terracota en la esquina superior derecha, máximo «9+» (DESIGN_SYSTEM §8.8). */
+.counter {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 1.5em;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Panel desplegable de 360 px bajo la campana; en móvil, todo el ancho bajo la cabecera. */
+.panel {
+  position: fixed;
+  top: var(--size-header);
+  right: 0;
+  left: 0;
+  z-index: 11;
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  .panel {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: auto;
+    width: 360px;
+  }
+}
+
+.list {
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+}
+
+.all {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-weight: 600;
+  text-align: center;
+}
