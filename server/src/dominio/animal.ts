@@ -26,3 +26,8 @@ export function motivoDeCierre(nuevo: AnimalStatus): AdoptionEndReason | null {
 export function sePuedeBorrar(tieneHistorialDeAdopciones: boolean): boolean {
   return !tieneHistorialDeAdopciones;
 }
+
+/** CU-33 3a: un fallecimiento con adopciones abiertas necesita el mensaje para los adoptantes. */
+export function requiereMensajeDeDespedida(nuevo: AnimalStatus, adopcionesAbiertas: number): boolean {
+  return nuevo === 'deceased' && adopcionesAbiertas > 0;
+}

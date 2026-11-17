@@ -139,9 +139,12 @@ describe('CU-28 Gestionar animales: estado', () => {
     const fecha = within(dialogo).getByLabelText('Fecha');
     await userEvent.clear(fecha);
     await userEvent.type(fecha, '2026-11-10');
+    await userEvent.type(within(dialogo).getByLabelText('Mensaje para los adoptantes'), 'Rufo nos ha dejado.');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Registrar' }));
     expect(await screen.findByText('Estado cambiado a «Fallecido»')).toBeInTheDocument();
-    expect(enviados('/api/admin/animals/1/status')).toEqual([{ status: 'deceased', date: '2026-11-10' }]);
+    expect(enviados('/api/admin/animals/1/status')).toEqual([
+      { status: 'deceased', date: '2026-11-10', message: 'Rufo nos ha dejado.' },
+    ]);
   });
 });
 

@@ -251,3 +251,9 @@ export async function findStatus(db: Queryable, id: number): Promise<AnimalStatu
   const { rows } = await db.query<{ status: AnimalStatus }>('SELECT status FROM animals WHERE id = $1 FOR SHARE', [id]);
   return rows[0]?.status ?? null;
 }
+
+/** Nombre del animal, para los avisos (CU-31, CU-33). */
+export async function findName(db: Queryable, id: number): Promise<string | null> {
+  const { rows } = await db.query<{ name: string }>('SELECT name FROM animals WHERE id = $1', [id]);
+  return rows[0]?.name ?? null;
+}

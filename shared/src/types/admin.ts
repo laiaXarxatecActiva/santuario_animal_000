@@ -97,3 +97,8 @@ export interface AdminUpdateDto extends AdminUpdateListItemDto {
   updatedAt: string;
   photos: AdminPhotoDto[];
 }
+
+/** CU-31 paso 5: respuesta al publicar, con los adoptantes avisados. */
+export interface AdminUpdateCreatedDto extends AdminUpdateDto {
+  notifiedAdopters: number;
+}

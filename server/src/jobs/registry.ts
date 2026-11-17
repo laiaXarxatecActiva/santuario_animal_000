@@ -3,12 +3,16 @@ import { runBilling } from './billing.job.js';
 import { runExpirePending } from './expire-pending.job.js';
 import { runFinishCancelled } from './finish-cancelled.job.js';
 import type { JobDeps, JobResult } from './job.types.js';
+import { runMonthlyDigest } from './monthly-digest.job.js';
+import { runUpdateReminder } from './update-reminder.job.js';
 
 // Tareas programadas (TECH_SPEC §11.4). Horario en Europe/Madrid.
 export const JOBS = {
   billing: { schedule: '0 3 * * *', run: runBilling },
   'expire-pending': { schedule: '30 3 * * *', run: runExpirePending },
   'finish-cancelled': { schedule: '45 3 * * *', run: runFinishCancelled },
+  'monthly-digest': { schedule: '0 9 1 * *', run: runMonthlyDigest },
+  'update-reminder': { schedule: '0 7 * * *', run: runUpdateReminder },
 } as const;
 
 export type JobName = keyof typeof JOBS;

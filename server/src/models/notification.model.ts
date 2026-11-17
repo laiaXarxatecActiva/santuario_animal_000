@@ -1,5 +1,6 @@
 import type { NotificationDto, NotificationType } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
+import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
 
 // Notificaciones de la campana (CU-18). Todas las consultas filtran por el
 // usuario: una notificación ajena no existe para quien la pide.
@@ -83,4 +84,41 @@ export async function markAllRead(db: Queryable, userId: number): Promise<void> 
 export async function remove(db: Queryable, userId: number, id: number): Promise<boolean> {
   const { rowCount } = await db.query('DELETE FROM notifications WHERE id = $2 AND user_id = $1', [userId, id]);
   return (rowCount ?? 0) > 0;
+}
+
+/** La misma notificación para varios usuarios (CU-31 paso 4.1, CU-33 paso 6). */
+export async function createForUsers(
+  db: Queryable,
+  userIds: readonly number[],
+  datos: { type: NotificationType; message: string; link: string | null },
+): Promise<void> {
+  if (userIds.length === 0) return;
+  await db.query('INSERT INTO notifications (user_id, type, message, link) SELECT unnest($1::int[]), $2, $3, $4', [
+    userIds,
+    datos.type,
+    datos.message,
+    datos.link,
+  ]);
+}
+
+/**
+ * CU-47 paso 2: aviso `update_reminder` de un animal a cada trabajador activo,
+ * salvo a quien ya lo tiene hoy (zona del santuario). Devuelve cuántos se crean.
+ */
+export async function createUpdateReminders(
+  db: Queryable,
+  datos: { message: string; link: string; hoy: string; ahora: Date },
+): Promise<number> {
+  const { rowCount } = await db.query(
+    `INSERT INTO notifications (user_id, type, message, link, created_at)
+     SELECT u.id, 'update_reminder', $1::text, $2::text, $4::timestamptz
+       FROM users u
+      WHERE u.role IN ('caretaker', 'admin') AND u.is_active
+        AND NOT EXISTS (
+          SELECT 1 FROM notifications n
+           WHERE n.user_id = u.id AND n.type = 'update_reminder' AND n.link = $2::text
+             AND (n.created_at AT TIME ZONE '${ZONA_HORARIA_SANTUARIO}')::date = $3::date)`,
+    [datos.message, datos.link, datos.hoy, datos.ahora],
+  );
+  return rowCount ?? 0;
 }

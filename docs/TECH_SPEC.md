@@ -294,6 +294,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | Tabla.columna | Motivo |
 | --- | --- |
 | `users.email_notifications`, `users.email_frequency` | Preferencias de notificación: email sí/no y frecuencia (`per_update` o `monthly_digest`) |
+| `users.digest_sent_for` | Primer día del último mes resumido por `monthly-digest`: como máximo un resumen al mes, aunque la tarea se repita (CU-46) |
 | `users.preferred_language` | Preparado para varios idiomas (Fase 3) |
 | `users.privacy_accepted_at` | Consentimiento RGPD al registrarse |
 | `users.anonymized_at` | Baja con anonimización, conservando pagos y donaciones |
@@ -547,7 +548,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/admin/animals` | Cuidador, admin | Alta | CU-28 |
 | GET | `/api/admin/animals/:id` | Cuidador, admin | Detalle completo | CU-28 |
 | PUT | `/api/admin/animals/:id` | Cuidador, admin | Edición, incluidos `isPublished` e `isAdoptable` | CU-28 |
-| PATCH | `/api/admin/animals/:id/status` | Cuidador, admin | Cambio de estado; si es `deceased` o `transferred`, cierra las adopciones abiertas | CU-28, CU-33 |
+| PATCH | `/api/admin/animals/:id/status` | Cuidador, admin | Cambio de estado (`status`, `date`, `message`); si es `deceased` o `transferred`, cierra las adopciones abiertas y avisa a cada afectado (notificación `adoption_closed` y email). Un fallecimiento con adopciones abiertas exige `message` (422 `FAREWELL_MESSAGE_REQUIRED`), que se publica como actualización «solo adoptantes» con el trabajador como autor | CU-28, CU-33 |
 | DELETE | `/api/admin/animals/:id` | Admin | Borrado físico; solo si nunca ha tenido adopciones | CU-28 |
 | GET | `/api/admin/animals/:id/photos` | Cuidador, admin | Galería del animal (todas las visibilidades, sin las fotos de actualizaciones), en su orden | CU-29 |
 | POST | `/api/admin/animals/:id/photos` | Cuidador, admin | Subida múltiple (`multipart/form-data`: archivos en `files` y, en `meta`, un JSON con el texto alternativo y la visibilidad de cada uno). Responde `{ created, rejected }`: 201 si se ha guardado alguno, 200 si se han rechazado todos | CU-29 |
@@ -560,7 +561,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | DELETE | `/api/admin/species/:id` | Admin | Solo si ningún animal la usa | CU-30 |
 | GET | `/api/admin/updates` | Cuidador, admin | Listado; filtro `?animalId=` | CU-31 |
 | GET | `/api/admin/updates/:id` | Cuidador, admin | Detalle con el texto y las fotos; `canEdit` indica si quien consulta puede editarla | CU-32 |
-| POST | `/api/admin/updates` | Cuidador, admin | Publica y notifica a los adoptantes activos (la notificación llega en la Fase 2). JSON o, con fotos, `multipart/form-data` (`files` + `meta` con el texto alternativo de cada una); las fotos heredan la visibilidad de la actualización y, si alguna no es válida, no se publica nada (422 `FILES_REJECTED`) | CU-31 |
+| POST | `/api/admin/updates` | Cuidador, admin | Publica y notifica a los adoptantes activos (`new_update` y, si lo quieren por actualización, email); responde con `notifiedAdopters`. JSON o, con fotos, `multipart/form-data` (`files` + `meta` con el texto alternativo de cada una); las fotos heredan la visibilidad de la actualización y, si alguna no es válida, no se publica nada (422 `FILES_REJECTED`) | CU-31 |
 | PUT | `/api/admin/updates/:id` | Autor, admin | Edición (sin volver a notificar): título, texto, visibilidad, fotos nuevas y `removePhotoIds` | CU-32 |
 | DELETE | `/api/admin/updates/:id` | Autor, admin | Borrado (y sus fotos) | CU-32 |
 | GET / POST | `/api/admin/animals/:id/vet-records` | Cuidador, admin | Historial veterinario (Fase 3) | CU-34 |

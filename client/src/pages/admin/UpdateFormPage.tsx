@@ -107,6 +107,8 @@ function Formulario({
   const [error, setError] = useState<{ message: string; items?: string[] } | null>(null);
   const [pendientes, setPendientes] = useState<PendingMedia[]>([]);
   const [quitadas, setQuitadas] = useState<number[]>([]);
+  // CU-31 paso 4: el aviso irá a los adoptantes activos del animal elegido.
+  const avisara = animales.data?.find((a) => String(a.id) === valores.animalId)?.activeAdopters ?? 0;
   const fotos: AdminPhotoDto[] = (actualizacion?.photos ?? []).filter((f) => !quitadas.includes(f.id));
 
   const cambiar = (campo: Campo, valor: string) => {
@@ -115,15 +117,19 @@ function Formulario({
   };
 
   const guardar = useMutation({
-    mutationFn: (datos: FormData) =>
+    mutationFn: (datos: FormData): Promise<AdminUpdateDto & { notifiedAdopters?: number }> =>
       actualizacion ? adminApi.updates.update(actualizacion.id, datos) : adminApi.updates.create(datos),
-    onSuccess: async () => {
+    onSuccess: async (respuesta) => {
       await queryClient.invalidateQueries({ queryKey: ADMIN_KEY });
+      // CU-31 paso 5: cuántos adoptantes se han avisado (4a: ninguno, solo «publicada»).
+      const avisados = respuesta.notifiedAdopters ?? 0;
+      let mensaje = t('admin.updates.saved');
+      if (!actualizacion) {
+        mensaje =
+          avisados > 0 ? t('admin.updates.publishedNotified', { count: avisados }) : t('admin.updates.published');
+      }
       await navigate('/admin/updates', {
-        state: flashState({
-          type: 'success',
-          message: actualizacion ? t('admin.updates.saved') : t('admin.updates.published'),
-        }),
+        state: flashState({ type: 'success', message: mensaje }),
       });
     },
     onError: (e) => {
@@ -254,6 +260,9 @@ function Formulario({
         ]}
       />
 
+      {!actualizacion && avisara > 0 && (
+        <p className={pageStyles.muted}>{t('admin.updates.willNotify', { count: avisara })}</p>
+      )}
       <div>
         <Button type="submit" disabled={guardar.isPending}>
           {guardar.isPending

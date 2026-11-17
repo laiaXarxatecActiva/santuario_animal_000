@@ -155,9 +155,22 @@ export function createApp(options: AppOptions): Express {
     createAdminRoutes({
       dashboard: createDashboardService({ db, reloj }),
       species: createSpeciesAdminService({ db }),
-      animals: createAnimalAdminService({ db, reloj }),
+      animals: createAnimalAdminService({
+        db,
+        reloj,
+        email: options.email,
+        clientUrl: options.clientUrl,
+        logEmailError,
+      }),
       photos: createPhotoAdminService({ db, media }),
-      updates: createUpdateAdminService({ db, reloj, media }),
+      updates: createUpdateAdminService({
+        db,
+        reloj,
+        media,
+        email: options.email,
+        clientUrl: options.clientUrl,
+        logEmailError,
+      }),
       jobs,
     }),
   );

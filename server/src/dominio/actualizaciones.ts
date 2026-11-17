@@ -26,6 +26,11 @@ export function nivelAlertaActualizacion(diasSinActualizar: number): NivelAlerta
   return null;
 }
 
+/** CU-47 y RN-14: se avisa a los trabajadores desde el primer día del aviso amarillo. */
+export function necesitaRecordatorio(diasSinActualizar: number): boolean {
+  return diasSinActualizar >= DIAS_AVISO_ACTUALIZACION;
+}
+
 /** CU-31 precondición: no se publica sobre un animal fallecido o trasladado (el último aviso es de CU-33). */
 export function puedePublicarActualizacion(status: AnimalStatus): boolean {
   return !estaArchivado(status);

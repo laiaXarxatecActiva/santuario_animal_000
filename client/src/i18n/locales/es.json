@@ -236,7 +236,8 @@
     "PLAN_CHANGE_NOT_ALLOWED": "Solo puedes cambiar el plan de una adopción activa sin baja solicitada.",
     "ADOPTION_CANCEL_ALREADY_REQUESTED": "Ya habías solicitado la baja de esta adopción.",
     "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado.",
-    "EMAIL_NOT_SENT": "No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde."
+    "EMAIL_NOT_SENT": "No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde.",
+    "FAREWELL_MESSAGE_REQUIRED": "Escribe el mensaje para los adoptantes."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -651,6 +652,10 @@
       "closesAdoptions_other": "Se cerrarán sus {{count}} adopciones abiertas y dejará de aparecer en el catálogo.",
       "noOpenAdoptions": "No tiene adopciones abiertas. Dejará de aparecer en el catálogo.",
       "eventDate": "Fecha",
+      "transferNotice": "Sus adoptantes recibirán un aviso en la web y por email.",
+      "farewellMessage": "Mensaje para los adoptantes",
+      "farewellHelp": "Escríbelo con calma: se publicará como actualización y les llegará por email junto al aviso de que su adopción se cierra.",
+      "farewellRequired": "Escribe el mensaje para los adoptantes.",
       "register": "Registrar",
       "registering": "Registrando…",
       "delete": "Borrar animal",
@@ -721,6 +726,10 @@
       "publish": "Publicar",
       "save": "Guardar cambios",
       "published": "Actualización publicada.",
+      "publishedNotified_one": "Actualización publicada y {{count}} adoptante avisado.",
+      "publishedNotified_other": "Actualización publicada y {{count}} adoptantes avisados.",
+      "willNotify_one": "Se avisará a {{count}} adoptante.",
+      "willNotify_other": "Se avisará a {{count}} adoptantes.",
       "saved": "Actualización guardada.",
       "deleted": "Actualización borrada.",
       "confirmDelete": "¿Borrar «{{title}}»?",

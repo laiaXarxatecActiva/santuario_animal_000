@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ANIMAL_SEXES } from '../constants/animals.js';
 import { ALT_TEXT_MAX_LENGTH, MAX_FILES_PER_UPLOAD } from '../constants/media.js';
 import { ANIMAL_STATUSES, VISIBILITIES } from '../constants/status.js';
-import { textoObligatorio } from './fields.js';
+import { textoObligatorio, textoOpcional as textoSinVacio } from './fields.js';
 import { paginationQuerySchema } from './pagination.schema.js';
 
 // Esquemas del panel de gestión (TECH_SPEC §10.6).
@@ -80,8 +80,11 @@ export type AnimalData = z.infer<typeof animalBodySchema>;
 export const animalStatusBodySchema = z.object({
   status: z.enum(ANIMAL_STATUSES, { error: 'Elige un estado.' }),
   date: fecha('La fecha no es válida.').optional(),
+  /** CU-33 paso 3: mensaje redactado para los adoptantes (fallecimiento); vacío cuenta como ausente. */
+  message: textoSinVacio(10000),
 });
-export type AnimalStatusBody = z.infer<typeof animalStatusBodySchema>;
+export type AnimalStatusBody = z.input<typeof animalStatusBodySchema>;
+export type AnimalStatusData = z.infer<typeof animalStatusBodySchema>;
 
 // CU-29: fotos y vídeos de la galería de un animal.
 const FALTAN_DATOS_ARCHIVOS = 'Faltan los datos de los archivos.';

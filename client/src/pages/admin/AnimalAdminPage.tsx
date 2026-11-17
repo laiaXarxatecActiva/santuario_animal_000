@@ -9,10 +9,11 @@ import { adminApi } from '../../api/admin';
 import { Alert } from '../../components/Alert';
 import { AnimalStatusBadges } from '../../components/AnimalStatusBadges';
 import { Button, ButtonLink } from '../../components/Button';
-import { TextField } from '../../components/FormFields';
+import { TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { ADMIN_KEY, adminAnimalKey, useAdminAnimal } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
+import { ApiError } from '../../api/client';
 import { errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
 import { formatDate } from '../../utils/format';
@@ -91,11 +92,17 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
   const [menu, setMenu] = useState(false);
   const [archivarComo, setArchivarComo] = useState<AnimalStatus | null>(null);
   const [fecha, setFecha] = useState(hoyLocal);
+  // CU-33 paso 3: mensaje para los adoptantes (fallecimiento con adopciones abiertas).
+  const [mensaje, setMensaje] = useState('');
+  const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
   const [borrando, setBorrando] = useState(false);
   const archivado = esArchivado(animal.status);
 
+  const pideMensaje = archivarComo === 'deceased' && animal.openAdoptions > 0;
+
   const cambiarEstado = useMutation({
-    mutationFn: (cambio: { status: AnimalStatus; date?: string }) => adminApi.animals.changeStatus(animal.id, cambio),
+    mutationFn: (cambio: { status: AnimalStatus; date?: string; message?: string }) =>
+      adminApi.animals.changeStatus(animal.id, cambio),
     onSuccess: async (actualizado) => {
       setArchivarComo(null);
       queryClient.setQueryData(adminAnimalKey(animal.id), actualizado);
@@ -106,10 +113,25 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
       await queryClient.invalidateQueries({ queryKey: [...ADMIN_KEY, 'animals', 'list'] });
     },
     onError: (e) => {
+      // 3a: el error del mensaje se queda en el diálogo.
+      const enMensaje = e instanceof ApiError ? e.details?.find((d) => d.field === 'message') : undefined;
+      if (enMensaje) {
+        setErrorMensaje(enMensaje.message);
+        return;
+      }
       setArchivarComo(null);
       avisar({ type: 'error', message: errorMessage(t, e) });
     },
   });
+
+  const registrar = () => {
+    if (!archivarComo) return;
+    if (pideMensaje && mensaje.trim() === '') {
+      setErrorMensaje(t('admin.animal.farewellRequired'));
+      return;
+    }
+    cambiarEstado.mutate({ status: archivarComo, date: fecha, ...(pideMensaje ? { message: mensaje } : {}) });
+  };
 
   const borrar = useMutation({
     mutationFn: () => adminApi.animals.remove(animal.id),
@@ -131,6 +153,8 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
     avisar(null);
     if (esArchivado(status)) {
       setFecha(hoyLocal());
+      setMensaje('');
+      setErrorMensaje(null);
       setArchivarComo(status);
     } else {
       cambiarEstado.mutate({ status });
@@ -205,10 +229,7 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
             <Button variant="outline" onClick={() => setArchivarComo(null)}>
               {t('admin.common.cancel')}
             </Button>
-            <Button
-              disabled={cambiarEstado.isPending || fecha === ''}
-              onClick={() => archivarComo && cambiarEstado.mutate({ status: archivarComo, date: fecha })}
-            >
+            <Button disabled={cambiarEstado.isPending || fecha === ''} onClick={registrar}>
               {cambiarEstado.isPending ? t('admin.animal.registering') : t('admin.animal.register')}
             </Button>
           </>
@@ -227,6 +248,21 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
             max={hoyLocal()}
             onChange={(e) => setFecha(e.target.value)}
           />
+          {archivarComo === 'transferred' && animal.openAdoptions > 0 && <p>{t('admin.animal.transferNotice')}</p>}
+          {pideMensaje && (
+            <TextAreaField
+              label={t('admin.animal.farewellMessage')}
+              help={t('admin.animal.farewellHelp')}
+              required
+              rows={5}
+              value={mensaje}
+              error={errorMensaje ?? undefined}
+              onChange={(e) => {
+                setMensaje(e.target.value);
+                setErrorMensaje(null);
+              }}
+            />
+          )}
         </div>
       </Modal>
 
