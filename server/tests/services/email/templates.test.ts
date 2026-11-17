@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { accountExistsEmail } from '../../../src/services/email/templates/account-exists.js';
 import { adoptionWelcomeEmail } from '../../../src/services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../../../src/services/email/templates/payment-completed.js';
 import { resetPasswordEmail } from '../../../src/services/email/templates/reset-password.js';
@@ -13,6 +14,21 @@ describe('plantillas de email', () => {
     expect(email.text).toContain(url);
     expect(email.html).toContain(`href="${url}"`);
     expect(email.text).toContain('24 horas');
+  });
+
+  it('CU-07 3a account-exists enlaza a iniciar sesión y a recuperar la contraseña', () => {
+    const email = accountExistsEmail({
+      firstName: 'Lucía',
+      loginUrl: 'http://x/login',
+      forgotPasswordUrl: 'http://x/forgot-password',
+    });
+    expect(email.subject).toBe('Ya tienes una cuenta en el santuario');
+    expect(email.text).toContain('Hola, Lucía:');
+    expect(email.text).toContain('http://x/login');
+    expect(email.text).toContain('http://x/forgot-password');
+    expect(email.text).toContain('Si no has sido tú');
+    expect(email.html).toContain('href="http://x/login"');
+    expect(email.html).toContain('href="http://x/forgot-password"');
   });
 
   it('CU-10 reset-password caduca en 1 hora', () => {

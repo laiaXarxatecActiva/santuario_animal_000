@@ -330,7 +330,7 @@ Todas las pantallas de autenticación comparten el mismo esquema: **una tarjeta 
 
 | Pantalla | Contenido |
 | --- | --- |
-| Registro (`/register`) | Nombre, apellidos, email, contraseña (con indicación «Mínimo 10 caracteres» y botón 👁 para mostrarla), repetir contraseña, casilla de privacidad con enlace, [■ Crear cuenta] |
+| Registro (`/register`) | Nombre, apellidos, email, contraseña (con indicación «Mínimo 10 caracteres» y botón 👁 para mostrarla), repetir contraseña, casilla de privacidad con enlace, [■ Crear cuenta]. Al enviarlo lleva a «Iniciar sesión» (conservando `?next`) con un aviso de éxito: «Te hemos enviado un email…». No muestra nunca si el email ya tenía cuenta. |
 | Iniciar sesión (`/login`) | Como el esquema |
 | Verificar email (`/verify-email`) | Solo un aviso (éxito o error) y un botón: [Ir a Mis animales] o [Reenviar email] |
 | He olvidado mi contraseña (`/forgot-password`) | Email y [■ Enviar enlace]; después, aviso `info` con el mensaje neutro |

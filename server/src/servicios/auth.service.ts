@@ -25,6 +25,7 @@ import * as sessionModel from '../models/session.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailMessage, EmailService } from '../services/email/email.service.js';
+import { accountExistsEmail } from '../services/email/templates/account-exists.js';
 import { resetPasswordEmail } from '../services/email/templates/reset-password.js';
 import { verifyEmailEmail } from '../services/email/templates/verify-email.js';
 import { hashPassword, verifyPassword } from '../utils/passwords.js';
@@ -94,22 +95,47 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
     return encontrado;
   }
 
-  /** CU-07: crea el adoptante y su token de verificación, y envía el email. */
-  async function register(datos: RegisterInput): Promise<SessionUser> {
-    if (await userModel.findByEmail(db, datos.email)) throw new EmailAlreadyRegisteredError();
-    const passwordHash = await hashPassword(datos.password);
-    const { user, token } = await withTransaction(db, async (client) => {
-      const creado = await userModel.create(client, {
-        firstName: datos.firstName,
-        lastName: datos.lastName,
-        email: datos.email,
-        passwordHash,
-        privacyAcceptedAt: reloj.ahora(),
-      });
-      return { user: creado, token: await crearToken(client, creado.id, 'email_verification') };
+  /** CU-07 3a: avisa al dueño de la cuenta (si está activa) de que ya tiene una. */
+  async function avisarCuentaExistente(user: userModel.User | null): Promise<void> {
+    if (!user || !cuentaActiva(user)) return;
+    const contenido = accountExistsEmail({
+      firstName: user.firstName,
+      loginUrl: new URL('/login', clientUrl).toString(),
+      forgotPasswordUrl: new URL('/forgot-password', clientUrl).toString(),
     });
-    await enviarVerificacion(user, token);
-    return toSessionUser(user);
+    await enviar({ to: user.email, ...contenido });
+  }
+
+  /**
+   * CU-07: crea el adoptante y su token de verificación, y envía el email. Si el
+   * email ya tiene cuenta no crea nada y avisa a su dueño por email. Quien llama
+   * responde siempre igual, así que la web no revela qué cuentas existen. El hash
+   * se calcula en los dos casos para que la respuesta tarde lo mismo.
+   */
+  async function register(datos: RegisterInput): Promise<void> {
+    const existente = await userModel.findByEmail(db, datos.email);
+    const passwordHash = await hashPassword(datos.password);
+    if (existente) {
+      await avisarCuentaExistente(existente);
+      return;
+    }
+    try {
+      const { user, token } = await withTransaction(db, async (client) => {
+        const creado = await userModel.create(client, {
+          firstName: datos.firstName,
+          lastName: datos.lastName,
+          email: datos.email,
+          passwordHash,
+          privacyAcceptedAt: reloj.ahora(),
+        });
+        return { user: creado, token: await crearToken(client, creado.id, 'email_verification') };
+      });
+      await enviarVerificacion(user, token);
+    } catch (error) {
+      // Otra petición ha registrado el mismo email a la vez.
+      if (!(error instanceof EmailAlreadyRegisteredError)) throw error;
+      await avisarCuentaExistente(await userModel.findByEmail(db, datos.email));
+    }
   }
 
   /** CU-08. Si el email ya estaba verificado lo indica, aunque el enlace se haya usado. */

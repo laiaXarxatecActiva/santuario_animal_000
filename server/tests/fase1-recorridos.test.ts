@@ -41,7 +41,9 @@ describe('Fase 1: un visitante se registra, verifica el email y adopta (CU-07, C
       passwordConfirm: 'buitres-2026',
       privacyAccepted: true,
     });
-    expect(registro.status).toBe(201);
+    expect(registro.status).toBe(202);
+    // El registro no abre sesión (no revela si el email ya existía): entra con su contraseña.
+    expect((await visitante.post('/api/auth/login').send({ email, password: 'buitres-2026' })).status).toBe(200);
 
     const animales = await adoptablesPublicos();
     expect(animales.length).toBeGreaterThanOrEqual(PLANES.length);

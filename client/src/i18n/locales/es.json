@@ -265,8 +265,7 @@
       "submitting": "Creando la cuenta…",
       "hasAccount": "¿Ya tienes cuenta?",
       "login": "Inicia sesión",
-      "forgot": "He olvidado mi contraseña",
-      "success": "Te hemos enviado un email para verificar tu cuenta."
+      "success": "Te hemos enviado un email. Revísalo para verificar tu cuenta y, mientras tanto, inicia sesión con tu email y tu contraseña."
     },
     "verify": {
       "title": "Verificar el email",

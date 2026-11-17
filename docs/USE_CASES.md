@@ -263,18 +263,19 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 3. El sistema valida los datos y comprueba que el email no esté registrado (sin distinguir mayúsculas).
 4. El sistema crea el usuario con `role = 'adopter'`, `email_verified = FALSE`, la contraseña con hash y `privacy_accepted_at`.
 5. El sistema crea un token de verificación (24 horas) y envía el email de verificación.
-6. El sistema inicia la sesión y muestra «Te hemos enviado un email para verificar tu cuenta». Si venía de adoptar, vuelve a la ficha del animal.
+6. El sistema responde «Te hemos enviado un email. Revisa tu bandeja de entrada para continuar.» **sin iniciar la sesión** (abrirla revelaría que el email no tenía cuenta) y lleva a «Iniciar sesión». Si venía de adoptar, tras iniciar sesión vuelve a la ficha del animal.
 
 **Flujos alternativos**
 
-- **3a.** El email ya está registrado: se muestra «Ya existe una cuenta con este email» con enlaces a «Iniciar sesión» y «He olvidado mi contraseña».
+- **3a.** El email ya está registrado: no se crea nada y la respuesta es **idéntica** a la del flujo principal, para no revelar qué cuentas existen. Si la cuenta está activa, se envía a ese email el aviso «Ya tienes una cuenta en el santuario», con enlaces a «Iniciar sesión» y «He olvidado mi contraseña» (si está desactivada, no se envía nada). La contraseña se procesa igualmente para que la respuesta tarde lo mismo.
 - **3b.** Las contraseñas no coinciden o no cumplen el mínimo: error en el campo.
 - **3c.** No se acepta la política de privacidad: no se puede continuar.
-- **5a.** Falla el envío del email: la cuenta se crea igualmente y el usuario puede pedir que se reenvíe (CU-08).
+- **5a.** Falla el envío del email: la cuenta se crea igualmente y el usuario puede pedir que se reenvíe (CU-08) tras iniciar sesión.
+- **6a.** Demasiados registros: más de 3 por hora con el mismo email o más de 20 por hora desde la misma IP responden 429 (evita usar el formulario para inundar el buzón de otra persona).
 
 **Postcondiciones**
 
-- Existe un usuario adoptante con el email sin verificar y la sesión iniciada.
+- Existe un usuario adoptante con el email sin verificar. La sesión no se inicia hasta que entra con CU-09.
 
 **Reglas de negocio:** RN-01, RN-02, RN-21.
 
