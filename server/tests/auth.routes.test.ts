@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { hashToken } from '../src/utils/tokens.js';
+import { hashPassword } from '../src/utils/passwords.js';
 import { prepararApp, TEST_CLIENT_URL, tokenDelEmail, type TestApp } from './helpers/test-app.js';
 
 let t: TestApp;
@@ -76,7 +77,7 @@ describe('CU-07 Registrarse', () => {
 
     const fila = await usuario('ana.ferrer@correo.test');
     expect(fila).toMatchObject({ role: 'adopter', email_verified: false });
-    expect(fila.password_hash).toMatch(/^\$2[aby]\$10\$/);
+    expect(fila.password_hash).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
     expect(fila.privacy_accepted_at.toISOString()).toBe(t.reloj.ahora().toISOString());
 
     expect((await agent.get('/api/auth/me')).body.user).toMatchObject({ email: 'ana.ferrer@correo.test' });
@@ -144,7 +145,7 @@ describe('CU-07 Registrarse', () => {
       .send(registro({ email: 'corta@correo.test', password: 'corta', passwordConfirm: 'corta' }));
     expect(res.status).toBe(400);
     expect(res.body.error.details).toEqual([
-      { field: 'password', message: 'La contraseña debe tener al menos 8 caracteres.' },
+      { field: 'password', message: 'La contraseña debe tener al menos 10 caracteres.' },
     ]);
   });
 
@@ -323,7 +324,7 @@ describe('CU-09 Iniciar sesión', () => {
   });
 
   it('3b: una cuenta anonimizada no puede entrar', async () => {
-    await t.pool.query("UPDATE users SET password_hash = crypt('Clave-conocida1', gen_salt('bf', 4)) WHERE id = 15");
+    await t.pool.query('UPDATE users SET password_hash = $1 WHERE id = 15', [await hashPassword('Clave-conocida1')]);
     const res = await login(request(t.app), 'deleted-15@anonymized.invalid', 'Clave-conocida1');
     expect(res.status).toBe(403);
   });

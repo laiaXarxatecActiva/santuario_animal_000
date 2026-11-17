@@ -71,7 +71,7 @@ Módulos: `shared` y `server` usan `NodeNext`, así que los imports relativos ll
 - Compartido: esquemas Zod, tipos de la API y constantes.
 - Servidor: Express 5 + TypeScript, `pg` sin ORM, express-session + connect-pg-simple.
 - Cliente: React 19 + Vite, React Query, react-hook-form, i18next.
-- Requisitos: Node 22+, PostgreSQL 14+ y Mailpit (SMTP en el 1025, interfaz en http://localhost:8025). `docker-compose.yml` (opcional) levanta Postgres 16, con `sanctuary` y `sanctuary_test` (`database/docker-init.sql`), y Mailpit.
+- Requisitos: Node 24.7+ (por `crypto.argon2`), PostgreSQL 14+ y Mailpit (SMTP en el 1025, interfaz en http://localhost:8025). `docker-compose.yml` (opcional) levanta Postgres 16, con `sanctuary` y `sanctuary_test` (`database/docker-init.sql`), y Mailpit.
 
 ## Arquitectura
 

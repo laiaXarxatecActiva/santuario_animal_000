@@ -8,7 +8,7 @@
     "client"
   ],
   "engines": {
-    "node": ">=22"
+    "node": ">=24.7"
   },
   "scripts": {
     "predev": "npm run users:file",

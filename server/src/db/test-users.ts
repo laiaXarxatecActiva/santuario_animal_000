@@ -24,22 +24,17 @@ interface UserRow {
   anonymized: boolean;
 }
 
-// `'email', crypt('contraseña', ...)`: las comillas se escapan duplicándolas.
-const CRYPT_RE = /'([^'\s]+@[^'\s]+)',\s*crypt\('((?:[^']|'')*)'/g;
 // Fila de la cabecera: `--   6   lucia@…   Lucia.buitres1    notas` (con rol opcional).
-const CABECERA_RE = /^--\s+\d+\s+(?:(?:admin|caretaker)\s+)?(\S+@\S+)\s+\S+(?:\s+(.*))?$/;
+// Las contraseñas no llevan espacios. Los hashes Argon2id de la tabla `users` ya
+// vienen calculados, así que la cabecera es la única fuente de la contraseña en claro.
+const CABECERA_RE = /^--\s+\d+\s+(?:(?:admin|caretaker)\s+)?(\S+@\S+)\s+(\S+)(?:\s+(.*))?$/;
 
-/** Extrae de TEST_DATA.sql la contraseña en claro (y las notas) de cada email. */
+/** Extrae de la cabecera de TEST_DATA.sql la contraseña en claro (y las notas) de cada email. */
 export function parseTestUsers(sql: string): Map<string, TestUserInfo> {
-  const notas = new Map<string, string>();
+  const usuarios = new Map<string, TestUserInfo>();
   for (const linea of sql.split('\n')) {
     const m = CABECERA_RE.exec(linea.trimEnd());
-    if (m?.[1]) notas.set(m[1].toLowerCase(), (m[2] ?? '').trim());
-  }
-  const usuarios = new Map<string, TestUserInfo>();
-  for (const m of sql.matchAll(CRYPT_RE)) {
-    const email = (m[1] ?? '').toLowerCase();
-    usuarios.set(email, { password: (m[2] ?? '').replaceAll("''", "'"), notes: notas.get(email) ?? '' });
+    if (m?.[1] && m[2]) usuarios.set(m[1].toLowerCase(), { password: m[2], notes: (m[3] ?? '').trim() });
   }
   return usuarios;
 }

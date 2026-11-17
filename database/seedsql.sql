@@ -54,11 +54,6 @@ DROP FUNCTION IF EXISTS check_adoption_user_role() CASCADE;
 DROP FUNCTION IF EXISTS check_update_author_role() CASCADE;
 DROP FUNCTION IF EXISTS check_animal_cover_photo() CASCADE;
 
--- pgcrypto: gratuita, incluida con PostgreSQL y "trusted" desde la versión 13
--- (no necesita superusuario). Se usa en TEST_DATA.sql para generar los hashes
--- bcrypt de las contraseñas de prueba con crypt() y gen_salt('bf').
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
 -- -----------------------------------------------------------------------------
 -- 1. Funciones auxiliares
 -- -----------------------------------------------------------------------------
@@ -83,7 +78,7 @@ CREATE TABLE users (
     first_name            VARCHAR(100) NOT NULL,
     last_name             VARCHAR(150) NOT NULL,
     email                 VARCHAR(255) NOT NULL,
-    password_hash         VARCHAR(255) NOT NULL,           -- bcrypt
+    password_hash         VARCHAR(255) NOT NULL,           -- Argon2id (formato PHC)
     phone                 VARCHAR(30),
     role                  VARCHAR(20)  NOT NULL DEFAULT 'adopter'
                           CHECK (role IN ('adopter', 'caretaker', 'admin')),

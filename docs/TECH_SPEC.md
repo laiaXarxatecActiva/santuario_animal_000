@@ -48,7 +48,7 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | Capa | Tecnología | Versión mínima | Motivo |
 | --- | --- | --- | --- |
 | Lenguaje | TypeScript | 5.x | Tipado en cliente y servidor; tipos compartidos |
-| Entorno de ejecución | Node.js (LTS) | 22 | Soporte nativo de `--env-file` y `fetch` |
+| Entorno de ejecución | Node.js (LTS) | 24.7 | Soporte nativo de `--env-file`, `fetch` y `crypto.argon2` (hash de contraseñas sin dependencias) |
 | Servidor | Express | 5.x | Gestiona errores de funciones `async` sin envoltorios |
 | Base de datos | PostgreSQL | 14 | Requisito del proyecto |
 | Cliente | React | 19 | Requisito del proyecto |
@@ -61,7 +61,7 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | --- | --- | --- |
 | Acceso a datos | `pg` (node-postgres) | SQL escrito a mano y **siempre parametrizado** (`$1, $2…`). Sin ORM. |
 | Sesiones | `express-session` + `connect-pg-simple` | Sesiones guardadas en la tabla `user_sessions` |
-| Hash de contraseñas | `bcryptjs` | JavaScript puro, sin compilación nativa. Coste 10. Compatible con los hashes `$2a$` de `TEST_DATA.sql`. |
+| Hash de contraseñas | `crypto.argon2` (nativo de Node) | Argon2id, el algoritmo recomendado por OWASP, sin dependencias ni compilación. |
 | Validación | `zod` | Esquemas compartidos con el cliente en `shared/` |
 | Subida de archivos | `multer` | Fotos y vídeos |
 | Procesado de imágenes | `sharp` | Redimensionado y miniaturas |
@@ -398,8 +398,8 @@ Al iniciar sesión se regenera el identificador de sesión (`req.session.regener
 
 ### 9.2 Contraseñas y tokens
 
-- Hash con `bcryptjs`, coste 10.
-- Requisitos mínimos de contraseña para el registro: 8 caracteres. Las contraseñas de `TEST_DATA.sql` no se validan con esta regla.
+- Hash con **Argon2id** (`crypto.argon2` de Node), con los parámetros mínimos de OWASP: 19 MiB de memoria, 2 pasadas y paralelismo 1, sal aleatoria de 16 bytes y hash de 32 bytes. Se guarda en formato PHC (`$argon2id$v=19$m=19456,t=2,p=1$<sal>$<hash>`), de modo que se pueden subir los parámetros más adelante sin invalidar los hashes existentes. Los parámetros están en `server/src/utils/passwords.ts`.
+- Contraseñas de **10 a 128 caracteres**, sin reglas de composición (se permiten espacios, símbolos y pegar desde un gestor de contraseñas). El máximo evita que un texto enorme se use para cargar el servidor. Las contraseñas de `TEST_DATA.sql` no se validan con esta regla; sus hashes Argon2id ya vienen calculados en el archivo.
 - **Tokens de un solo uso** (`user_tokens`): 32 bytes aleatorios (`crypto.randomBytes`) enviados por email. En la base de datos se guarda su hash SHA-256.
   - Verificación de email: caduca en 24 horas.
   - Recuperación de contraseña: caduca en 1 hora. Al usarse, se cierran todas las sesiones del usuario.
@@ -745,7 +745,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 ### 14.1 Requisitos
 
-- Node.js LTS (22 o superior).
+- Node.js LTS (24.7 o superior).
 - PostgreSQL 14 o superior, instalado en el ordenador **o** con Docker Compose.
 - Mailpit, como binario **o** con Docker Compose.
 
@@ -912,7 +912,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
    | Necesidad | Qué buscar |
    | --- | --- |
    | Servidor Node | Servicio web gratuito con HTTPS. Suelen «dormirse» tras un rato sin visitas. |
-   | PostgreSQL | Base de datos gestionada gratuita, versión 14 o superior, con `pgcrypto`. Comprobar si caduca a los X días. |
+   | PostgreSQL | Base de datos gestionada gratuita, versión 14 o superior. Comprobar si caduca a los X días. |
    | Archivos (fotos y vídeos) | Almacenamiento de objetos o servicio de imágenes gratuito, porque el disco de los servidores gratuitos suele borrarse al reiniciar |
    | Email | Servicio SMTP con cupo diario gratuito |
    | Tareas programadas | Si el servidor «se duerme», `node-cron` no es fiable: se usará un programador externo gratuito (por ejemplo, un flujo programado de GitHub Actions) que llame a `POST /api/admin/jobs/:jobName/run` con `JOBS_TRIGGER_TOKEN` |

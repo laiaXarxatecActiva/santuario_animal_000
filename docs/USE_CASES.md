@@ -259,7 +259,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal**
 
 1. El visitante entra en «Registrarse» (`/register`), directamente o al intentar adoptar.
-2. Introduce nombre, apellidos, email, contraseña (mínimo 8 caracteres) y su confirmación, y acepta la política de privacidad.
+2. Introduce nombre, apellidos, email, contraseña (mínimo 10 caracteres) y su confirmación, y acepta la política de privacidad.
 3. El sistema valida los datos y comprueba que el email no esté registrado (sin distinguir mayúsculas).
 4. El sistema crea el usuario con `role = 'adopter'`, `email_verified = FALSE`, la contraseña con hash y `privacy_accepted_at`.
 5. El sistema crea un token de verificación (24 horas) y envía el email de verificación.

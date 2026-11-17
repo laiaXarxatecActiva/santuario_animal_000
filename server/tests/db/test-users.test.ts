@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { relojFijo } from '../../src/dominio/reloj.js';
 import { resetDatabase } from '../../src/db/reset.js';
 import { parseTestUsers, writeTestUsersFile } from '../../src/db/test-users.js';
+import { hashPassword } from '../../src/utils/passwords.js';
 import { databaseDir, testDatabaseUrl } from '../helpers/test-db.js';
 
 const testDataSql = join(databaseDir, 'TEST_DATA.sql');
@@ -23,7 +24,7 @@ afterAll(async () => {
 });
 
 describe('parseTestUsers', () => {
-  it('extrae la contraseña en claro de cada crypt() de TEST_DATA.sql', async () => {
+  it('extrae la contraseña en claro de la cabecera de TEST_DATA.sql', async () => {
     const usuarios = parseTestUsers(await readFile(testDataSql, 'utf8'));
     expect(usuarios.get('marta.soler@santuario.test')?.password).toBe('MartaSoler26#!');
     expect(usuarios.get('sergio.llorens@correo.test')?.password).toBe('Sergio#Vuela7');
@@ -42,9 +43,10 @@ describe('parseTestUsers', () => {
     expect(usuarios.get('marta.soler@santuario.test')?.notes).toBe('');
   });
 
-  it("admite comillas escapadas ('') dentro de la contraseña", () => {
-    const usuarios = parseTestUsers("('ana@x.test', crypt('O''Neil1!', gen_salt('bf', 10)))");
-    expect(usuarios.get('ana@x.test')?.password).toBe("O'Neil1!");
+  it('lee la contraseña aunque la fila no tenga notas, y no la toma de los hashes', () => {
+    const usuarios = parseTestUsers("--   1   admin   ana@x.test   O'Neil1!\n('ana@x.test', '$argon2id$v=19$...')");
+    expect(usuarios.get('ana@x.test')).toEqual({ password: "O'Neil1!", notes: '' });
+    expect(usuarios.size).toBe(1);
   });
 });
 
@@ -74,10 +76,11 @@ describe('writeTestUsersFile', () => {
     const client = new pg.Client({ connectionString: testDatabaseUrl() });
     await client.connect();
     try {
-      await client.query(`UPDATE users SET password_hash = crypt('Otra1234!', gen_salt('bf', 4)) WHERE id = 6`);
+      await client.query('UPDATE users SET password_hash = $1 WHERE id = 6', [await hashPassword('Otra1234!')]);
       await client.query(
         `INSERT INTO users (first_name, last_name, email, password_hash, role, privacy_accepted_at)
-         VALUES ('Nueva', 'Persona', 'nueva@correo.test', crypt('Nueva1234!', gen_salt('bf', 4)), 'adopter', now())`,
+         VALUES ('Nueva', 'Persona', 'nueva@correo.test', $1, 'adopter', now())`,
+        [await hashPassword('Nueva1234!')],
       );
     } finally {
       await client.end();

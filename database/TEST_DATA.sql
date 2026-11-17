@@ -19,8 +19,10 @@
 --
 -- USUARIOS DE PRUEBA
 -- -----------------------------------------------------------------------------
--- Las contraseñas se guardan con hash bcrypt (pgcrypto). Aquí se indican en
--- claro para poder iniciar sesión durante las pruebas.
+-- Las contraseñas se guardan con hash Argon2id, ya calculado (PostgreSQL no
+-- sabe calcularlo). Aquí se indican en claro para poder iniciar sesión durante
+-- las pruebas; `npm run users:file` lee esta tabla. Para cambiar una, calcula
+-- su hash con `hashPassword` (server/src/utils/passwords.ts) y actualiza la tabla.
 --
 -- Trabajadores. Convenio: NombreApellido + "26#!" (sin tildes ni espacios).
 --   id  rol        email                           contraseña
@@ -87,37 +89,37 @@ INSERT INTO users (
     privacy_accepted_at, is_active, anonymized_at, last_login_at, created_at
 ) OVERRIDING SYSTEM VALUE VALUES
 -- Trabajadores
-(1,  'Marta',  'Soler Ferrer',   'marta.soler@santuario.test',    crypt('MartaSoler26#!',    gen_salt('bf', 10)), '600111001', 'admin',
+(1,  'Marta',  'Soler Ferrer',   'marta.soler@santuario.test',    '$argon2id$v=19$m=19456,t=2,p=1$CeSrlmFQtBMnU8qRIw3rOQ$aDmS4jtBb+VfX5amVk73TWfScbBFF+XLYSW4amjCODk', '600111001', 'admin',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('3 years'),  TRUE,  NULL, pg_temp.ago_ts('0 days', '08:05'), pg_temp.ago_ts('3 years')),
-(2,  'Javier', 'Ortega Ruiz',    'javier.ortega@santuario.test',  crypt('JavierOrtega26#!',  gen_salt('bf', 10)), '600111002', 'admin',
+(2,  'Javier', 'Ortega Ruiz',    'javier.ortega@santuario.test',  '$argon2id$v=19$m=19456,t=2,p=1$TlEQihHxFTLTOIfrobxL/w$pVhW9B8MZ0sF48iVm9qraDWK4PsDwX7+ucKXuA4c6Wo', '600111002', 'admin',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('2 years'),  TRUE,  NULL, pg_temp.ago_ts('2 days', '09:12'), pg_temp.ago_ts('2 years')),
-(3,  'Nuria',  'Peris Gil',      'nuria.peris@santuario.test',    crypt('NuriaPeris26#!',    gen_salt('bf', 10)), '600111003', 'caretaker',
+(3,  'Nuria',  'Peris Gil',      'nuria.peris@santuario.test',    '$argon2id$v=19$m=19456,t=2,p=1$sEEMaISpRYhVy1JWiVDFMQ$C2AnGTmKAGQjKRlIqaITiRCChU8pN2ct14Txy/xtCew', '600111003', 'caretaker',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('3 years'),  TRUE,  NULL, pg_temp.ago_ts('0 days', '07:45'), pg_temp.ago_ts('3 years')),
-(4,  'Andrés', 'Climent Mas',    'andres.climent@santuario.test', crypt('AndresCliment26#!', gen_salt('bf', 10)), '600111004', 'caretaker',
+(4,  'Andrés', 'Climent Mas',    'andres.climent@santuario.test', '$argon2id$v=19$m=19456,t=2,p=1$H99t0dmvcvWKboHig4swDQ$4rENn9DJPN3ZCUZ+jr44tH4KaweZpUSxIqRHN2ehMW4', '600111004', 'caretaker',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('18 months'), TRUE, NULL, pg_temp.ago_ts('1 day', '07:50'),  pg_temp.ago_ts('18 months')),
-(5,  'Carmen', 'Boix Vidal',     'carmen.boix@santuario.test',    crypt('CarmenBoix26#!',    gen_salt('bf', 10)), '600111005', 'caretaker',
+(5,  'Carmen', 'Boix Vidal',     'carmen.boix@santuario.test',    '$argon2id$v=19$m=19456,t=2,p=1$HpMrzUMiDn6bUB/ryFpBxQ$K+gsq7N9pshBgClPL63kEyFMjlC/MQ6hQ/+A/cJQHPg', '600111005', 'caretaker',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('8 months'), TRUE,  NULL, pg_temp.ago_ts('3 days', '15:20'), pg_temp.ago_ts('8 months')),
 -- Adoptantes
-(6,  'Lucía',  'Martínez Navarro', 'lucia.martinez@correo.test',  crypt('Lucia.buitres1',    gen_salt('bf', 10)), '611222006', 'adopter',
+(6,  'Lucía',  'Martínez Navarro', 'lucia.martinez@correo.test',  '$argon2id$v=19$m=19456,t=2,p=1$ClLRxc3K31eySyD/sQWnHg$AlC5PdPq1Ubn461Edl4P/6VqO+jiPEMEMhgt4wRLgew', '611222006', 'adopter',
      TRUE,  TRUE,  TRUE,  'per_update',     pg_temp.ago_ts('15 months'), TRUE, NULL, pg_temp.ago_ts('1 day', '21:30'),  pg_temp.ago_ts('15 months')),
-(7,  'Pablo',  'García Esteve',  'pablo.garcia@correo.test',      crypt('Pablo2024!',        gen_salt('bf', 10)), NULL,        'adopter',
+(7,  'Pablo',  'García Esteve',  'pablo.garcia@correo.test',      '$argon2id$v=19$m=19456,t=2,p=1$DaU6n+LLjpTTYAvFmL4ecg$xL/GSfyWORTnqFZlBYBUySHbj+fiuVBAcLoXfrJuAfY', NULL,        'adopter',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('9 months'), TRUE,  NULL, pg_temp.ago_ts('4 days', '18:02'), pg_temp.ago_ts('9 months')),
-(8,  'Elena',  'Rubio Sanz',     'elena.rubio@correo.test',       crypt('elenita_88',        gen_salt('bf', 10)), '611222008', 'adopter',
+(8,  'Elena',  'Rubio Sanz',     'elena.rubio@correo.test',       '$argon2id$v=19$m=19456,t=2,p=1$u4CGV8e7GL0w+MQU9LYqqg$hTw7cY+MXpBJnyavq9qGF+4/RLG87+NkimrcSzjgKXI', '611222008', 'adopter',
      TRUE,  TRUE,  TRUE,  'monthly_digest', pg_temp.ago_ts('5 months'), TRUE,  NULL, pg_temp.ago_ts('6 days', '12:40'), pg_temp.ago_ts('5 months')),
-(9,  'Sergio', 'Llorens Puig',   'sergio.llorens@correo.test',    crypt('Sergio#Vuela7',     gen_salt('bf', 10)), NULL,        'adopter',
+(9,  'Sergio', 'Llorens Puig',   'sergio.llorens@correo.test',    '$argon2id$v=19$m=19456,t=2,p=1$n4bveUF4t6T4xYNlUm5jJQ$o2IePDt4eN902a7oW2AU20vwXgrRzxrr9zJlAcPgaXw', NULL,        'adopter',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('6 months'), TRUE,  NULL, pg_temp.ago_ts('5 days', '20:15'), pg_temp.ago_ts('6 months')),
-(10, 'Irene',  'Domínguez Prats', 'irene.dominguez@correo.test',  crypt('Irene2025ok',       gen_salt('bf', 10)), '611222010', 'adopter',
+(10, 'Irene',  'Domínguez Prats', 'irene.dominguez@correo.test',  '$argon2id$v=19$m=19456,t=2,p=1$Bm816VjiaHIZ/YFQzwb6mA$aXZDbRPmZn6KbuQWM7XTFBaswsYnuPi6stByeYbQcPI', '611222010', 'adopter',
      TRUE,  TRUE,  TRUE,  'per_update',     pg_temp.ago_ts('12 months'), TRUE, NULL, pg_temp.ago_ts('2 days', '11:05'), pg_temp.ago_ts('12 months')),
-(11, 'Héctor', 'Benet Ramos',    'hector.benet@correo.test',      crypt('Hector1234',        gen_salt('bf', 10)), NULL,        'adopter',
+(11, 'Héctor', 'Benet Ramos',    'hector.benet@correo.test',      '$argon2id$v=19$m=19456,t=2,p=1$PwQYoMI4IgJ2eLv1tUH3UQ$cxWidCUHh80ja06wbBYlRX/IZby90kkOZqw9gLv61lc', NULL,        'adopter',
      TRUE,  FALSE, FALSE, 'per_update',     pg_temp.ago_ts('45 days'),  TRUE,  NULL, pg_temp.ago_ts('9 days', '17:30'), pg_temp.ago_ts('45 days')),
-(12, 'Raquel', 'Font Escrivà',   'raquel.font@correo.test',       crypt('RaquelFont!',       gen_salt('bf', 10)), '611222012', 'adopter',
+(12, 'Raquel', 'Font Escrivà',   'raquel.font@correo.test',       '$argon2id$v=19$m=19456,t=2,p=1$0z+sf8xKUeQkfkvZcqsYig$wd+XJROFVnoJmeJF++uo8yNa1VaT74a1herL4lGPe/s', '611222012', 'adopter',
      TRUE,  TRUE,  TRUE,  'per_update',     pg_temp.ago_ts('10 months'), TRUE, NULL, pg_temp.ago_ts('8 days', '19:00'), pg_temp.ago_ts('10 months')),
-(13, 'Adrián', 'Moreno Lara',    'adrian.moreno@correo.test',     crypt('Adrian_99',         gen_salt('bf', 10)), NULL,        'adopter',
+(13, 'Adrián', 'Moreno Lara',    'adrian.moreno@correo.test',     '$argon2id$v=19$m=19456,t=2,p=1$uZDgZpX92baFhLYHC6VIpw$cctMfGTdJYvkJt0psRVE3gp9nvMLKt15PP6KDsh+Vlk', NULL,        'adopter',
      FALSE, FALSE, TRUE,  'per_update',     pg_temp.ago_ts('1 day'),    TRUE,  NULL, NULL,                              pg_temp.ago_ts('1 day')),
-(14, 'Teresa', 'Vicent Molina',  'teresa.vicent@correo.test',     crypt('Teresa*55',         gen_salt('bf', 10)), '611222014', 'adopter',
+(14, 'Teresa', 'Vicent Molina',  'teresa.vicent@correo.test',     '$argon2id$v=19$m=19456,t=2,p=1$1oIK+jwB44NlMeFXYMrUtg$9wA2PVXclWMPtbQi06Icn5v5GFfPyfIUsRQWxcrHDP8', '611222014', 'adopter',
      TRUE,  FALSE, TRUE,  'per_update',     pg_temp.ago_ts('14 months'), FALSE, NULL, pg_temp.ago_ts('2 months'),        pg_temp.ago_ts('14 months')),
 -- Usuario que pidió la baja: datos personales anonimizados, contraseña inservible.
-(15, 'Usuario', 'eliminado',     'deleted-15@anonymized.invalid', crypt(gen_random_uuid()::TEXT, gen_salt('bf', 10)), NULL, 'adopter',
+(15, 'Usuario', 'eliminado',     'deleted-15@anonymized.invalid', '$argon2id$v=19$m=19456,t=2,p=1$lexSL1sZOQtonNR1s9Wd5w$RjbF3K1Hz3QxwLwbmne2BAjARj2YWFTS5n0f9A5xPuc', NULL, 'adopter',
      FALSE, FALSE, FALSE, 'per_update',     pg_temp.ago_ts('8 months'), FALSE, pg_temp.ago_ts('4 months'), NULL,  pg_temp.ago_ts('8 months'));
 
 -- -----------------------------------------------------------------------------

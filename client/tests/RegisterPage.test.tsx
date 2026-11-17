@@ -21,7 +21,7 @@ describe('CU-07 Registrarse', () => {
     mockApi({});
     renderRoute('/register');
     expect(await screen.findByRole('heading', { level: 1, name: 'Crear una cuenta' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Contraseña')).toHaveAccessibleDescription('Mínimo 8 caracteres.');
+    expect(screen.getByLabelText('Contraseña')).toHaveAccessibleDescription('Mínimo 10 caracteres.');
     expect(screen.getByRole('link', { name: 'política de privacidad' })).toHaveAttribute('href', '/privacy');
   });
 
