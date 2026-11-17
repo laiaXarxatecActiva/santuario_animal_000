@@ -6,6 +6,7 @@ Aplicación web para un santuario de animales (apadrinamiento simbólico de buit
 
 - `docs/TECH_SPEC.md`: stack, arquitectura, estructura del repo, convenciones, API, jobs, fases y preguntas abiertas (el §18 recoge decisiones provisionales que hay que aplicar).
 - `docs/USE_CASES.md`: casos de uso `CU-xx` y reglas de negocio.
+- `docs/AUTHENTICATION_SESSIONS_AND_SECURITY.md`: política de seguridad (contraseñas, sesiones, cookies, CSRF, autorización), dónde está implementada cada pieza y qué tests la comprueban. Léelo antes de tocar autenticación, sesiones, permisos o rutas nuevas, y actualízalo si cambia algo.
 - `database/seedsql.sql` (esquema; borra y recrea todo) y `database/TEST_DATA.sql` (vacía e inserta; fechas relativas al día de carga; los usuarios de prueba y sus contraseñas están en su cabecera).
 - `docs/ux-ui/DESIGN_SYSTEM.md` (tokens y componentes; no inventes colores, tamaños ni componentes que no estén definidos ahí: añádelos antes al documento) y `docs/ux-ui/SCREENS.md` (diseño de cada pantalla).
 - `ignore/` está en el `.gitignore` (borrador del diseño funcional, anexo de "producción real" y `test-images/`: fotos de ejemplo por especie que `db:reset` copia en `server/uploads/`; no se suben a git porque sus derechos no están comprobados y el repositorio es público).
