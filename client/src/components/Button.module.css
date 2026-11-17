@@ -66,6 +66,12 @@
   color: var(--color-primary-hover);
 }
 
+/* Acción destructiva dentro de una ventana de confirmación (DESIGN_SYSTEM §8.1). */
+.danger {
+  background: var(--color-error);
+  color: var(--color-on-primary);
+}
+
 .block {
   width: 100%;
 }

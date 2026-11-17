@@ -67,3 +67,9 @@ export const changePasswordFormSchema = z
     when: sinErroresEn('newPassword', 'newPasswordConfirm'),
   });
 export type ChangePasswordFormInput = z.infer<typeof changePasswordFormSchema>;
+
+// CU-25 paso 3: la contraseña confirma la baja (se compara tal cual, sin recortar).
+export const deleteAccountSchema = z.object({
+  password: z.string({ error: 'Escribe tu contraseña.' }).min(1, { error: 'Escribe tu contraseña.' }),
+});
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

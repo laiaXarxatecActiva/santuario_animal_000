@@ -67,3 +67,8 @@ export async function create(db: Queryable, d: NewDonation): Promise<DonationRes
   );
   return mapRow(rows[0] as DonationRow);
 }
+
+/** CU-25 4.3: las donaciones del usuario se quedan sin nombre ni email; los importes se conservan. */
+export async function clearDonorData(db: Queryable, userId: number): Promise<void> {
+  await db.query('UPDATE donations SET donor_name = NULL, donor_email = NULL WHERE user_id = $1', [userId]);
+}

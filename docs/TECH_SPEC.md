@@ -537,7 +537,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/me/profile` | Perfil | CU-23 |
 | PATCH | `/api/me/profile` | Cambios parciales: nombre, apellidos, teléfono (móvil español de 9 dígitos, sin +34; se guarda sin separadores), preferencias de email y `showPublicName` (estos tres, solo para adoptantes: 403 `ADOPTER_ONLY_PREFERENCE`). El email no se puede cambiar | CU-23 |
 | PUT | `/api/me/password` | `{ currentPassword, newPassword }`. La nueva debe ser distinta de la actual. Cierra las demás sesiones y anula los enlaces de recuperación pendientes. 5 intentos fallidos por usuario cada 15 minutos | CU-24 |
-| DELETE | `/api/me` | Baja y anonimización (solo adoptantes) | CU-25 |
+| DELETE | `/api/me` | Baja y anonimización (solo adoptantes; un trabajador recibe 403). `{ password }`; si no es correcta, 422 `INVALID_PASSWORD` y no cambia nada. Responde 200 `{ message }`, cierra todas las sesiones y borra la cookie. Mismo límite de intentos que `PUT /api/me/password` | CU-25 |
 
 ### 10.6 Panel: cuidador y administrador (`/api/admin`)
 
@@ -738,7 +738,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | **XSS** | React escapa por defecto; prohibido `dangerouslySetInnerHTML` con contenido del usuario. Los textos de las actualizaciones son texto plano con saltos de línea. |
 | **Autorización** | En el servidor, en cada ruta ([§9](#9-autenticación-y-autorización)) |
 | **RGPD** | Casilla de aceptación de la política de privacidad al registrarse (`privacy_accepted_at`); banner de cookies informativo (solo hay cookies técnicas de sesión). Derecho de acceso: el perfil y «Mis aportaciones». Rectificación: editar el perfil. Supresión: CU-25. |
-| **Anonimización (CU-25)** | `first_name = 'Usuario'`, `last_name = 'eliminado'`, `email = 'deleted-<id>@anonymized.invalid'`, `phone = NULL`, contraseña aleatoria, `is_active = FALSE`, `show_public_name = FALSE`, `anonymized_at = NOW()`. Se cierran sus adopciones abiertas (`account_deleted`), se borran sus sesiones, tokens, notificaciones y lecturas, y en sus donaciones se vacían `donor_name` y `donor_email`. Se conservan los importes de pagos y donaciones. |
+| **Anonimización (CU-25)** | `first_name = 'Usuario'`, `last_name = 'eliminado'`, `email = 'deleted-<id>@anonymized.invalid'`, `phone = NULL`, contraseña aleatoria, `is_active = FALSE`, `email_verified = FALSE`, `show_public_name = FALSE`, `email_notifications = FALSE`, `last_login_at = NULL`, `anonymized_at = NOW()`. Se cierran sus adopciones abiertas (`account_deleted`), se borran sus sesiones, tokens, notificaciones y lecturas, y en sus donaciones se vacían `donor_name` y `donor_email`. Se conservan los importes de pagos y donaciones. |
 | **Accesibilidad** | `alt_text` obligatorio en cada foto; contraste AA (4,5:1); navegación completa con teclado y foco visible; etiquetas `<label>` en todos los campos; HTML semántico |
 | **Imágenes** | JPEG, PNG o WebP, máximo 5 MB. `sharp` las redimensiona a un máximo de 1600 px de ancho (WebP, calidad 80) y crea una miniatura de 400 px. Vídeos: MP4, máximo 50 MB, sin procesar; en la Fase 4 se revisará según el almacenamiento disponible. Máximo 10 archivos por subida. |
 | **Rendimiento** | Paginación en todos los listados; índices definidos en `seedsql.sql`; miniaturas en las tarjetas del catálogo |

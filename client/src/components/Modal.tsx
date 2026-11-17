@@ -31,6 +31,8 @@ function Ventana({ title, onClose, closable = true, children, footer }: Omit<Mod
     const dialogo = ref.current;
     if (!dialogo) return;
     dialogo.showModal();
+    // DESIGN_SYSTEM §8.4: en una confirmación destructiva, el foco empieza en «Cancelar».
+    dialogo.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     return () => dialogo.close();
   }, []);
 

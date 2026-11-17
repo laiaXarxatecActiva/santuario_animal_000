@@ -424,7 +424,7 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 | Pie | Botones alineados a la derecha en escritorio y apilados (ancho completo) en móvil; la acción principal la última en escritorio y la primera en móvil |
 | Visor de fotos | Fondo casi opaco (`--viewer-backdrop`, `rgba(30, 25, 21, 0.92)`, en ambos modos), foto centrada al máximo tamaño posible, flechas laterales (`chevron-left` / `chevron-right`, desactivadas en los extremos; también con las flechas del teclado), contador «3 de 8» arriba a la izquierda y ✕ arriba a la derecha. Texto y botones en `--viewer-text` (`#fffdf9`), con el borde de los botones al 50 % de opacidad. Con una sola foto, sin flechas ni contador |
 
-**Comportamiento:** el foco va al primer elemento útil al abrir (en confirmaciones destructivas, al botón **Cancelar**, nunca al de borrar); el foco queda atrapado dentro mientras está abierta; la tecla Esc y el botón ✕ la cierran (salvo durante un pago en curso); al cerrar, el foco vuelve al botón que la abrió.
+**Comportamiento:** el foco va al primer elemento útil al abrir (en confirmaciones destructivas, al botón **Cancelar**, nunca al de borrar: en el código, el botón que lleva `data-autofocus`); el foco queda atrapado dentro mientras está abierta; la tecla Esc y el botón ✕ la cierran (salvo durante un pago en curso); al cerrar, el foco vuelve al botón que la abrió.
 
 **Confirmación destructiva:** título en forma de pregunta («¿Eliminar la foto?»), una frase con la consecuencia, botón `outline` «Cancelar» y botón `danger` con el verbo concreto («Eliminar foto»), nunca un simple «Aceptar». La eliminación de la cuenta pide además la contraseña dentro de la ventana.
 

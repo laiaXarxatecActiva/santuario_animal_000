@@ -192,6 +192,14 @@ export class AdopterOnlyPreferenceError extends AppError {
 }
 
 // CU-24 2a. El detalle permite mostrarlo junto al campo.
+// CU-25 3a.
+export class InvalidPasswordError extends BusinessRuleError {
+  constructor() {
+    super('INVALID_PASSWORD', 'La contraseña no es correcta.');
+  }
+  override readonly details = [{ field: 'password', message: 'La contraseña no es correcta.' }];
+}
+
 export class InvalidCurrentPasswordError extends BusinessRuleError {
   constructor() {
     super('INVALID_CURRENT_PASSWORD', 'La contraseña actual no es correcta.');

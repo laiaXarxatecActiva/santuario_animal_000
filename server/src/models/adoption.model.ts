@@ -333,3 +333,20 @@ export async function applyCancellation(
     [id, baja.status, baja.endReason, baja.endDate, baja.requestedAt],
   );
 }
+
+/**
+ * CU-25 4.1: las abiertas del usuario se cierran con `account_deleted`: las
+ * pendientes se cancelan y las activas y pausadas terminan hoy, sin más cobros.
+ */
+export async function closeOpenForUser(db: Queryable, userId: number, hoy: string): Promise<void> {
+  await db.query(
+    `UPDATE adoptions
+        SET status = CASE WHEN status = 'pending' THEN 'cancelled' ELSE 'finished' END,
+            end_reason = 'account_deleted',
+            end_date = GREATEST($2::date, COALESCE(start_date, $2::date)),
+            next_billing_date = NULL,
+            next_plan_id = NULL
+      WHERE user_id = $1 AND status IN ('pending', 'active', 'paused')`,
+    [userId, hoy],
+  );
+}

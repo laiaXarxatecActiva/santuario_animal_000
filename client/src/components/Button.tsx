@@ -5,7 +5,7 @@ import { Link, type LinkProps } from 'react-router';
 import styles from './Button.module.css';
 
 // Botones en píldora (DESIGN_SYSTEM §8.1).
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 
 interface Comunes {
   variant?: ButtonVariant;
