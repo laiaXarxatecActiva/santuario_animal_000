@@ -1,0 +1,28 @@
+/* Una sola columna centrada, de 720 px como máximo (SCREENS §4.7). */
+.page {
+  max-width: 720px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.list {
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  list-style: none;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.delete {
+  align-self: center;
+  margin-inline: var(--space-2);
+  font-size: var(--font-size-base);
+}

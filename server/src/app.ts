@@ -4,6 +4,7 @@ import type { Pool } from 'pg';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
 import type { Reloj } from './dominio/reloj.js';
+import { createJobRunner, type JobRunner } from './jobs/registry.js';
 import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { requireJson } from './middlewares/require-json.js';
@@ -13,6 +14,7 @@ import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
+import { createNotificationRoutes } from './routes/notification.routes.js';
 import { createProfileRoutes } from './routes/profile.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
@@ -23,6 +25,7 @@ import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
+import { createNotificationService } from './servicios/notification.service.js';
 import { createMediaUploader } from './servicios/media-upload.service.js';
 import { createPhotoAdminService } from './servicios/photo-admin.service.js';
 import { createProfileService } from './servicios/profile.service.js';
@@ -50,6 +53,8 @@ export interface AppOptions {
   logger?: Logger;
   /** Sustituye el registro de errores inesperados (500). */
   logError?: (error: unknown) => void;
+  /** Ejecutor de las tareas programadas; por defecto, uno con estas mismas dependencias. */
+  jobs?: JobRunner;
 }
 
 // Configuración de Express sin `listen`, para que Supertest pueda importarla.
@@ -91,6 +96,17 @@ export function createApp(options: AppOptions): Express {
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
 
+  const jobs =
+    options.jobs ??
+    createJobRunner({
+      db,
+      reloj,
+      payments: options.payments,
+      email: options.email,
+      clientUrl: options.clientUrl,
+      logError: logger ? (error, contexto) => logger.error({ err: error }, contexto) : undefined,
+    });
+
   app.use('/api', createRequireSameOrigin([options.clientUrl]), express.json({ limit: '100kb' }), requireJson);
   app.use(
     '/api',
@@ -112,6 +128,7 @@ export function createApp(options: AppOptions): Express {
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
+  app.use('/api', createNotificationRoutes(createNotificationService({ db })));
   app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
   app.use(
     '/api/admin',
@@ -121,6 +138,7 @@ export function createApp(options: AppOptions): Express {
       animals: createAnimalAdminService({ db, reloj }),
       photos: createPhotoAdminService({ db, media }),
       updates: createUpdateAdminService({ db, reloj, media }),
+      jobs,
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadConfig, loadDatabaseConfig } from '../src/config/env.js';
+import { jobsEnabled, loadConfig, loadDatabaseConfig } from '../src/config/env.js';
 
 const DATABASE_URL = 'postgres://sanctuary:sanctuary@localhost:5432/sanctuary';
 const SESSION_SECRET = 'a'.repeat(32);
@@ -91,5 +91,17 @@ describe('loadDatabaseConfig', () => {
 
   it('sigue exigiendo DATABASE_URL', () => {
     expect(() => loadDatabaseConfig({})).toThrow(/DATABASE_URL/);
+  });
+});
+
+describe('JOBS_ENABLED (TECH_SPEC §11.4)', () => {
+  it('sin valor, las tareas programadas están activas; con false, no', () => {
+    expect(jobsEnabled(loadConfig({ DATABASE_URL, SESSION_SECRET }))).toBe(true);
+    expect(jobsEnabled(loadConfig({ DATABASE_URL, SESSION_SECRET, JOBS_ENABLED: 'true' }))).toBe(true);
+    expect(jobsEnabled(loadConfig({ DATABASE_URL, SESSION_SECRET, JOBS_ENABLED: 'false' }))).toBe(false);
+  });
+
+  it('rechaza otros valores', () => {
+    expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, JOBS_ENABLED: 'si' })).toThrow(/JOBS_ENABLED/);
   });
 });

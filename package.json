@@ -19,7 +19,8 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "job": "npm run job -w server --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

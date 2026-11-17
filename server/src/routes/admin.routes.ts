@@ -16,12 +16,14 @@ import {
 import { Router } from 'express';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
+import { createJobController } from '../controllers/job.controller.js';
 import { createPhotoAdminController } from '../controllers/photo-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
 import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
+import type { JobRunner } from '../jobs/registry.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
@@ -34,6 +36,7 @@ export interface AdminRoutesDeps {
   animals: AnimalAdminService;
   photos: PhotoAdminService;
   updates: UpdateAdminService;
+  jobs: JobRunner;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -97,6 +100,9 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     actualizaciones.update,
   );
   router.delete('/updates/:id', conId, actualizaciones.remove);
+
+  // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
+  router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);
 
   return router;
 }

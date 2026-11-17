@@ -9,11 +9,12 @@ import { useLogout, useSession } from '../hooks/useSession';
 import { ButtonLink } from './Button';
 import iconStyles from './IconButton.module.css';
 import { Logo } from './Logo';
+import { NotificationBell } from './NotificationBell';
 import styles from './PublicHeader.module.css';
 import { ThemeToggle } from './ThemeToggle';
 import { UserMenu, type MenuLink } from './UserMenu';
 
-// Enlaces según quién navega (SCREENS §2.1). La campana llegará con CU-18.
+// Enlaces según quién navega (SCREENS §2.1). Con sesión, además, la campana (CU-18).
 const VISITANTE: readonly MenuLink[] = [
   { to: '/animals', key: 'nav.animals' },
   { to: '/how-it-works', key: 'nav.howItWorks' },
@@ -95,6 +96,7 @@ export function PublicHeader() {
           <ul className={styles.links}>{lista(enlaces)}</ul>
         </nav>
         <div className={styles.actions}>
+          {user && <NotificationBell />}
           <ThemeToggle />
           {!isLoading && (
             <div className={styles.desktopAuth}>

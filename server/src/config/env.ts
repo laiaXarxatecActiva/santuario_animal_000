@@ -28,6 +28,8 @@ const envSchema = databaseEnvSchema.extend({
   // Pasarela simulada (TECH_SPEC §11.1).
   PAYMENT_SIMULATION_MODE: z.enum(PAYMENT_SIMULATION_MODES).default('always_succeed'),
   PAYMENT_SIMULATION_FAILURE_RATE: z.coerce.number().min(0).max(1).default(0.2),
+  // Tareas programadas con node-cron (TECH_SPEC §11.4). Sin valor, activadas; en las pruebas, false.
+  JOBS_ENABLED: z.enum(['true', 'false'], { error: 'Debe ser true o false' }).optional(),
 });
 
 export type Config = z.infer<typeof envSchema>;
@@ -46,6 +48,11 @@ function parse<S extends z.ZodType>(schema: S, env: NodeJS.ProcessEnv): z.output
 /** Valida las variables de entorno del servidor. Lanza un error legible si alguna no es válida. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return parse(envSchema, env);
+}
+
+/** JOBS_ENABLED: las tareas programadas están activas salvo que valga `false`. */
+export function jobsEnabled(config: Pick<Config, 'JOBS_ENABLED'>): boolean {
+  return config.JOBS_ENABLED !== 'false';
 }
 
 /** Solo las variables de la base de datos, para los scripts como db:reset. */

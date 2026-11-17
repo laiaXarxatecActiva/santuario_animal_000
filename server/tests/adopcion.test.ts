@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bajaVencida,
+  debeCobrarse,
   esAdoptable,
+  limitePagoPendiente,
   periodoCuota,
   proximaActualizacionPrevista,
   puedePagar,
@@ -92,5 +95,42 @@ describe('RN-15 veContenidoExclusivo', () => {
     for (const status of ['pending', 'paused', 'cancelled', 'finished'] as const) {
       expect(veContenidoExclusivo(status)).toBe(false);
     }
+  });
+});
+
+describe('CU-43 debeCobrarse', () => {
+  const activa = { status: 'active' as const, cancelRequested: false, nextBillingDate: '2026-11-17' };
+  it('activa, sin baja y con la cuota vencida hoy o antes', () => {
+    expect(debeCobrarse(activa, '2026-11-17')).toBe(true);
+    expect(debeCobrarse({ ...activa, nextBillingDate: '2026-10-01' }, '2026-11-17')).toBe(true);
+  });
+  it('no se cobra antes de tiempo, con la baja pedida ni si no está activa', () => {
+    expect(debeCobrarse({ ...activa, nextBillingDate: '2026-11-18' }, '2026-11-17')).toBe(false);
+    expect(debeCobrarse({ ...activa, cancelRequested: true }, '2026-11-17')).toBe(false);
+    expect(debeCobrarse({ ...activa, nextBillingDate: null }, '2026-11-17')).toBe(false);
+    expect(debeCobrarse({ ...activa, status: 'paused' }, '2026-11-17')).toBe(false);
+  });
+});
+
+describe('CU-44 limitePagoPendiente', () => {
+  it('es el instante de hace 7 días: las pendientes anteriores ya no se pueden pagar (RN-07)', () => {
+    const ahora = new Date('2026-11-17T03:30:00Z');
+    const limite = limitePagoPendiente(ahora);
+    expect(limite.toISOString()).toBe('2026-11-10T03:30:00.000Z');
+    expect(puedePagar({ status: 'pending', createdAt: new Date(limite.getTime() - 1) }, ahora)).toBe(false);
+    expect(puedePagar({ status: 'pending', createdAt: limite }, ahora)).toBe(true);
+  });
+});
+
+describe('CU-45 bajaVencida', () => {
+  const baja = { status: 'active' as const, cancelRequested: true, endDate: '2026-11-16' };
+  it('termina el día siguiente al último pagado', () => {
+    expect(bajaVencida(baja, '2026-11-17')).toBe(true);
+    expect(bajaVencida(baja, '2026-11-16')).toBe(false);
+  });
+  it('sin baja pedida o sin estar activa no termina', () => {
+    expect(bajaVencida({ ...baja, cancelRequested: false }, '2026-11-17')).toBe(false);
+    expect(bajaVencida({ ...baja, status: 'paused' }, '2026-11-17')).toBe(false);
+    expect(bajaVencida({ ...baja, endDate: null }, '2026-11-17')).toBe(false);
   });
 });

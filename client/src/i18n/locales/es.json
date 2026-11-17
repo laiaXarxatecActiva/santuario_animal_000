@@ -295,7 +295,8 @@
       "submitting": "Guardando…",
       "success": "Contraseña cambiada. Ya puedes iniciar sesión.",
       "requestAnother": "Pedir otro enlace"
-    }
+    },
+    "sessionExpired": "Tu sesión ha caducado. Vuelve a iniciar sesión para continuar."
   },
   "modal": {
     "close": "Cerrar"
@@ -712,5 +713,16 @@
       "deleteTitle": "Cómo borrarlas",
       "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión."
     }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "bellUnread_one": "Notificaciones, {{count}} sin leer",
+    "bellUnread_other": "Notificaciones, {{count}} sin leer",
+    "unread": "Sin leer",
+    "empty": "No tienes notificaciones",
+    "seeAll": "Ver todas",
+    "readAll": "Marcar todas como leídas",
+    "delete": "Borrar: {{message}}",
+    "errorLoading": "No hemos podido cargar tus notificaciones"
   }
 }

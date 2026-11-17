@@ -16,9 +16,11 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Alert } from '../components/Alert';
 import iconStyles from '../components/IconButton.module.css';
 import { Logo } from '../components/Logo';
+import { NotificationBell } from '../components/NotificationBell';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { UserMenu } from '../components/UserMenu';
 import { useLogout, useSession } from '../hooks/useSession';
+import { useSessionExpiry } from '../hooks/useSessionExpiry';
 import { readFlash } from '../utils/flash';
 import styles from './AdminLayout.module.css';
 
@@ -58,6 +60,7 @@ export function AdminLayout() {
   const { t } = useTranslation();
   const { user } = useSession();
   const logout = useLogout();
+  useSessionExpiry();
   const location = useLocation();
   const { pathname } = location;
   const [abierto, setAbierto] = useState(false);
@@ -96,6 +99,7 @@ export function AdminLayout() {
         </button>
         <span className={styles.title}>{t('admin.nav.title')}</span>
         <div className={styles.actions}>
+          {user && <NotificationBell />}
           <ThemeToggle />
           {user && <UserMenu name={user.firstName} links={MENU_USUARIO} onLogout={() => logout.mutate()} />}
         </div>

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { accountExistsEmail } from '../../../src/services/email/templates/account-exists.js';
 import { adoptionWelcomeEmail } from '../../../src/services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../../../src/services/email/templates/payment-completed.js';
+import { paymentFailedEmail } from '../../../src/services/email/templates/payment-failed.js';
 import { resetPasswordEmail } from '../../../src/services/email/templates/reset-password.js';
 import { verifyEmailEmail } from '../../../src/services/email/templates/verify-email.js';
 
@@ -73,5 +74,18 @@ describe('plantillas de pagos (CU-13, CU-14)', () => {
     expect(email.subject).toBe('Cuota cobrada: Brisa');
     expect(email.text).toContain('SIM-20261112-ABCDEF0123');
     expect(email.html).toContain('href="http://localhost:5173/my-animals"');
+  });
+});
+
+describe('CU-43 3a payment-failed', () => {
+  it('avisa de la pausa y enlaza a la ficha para regularizar', () => {
+    const url = 'http://localhost:5173/my-animals/2';
+    const email = paymentFailedEmail({ firstName: 'Elena', animalName: 'Greta', amount: '5.00', url });
+    expect(email.subject).toBe('No hemos podido cobrar la cuota de Greta');
+    expect(email.text).toContain('Hola, Elena:');
+    expect(email.text).toMatch(/5,00\s€/);
+    expect(email.text).toContain('pausada');
+    expect(email.text).toContain(url);
+    expect(email.html).toContain(`href="${url}"`);
   });
 });
