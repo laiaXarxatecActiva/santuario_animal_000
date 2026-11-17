@@ -21,9 +21,23 @@ function esErrorDeApi(body: unknown): body is ApiErrorBody {
   return typeof error === 'object' && error !== null && 'code' in error && 'message' in error;
 }
 
+type AlNoAutorizado = () => void;
+const oyentes = new Set<AlNoAutorizado>();
+
+/**
+ * Avisa cuando una llamada responde 401 (sesión caducada o cerrada en otro
+ * sitio). Las rutas de `/api/auth/` quedan fuera: allí un 401 es una respuesta
+ * esperada (credenciales incorrectas, logout sin sesión). Devuelve la baja.
+ */
+export function onUnauthorized(oyente: AlNoAutorizado): () => void {
+  oyentes.add(oyente);
+  return () => oyentes.delete(oyente);
+}
+
 async function peticion<T>(url: string, init: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, credentials: 'same-origin' });
   const body: unknown = res.status === 204 ? undefined : await res.json().catch(() => null);
+  if (res.status === 401 && !url.startsWith('/api/auth/')) oyentes.forEach((oyente) => oyente());
   if (!res.ok) {
     if (esErrorDeApi(body)) {
       throw new ApiError(res.status, body.error.code, body.error.message, body.error.details);
