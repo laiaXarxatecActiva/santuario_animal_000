@@ -1,4 +1,10 @@
-import { createAdoptionSchema, idParamsSchema, myAdoptionsQuerySchema, payAdoptionSchema } from '@sanctuary/shared';
+import {
+  changePlanSchema,
+  createAdoptionSchema,
+  idParamsSchema,
+  myAdoptionsQuerySchema,
+  payAdoptionSchema,
+} from '@sanctuary/shared';
 import type { Request, RequestHandler } from 'express';
 import { UnauthorizedError } from '../errors/app-error.js';
 import { validated } from '../middlewares/validate.js';
@@ -30,5 +36,15 @@ export function createAdoptionController(service: AdoptionService) {
     res.json(await service.pay(usuario(req).id, id, simulatedOutcome));
   };
 
-  return { create, listMine, getMine, pay };
+  const changePlan: RequestHandler = async (req, res) => {
+    const { id } = validated(res, 'params', idParamsSchema);
+    const { planId } = validated(res, 'body', changePlanSchema);
+    res.json(await service.changePlan(usuario(req).id, id, planId));
+  };
+
+  const cancel: RequestHandler = async (req, res) => {
+    res.json(await service.cancel(usuario(req).id, validated(res, 'params', idParamsSchema).id));
+  };
+
+  return { create, listMine, getMine, pay, changePlan, cancel };
 }

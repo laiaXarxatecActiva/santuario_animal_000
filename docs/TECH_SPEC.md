@@ -513,15 +513,15 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/me/adoptions` | Mis adopciones con animal, plan, estado, fechas, `canPay` y próxima actualización prevista. Filtro `?animalId=` (lo usa la pantalla «Adoptar» para el caso 5a) | CU-15 |
 | GET | `/api/me/adoptions/:id` | Detalle de una adopción | CU-15 |
 | POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`. Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
-| PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio) | CU-20 |
-| POST | `/api/me/adoptions/:id/cancel` | Baja de la cuota mensual | CU-21 |
+| PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio si es el plan actual). Solo `active` sin baja (422 `PLAN_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-20 |
+| POST | `/api/me/adoptions/:id/cancel` | Baja (`{}`): la activa sigue hasta el último día pagado, la pendiente pasa a `cancelled` y la pausada a `finished`. Baja ya pedida: 409 `ADOPTION_CANCEL_ALREADY_REQUESTED`; cerrada: 422 `ADOPTION_CLOSED`. Devuelve la adopción | CU-21 |
 | GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) | CU-22 |
 | GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
-| GET | `/api/me/contributions` | Historial de cuotas y donaciones con mi cuenta | CU-19 |
-| GET | `/api/me/payments/:id/receipt` | Recibo de una cuota | CU-19 |
-| GET | `/api/me/donations/:id/receipt` | Recibo de una donación | CU-19 |
+| GET | `/api/me/contributions` | `{ payments, donations, totals: { allTime, years } }`: cuotas y donaciones con mi cuenta, las más recientes primero. `?year=` filtra los listados (no los totales); los totales solo suman lo cobrado | CU-19 |
+| GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`). El pago no guarda el plan: se muestra el de la adopción si el importe coincide o, si no, el plan con ese importe | CU-19 |
+| GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
 | POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
 
 ### 10.5 Cualquier usuario autenticado
@@ -706,6 +706,7 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/my-animals/:animalId` | Ficha ampliada | Adoptante |
 | `/feed` | Muro de actualizaciones | Adoptante |
 | `/my-contributions` | Mis aportaciones | Adoptante |
+| `/my-contributions/receipts/:kind/:id` | Recibo imprimible (`kind` = `payment` o `donation`) | Adoptante |
 | `/profile` | Mi perfil | Autenticado |
 | `/notifications` | Notificaciones | Autenticado |
 | `/admin` | Escritorio | Cuidador, admin |

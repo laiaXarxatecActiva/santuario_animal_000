@@ -1,0 +1,72 @@
+.title {
+  margin-bottom: var(--space-5);
+}
+
+/* Tarjetas de resumen (SCREENS §4.5), como las del escritorio del panel. */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.figure {
+  font-family: var(--font-heading);
+  font-size: var(--font-size-h1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.filters {
+  max-width: 240px;
+  margin-bottom: var(--space-4);
+}
+
+/* Pestañas (DESIGN_SYSTEM §8.9). */
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  min-height: var(--size-touch);
+  padding: 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--color-primary);
+}
+
+.tab[aria-selected='true'] {
+  border-bottom-color: var(--color-primary);
+}
+
+.reference {
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.none {
+  color: var(--color-text-muted);
+}

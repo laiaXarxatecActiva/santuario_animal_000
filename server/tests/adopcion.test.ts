@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  bajaAdopcion,
   bajaVencida,
+  cambioDePlan,
   debeCobrarse,
   esAdoptable,
   limitePagoPendiente,
   periodoCuota,
+  puedeCambiarPlan,
   proximaActualizacionPrevista,
   puedePagar,
   sumarDias,
   sumarMeses,
+  tieneRecibo,
   veContenidoExclusivo,
 } from '../src/dominio/adopcion.js';
 
@@ -132,5 +136,70 @@ describe('CU-45 bajaVencida', () => {
     expect(bajaVencida({ ...baja, cancelRequested: false }, '2026-11-17')).toBe(false);
     expect(bajaVencida({ ...baja, status: 'paused' }, '2026-11-17')).toBe(false);
     expect(bajaVencida({ ...baja, endDate: null }, '2026-11-17')).toBe(false);
+  });
+});
+
+describe('CU-20 Cambiar de plan', () => {
+  it('1a: solo las activas sin baja solicitada', () => {
+    expect(puedeCambiarPlan({ status: 'active', cancelRequested: false })).toBe(true);
+    expect(puedeCambiarPlan({ status: 'active', cancelRequested: true })).toBe(false);
+    expect(puedeCambiarPlan({ status: 'paused', cancelRequested: false })).toBe(false);
+    expect(puedeCambiarPlan({ status: 'pending', cancelRequested: false })).toBe(false);
+  });
+
+  it('3: elegir otro plan lo programa para la próxima cuota', () => {
+    expect(cambioDePlan({ planId: 2, nextPlanId: null }, 3)).toEqual({ tipo: 'programado', nextPlanId: 3 });
+  });
+
+  it('3b: con un cambio programado, otro plan lo sustituye', () => {
+    expect(cambioDePlan({ planId: 2, nextPlanId: 3 }, 1)).toEqual({ tipo: 'programado', nextPlanId: 1 });
+  });
+
+  it('3a: elegir el plan actual anula el cambio programado, o no hace nada', () => {
+    expect(cambioDePlan({ planId: 2, nextPlanId: 3 }, 2)).toEqual({ tipo: 'anulado', nextPlanId: null });
+    expect(cambioDePlan({ planId: 2, nextPlanId: null }, 2)).toEqual({ tipo: 'ninguno', nextPlanId: null });
+  });
+
+  it('elegir el plan ya programado no cambia nada', () => {
+    expect(cambioDePlan({ planId: 2, nextPlanId: 3 }, 3)).toEqual({ tipo: 'ninguno', nextPlanId: 3 });
+  });
+});
+
+describe('CU-21 bajaAdopcion', () => {
+  const hoy = '2026-11-17';
+  it('4: activa: sigue activa hasta el último día pagado', () => {
+    expect(bajaAdopcion({ status: 'active', cancelRequested: false, nextBillingDate: '2026-12-05' }, hoy)).toEqual({
+      status: 'active',
+      endReason: null,
+      endDate: '2026-12-04',
+    });
+  });
+  it('1a: pendiente: se cancela hoy, sin nada pagado', () => {
+    expect(bajaAdopcion({ status: 'pending', cancelRequested: false, nextBillingDate: null }, hoy)).toEqual({
+      status: 'cancelled',
+      endReason: 'user_cancelled',
+      endDate: hoy,
+    });
+  });
+  it('1b: pausada: termina el último día pagado; la cuota pendiente no se cobra', () => {
+    expect(bajaAdopcion({ status: 'paused', cancelRequested: false, nextBillingDate: '2026-11-10' }, hoy)).toEqual({
+      status: 'finished',
+      endReason: 'user_cancelled',
+      endDate: '2026-11-09',
+    });
+  });
+  it('con la baja ya pedida o cerrada no hay baja posible', () => {
+    expect(bajaAdopcion({ status: 'active', cancelRequested: true, nextBillingDate: null }, hoy)).toBeNull();
+    expect(bajaAdopcion({ status: 'finished', cancelRequested: false, nextBillingDate: null }, hoy)).toBeNull();
+    expect(bajaAdopcion({ status: 'cancelled', cancelRequested: false, nextBillingDate: null }, hoy)).toBeNull();
+  });
+});
+
+describe('CU-19 tieneRecibo', () => {
+  it('4a, 4b: solo los pagos cobrados o devueltos tienen recibo', () => {
+    expect(tieneRecibo('completed')).toBe(true);
+    expect(tieneRecibo('refunded')).toBe(true);
+    expect(tieneRecibo('failed')).toBe(false);
+    expect(tieneRecibo('pending')).toBe(false);
   });
 });

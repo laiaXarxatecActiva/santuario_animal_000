@@ -1,4 +1,9 @@
-import { PUBLIC_ANIMAL_STATUSES, type AdoptionStatus, type AnimalStatus } from '@sanctuary/shared';
+import {
+  PUBLIC_ANIMAL_STATUSES,
+  type AdoptionStatus,
+  type AnimalStatus,
+  type PaymentStatus,
+} from '@sanctuary/shared';
 
 // Reglas de las adopciones (RN-06, RN-07) y de las fechas de sus cuotas.
 
@@ -85,4 +90,45 @@ export function bajaVencida(
   hoy: string,
 ): boolean {
   return adopcion.status === 'active' && adopcion.cancelRequested && adopcion.endDate !== null && adopcion.endDate < hoy;
+}
+
+/** CU-20 1a: solo se cambia el plan de una adopción activa sin baja solicitada. */
+export function puedeCambiarPlan(adopcion: { status: AdoptionStatus; cancelRequested: boolean }): boolean {
+  return adopcion.status === 'active' && !adopcion.cancelRequested;
+}
+
+export type CambioDePlan =
+  | { tipo: 'programado'; nextPlanId: number }
+  | { tipo: 'anulado'; nextPlanId: null }
+  | { tipo: 'ninguno'; nextPlanId: number | null };
+
+/** CU-20 pasos 3-4: qué pasa con `next_plan_id` al elegir un plan (3a, 3b). */
+export function cambioDePlan(actual: { planId: number; nextPlanId: number | null }, elegido: number): CambioDePlan {
+  if (elegido === actual.planId) {
+    return actual.nextPlanId === null ? { tipo: 'ninguno', nextPlanId: null } : { tipo: 'anulado', nextPlanId: null };
+  }
+  if (elegido === actual.nextPlanId) return { tipo: 'ninguno', nextPlanId: elegido };
+  return { tipo: 'programado', nextPlanId: elegido };
+}
+
+/**
+ * CU-21 (RN-10): cómo queda la adopción tras la baja. La activa sigue activa
+ * hasta el último día pagado; la pendiente se cancela (1a) y la pausada termina
+ * el último día pagado (1b). `null` si ya no admite baja.
+ */
+export function bajaAdopcion(
+  adopcion: { status: AdoptionStatus; cancelRequested: boolean; nextBillingDate: string | null },
+  hoy: string,
+): { status: AdoptionStatus; endReason: 'user_cancelled' | null; endDate: string } | null {
+  const ultimoPagado = adopcion.nextBillingDate === null ? null : sumarDias(adopcion.nextBillingDate, -1);
+  if (adopcion.status === 'pending') return { status: 'cancelled', endReason: 'user_cancelled', endDate: hoy };
+  if (ultimoPagado === null || adopcion.cancelRequested) return null;
+  if (adopcion.status === 'active') return { status: 'active', endReason: null, endDate: ultimoPagado };
+  if (adopcion.status === 'paused') return { status: 'finished', endReason: 'user_cancelled', endDate: ultimoPagado };
+  return null;
+}
+
+/** CU-19 4a, 4b: solo los pagos cobrados o devueltos tienen recibo. */
+export function tieneRecibo(status: PaymentStatus): status is 'completed' | 'refunded' {
+  return status === 'completed' || status === 'refunded';
 }

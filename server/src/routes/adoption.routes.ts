@@ -1,4 +1,10 @@
-import { createAdoptionSchema, idParamsSchema, myAdoptionsQuerySchema, payAdoptionSchema } from '@sanctuary/shared';
+import {
+  changePlanSchema,
+  createAdoptionSchema,
+  idParamsSchema,
+  myAdoptionsQuerySchema,
+  payAdoptionSchema,
+} from '@sanctuary/shared';
 import { Router } from 'express';
 import { createAdoptionController } from '../controllers/adoption.controller.js';
 import { requireAuth, requireRole, requireVerifiedEmail } from '../middlewares/auth.js';
@@ -20,6 +26,13 @@ export function createAdoptionRoutes(service: AdoptionService): Router {
     validate({ params: idParamsSchema, body: payAdoptionSchema }),
     c.pay,
   );
+  router.patch(
+    '/me/adoptions/:id/plan',
+    requireRole('adopter'),
+    validate({ params: idParamsSchema, body: changePlanSchema }),
+    c.changePlan,
+  );
+  router.post('/me/adoptions/:id/cancel', requireRole('adopter'), validate({ params: idParamsSchema }), c.cancel);
 
   return router;
 }
