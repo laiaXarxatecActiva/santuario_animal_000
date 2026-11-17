@@ -68,3 +68,21 @@ export function createChangePasswordLimiter(): RequestHandler {
     handler: rechazar,
   });
 }
+
+/** Límite por IP en una hora, para los formularios públicos que envían emails. */
+function porIpYHora(limit: number): RequestHandler {
+  return rateLimit({
+    windowMs: 60 * MINUTO_MS,
+    limit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    keyGenerator: (req) => ipKeyGenerator(req.ip ?? ''),
+    handler: rechazar,
+  });
+}
+
+/** CU-05: 10 donaciones por hora desde una IP (cada una puede enviar un email a cualquier dirección). */
+export const createDonationLimiter = (): RequestHandler => porIpYHora(10);
+
+/** CU-06 3b: 5 mensajes de contacto por hora desde una IP. */
+export const createContactLimiter = (): RequestHandler => porIpYHora(5);

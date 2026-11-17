@@ -139,6 +139,7 @@ Los demás valores ya sirven tal cual si has seguido los pasos anteriores. Qué 
 | `PAYMENT_SIMULATION_MODE`         | `always_succeed`                                               | Resultado de los pagos simulados: `always_succeed` (siempre bien), `always_fail` (siempre mal) o `random` (al azar)                 |
 | `PAYMENT_SIMULATION_FAILURE_RATE` | `0.2`                                                          | Con `random`, probabilidad de que un pago falle (0,2 = 20 %)                                                                        |
 | `JOBS_ENABLED`                    | `true`                                                         | Tareas programadas diarias (cobro de cuotas a las 03:00, cancelar pendientes de más de 7 días, cerrar bajas). `false` las desactiva |
+| `SANCTUARY_EMAIL`                 | `santuario@santuario.test`                                     | Buzón al que llegan los mensajes del formulario de contacto (en local, los ves en Mailpit)                                          |
 
 > El `.env` nunca se sube a GitHub (está en el `.gitignore`). Si cambias algo con la aplicación arrancada, párala y vuelve a arrancarla.
 

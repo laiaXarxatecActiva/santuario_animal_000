@@ -235,7 +235,8 @@
     "ANIMAL_NOT_FOUND": "Este animal no existe.",
     "PLAN_CHANGE_NOT_ALLOWED": "Solo puedes cambiar el plan de una adopción activa sin baja solicitada.",
     "ADOPTION_CANCEL_ALREADY_REQUESTED": "Ya habías solicitado la baja de esta adopción.",
-    "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado."
+    "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado.",
+    "EMAIL_NOT_SENT": "No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -746,6 +747,39 @@
     "locationText": "Dirección por confirmar.",
     "visitsText": "El santuario no está abierto al público: así los animales viven tranquilos. Puedes conocerlos a través de sus fichas y de las noticias que publicamos.",
     "seeAnimals": "Ver animales"
+  },
+  "contact": {
+    "title": "Escríbenos",
+    "intro": "¿Tienes alguna pregunta sobre el santuario o las adopciones? Te responderemos por email.",
+    "name": "Nombre",
+    "email": "Email",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "send": "Enviar mensaje",
+    "sending": "Enviando…",
+    "tooMany": "Has enviado demasiados mensajes; inténtalo más tarde."
+  },
+  "donate": {
+    "title": "Donar",
+    "intro": "Con una donación ayudas a cuidar de los buitres que ya no pueden volver a volar.",
+    "where": "Las donaciones pagan la comida, los cuidados veterinarios y el mantenimiento de los voladeros. No hace falta tener cuenta ni hay importe mínimo.",
+    "formTitle": "Haz una donación",
+    "howMuch": "¿Cuánto quieres donar?",
+    "suggested": "{{amount}} €",
+    "other": "Otra",
+    "amount": "Importe (€)",
+    "noMinimum": "Sin importe mínimo.",
+    "name": "Nombre (opcional)",
+    "email": "Email (opcional)",
+    "emailHelp": "Para enviarte el recibo.",
+    "anonymous": "Quiero que mi donación sea anónima",
+    "message": "Mensaje (opcional)",
+    "continue": "Continuar con el pago",
+    "failed": "El pago no se ha completado. Puedes intentarlo de nuevo.",
+    "thanksEmail": "¡Gracias por tu donación! Te hemos enviado el recibo por email.",
+    "thanksNoEmail": "¡Gracias por tu donación! Puedes imprimir el recibo desde esta página.",
+    "printReceipt": "Imprimir recibo",
+    "another": "Hacer otra donación"
   },
   "legal": {
     "lastUpdated": "Última actualización: {{date}}",

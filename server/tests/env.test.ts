@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { jobsEnabled, loadConfig, loadDatabaseConfig } from '../src/config/env.js';
+import { jobsEnabled, loadConfig, loadDatabaseConfig, sanctuaryEmail } from '../src/config/env.js';
 
 const DATABASE_URL = 'postgres://sanctuary:sanctuary@localhost:5432/sanctuary';
 const SESSION_SECRET = 'a'.repeat(32);
@@ -103,5 +103,14 @@ describe('JOBS_ENABLED (TECH_SPEC §11.4)', () => {
 
   it('rechaza otros valores', () => {
     expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, JOBS_ENABLED: 'si' })).toThrow(/JOBS_ENABLED/);
+  });
+});
+
+describe('SANCTUARY_EMAIL (CU-06)', () => {
+  it('por defecto santuario@santuario.test; si se indica, debe ser un email', () => {
+    expect(sanctuaryEmail(loadConfig({ DATABASE_URL, SESSION_SECRET }))).toBe('santuario@santuario.test');
+    const config = loadConfig({ DATABASE_URL, SESSION_SECRET, SANCTUARY_EMAIL: 'buzon@ejemplo.test' });
+    expect(sanctuaryEmail(config)).toBe('buzon@ejemplo.test');
+    expect(() => loadConfig({ DATABASE_URL, SESSION_SECRET, SANCTUARY_EMAIL: 'buzon' })).toThrow(/SANCTUARY_EMAIL/);
   });
 });

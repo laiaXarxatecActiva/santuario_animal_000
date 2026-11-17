@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { createApp } from './app.js';
-import { jobsEnabled, loadConfig } from './config/env.js';
+import { jobsEnabled, loadConfig, sanctuaryEmail } from './config/env.js';
 import { createJobDeps } from './jobs/job-deps.js';
 import { createJobRunner } from './jobs/registry.js';
 import { startScheduler } from './jobs/scheduler.js';
@@ -34,6 +34,7 @@ const app = createApp({
   pruneSessions: true,
   logger,
   jobs,
+  sanctuaryEmail: sanctuaryEmail(config),
 });
 
 app.listen(config.PORT, () => {

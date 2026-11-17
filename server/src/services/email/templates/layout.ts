@@ -37,3 +37,12 @@ export function htmlConEnlace(
     '</body></html>',
   ].join('\n');
 }
+
+/** HTML sencillo con un párrafo por línea, sin botón. */
+export function htmlParrafos(parrafos: string[]): string {
+  return [
+    '<!doctype html><html lang="es"><body style="font-family: sans-serif; line-height: 1.5; color: #3B2F26;">',
+    ...parrafos.map((texto) => `<p>${escapeHtml(texto).replaceAll('\n', '<br>')}</p>`),
+    '</body></html>',
+  ].join('\n');
+}

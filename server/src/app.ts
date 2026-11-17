@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import type { Pool } from 'pg';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
+import { DEFAULT_SANCTUARY_EMAIL } from './config/env.js';
 import type { Reloj } from './dominio/reloj.js';
 import { createJobRunner, type JobRunner } from './jobs/registry.js';
 import { createLoadUser } from './middlewares/auth.js';
@@ -14,6 +15,7 @@ import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createContributionRoutes } from './routes/contribution.routes.js';
+import { createDonationRoutes } from './routes/donation.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
 import { createNotificationRoutes } from './routes/notification.routes.js';
 import { createProfileRoutes } from './routes/profile.routes.js';
@@ -24,7 +26,9 @@ import { createLocalStorage } from './services/storage/local.storage.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
+import { createContactService } from './servicios/contact.service.js';
 import { createContributionService } from './servicios/contribution.service.js';
+import { createDonationService } from './servicios/donation.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createNotificationService } from './servicios/notification.service.js';
@@ -55,6 +59,8 @@ export interface AppOptions {
   logger?: Logger;
   /** Sustituye el registro de errores inesperados (500). */
   logError?: (error: unknown) => void;
+  /** Buzón del santuario para el formulario de contacto (SANCTUARY_EMAIL). */
+  sanctuaryEmail?: string;
   /** Ejecutor de las tareas programadas; por defecto, uno con estas mismas dependencias. */
   jobs?: JobRunner;
 }
@@ -131,6 +137,17 @@ export function createApp(options: AppOptions): Express {
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
   app.use('/api', createContributionRoutes(createContributionService({ db })));
+  app.use(
+    '/api',
+    createDonationRoutes(
+      createDonationService({ db, reloj, payments: options.payments, email: options.email, logEmailError }),
+      createContactService({
+        email: options.email,
+        sanctuaryEmail: options.sanctuaryEmail ?? DEFAULT_SANCTUARY_EMAIL,
+        logEmailError,
+      }),
+    ),
+  );
   app.use('/api', createNotificationRoutes(createNotificationService({ db })));
   app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
   app.use(

@@ -409,6 +409,7 @@ CREATE TRIGGER adoptions_check_user_role
 CREATE TABLE payments (
     id                 INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     adoption_id        INTEGER       NOT NULL REFERENCES adoptions (id) ON DELETE RESTRICT,
+    plan_id            INTEGER       NOT NULL REFERENCES adoption_plans (id) ON DELETE RESTRICT, -- plan con el que se cobró (la adopción puede cambiarlo después)
     amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
     period_start       DATE          NOT NULL,              -- mes cubierto por la cuota
     period_end         DATE          NOT NULL,

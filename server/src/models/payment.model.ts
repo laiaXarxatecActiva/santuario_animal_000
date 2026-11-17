@@ -25,6 +25,8 @@ export function mapRow(row: PaymentRow): PaymentDto {
 
 export interface NewPayment {
   adoptionId: number;
+  /** Plan con el que se cobra la cuota. Sin él, el plan actual de la adopción. */
+  planId?: number;
   amount: string;
   periodStart: string;
   periodEnd: string;
@@ -38,9 +40,10 @@ export interface NewPayment {
 export async function create(db: Queryable, pago: NewPayment): Promise<PaymentDto> {
   try {
     const { rows } = await db.query<PaymentRow>(
-      `INSERT INTO payments (adoption_id, amount, period_start, period_end, method, status,
+      `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status,
                              payment_reference, failure_reason, paid_at)
-       VALUES ($1, $2, $3, $4, 'simulated', $5, $6, $7, $8)
+       VALUES ($1, COALESCE($9::int, (SELECT plan_id FROM adoptions WHERE id = $1)),
+               $2, $3, $4, 'simulated', $5, $6, $7, $8)
        RETURNING id, status, amount, period_start, period_end, failure_reason`,
       [
         pago.adoptionId,
@@ -51,6 +54,7 @@ export async function create(db: Queryable, pago: NewPayment): Promise<PaymentDt
         pago.reference,
         pago.failureReason,
         pago.paidAt,
+        pago.planId ?? null,
       ],
     );
     return mapRow(rows[0] as PaymentRow);

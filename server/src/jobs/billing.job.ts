@@ -74,6 +74,7 @@ export async function runBilling({
       });
       await paymentModel.create(client, {
         adoptionId,
+        planId: plan.id,
         amount: plan.monthlyAmount,
         periodStart: periodo.periodStart,
         periodEnd: periodo.periodEnd,

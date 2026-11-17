@@ -309,6 +309,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `adoptions.gifted_by_user_id` | Adopción regalo (Fase 3) |
 | `adoptions.created_by`, `adoptions.notes` | Adopciones creadas a mano por un administrador |
 | `payments.period_start`, `payments.period_end` | Mes cubierto por cada cuota; evita cobros duplicados |
+| `payments.plan_id` | Plan con el que se cobró la cuota; el recibo lo muestra aunque la adopción cambie de plan después |
 | `payments.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Trazabilidad de fallos, cobros, devoluciones y pagos manuales |
 | `donations.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Igual que en `payments` |
 
@@ -502,8 +503,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/animals/memorial` | Público | Animales con `show_in_memorial = TRUE` (Fase 3) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
-| POST | `/api/donations` | Público (sesión opcional) | Crea y paga una donación | CU-05 |
-| POST | `/api/contact` | Público | Envía el formulario de contacto por email al santuario | CU-06 |
+| POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName?, donorEmail?, isAnonymous, message?, simulatedOutcome? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
+| POST | `/api/contact` | Público | `{ name, email, subject, message, acceptPrivacy: true }`: email al santuario con `Reply-To` del visitante (202). Si falla el envío, 503 `EMAIL_NOT_SENT`. No se guarda. 5 por hora y por IP | CU-06 |
 
 ### 10.4 Área del adoptante (rol `adopter`)
 
@@ -520,7 +521,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
 | GET | `/api/me/contributions` | `{ payments, donations, totals: { allTime, years } }`: cuotas y donaciones con mi cuenta, las más recientes primero. `?year=` filtra los listados (no los totales); los totales solo suman lo cobrado | CU-19 |
-| GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`). El pago no guarda el plan: se muestra el de la adopción si el importe coincide o, si no, el plan con ese importe | CU-19 |
+| GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`), con el plan con el que se cobró (`payments.plan_id`) | CU-19 |
 | GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
 | POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
 
@@ -766,7 +767,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | `SMTP_HOST` / `SMTP_PORT` | `localhost` / `1025` | Mailpit |
 | `SMTP_USER` / `SMTP_PASSWORD` | *(vacío en local)* | Credenciales SMTP |
 | `MAIL_FROM` | `"Santuario <no-reply@santuario.test>"` | Remitente |
-| `SANCTUARY_EMAIL` | `contacto@santuario.test` | Buzón para el formulario de contacto |
+| `SANCTUARY_EMAIL` | `santuario@santuario.test` | Buzón para el formulario de contacto. En local llega a Mailpit |
 | `UPLOADS_DIR` | `./uploads` | Carpeta de archivos subidos |
 | `PAYMENT_SIMULATION_MODE` | `always_succeed` | `always_succeed`, `always_fail` o `random` |
 | `PAYMENT_SIMULATION_FAILURE_RATE` | `0.2` | Solo con `random` |

@@ -172,6 +172,7 @@ export function createAdoptionService({
     const payment = await withTransaction(db, async (client) => {
       const pago = await paymentModel.create(client, {
         adoptionId,
+        planId: adopcion.plan.id,
         amount: adopcion.plan.monthlyAmount,
         periodStart: periodo.periodStart,
         periodEnd: periodo.periodEnd,
