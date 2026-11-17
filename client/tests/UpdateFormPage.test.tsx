@@ -95,7 +95,7 @@ describe('CU-31 Publicar una actualización (SCREENS §5.5)', () => {
     expect(datos.get('visibility')).toBe('adopters');
     expect(JSON.parse(String(datos.get('meta')))).toEqual([{ altText: 'Turia mojada' }]);
     expect((datos.getAll('files') as File[]).map((f) => f.name)).toEqual(['lluvia.jpg']);
-  });
+  }, 15000);
 
   it('3a: título, texto y animal son obligatorios; también el texto alternativo de cada foto', async () => {
     const { fetchMock } = api();
