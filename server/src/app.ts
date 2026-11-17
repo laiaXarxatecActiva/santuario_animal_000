@@ -1,4 +1,5 @@
 import express, { type Express } from 'express';
+import helmet from 'helmet';
 import type { Pool } from 'pg';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
@@ -6,6 +7,7 @@ import type { Reloj } from './dominio/reloj.js';
 import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { requireJson } from './middlewares/require-json.js';
+import { createRequireSameOrigin } from './middlewares/require-same-origin.js';
 import { createSessionMiddleware } from './middlewares/session.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
@@ -57,6 +59,9 @@ export function createApp(options: AppOptions): Express {
 
   app.disable('x-powered-by');
   if (production) app.set('trust proxy', 1);
+  // Cabeceras de seguridad (TECH_SPEC §13): CSP, nosniff, Referrer-Policy no-referrer
+  // (los enlaces con token no se filtran por el Referer), HSTS, etc.
+  app.use(helmet());
   if (logger) {
     app.use(pinoHttp({ logger }));
   }
@@ -86,7 +91,7 @@ export function createApp(options: AppOptions): Express {
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
 
-  app.use('/api', express.json({ limit: '100kb' }), requireJson);
+  app.use('/api', createRequireSameOrigin([options.clientUrl]), express.json({ limit: '100kb' }), requireJson);
   app.use(
     '/api',
     createSessionMiddleware({

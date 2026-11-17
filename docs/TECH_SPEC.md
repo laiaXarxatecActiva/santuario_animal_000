@@ -729,8 +729,8 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 | Requisito | Implementación |
 | --- | --- |
-| **Seguridad HTTP** | `helmet`; cookies `httpOnly` y `sameSite=lax`; `app.set('trust proxy', 1)` en producción; límite de tamaño del cuerpo JSON (100 kB) |
-| **CSRF** | `sameSite=lax`, además de aceptar solo `application/json` en las peticiones que modifican datos (las subidas `multipart` exigen una cabecera `X-Requested-With`) |
+| **Seguridad HTTP** | `helmet` con su configuración por defecto (CSP, `nosniff`, `Referrer-Policy: no-referrer`, HSTS); cookies `httpOnly` y `sameSite=lax`; `app.set('trust proxy', 1)` en producción; límite de tamaño del cuerpo JSON (100 kB) |
+| **CSRF** | `sameSite=lax`; las peticiones que modifican datos se rechazan (403 `ORIGIN_NOT_ALLOWED`) si llegan con un `Origin` distinto de `CLIENT_URL` o con `Sec-Fetch-Site: cross-site` (`requireSameOrigin`), y solo se acepta `application/json` (las subidas `multipart` exigen una cabecera `X-Requested-With`). No hay CORS: cliente y API comparten origen, así que no se envía ninguna cabecera `Access-Control-Allow-*` |
 | **Inyección SQL** | Solo consultas parametrizadas; listas blancas para la ordenación |
 | **XSS** | React escapa por defecto; prohibido `dangerouslySetInnerHTML` con contenido del usuario. Los textos de las actualizaciones son texto plano con saltos de línea. |
 | **Autorización** | En el servidor, en cada ruta ([§9](#9-autenticación-y-autorización)) |
