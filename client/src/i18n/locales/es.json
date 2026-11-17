@@ -7,7 +7,8 @@
     "skipToContent": "Saltar al contenido",
     "retry": "Reintentar",
     "loading": "Cargando…",
-    "listSeparator": " · "
+    "listSeparator": " · ",
+    "cancel": "Cancelar"
   },
   "nav": {
     "main": "Navegación principal",
@@ -231,7 +232,10 @@
     "INVALID_FILE": "El archivo está dañado o no corresponde a su formato.",
     "UPDATE_ANIMAL_ARCHIVED": "No se pueden publicar actualizaciones de un animal fallecido o trasladado.",
     "FILES_REJECTED": "Algún archivo no se puede subir; revísalo o quítalo.",
-    "ANIMAL_NOT_FOUND": "Este animal no existe."
+    "ANIMAL_NOT_FOUND": "Este animal no existe.",
+    "PLAN_CHANGE_NOT_ALLOWED": "Solo puedes cambiar el plan de una adopción activa sin baja solicitada.",
+    "ADOPTION_CANCEL_ALREADY_REQUESTED": "Ya habías solicitado la baja de esta adopción.",
+    "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -377,6 +381,73 @@
     "history": "Historial",
     "continueWithOther": "¿Quieres continuar con otro animal?",
     "errorLoading": "No hemos podido cargar tus adopciones"
+  },
+  "manageAdoption": {
+    "moreActions": "Más acciones de {{name}}",
+    "changePlan": "Cambiar plan",
+    "appliesFrom": "El cambio se aplicará a partir del {{date}}.",
+    "planOption": "{{plan}} · {{amount}}/mes",
+    "currentPlan": "(plan actual)",
+    "plansError": "No hemos podido cargar los planes. Inténtalo de nuevo más tarde.",
+    "save": "Guardar",
+    "planChanged": "Cambio de plan guardado. Te hemos enviado un email de confirmación.",
+    "planKept": "Se mantiene tu plan actual.",
+    "cancel": "Darme de baja",
+    "cancelTitle": "Darte de baja de {{name}}",
+    "cancelActive": "Tu adopción seguirá activa hasta el {{date}} y después no se te volverá a cobrar. No se hacen devoluciones parciales.",
+    "cancelActiveNoDate": "Tu adopción seguirá activa hasta el final del mes pagado y después no se te volverá a cobrar. No se hacen devoluciones parciales.",
+    "cancelPending": "La adopción se cancelará ahora. Como no has completado el pago, no se te cobrará nada.",
+    "cancelPaused": "La adopción terminará ahora y la cuota pendiente no se cobrará.",
+    "back": "Volver",
+    "confirmCancel": "Confirmar la baja",
+    "cancelled": "Hemos registrado tu baja. Te hemos enviado un email de confirmación."
+  },
+  "contributions": {
+    "title": "Mis aportaciones",
+    "empty": "Todavía no hay aportaciones",
+    "errorLoading": "No hemos podido cargar tus aportaciones",
+    "yearTotal": "Aportado en {{year}}",
+    "allTime": "Desde que empezaste",
+    "year": "Año",
+    "allYears": "Todos los años",
+    "tabs": {
+      "payments": "Cuotas",
+      "donations": "Donaciones"
+    },
+    "date": "Fecha",
+    "concept": "Concepto",
+    "amount": "Importe",
+    "status": "Estado",
+    "reference": "Referencia",
+    "receipt": "Recibo",
+    "paymentConcept": "Cuota de {{name}} · del {{from}} al {{to}}",
+    "donation": "Donación",
+    "noPayments": "No hay cuotas en este periodo.",
+    "noDonations": "No hay donaciones en este periodo.",
+    "paymentStatus": {
+      "completed": "Cobrado",
+      "failed": "Fallido",
+      "pending": "Pendiente",
+      "refunded": "Devuelto"
+    }
+  },
+  "receipt": {
+    "title": "Recibo",
+    "back": "Volver a mis aportaciones",
+    "print": "Imprimir",
+    "errorLoading": "No hemos podido cargar este recibo",
+    "payer": "Pagado por",
+    "paidAt": "Fecha del pago",
+    "method": "Forma de pago",
+    "methods": {
+      "simulated": "Pago simulado",
+      "cash": "Efectivo",
+      "bank_transfer": "Transferencia",
+      "card": "Tarjeta"
+    },
+    "paymentConceptPlan": "Cuota de {{name}} · Plan {{plan}} · del {{from}} al {{to}}",
+    "refundedOn": "Devuelto el {{date}}",
+    "simulated": "Pago simulado: no se ha realizado ningún cargo real."
   },
   "adoptedAnimal": {
     "yourAdoption": "Tu adopción",

@@ -336,3 +336,24 @@ export class FilesRejectedError extends AppError {
     super(422, 'FILES_REJECTED', 'Algún archivo no se puede subir; revísalo o quítalo.', details);
   }
 }
+
+/** CU-20 1a: la adopción no está activa o tiene la baja solicitada. */
+export class PlanChangeNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super('PLAN_CHANGE_NOT_ALLOWED', 'Solo puedes cambiar el plan de una adopción activa sin baja solicitada.');
+  }
+}
+
+/** CU-21: la baja ya estaba solicitada. */
+export class AdoptionCancelAlreadyRequestedError extends ConflictError {
+  constructor() {
+    super('ADOPTION_CANCEL_ALREADY_REQUESTED', 'Ya habías solicitado la baja de esta adopción.');
+  }
+}
+
+/** CU-19 4a: los pagos fallidos o pendientes no tienen recibo. */
+export class ReceiptNotAvailableError extends BusinessRuleError {
+  constructor() {
+    super('RECEIPT_NOT_AVAILABLE', 'Este pago no tiene recibo porque no se ha cobrado.');
+  }
+}

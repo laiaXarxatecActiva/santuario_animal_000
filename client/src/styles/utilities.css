@@ -59,3 +59,15 @@
 .reading {
   max-width: var(--reading-max);
 }
+
+/* Lo que no se imprime (cabecera, pie, avisos de la web) al imprimir un recibo (§8.9).
+   `display: contents` no crea caja, así que la cabecera sigue siendo fija. */
+.print-hidden {
+  display: contents;
+}
+
+@media print {
+  .print-hidden {
+    display: none;
+  }
+}

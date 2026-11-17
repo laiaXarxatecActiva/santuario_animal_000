@@ -279,3 +279,23 @@ export async function finishCancelled(db: Queryable, hoy: string): Promise<Close
   );
   return rows.map((r) => ({ id: r.id, userId: r.user_id, animalId: r.animal_id, animalName: r.animal_name }));
 }
+
+/** CU-20: plan de la próxima cuota (`null` anula el cambio programado). */
+export async function setNextPlan(db: Queryable, id: number, nextPlanId: number | null): Promise<void> {
+  await db.query('UPDATE adoptions SET next_plan_id = $2 WHERE id = $1', [id, nextPlanId]);
+}
+
+/** CU-21: guarda la baja. Ya no se cobra más ni se aplica ningún cambio de plan. */
+export async function applyCancellation(
+  db: Queryable,
+  id: number,
+  baja: { status: AdoptionStatus; endReason: AdoptionEndReason | null; endDate: string; requestedAt: Date },
+): Promise<void> {
+  await db.query(
+    `UPDATE adoptions
+        SET status = $2, end_reason = $3, end_date = $4, cancel_requested_at = $5,
+            next_billing_date = NULL, next_plan_id = NULL
+      WHERE id = $1`,
+    [id, baja.status, baja.endReason, baja.endDate, baja.requestedAt],
+  );
+}

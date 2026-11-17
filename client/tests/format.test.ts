@@ -5,7 +5,10 @@ import {
   formatList,
   formatLongDate,
   formatRelative,
+  formatShortDate,
+  formatShortInstant,
   formatYear,
+  previousDay,
 } from '../src/utils/format';
 
 describe('format', () => {
@@ -43,5 +46,19 @@ describe('formatRelative', () => {
     expect(formatRelative('2026-11-15T12:00:00Z', ahora)).toBe('hace 2 días');
     expect(formatRelative('2026-09-10T12:00:00Z', ahora)).toBe('hace 2 meses');
     expect(formatRelative('2024-11-10T12:00:00Z', ahora)).toBe('hace 2 años');
+  });
+});
+
+describe('fechas cortas y día anterior (CU-19, CU-21)', () => {
+  it('formatShortDate y formatShortInstant dan «5 nov 2026»', () => {
+    expect(formatShortDate('2026-11-05')).toBe('5 nov 2026');
+    // 23:30 UTC del 4 de noviembre ya es el 5 en Madrid.
+    expect(formatShortInstant('2026-11-04T23:30:00.000Z')).toBe('5 nov 2026');
+  });
+
+  it('previousDay cruza meses y años', () => {
+    expect(previousDay('2026-12-05')).toBe('2026-12-04');
+    expect(previousDay('2026-03-01')).toBe('2026-02-28');
+    expect(previousDay('2027-01-01')).toBe('2026-12-31');
   });
 });

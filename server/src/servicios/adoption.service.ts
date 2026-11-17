@@ -7,17 +7,28 @@ import {
   type SimulatedOutcome,
 } from '@sanctuary/shared';
 import type { Pool } from 'pg';
+import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
-import { esAdoptable, periodoCuota, proximaActualizacionPrevista, puedePagar } from '../dominio/adopcion.js';
+import {
+  bajaAdopcion,
+  cambioDePlan,
+  esAdoptable,
+  periodoCuota,
+  proximaActualizacionPrevista,
+  puedeCambiarPlan,
+  puedePagar,
+} from '../dominio/adopcion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import {
   AdoptionAlreadyOpenError,
+  AdoptionCancelAlreadyRequestedError,
   AdoptionClosedError,
   AdoptionNotPayableError,
   AdoptionPaymentExpiredError,
   AnimalNotAdoptableError,
   AnimalNotAvailableError,
   NotFoundError,
+  PlanChangeNotAllowedError,
   PlanNotAvailableError,
   WorkerCannotAdoptError,
 } from '../errors/app-error.js';
@@ -28,8 +39,11 @@ import * as notificationModel from '../models/notification.model.js';
 import * as paymentModel from '../models/payment.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
+import { adoptionCancelledEmail } from '../services/email/templates/adoption-cancelled.js';
 import { adoptionWelcomeEmail } from '../services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../services/email/templates/payment-completed.js';
+import { planChangedEmail } from '../services/email/templates/plan-changed.js';
+import { formatEuros, formatFecha } from '../utils/format.js';
 import type { PaymentGateway } from '../services/payment/payment.service.js';
 
 export interface AdoptionServiceDeps {
@@ -41,7 +55,7 @@ export interface AdoptionServiceDeps {
   logEmailError?: (error: unknown) => void;
 }
 
-// Casos de uso de la adopción: CU-13, CU-14 y CU-15.
+// Casos de uso de la adopción: CU-13, CU-14, CU-15, CU-20 y CU-21.
 export function createAdoptionService({
   db,
   reloj,
@@ -187,7 +201,105 @@ export function createAdoptionService({
     return { adoption: toDto(actualizada), payment };
   }
 
-  return { create, listMine, getMine, pay };
+  /** Envía un email al adoptante; un fallo nunca deshace la operación. */
+  async function enviarAlAdoptante(
+    userId: number,
+    plantilla: (firstName: string) => { subject: string; text: string; html: string },
+  ): Promise<void> {
+    try {
+      const user = await userModel.findById(db, userId);
+      if (user) await email.send({ to: user.email, ...plantilla(user.firstName) });
+    } catch (error) {
+      logEmailError(error);
+    }
+  }
+
+  /** Lee y bloquea la adopción propia dentro de la transacción; una ajena es 404. */
+  async function propiaBloqueada(client: Queryable, userId: number, adoptionId: number) {
+    const adopcion = await adoptionModel.findByIdForUpdate(client, adoptionId);
+    if (!adopcion || adopcion.userId !== userId) throw new NotFoundError();
+    return adopcion;
+  }
+
+  /** CU-20: programa (o anula) el cambio de plan para la próxima cuota. */
+  async function changePlan(userId: number, adoptionId: number, planId: number): Promise<AdoptionDto> {
+    const resultado = await withTransaction(db, async (client) => {
+      const adopcion = await propiaBloqueada(client, userId, adoptionId);
+      if (!puedeCambiarPlan({ status: adopcion.status, cancelRequested: adopcion.cancelRequestedAt !== null })) {
+        throw new PlanChangeNotAllowedError();
+      }
+      // Volver al plan actual (3a) siempre se puede, aunque ese plan ya no se ofrezca.
+      const plan = planId === adopcion.plan.id ? adopcion.plan : await planModel.findActiveById(client, planId);
+      if (!plan) throw new PlanNotAvailableError();
+      const cambio = cambioDePlan({ planId: adopcion.plan.id, nextPlanId: adopcion.nextPlan?.id ?? null }, planId);
+      if (cambio.tipo === 'ninguno') return { adopcion, cambio, plan };
+      await adoptionModel.setNextPlan(client, adoptionId, cambio.nextPlanId);
+      if (cambio.tipo === 'programado' && adopcion.nextBillingDate) {
+        await notificationModel.create(client, {
+          userId,
+          type: 'plan_changed',
+          message: `A partir del ${formatFecha(adopcion.nextBillingDate)}, tu cuota de ${adopcion.animal.name} será de ${formatEuros(plan.monthlyAmount)} (plan ${plan.name}).`,
+          link: `/my-animals/${adopcion.animal.id}`,
+        });
+      }
+      return { adopcion, cambio, plan };
+    });
+
+    const { adopcion, cambio, plan } = resultado;
+    if (cambio.tipo === 'programado' && adopcion.nextBillingDate) {
+      const fromDate = adopcion.nextBillingDate;
+      await enviarAlAdoptante(userId, (firstName) =>
+        planChangedEmail({
+          firstName,
+          animalName: adopcion.animal.name,
+          planName: plan.name,
+          amount: plan.monthlyAmount,
+          fromDate,
+          url: new URL('/my-animals', clientUrl).toString(),
+        }),
+      );
+    }
+    return getMine(userId, adoptionId);
+  }
+
+  /** CU-21: baja de la adopción (RN-10). */
+  async function cancel(userId: number, adoptionId: number): Promise<AdoptionDto> {
+    const { adopcion, baja } = await withTransaction(db, async (client) => {
+      const adopcion = await propiaBloqueada(client, userId, adoptionId);
+      const cancelRequested = adopcion.cancelRequestedAt !== null;
+      const baja = bajaAdopcion({ ...adopcion, cancelRequested }, reloj.hoy());
+      if (!baja) {
+        if (cancelRequested && adopcion.status === 'active') throw new AdoptionCancelAlreadyRequestedError();
+        throw new AdoptionClosedError();
+      }
+      await adoptionModel.applyCancellation(client, adoptionId, { ...baja, requestedAt: reloj.ahora() });
+      const nombre = adopcion.animal.name;
+      await notificationModel.create(client, {
+        userId,
+        type: 'adoption_cancelled',
+        message:
+          baja.status === 'active'
+            ? `Has solicitado la baja de ${nombre}. La adopción sigue activa hasta el ${formatFecha(baja.endDate)} y no se te volverá a cobrar.`
+            : `Tu adopción de ${nombre} ha terminado. No se te cobrará nada más.`,
+        link: `/my-animals/${adopcion.animal.id}`,
+      });
+      return { adopcion, baja };
+    });
+
+    const status = baja.status === 'cancelled' || baja.status === 'finished' ? baja.status : 'active';
+    await enviarAlAdoptante(userId, (firstName) =>
+      adoptionCancelledEmail({
+        firstName,
+        animalName: adopcion.animal.name,
+        status,
+        endDate: baja.endDate,
+        url: new URL('/my-animals', clientUrl).toString(),
+      }),
+    );
+    return getMine(userId, adoptionId);
+  }
+
+  return { create, listMine, getMine, pay, changePlan, cancel };
 }
 
 export type AdoptionService = ReturnType<typeof createAdoptionService>;

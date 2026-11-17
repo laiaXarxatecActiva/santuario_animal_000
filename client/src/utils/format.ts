@@ -12,6 +12,18 @@ const fechaLarga = new Intl.DateTimeFormat('es-ES', {
 });
 // Los DATE (`YYYY-MM-DD`) se formatean en UTC para que el día no cambie.
 const fechaDia = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const fechaCortaDia = new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+const fechaCortaInstante = new Intl.DateTimeFormat('es-ES', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: ZONA_SANTUARIO,
+});
 const lista = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' });
 
 /** `'5.00'` → `'5,00 €'`. */
@@ -32,6 +44,26 @@ export function formatLongDate(isoInstant: string): string {
 /** `'2026-11-29'` → «29 de noviembre de 2026». */
 export function formatDate(date: string): string {
   return fechaDia.format(new Date(`${date}T00:00:00Z`));
+}
+
+/** `'2026-11-05'` → «5 nov 2026» (tablas y recibos). */
+export function formatShortDate(date: string): string {
+  return fechaCortaDia.format(new Date(`${date}T00:00:00Z`));
+}
+
+/** Instante ISO → «5 nov 2026» en la zona del santuario. */
+export function formatShortInstant(isoInstant: string): string {
+  return fechaCortaInstante.format(new Date(isoInstant));
+}
+
+/**
+ * Día anterior a una fecha `YYYY-MM-DD`. Solo para mostrar: el último día pagado
+ * antes de una cuota (CU-21 paso 2); la fecha que cuenta la fija el servidor.
+ */
+export function previousDay(date: string): string {
+  const dia = new Date(`${date}T00:00:00Z`);
+  dia.setUTCDate(dia.getUTCDate() - 1);
+  return dia.toISOString().slice(0, 10);
 }
 
 /** `['Lucía', 'Elena', 'Irene']` → «Lucía, Elena e Irene». */

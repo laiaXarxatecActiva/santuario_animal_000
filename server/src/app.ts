@@ -13,6 +13,7 @@ import { createSessionMiddleware } from './middlewares/session.js';
 import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
+import { createContributionRoutes } from './routes/contribution.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
 import { createNotificationRoutes } from './routes/notification.routes.js';
 import { createProfileRoutes } from './routes/profile.routes.js';
@@ -23,6 +24,7 @@ import { createLocalStorage } from './services/storage/local.storage.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
+import { createContributionService } from './servicios/contribution.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createNotificationService } from './servicios/notification.service.js';
@@ -128,6 +130,7 @@ export function createApp(options: AppOptions): Express {
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
+  app.use('/api', createContributionRoutes(createContributionService({ db })));
   app.use('/api', createNotificationRoutes(createNotificationService({ db })));
   app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
   app.use(

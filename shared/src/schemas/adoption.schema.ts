@@ -14,3 +14,7 @@ export type PayAdoptionInput = z.infer<typeof payAdoptionSchema>;
 // GET /api/me/adoptions?animalId=
 export const myAdoptionsQuerySchema = z.object({ animalId: z.coerce.number().int().positive().optional() });
 export type MyAdoptionsQuery = z.infer<typeof myAdoptionsQuerySchema>;
+
+// CU-20: el plan elegido para la próxima cuota (el actual anula el cambio programado).
+export const changePlanSchema = z.object({ planId: id });
+export type ChangePlanInput = z.infer<typeof changePlanSchema>;

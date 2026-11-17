@@ -35,7 +35,9 @@ export function PublicLayout() {
       <a href="#main" className={styles.skipLink}>
         {t('common.skipToContent')}
       </a>
-      <PublicHeader />
+      <div className="print-hidden">
+        <PublicHeader />
+      </div>
       <main id="main" tabIndex={-1} className={styles.main}>
         {(sinVerificar || flash) && (
           <div className={`container ${styles.notices}`}>
@@ -53,8 +55,10 @@ export function PublicLayout() {
         )}
         <Outlet />
       </main>
-      <Footer />
-      <CookieNotice />
+      <div className="print-hidden">
+        <Footer />
+        <CookieNotice />
+      </div>
     </>
   );
 }

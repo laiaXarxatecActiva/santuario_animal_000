@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { accountExistsEmail } from '../../../src/services/email/templates/account-exists.js';
+import { adoptionCancelledEmail } from '../../../src/services/email/templates/adoption-cancelled.js';
 import { adoptionWelcomeEmail } from '../../../src/services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../../../src/services/email/templates/payment-completed.js';
+import { planChangedEmail } from '../../../src/services/email/templates/plan-changed.js';
 import { paymentFailedEmail } from '../../../src/services/email/templates/payment-failed.js';
 import { resetPasswordEmail } from '../../../src/services/email/templates/reset-password.js';
 import { verifyEmailEmail } from '../../../src/services/email/templates/verify-email.js';
@@ -87,5 +89,41 @@ describe('CU-43 3a payment-failed', () => {
     expect(email.text).toContain('pausada');
     expect(email.text).toContain(url);
     expect(email.html).toContain(`href="${url}"`);
+  });
+});
+
+describe('CU-20 plan-changed', () => {
+  it('indica el nuevo plan, su importe y desde cuándo se aplica', () => {
+    const email = planChangedEmail({
+      firstName: 'Pablo',
+      animalName: 'Rufo',
+      planName: 'Usual',
+      amount: '5.00',
+      fromDate: '2026-12-05',
+      url: 'http://localhost:5173/my-animals',
+    });
+    expect(email.subject).toBe('Cambio de plan programado: Rufo');
+    for (const texto of ['Hola, Pablo:', 'Usual', '05/12/2026', 'http://localhost:5173/my-animals']) {
+      expect(email.text).toContain(texto);
+    }
+    expect(email.text).toMatch(/5,00\s€/);
+  });
+});
+
+describe('CU-21 adoption-cancelled', () => {
+  const base = { firstName: 'Lucía', animalName: 'Carbón', url: 'http://localhost:5173/my-animals' };
+  it('activa: sigue activa hasta el último día pagado', () => {
+    const email = adoptionCancelledEmail({ ...base, status: 'active', endDate: '2026-12-04' });
+    expect(email.subject).toBe('Baja confirmada: Carbón');
+    expect(email.text).toContain('04/12/2026');
+    expect(email.text).toContain('no se te volverá a cobrar');
+  });
+  it('pendiente o pausada: termina ya, sin cobros', () => {
+    expect(adoptionCancelledEmail({ ...base, status: 'cancelled', endDate: '2026-11-17' }).text).toContain(
+      'no se te ha cobrado nada',
+    );
+    expect(adoptionCancelledEmail({ ...base, status: 'finished', endDate: '2026-11-09' }).text).toContain(
+      'no se cobrará',
+    );
   });
 });

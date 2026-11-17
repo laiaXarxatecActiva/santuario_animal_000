@@ -48,6 +48,35 @@
   gap: var(--space-2);
 }
 
+.headingEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.planForm {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+}
+
+.planLegend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.planOption {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--size-touch);
+  cursor: pointer;
+}
+
 .name {
   font-size: var(--font-size-h3);
 }
