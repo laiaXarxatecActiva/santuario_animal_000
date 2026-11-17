@@ -1,4 +1,4 @@
-import type { AdoptionEndReason, AdoptionStatus, PhotoDto } from '@sanctuary/shared';
+import type { AdoptionEndReason, AdoptionStatus, EmailFrequency, PhotoDto } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { esErrorPg, PG_CHECK_VIOLATION, PG_UNIQUE_VIOLATION } from '../db/pg-errors.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
@@ -198,18 +198,52 @@ export async function closeOpenForAnimal(
   db: Queryable,
   animalId: number,
   cierre: { reason: AdoptionEndReason; date: string },
-): Promise<number> {
-  const { rowCount } = await db.query(
+): Promise<number[]> {
+  const { rows } = await db.query<{ user_id: number }>(
     `UPDATE adoptions
         SET status = CASE WHEN status = 'pending' THEN 'cancelled' ELSE 'finished' END,
             end_reason = $2,
             end_date = GREATEST($3::date, COALESCE(start_date, $3::date)),
             next_billing_date = NULL,
             next_plan_id = NULL
-      WHERE animal_id = $1 AND status IN ('pending', 'active', 'paused')`,
+      WHERE animal_id = $1 AND status IN ('pending', 'active', 'paused')
+      RETURNING user_id`,
     [animalId, cierre.reason, cierre.date],
   );
-  return rowCount ?? 0;
+  return [...new Set(rows.map((r) => r.user_id))];
+}
+
+/** Adoptante a quien se avisa (CU-31, CU-33), con sus preferencias de email. */
+export interface AdoptanteAvisable {
+  userId: number;
+  firstName: string;
+  email: string;
+  emailNotifications: boolean;
+  emailFrequency: EmailFrequency;
+}
+
+/** CU-31 paso 4: adoptantes con adopción activa del animal (una fila por persona). */
+export async function listActiveAdopters(db: Queryable, animalId: number): Promise<AdoptanteAvisable[]> {
+  const { rows } = await db.query<{
+    id: number;
+    first_name: string;
+    email: string;
+    email_notifications: boolean;
+    email_frequency: EmailFrequency;
+  }>(
+    `SELECT DISTINCT u.id, u.first_name, u.email, u.email_notifications, u.email_frequency
+       FROM adoptions ad JOIN users u ON u.id = ad.user_id
+      WHERE ad.animal_id = $1 AND ad.status = 'active'
+      ORDER BY u.id`,
+    [animalId],
+  );
+  return rows.map((r) => ({
+    userId: r.id,
+    firstName: r.first_name,
+    email: r.email,
+    emailNotifications: r.email_notifications,
+    emailFrequency: r.email_frequency,
+  }));
 }
 
 /** CU-43: ids de las adopciones con la cuota vencida, para procesarlas una a una. */

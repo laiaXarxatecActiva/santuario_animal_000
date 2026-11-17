@@ -87,6 +87,7 @@ CREATE TABLE users (
     email_notifications   BOOLEAN      NOT NULL DEFAULT TRUE,  -- recibir emails (sí/no)
     email_frequency       VARCHAR(20)  NOT NULL DEFAULT 'per_update'
                           CHECK (email_frequency IN ('per_update', 'monthly_digest')),
+    digest_sent_for       DATE,                            -- CU-46: primer día del último mes resumido (un resumen al mes)
     preferred_language    VARCHAR(10)  NOT NULL DEFAULT 'es'
                           CHECK (preferred_language IN ('es', 'ca', 'en')), -- [FASE 3] multidioma
     privacy_accepted_at   TIMESTAMPTZ,                     -- consentimiento RGPD

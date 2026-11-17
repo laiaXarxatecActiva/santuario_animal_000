@@ -183,7 +183,9 @@ describe('CU-28 Gestionar animales: cambio de estado', () => {
     const fecha = sumarDias(t.hoy, -1);
     // Lupe: adopción pausada de Elena; se le añade una pendiente de Adrián.
     await t.pool.query('INSERT INTO adoptions (user_id, animal_id, plan_id) VALUES (13, 11, 1)');
-    const res = await nuria.patch('/api/admin/animals/11/status').send({ status: 'deceased', date: fecha });
+    const res = await nuria
+      .patch('/api/admin/animals/11/status')
+      .send({ status: 'deceased', date: fecha, message: 'Lupe nos ha dejado.' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({
       status: 'deceased',

@@ -7,11 +7,13 @@ import { NotFoundError } from '../../src/errors/app-error.js';
 
 describe('Tareas programadas (TECH_SPEC §11.4)', () => {
   it('están registradas con su horario de TECH_SPEC, válido para node-cron', () => {
-    expect(JOB_NAMES).toEqual(['billing', 'expire-pending', 'finish-cancelled']);
+    expect(JOB_NAMES).toEqual(['billing', 'expire-pending', 'finish-cancelled', 'monthly-digest', 'update-reminder']);
     expect(Object.fromEntries(JOB_NAMES.map((n) => [n, JOBS[n].schedule]))).toEqual({
       billing: '0 3 * * *',
       'expire-pending': '30 3 * * *',
       'finish-cancelled': '45 3 * * *',
+      'monthly-digest': '0 9 1 * *',
+      'update-reminder': '0 7 * * *',
     });
     for (const nombre of JOB_NAMES) expect(cron.validate(JOBS[nombre].schedule)).toBe(true);
   });

@@ -1,4 +1,5 @@
 import type {
+  AdminUpdateCreatedDto,
   AdminUpdateDto,
   AdminUpdateListItemDto,
   AdminUpdatesQuery,
@@ -15,6 +16,7 @@ import {
   puedeModificarActualizacion,
   puedePublicarActualizacion,
 } from '../dominio/actualizaciones.js';
+import { extracto, recibeEmailPorActualizacion } from '../dominio/avisos.js';
 import type { ArchivoSubido } from '../dominio/fotos.js';
 import { paginar } from '../dominio/paginacion.js';
 import type { Reloj } from '../dominio/reloj.js';
@@ -26,15 +28,22 @@ import {
   UpdateAnimalArchivedError,
   ValidationError,
 } from '../errors/app-error.js';
+import * as adoptionModel from '../models/adoption.model.js';
 import * as animalModel from '../models/animal-admin.model.js';
 import * as updateModel from '../models/animal-update.model.js';
+import * as notificationModel from '../models/notification.model.js';
 import * as photoModel from '../models/photo.model.js';
+import type { EmailService } from '../services/email/email.service.js';
+import { newUpdateEmail } from '../services/email/templates/new-update.js';
 import { urlsDe, type MediaUploader, type MedioGuardado } from './media-upload.service.js';
 
 export interface UpdateAdminServiceDeps {
   db: Pool;
   reloj: Reloj;
   media: MediaUploader;
+  email: EmailService;
+  clientUrl: string;
+  logEmailError?: (error: unknown) => void;
 }
 
 /** Quien hace la petición (autor o administrador). */
@@ -48,8 +57,16 @@ export type UpdateAdminService = ReturnType<typeof createUpdateAdminService>;
 const noExiste = () => new NotFoundError('Esta actualización no existe.');
 
 // CU-31 Publicar una actualización y CU-32 Editar o borrar una actualización.
-// Las notificaciones a los adoptantes (CU-31 paso 4) llegan en la fase 2.
-export function createUpdateAdminService({ db, reloj, media }: UpdateAdminServiceDeps) {
+const LARGO_EXTRACTO = 300;
+
+export function createUpdateAdminService({
+  db,
+  reloj,
+  media,
+  email,
+  clientUrl,
+  logEmailError = () => {},
+}: UpdateAdminServiceDeps) {
   const fila = (r: updateModel.AdminUpdateRecord, usuario: Trabajador): AdminUpdateListItemDto => ({
     id: r.id,
     animal: r.animal,
@@ -133,12 +150,20 @@ export function createUpdateAdminService({ db, reloj, media }: UpdateAdminServic
 
     get: (id: number, usuario: Trabajador) => detalle(db, id, usuario),
 
-    /** CU-31 pasos 2-3 y 5: crea la actualización y sus fotos en una transacción. */
-    async create(datos: UpdateCreateData, archivos: ArchivoSubido[], usuario: Trabajador): Promise<AdminUpdateDto> {
+    /**
+     * CU-31 pasos 2-5: crea la actualización, sus fotos y las notificaciones de
+     * los adoptantes activos en una transacción; después, los emails (4b: un
+     * fallo de envío no deshace nada).
+     */
+    async create(
+      datos: UpdateCreateData,
+      archivos: ArchivoSubido[],
+      usuario: Trabajador,
+    ): Promise<AdminUpdateCreatedDto> {
       await comprobarAnimal(db, datos.animalId);
       const guardados = await guardarAdjuntos(datos.animalId, archivos, datos.meta);
       try {
-        const id = await withTransaction(db, async (client) => {
+        const { id, avisados, animalName } = await withTransaction(db, async (client) => {
           await comprobarAnimal(client, datos.animalId);
           const nuevo = await updateModel.insert(client, {
             animalId: datos.animalId,
@@ -152,9 +177,39 @@ export function createUpdateAdminService({ db, reloj, media }: UpdateAdminServic
             client,
             nuevasFotos(guardados, datos, { animalId: datos.animalId, updateId: nuevo, uploadedBy: usuario.id }),
           );
-          return nuevo;
+          // 4.1 (y 4a: sin adoptantes activos no hay a quién avisar).
+          const adoptantes = await adoptionModel.listActiveAdopters(client, datos.animalId);
+          const nombre = (await animalModel.findName(client, datos.animalId)) ?? '';
+          await notificationModel.createForUsers(
+            client,
+            adoptantes.map((a) => a.userId),
+            {
+              type: 'new_update',
+              message: `Nueva actualización de ${nombre}: «${datos.title}».`,
+              link: `/my-animals/${datos.animalId}`,
+            },
+          );
+          return { id: nuevo, avisados: adoptantes, animalName: nombre };
         });
-        return await detalle(db, id, usuario);
+        // 4.2: email solo a quien lo quiere por actualización (RN-19).
+        const url = new URL(`/my-animals/${datos.animalId}`, clientUrl).toString();
+        for (const adoptante of avisados.filter(recibeEmailPorActualizacion)) {
+          try {
+            await email.send({
+              to: adoptante.email,
+              ...newUpdateEmail({
+                firstName: adoptante.firstName,
+                animalName,
+                title: datos.title,
+                excerpt: extracto(datos.body, LARGO_EXTRACTO),
+                url,
+              }),
+            });
+          } catch (error) {
+            logEmailError(error);
+          }
+        }
+        return { ...(await detalle(db, id, usuario)), notifiedAdopters: avisados.length };
       } catch (error) {
         await media.borrar(urlsDe(guardados));
         throw error;

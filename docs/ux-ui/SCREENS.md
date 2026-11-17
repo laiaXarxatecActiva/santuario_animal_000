@@ -635,7 +635,7 @@ Encabezado con el nombre, las insignias de estado y las acciones [Ver en la web 
 ╰────────────────────────────────────────────────╯
 ```
 
-El botón de confirmar es terracota, no rojo: no es un borrado, sino un cambio de estado delicado.
+El botón de confirmar es terracota, no rojo: no es un borrado, sino un cambio de estado delicado. El mensaje solo aparece en un fallecimiento con adopciones abiertas y es obligatorio (CU-33 3a); en un traslado con adopciones abiertas se indica que sus adoptantes recibirán un aviso. La casilla «En memoria» llega con la Fase 3.
 
 ### 5.5 Nueva actualización (`/admin/updates/new`) — CU-31
 
@@ -647,7 +647,7 @@ Formulario de una columna (máximo 720 px):
 4. Fotos y vídeos (misma zona de subida, con el texto alternativo de cada uno).
 5. Visibilidad: (•) Solo adoptantes ( ) Pública.
 
-Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. Tras publicar: aviso `success` «Actualización publicada. Hemos avisado a 2 adoptantes».
+Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. Tras publicar: aviso `success` «Actualización publicada y 2 adoptantes avisados.» (sin adoptantes activos, solo «Actualización publicada.»).
 
 ### 5.6 Otras pantallas del panel
 

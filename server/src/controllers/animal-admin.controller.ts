@@ -19,8 +19,8 @@ export function createAnimalAdminController(service: AnimalAdminService) {
   const update: RequestHandler = async (_req, res) => {
     res.json(await service.update(id(res), validated(res, 'body', animalBodySchema)));
   };
-  const changeStatus: RequestHandler = async (_req, res) => {
-    res.json(await service.changeStatus(id(res), validated(res, 'body', animalStatusBodySchema)));
+  const changeStatus: RequestHandler = async (req, res) => {
+    res.json(await service.changeStatus(id(res), validated(res, 'body', animalStatusBodySchema), req.user!.id));
   };
   const remove: RequestHandler = async (_req, res) => {
     await service.remove(id(res));

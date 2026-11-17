@@ -237,18 +237,18 @@ Las fotos que subas desde el panel se guardan en `server/uploads/` (tampoco se s
 
 Todos se ejecutan desde la carpeta principal del proyecto.
 
-| Comando                  | Qué hace                                                                            |
-| ------------------------ | ----------------------------------------------------------------------------------- |
-| `npm install`            | Instala las dependencias                                                            |
-| `npm run dev`            | Arranca la API y la web en modo desarrollo                                          |
-| `npm run db:reset`       | ⚠️ Borra y vuelve a crear la base de datos de la aplicación con los datos de prueba |
-| `npm run db:reset:test`  | Lo mismo con la base de datos de los tests                                          |
-| `npm run users:file`     | Regenera `USUARIOS_PRUEBA.txt`                                                      |
-| `npm run job -- <tarea>` | Lanza ya una tarea programada: `billing`, `expire-pending` o `finish-cancelled`     |
-| `npm test`               | Pasa todos los tests automáticos                                                    |
-| `npm run typecheck`      | Comprueba los tipos de TypeScript                                                   |
-| `npm run lint`           | Busca errores con ESLint                                                            |
-| `npm run format`         | Da formato al código con Prettier                                                   |
+| Comando                  | Qué hace                                                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `npm install`            | Instala las dependencias                                                                                             |
+| `npm run dev`            | Arranca la API y la web en modo desarrollo                                                                           |
+| `npm run db:reset`       | ⚠️ Borra y vuelve a crear la base de datos de la aplicación con los datos de prueba                                  |
+| `npm run db:reset:test`  | Lo mismo con la base de datos de los tests                                                                           |
+| `npm run users:file`     | Regenera `USUARIOS_PRUEBA.txt`                                                                                       |
+| `npm run job -- <tarea>` | Lanza ya una tarea programada: `billing`, `expire-pending`, `finish-cancelled`, `monthly-digest` o `update-reminder` |
+| `npm test`               | Pasa todos los tests automáticos                                                                                     |
+| `npm run typecheck`      | Comprueba los tipos de TypeScript                                                                                    |
+| `npm run lint`           | Busca errores con ESLint                                                                                             |
+| `npm run format`         | Da formato al código con Prettier                                                                                    |
 
 Para pasar solo una parte de los tests: `npm test -w server` (solo la API), `npm test -w client` (solo la web), `npm test -w server -- -t "CU-13"` (los de un caso de uso).
 
