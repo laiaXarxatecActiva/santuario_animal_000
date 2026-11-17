@@ -1,14 +1,19 @@
-import type { ChangePasswordInput, ProfileDto, SessionUser, UpdateProfileInput } from '@sanctuary/shared';
+import { randomBytes } from 'node:crypto';
+import type { ChangePasswordInput, DeleteAccountInput, ProfileDto, SessionUser, UpdateProfileInput } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import { withTransaction } from '../db/transaction.js';
 import type { Reloj } from '../dominio/reloj.js';
-import { tienePreferenciasDeAdoptante } from '../dominio/usuario.js';
+import { datosAnonimizados, puedeEliminarCuenta, tienePreferenciasDeAdoptante } from '../dominio/usuario.js';
 import {
   AdopterOnlyPreferenceError,
+  ForbiddenError,
   InvalidCurrentPasswordError,
+  InvalidPasswordError,
   NotFoundError,
   PasswordUnchangedError,
 } from '../errors/app-error.js';
+import * as adoptionModel from '../models/adoption.model.js';
+import * as donationModel from '../models/donation.model.js';
 import * as sessionModel from '../models/session.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import * as userModel from '../models/user.model.js';
@@ -59,7 +64,28 @@ export function createProfileService({ db, reloj }: ProfileServiceDeps) {
     });
   }
 
-  return { get, update, changePassword };
+  /**
+   * CU-25: comprueba la contraseña y, en una transacción, cierra las adopciones
+   * abiertas, anonimiza al usuario, vacía sus donaciones y borra lo personal y
+   * todas sus sesiones (RN-20). Los pagos y los importes se conservan.
+   */
+  async function deleteAccount(userId: number, { password }: DeleteAccountInput): Promise<void> {
+    const user = await userModel.findById(db, userId);
+    if (!user) throw new NotFoundError();
+    if (!puedeEliminarCuenta(user.role)) throw new ForbiddenError();
+    if (!(await verifyPassword(password, user.passwordHash))) throw new InvalidPasswordError();
+    // Contraseña aleatoria que nadie conoce: la cuenta no vuelve a servir para entrar.
+    const passwordHash = await hashPassword(randomBytes(32).toString('base64url'));
+    await withTransaction(db, async (client) => {
+      await adoptionModel.closeOpenForUser(client, userId, reloj.hoy());
+      await userModel.anonymize(client, userId, { ...datosAnonimizados(userId), passwordHash, instante: reloj.ahora() });
+      await donationModel.clearDonorData(client, userId);
+      await userModel.deletePersonalRecords(client, userId);
+      await sessionModel.deleteByUserId(client, userId);
+    });
+  }
+
+  return { get, update, changePassword, deleteAccount };
 }
 
 export type ProfileService = ReturnType<typeof createProfileService>;

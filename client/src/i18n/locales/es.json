@@ -237,7 +237,8 @@
     "ADOPTION_CANCEL_ALREADY_REQUESTED": "Ya habías solicitado la baja de esta adopción.",
     "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado.",
     "EMAIL_NOT_SENT": "No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde.",
-    "FAREWELL_MESSAGE_REQUIRED": "Escribe el mensaje para los adoptantes."
+    "FAREWELL_MESSAGE_REQUIRED": "Escribe el mensaje para los adoptantes.",
+    "INVALID_PASSWORD": "La contraseña no es correcta."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -519,6 +520,16 @@
       "submit": "Cambiar contraseña",
       "submitting": "Cambiando…",
       "changed": "Contraseña cambiada"
+    },
+    "delete": {
+      "title": "Eliminar cuenta",
+      "consequences": "Si eliminas tu cuenta, se borran tus datos personales y se cierran tus adopciones, sin más cobros. Los registros de tus pagos y donaciones se conservan sin tu nombre, por obligaciones contables. No se puede deshacer.",
+      "open": "Eliminar mi cuenta",
+      "confirmTitle": "¿Eliminar tu cuenta?",
+      "confirmText": "Escribe tu contraseña para confirmar. Se cerrará tu sesión.",
+      "password": "Contraseña",
+      "submit": "Eliminar cuenta",
+      "submitting": "Eliminando…"
     }
   },
   "admin": {

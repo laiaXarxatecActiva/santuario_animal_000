@@ -55,6 +55,7 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
       'Notificaciones',
       'Privacidad',
       'Contraseña',
+      'Eliminar cuenta',
     ]);
   });
 

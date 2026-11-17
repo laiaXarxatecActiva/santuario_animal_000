@@ -1,21 +1,31 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { changePasswordFormSchema, profileDataSchema, type EmailFrequency, type ProfileDto } from '@sanctuary/shared';
+import {
+  changePasswordFormSchema,
+  deleteAccountSchema,
+  profileDataSchema,
+  type EmailFrequency,
+  type ProfileDto,
+} from '@sanctuary/shared';
 import { useState, type ReactNode } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
 import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
 import { PasswordField, TextField } from '../components/FormFields';
+import { Modal } from '../components/Modal';
 import { Switch } from '../components/Switch';
-import { useChangePassword, useProfile, useUpdateProfile } from '../hooks/useProfile';
+import { useChangePassword, useDeleteAccount, useProfile, useUpdateProfile } from '../hooks/useProfile';
+import { SESSION_KEY } from '../hooks/useSession';
+import { flashState } from '../utils/flash';
 import { applyFieldErrors, errorMessage } from '../utils/apiErrors';
 import { formatPhone } from '../utils/phone';
 import styles from './ProfilePage.module.css';
 
-// CU-23 Gestionar el perfil y CU-24 Cambiar la contraseña (SCREENS §4.6). Cada
-// sección tiene su propio botón y sus propios avisos. «Eliminar cuenta» (CU-25)
-// llegará con la Fase 2.
+// CU-23 Gestionar el perfil, CU-24 Cambiar la contraseña y CU-25 Eliminar la
+// cuenta (SCREENS §4.6). Cada sección tiene su propio botón y sus propios avisos.
 export function ProfilePage() {
   const { t } = useTranslation();
   const perfil = useProfile();
@@ -43,6 +53,7 @@ export function ProfilePage() {
         {adoptante && <Notificaciones perfil={perfil.data} />}
         {adoptante && <Privacidad perfil={perfil.data} />}
         <Contrasena />
+        {adoptante && <EliminarCuenta />}
       </>
     );
   }
@@ -283,5 +294,83 @@ function Contrasena() {
         </div>
       </form>
     </Seccion>
+  );
+}
+
+/** CU-25: sección final con la explicación y la confirmación con contraseña. */
+function EliminarCuenta() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const eliminar = useDeleteAccount();
+  const [abierta, setAbierta] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    setError,
+    reset,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(deleteAccountSchema), defaultValues: { password: '' } });
+
+  const cerrar = () => {
+    setAbierta(false);
+    reset({ password: '' });
+    eliminar.reset();
+  };
+
+  const confirmar = handleSubmit((datos) =>
+    eliminar.mutate(datos, {
+      // 5: sin sesión ni datos en caché, a la portada con el aviso.
+      onSuccess: async (respuesta) => {
+        queryClient.clear();
+        queryClient.setQueryData(SESSION_KEY, null);
+        await navigate('/', { state: flashState({ type: 'success', message: respuesta.message }) });
+      },
+      onError: (error) => applyFieldErrors(error, setError, ['password']),
+    }),
+  );
+
+  const errorGeneral =
+    eliminar.error && !(eliminar.error instanceof ApiError && eliminar.error.code === 'INVALID_PASSWORD')
+      ? errorMessage(t, eliminar.error)
+      : null;
+
+  return (
+    <section className={`${styles.section} ${styles.danger}`} aria-labelledby="perfil-eliminar">
+      <h2 id="perfil-eliminar">{t('profile.delete.title')}</h2>
+      <p>{t('profile.delete.consequences')}</p>
+      <div>
+        <Button variant="outline" onClick={() => setAbierta(true)}>
+          {t('profile.delete.open')}
+        </Button>
+      </div>
+      <Modal
+        open={abierta}
+        title={t('profile.delete.confirmTitle')}
+        onClose={cerrar}
+        closable={!eliminar.isPending}
+        footer={
+          <>
+            <Button variant="outline" data-autofocus onClick={cerrar} disabled={eliminar.isPending}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" onClick={() => void confirmar()} disabled={eliminar.isPending}>
+              {eliminar.isPending ? t('profile.delete.submitting') : t('profile.delete.submit')}
+            </Button>
+          </>
+        }
+      >
+        <form noValidate className={styles.form} onSubmit={(e) => void confirmar(e)}>
+          <p>{t('profile.delete.confirmText')}</p>
+          {errorGeneral && <Alert type="error">{errorGeneral}</Alert>}
+          <PasswordField
+            label={t('profile.delete.password')}
+            autoComplete="current-password"
+            error={errors.password?.message}
+            {...register('password')}
+          />
+        </form>
+      </Modal>
+    </section>
   );
 }

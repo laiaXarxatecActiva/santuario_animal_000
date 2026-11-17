@@ -144,6 +144,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Fugas en los logs | pino oculta `cookie`, `authorization`, `set-cookie`, `password`, `newPassword`, `currentPassword` y `token` |
 
 **Límites de intentos**:
+- Eliminar la cuenta (CU-25, `DELETE /api/me`) pide la contraseña y comparte el límite del cambio de contraseña (`createChangePasswordLimiter`), para que una sesión robada no sirva para adivinarla.
 - Formularios públicos que envían emails a direcciones que escribe quien los usa: donaciones, 10 por hora y por IP (CU-05); contacto, 5 por hora y por IP (CU-06). Así no sirven para inundar el buzón de otra persona ni el del santuario.
 - Con `express-rate-limit`, con los contadores en memoria. Si algún día hay varias instancias del servidor, los contadores tendrán que estar en un almacén compartido.
 - En producción se confía en `X-Forwarded-For` solo a través de `trust proxy = 1` (un único proxy controlado).
@@ -191,6 +192,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | El logout invalida la sesión | `server/tests/auth.routes.test.ts` (CU-11) |
 | Tokens de un solo uso; la recuperación cierra todas las sesiones | `server/tests/auth.routes.test.ts` (CU-08, CU-10) |
 | El cambio de contraseña cierra las demás sesiones | `server/tests/profile.routes.test.ts` (CU-24) |
+| Eliminar la cuenta pide la contraseña, solo la puede usar un adoptante, anonimiza los datos y cierra todas sus sesiones | `server/tests/account-deletion.routes.test.ts` (CU-25) |
 | Rutas privadas sin sesión o sin rol | `server/tests/admin.routes.test.ts`, `server/tests/auth.middleware.test.ts` y los tests de cada router |
 | Recursos ajenos → 404 | Tests de cada router (`adoptions.routes`, `feed.routes`…) |
 | Origen no permitido y solo JSON | `server/tests/require-same-origin.test.ts`, `server/tests/require-json.test.ts`, `server/tests/app.test.ts` |

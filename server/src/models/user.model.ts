@@ -150,3 +150,30 @@ export async function updateProfile(db: Queryable, id: number, cambios: UpdatePr
   if (asignaciones.length === 0) return;
   await db.query(`UPDATE users SET ${asignaciones.join(', ')} WHERE id = $1`, params);
 }
+
+// ----------------------------------------------------------------------------
+// CU-25 Eliminar la cuenta
+
+/** 4.2: sustituye los datos personales (TECH_SPEC §13) y deja la cuenta inservible. */
+export async function anonymize(
+  db: Queryable,
+  id: number,
+  datos: { firstName: string; lastName: string; email: string; passwordHash: string; instante: Date },
+): Promise<void> {
+  await db.query(
+    `UPDATE users
+        SET first_name = $2, last_name = $3, email = $4, password_hash = $5, phone = NULL,
+            is_active = FALSE, email_verified = FALSE, show_public_name = FALSE,
+            email_notifications = FALSE, digest_sent_for = NULL, last_login_at = NULL,
+            anonymized_at = $6
+      WHERE id = $1`,
+    [id, datos.firstName, datos.lastName, datos.email, datos.passwordHash, datos.instante],
+  );
+}
+
+/** 4.4: notificaciones, lecturas y tokens (las sesiones, en `session.model`). */
+export async function deletePersonalRecords(db: Queryable, id: number): Promise<void> {
+  await db.query('DELETE FROM notifications WHERE user_id = $1', [id]);
+  await db.query('DELETE FROM update_reads WHERE user_id = $1', [id]);
+  await db.query('DELETE FROM user_tokens WHERE user_id = $1', [id]);
+}

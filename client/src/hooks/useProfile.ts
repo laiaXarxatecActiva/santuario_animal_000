@@ -25,3 +25,4 @@ export function useUpdateProfile() {
 
 /** CU-24. */
 export const useChangePassword = () => useMutation({ mutationFn: profileApi.changePassword });
+export const useDeleteAccount = () => useMutation({ mutationFn: profileApi.deleteAccount });

@@ -86,13 +86,9 @@ export function apiPatch<T = void>(path: string, body: object): Promise<T> {
   return conJson<T>('PATCH', path, body);
 }
 
-/** DELETE a la API (también con JSON, para la protección CSRF). */
-export function apiDelete<T = void>(path: string): Promise<T> {
-  return peticion<T>(path, {
-    method: 'DELETE',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: '{}',
-  });
+/** DELETE a la API (también con JSON, para la protección CSRF; el cuerpo es `{}` si no hay datos). */
+export function apiDelete<T = void>(path: string, body: object = {}): Promise<T> {
+  return conJson<T>('DELETE', path, body);
 }
 
 /**

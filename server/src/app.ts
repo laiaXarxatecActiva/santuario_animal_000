@@ -149,7 +149,7 @@ export function createApp(options: AppOptions): Express {
     ),
   );
   app.use('/api', createNotificationRoutes(createNotificationService({ db })));
-  app.use('/api', createProfileRoutes(createProfileService({ db, reloj })));
+  app.use('/api', createProfileRoutes(createProfileService({ db, reloj }), { secureCookies: production }));
   app.use(
     '/api/admin',
     createAdminRoutes({
