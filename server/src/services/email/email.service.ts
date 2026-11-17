@@ -8,6 +8,8 @@ export interface EmailMessage {
   subject: string;
   html: string;
   text: string;
+  /** Dirección de respuesta (CU-06: el email del visitante). */
+  replyTo?: string;
 }
 
 /** Transporte de envío: SMTP (nodemailer) o el buzón en memoria de las pruebas. */

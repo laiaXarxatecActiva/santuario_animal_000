@@ -30,6 +30,8 @@ const envSchema = databaseEnvSchema.extend({
   PAYMENT_SIMULATION_FAILURE_RATE: z.coerce.number().min(0).max(1).default(0.2),
   // Tareas programadas con node-cron (TECH_SPEC §11.4). Sin valor, activadas; en las pruebas, false.
   JOBS_ENABLED: z.enum(['true', 'false'], { error: 'Debe ser true o false' }).optional(),
+  // Buzón del santuario para el formulario de contacto (CU-06). Sin valor, DEFAULT_SANCTUARY_EMAIL.
+  SANCTUARY_EMAIL: z.email({ error: 'Debe ser un email válido' }).optional(),
 });
 
 export type Config = z.infer<typeof envSchema>;
@@ -53,6 +55,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 /** JOBS_ENABLED: las tareas programadas están activas salvo que valga `false`. */
 export function jobsEnabled(config: Pick<Config, 'JOBS_ENABLED'>): boolean {
   return config.JOBS_ENABLED !== 'false';
+}
+
+export const DEFAULT_SANCTUARY_EMAIL = 'santuario@santuario.test';
+
+/** SANCTUARY_EMAIL o, si no se indica, el buzón de pruebas. */
+export function sanctuaryEmail(config: Pick<Config, 'SANCTUARY_EMAIL'>): string {
+  return config.SANCTUARY_EMAIL ?? DEFAULT_SANCTUARY_EMAIL;
 }
 
 /** Solo las variables de la base de datos, para los scripts como db:reset. */

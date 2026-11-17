@@ -3,11 +3,11 @@ import type { ReceiptDto } from '@sanctuary/shared';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 import { Alert } from '../../components/Alert';
-import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { CardSkeletons } from '../../components/CardSkeleton';
+import { ReceiptCard } from '../../components/ReceiptCard';
 import { useReceipt } from '../../hooks/useContributions';
-import { formatCurrency, formatLongDate, formatShortDate } from '../../utils/format';
+import { formatShortDate } from '../../utils/format';
 import styles from './ReceiptPage.module.css';
 
 // CU-19 paso 5: recibo imprimible (en la Fase 3 será un PDF).
@@ -50,42 +50,15 @@ export function ReceiptPage() {
           {t('receipt.print')}
         </Button>
       </div>
-      <article className={styles.receipt}>
-        <header className={styles.header}>
-          <div>
-            <p className={styles.sanctuary}>{t('app.name')}</p>
-            <p className={styles.muted}>{t('legal.academicNote')}</p>
-          </div>
-          <h1 className={styles.title}>{t('receipt.title')}</h1>
-        </header>
-        <dl className={styles.data}>
-          <dt>{t('receipt.payer')}</dt>
-          <dd>
-            <span>{r.payer.fullName}</span>
-            <br />
-            <span>{r.payer.email}</span>
-          </dd>
-          <dt>{t('contributions.concept')}</dt>
-          <dd>{concepto}</dd>
-          <dt>{t('contributions.amount')}</dt>
-          <dd className={styles.amount}>{formatCurrency(r.amount)}</dd>
-          <dt>{t('receipt.paidAt')}</dt>
-          <dd>{formatLongDate(r.paidAt)}</dd>
-          <dt>{t('receipt.method')}</dt>
-          <dd>{t(`receipt.methods.${r.method}`)}</dd>
-          <dt>{t('contributions.reference')}</dt>
-          <dd>{r.reference}</dd>
-          <dt>{t('contributions.status')}</dt>
-          <dd>
-            {r.status === 'refunded' && r.refundedAt ? (
-              <Badge tone="info">{t('receipt.refundedOn', { date: formatLongDate(r.refundedAt) })}</Badge>
-            ) : (
-              <Badge tone="success">{t('contributions.paymentStatus.completed')}</Badge>
-            )}
-          </dd>
-        </dl>
-        {r.method === 'simulated' && <p className={styles.notice}>{t('receipt.simulated')}</p>}
-      </article>
+      <ReceiptCard
+        concept={concepto}
+        amount={r.amount}
+        method={r.method}
+        reference={r.reference}
+        paidAt={r.paidAt}
+        refundedAt={r.status === 'refunded' ? r.refundedAt : null}
+        payer={r.payer}
+      />
     </div>
   );
 }

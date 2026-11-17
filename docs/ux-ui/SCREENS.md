@@ -293,13 +293,14 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 
 - Con sesión de adoptante, el nombre y el email aparecen rellenos.
 - «Continuar» abre la **ventana de pago simulado** (`DESIGN_SYSTEM.md` §8.4).
-- **Resultado correcto:** página de agradecimiento con aviso `success`, el recibo (tarjeta con concepto, importe, fecha y referencia) y [Imprimir recibo]. **Resultado fallido:** vuelta al formulario con aviso `error` «El pago no se ha completado» y los datos conservados.
+- **Resultado correcto:** página de agradecimiento con aviso `success` («Te hemos enviado el recibo por email» o, sin email, «Puedes imprimir el recibo desde esta página»), el recibo imprimible (DESIGN_SYSTEM §8.9) y [Imprimir recibo] [Hacer otra donación]. **Resultado fallido:** vuelta al formulario con aviso `error` «El pago no se ha completado» y los datos conservados.
+- Un trabajador puede donar, pero el formulario no se rellena con su cuenta y la donación no se vincula a ella (CU-05 6a).
 
 ### 3.6 Sobre el santuario y contacto (`/about`) — CU-06
 
 Historia del santuario (texto con foto), ubicación (dirección en texto; sin mapas de servicios de terceros) y el formulario de contacto: nombre, email, asunto, mensaje y la casilla de privacidad. En escritorio, el texto y el formulario van en dos columnas; en móvil, apilados. Resultado con aviso en línea encima del formulario.
 
-**En la Fase 1** la página se publica sin el formulario (llega con CU-06 en la Fase 2): historia y ubicación en una columna de lectura, y al final [■ Ver animales]. Los textos están en `locales/es.json` (`about.*`) para que el santuario los sustituya por los reales.
+El formulario («Escríbenos») va en una tarjeta a la derecha desde `lg`. Al enviarse, aviso `success` y el formulario se vacía; si falla, aviso `error` y se conserva lo escrito; con demasiados envíos, «Has enviado demasiados mensajes; inténtalo más tarde». Los textos están en `locales/es.json` (`about.*`, `contact.*`) para que el santuario los sustituya por los reales.
 
 ### 3.7 En memoria (`/memorial`) — CU-12 (Fase 3)
 

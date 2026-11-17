@@ -503,8 +503,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/animals/memorial` | Público | Animales con `show_in_memorial = TRUE` (Fase 3) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
-| POST | `/api/donations` | Público (sesión opcional) | Crea y paga una donación | CU-05 |
-| POST | `/api/contact` | Público | Envía el formulario de contacto por email al santuario | CU-06 |
+| POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName?, donorEmail?, isAnonymous, message?, simulatedOutcome? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
+| POST | `/api/contact` | Público | `{ name, email, subject, message, acceptPrivacy: true }`: email al santuario con `Reply-To` del visitante (202). Si falla el envío, 503 `EMAIL_NOT_SENT`. No se guarda. 5 por hora y por IP | CU-06 |
 
 ### 10.4 Área del adoptante (rol `adopter`)
 
@@ -767,7 +767,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | `SMTP_HOST` / `SMTP_PORT` | `localhost` / `1025` | Mailpit |
 | `SMTP_USER` / `SMTP_PASSWORD` | *(vacío en local)* | Credenciales SMTP |
 | `MAIL_FROM` | `"Santuario <no-reply@santuario.test>"` | Remitente |
-| `SANCTUARY_EMAIL` | `contacto@santuario.test` | Buzón para el formulario de contacto |
+| `SANCTUARY_EMAIL` | `santuario@santuario.test` | Buzón para el formulario de contacto. En local llega a Mailpit |
 | `UPLOADS_DIR` | `./uploads` | Carpeta de archivos subidos |
 | `PAYMENT_SIMULATION_MODE` | `always_succeed` | `always_succeed`, `always_fail` o `random` |
 | `PAYMENT_SIMULATION_FAILURE_RATE` | `0.2` | Solo con `random` |

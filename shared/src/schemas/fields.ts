@@ -19,3 +19,19 @@ export const textoObligatorio = (max: number, obligatorio: string) =>
     .trim()
     .min(1, { error: obligatorio })
     .max(max, { error: `No puede tener más de ${max} caracteres.` });
+
+/** Email normalizado (sin espacios y en minúsculas). */
+export const emailValido = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: 'Introduce un email válido.' }).max(255, { error: 'El email es demasiado largo.' }));
+
+/** Texto opcional: recortado y, si queda vacío, se descarta. */
+export const textoOpcional = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, { error: `No puede tener más de ${max} caracteres.` })
+    .optional()
+    .transform((v) => (v === '' ? undefined : v));

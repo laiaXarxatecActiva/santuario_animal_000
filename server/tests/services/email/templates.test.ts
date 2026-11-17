@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { accountExistsEmail } from '../../../src/services/email/templates/account-exists.js';
 import { adoptionCancelledEmail } from '../../../src/services/email/templates/adoption-cancelled.js';
+import { contactMessageEmail } from '../../../src/services/email/templates/contact-message.js';
+import { donationThanksEmail } from '../../../src/services/email/templates/donation-thanks.js';
 import { adoptionWelcomeEmail } from '../../../src/services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../../../src/services/email/templates/payment-completed.js';
 import { planChangedEmail } from '../../../src/services/email/templates/plan-changed.js';
@@ -125,5 +127,43 @@ describe('CU-21 adoption-cancelled', () => {
     expect(adoptionCancelledEmail({ ...base, status: 'finished', endDate: '2026-11-09' }).text).toContain(
       'no se cobrará',
     );
+  });
+});
+
+describe('CU-05 donation-thanks', () => {
+  it('agradece la donación e incluye el recibo', () => {
+    const email = donationThanksEmail({
+      donorName: 'Marta',
+      amount: '12.50',
+      paidAt: new Date('2026-11-17T10:00:00Z'),
+      reference: 'SIM-20261117-ABC',
+    });
+    expect(email.subject).toBe('¡Gracias por tu donación!');
+    expect(email.text).toContain('Hola, Marta:');
+    expect(email.text).toMatch(/12,50\s€/);
+    expect(email.text).toContain('17/11/2026');
+    expect(email.text).toContain('SIM-20261117-ABC');
+    expect(email.text).toContain('Pago simulado');
+  });
+
+  it('sin nombre saluda sin él', () => {
+    const email = donationThanksEmail({ donorName: null, amount: '1.00', paidAt: new Date(), reference: 'R' });
+    expect(email.text.startsWith('Hola:')).toBe(true);
+  });
+});
+
+describe('CU-06 contact-message', () => {
+  it('incluye los datos del visitante y escapa el HTML', () => {
+    const email = contactMessageEmail({
+      name: '<b>Ana</b>',
+      email: 'ana@correo.test',
+      subject: 'Visita',
+      message: 'Línea 1\nLínea 2',
+    });
+    expect(email.subject).toBe('Contacto: Visita');
+    expect(email.text).toContain('<b>Ana</b> <ana@correo.test>');
+    expect(email.text).toContain('Línea 1\nLínea 2');
+    expect(email.html).toContain('&lt;b&gt;Ana&lt;/b&gt;');
+    expect(email.html).not.toContain('<b>Ana</b>');
   });
 });

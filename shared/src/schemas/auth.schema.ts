@@ -1,13 +1,9 @@
 import { z } from 'zod';
-import { nuevaPassword, textoObligatorio as texto } from './fields.js';
+import { emailValido, nuevaPassword, textoObligatorio as texto } from './fields.js';
 
 export { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from './fields.js';
 
-const email = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .pipe(z.email({ error: 'Introduce un email válido.' }).max(255, { error: 'El email es demasiado largo.' }));
+const email = emailValido;
 
 const coinciden = <T extends { password: string; passwordConfirm: string }>(datos: T) =>
   datos.password === datos.passwordConfirm;

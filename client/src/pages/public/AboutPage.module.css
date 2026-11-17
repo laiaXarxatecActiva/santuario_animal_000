@@ -1,4 +1,16 @@
-/* Página de lectura a 70 caracteres (SCREENS §3.6). */
+/* Texto a 70 caracteres y formulario de contacto al lado desde lg (SCREENS §3.6). */
+.layout {
+  display: grid;
+  gap: var(--space-7);
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr minmax(0, 440px);
+  }
+}
+
 .page {
   display: flex;
   flex-direction: column;

@@ -357,3 +357,10 @@ export class ReceiptNotAvailableError extends BusinessRuleError {
     super('RECEIPT_NOT_AVAILABLE', 'Este pago no tiene recibo porque no se ha cobrado.');
   }
 }
+
+/** CU-06 3c: no se ha podido enviar el email; el formulario conserva lo escrito. */
+export class EmailNotSentError extends AppError {
+  constructor() {
+    super(503, 'EMAIL_NOT_SENT', 'No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde.');
+  }
+}
