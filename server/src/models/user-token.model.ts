@@ -63,3 +63,9 @@ export async function invalidateUnused(
     instante,
   ]);
 }
+
+/** CU-44 paso 3: borra los tokens caducados. Devuelve cuántos. */
+export async function deleteExpired(db: Queryable, ahora: Date): Promise<number> {
+  const { rowCount } = await db.query('DELETE FROM user_tokens WHERE expires_at < $1', [ahora]);
+  return rowCount ?? 0;
+}

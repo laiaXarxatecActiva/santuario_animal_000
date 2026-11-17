@@ -60,3 +60,29 @@ export function proximaActualizacionPrevista(
   const desde = ultimaActualizacion ?? adopcion.startDate;
   return desde === null ? null : sumarDias(desde, DIAS_ENTRE_ACTUALIZACIONES);
 }
+
+/** CU-43: activa, sin baja solicitada y con la cuota vencida hoy o antes (RN-08). */
+export function debeCobrarse(
+  adopcion: { status: AdoptionStatus; cancelRequested: boolean; nextBillingDate: string | null },
+  hoy: string,
+): boolean {
+  return (
+    adopcion.status === 'active' &&
+    !adopcion.cancelRequested &&
+    adopcion.nextBillingDate !== null &&
+    adopcion.nextBillingDate <= hoy
+  );
+}
+
+/** CU-44 (RN-07): las pendientes creadas antes de este instante ya no se pueden pagar. */
+export function limitePagoPendiente(ahora: Date): Date {
+  return new Date(ahora.getTime() - DIAS_PARA_COMPLETAR_PAGO * DIA_MS);
+}
+
+/** CU-45 (RN-10): la baja termina el día siguiente al último pagado (`end_date`). */
+export function bajaVencida(
+  adopcion: { status: AdoptionStatus; cancelRequested: boolean; endDate: string | null },
+  hoy: string,
+): boolean {
+  return adopcion.status === 'active' && adopcion.cancelRequested && adopcion.endDate !== null && adopcion.endDate < hoy;
+}

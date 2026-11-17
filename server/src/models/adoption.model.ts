@@ -211,3 +211,71 @@ export async function closeOpenForAnimal(
   );
   return rowCount ?? 0;
 }
+
+/** CU-43: ids de las adopciones con la cuota vencida, para procesarlas una a una. */
+export async function listDueForBilling(db: Queryable, hoy: string): Promise<number[]> {
+  const { rows } = await db.query<{ id: number }>(
+    `SELECT id FROM adoptions
+      WHERE status = 'active' AND cancel_requested_at IS NULL AND next_billing_date <= $1
+      ORDER BY next_billing_date, id`,
+    [hoy],
+  );
+  return rows.map((r) => r.id);
+}
+
+/** Lee la adopción bloqueando su fila hasta el final de la transacción (cobros). */
+export async function findByIdForUpdate(db: Queryable, id: number): Promise<Adoption | null> {
+  const { rows } = await db.query<AdoptionRow>(`${SELECT_ADOPCION} WHERE ad.id = $1 FOR UPDATE OF ad`, [id]);
+  return rows[0] ? mapRow(rows[0]) : null;
+}
+
+/** CU-43 paso 1 (CU-20): el plan programado pasa a ser el actual. */
+export async function applyNextPlan(db: Queryable, id: number): Promise<void> {
+  await db.query(
+    'UPDATE adoptions SET plan_id = next_plan_id, next_plan_id = NULL WHERE id = $1 AND next_plan_id IS NOT NULL',
+    [id],
+  );
+}
+
+export async function setNextBillingDate(db: Queryable, id: number, fecha: string): Promise<void> {
+  await db.query('UPDATE adoptions SET next_billing_date = $2 WHERE id = $1', [id, fecha]);
+}
+
+/** CU-43 3a: cuota fallida. `next_billing_date` se conserva: es la cuota pendiente de regularizar. */
+export async function pause(db: Queryable, id: number): Promise<void> {
+  await db.query("UPDATE adoptions SET status = 'paused' WHERE id = $1 AND status = 'active'", [id]);
+}
+
+export interface ClosedAdoption {
+  id: number;
+  userId: number;
+  animalId: number;
+  animalName: string;
+}
+
+/** CU-44: cancela las pendientes creadas antes de `limite` (RN-07). */
+export async function cancelExpiredPending(db: Queryable, limite: Date, hoy: string): Promise<ClosedAdoption[]> {
+  const { rows } = await db.query<{ id: number; user_id: number; animal_id: number; animal_name: string }>(
+    `UPDATE adoptions ad
+        SET status = 'cancelled', end_reason = 'payment_not_completed', end_date = $2
+       FROM animals an
+      WHERE an.id = ad.animal_id AND ad.status = 'pending' AND ad.created_at < $1
+     RETURNING ad.id, ad.user_id, ad.animal_id, an.name AS animal_name`,
+    [limite, hoy],
+  );
+  return rows.map((r) => ({ id: r.id, userId: r.user_id, animalId: r.animal_id, animalName: r.animal_name }));
+}
+
+/** CU-45: las bajas cuyo último día pagado ya ha pasado terminan (RN-10). */
+export async function finishCancelled(db: Queryable, hoy: string): Promise<ClosedAdoption[]> {
+  const { rows } = await db.query<{ id: number; user_id: number; animal_id: number; animal_name: string }>(
+    `UPDATE adoptions ad
+        SET status = 'finished', end_reason = 'user_cancelled'
+       FROM animals an
+      WHERE an.id = ad.animal_id AND ad.status = 'active'
+        AND ad.cancel_requested_at IS NOT NULL AND ad.end_date < $1
+     RETURNING ad.id, ad.user_id, ad.animal_id, an.name AS animal_name`,
+    [hoy],
+  );
+  return rows.map((r) => ({ id: r.id, userId: r.user_id, animalId: r.animal_id, animalName: r.animal_name }));
+}

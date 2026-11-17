@@ -41,6 +41,7 @@ const RUTAS: Ruta[] = [
   { metodo: 'get', patron: '/updates/:id' },
   { metodo: 'put', patron: '/updates/:id' },
   { metodo: 'delete', patron: '/updates/:id' },
+  { metodo: 'post', patron: '/jobs/:jobName/run', soloAdmin: true },
 ];
 
 const url = (r: Ruta) => `/api/admin${r.patron.replace(':id', '1')}`;

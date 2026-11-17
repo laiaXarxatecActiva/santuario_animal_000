@@ -4,6 +4,7 @@ import type { Pool } from 'pg';
 import type { Logger } from 'pino';
 import { pinoHttp } from 'pino-http';
 import type { Reloj } from './dominio/reloj.js';
+import { createJobRunner, type JobRunner } from './jobs/registry.js';
 import { createLoadUser } from './middlewares/auth.js';
 import { createErrorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { requireJson } from './middlewares/require-json.js';
@@ -52,6 +53,8 @@ export interface AppOptions {
   logger?: Logger;
   /** Sustituye el registro de errores inesperados (500). */
   logError?: (error: unknown) => void;
+  /** Ejecutor de las tareas programadas; por defecto, uno con estas mismas dependencias. */
+  jobs?: JobRunner;
 }
 
 // Configuración de Express sin `listen`, para que Supertest pueda importarla.
@@ -93,6 +96,17 @@ export function createApp(options: AppOptions): Express {
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
 
+  const jobs =
+    options.jobs ??
+    createJobRunner({
+      db,
+      reloj,
+      payments: options.payments,
+      email: options.email,
+      clientUrl: options.clientUrl,
+      logError: logger ? (error, contexto) => logger.error({ err: error }, contexto) : undefined,
+    });
+
   app.use('/api', createRequireSameOrigin([options.clientUrl]), express.json({ limit: '100kb' }), requireJson);
   app.use(
     '/api',
@@ -124,6 +138,7 @@ export function createApp(options: AppOptions): Express {
       animals: createAnimalAdminService({ db, reloj }),
       photos: createPhotoAdminService({ db, media }),
       updates: createUpdateAdminService({ db, reloj, media }),
+      jobs,
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

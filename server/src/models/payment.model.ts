@@ -60,3 +60,12 @@ export async function create(db: Queryable, pago: NewPayment): Promise<PaymentDt
     throw error;
   }
 }
+
+/** CU-43 2a: ya hay un pago válido (cobrado o en curso) de ese periodo. */
+export async function existsValidForPeriod(db: Queryable, adoptionId: number, periodStart: string): Promise<boolean> {
+  const { rowCount } = await db.query(
+    "SELECT 1 FROM payments WHERE adoption_id = $1 AND period_start = $2 AND status IN ('pending', 'completed')",
+    [adoptionId, periodStart],
+  );
+  return (rowCount ?? 0) > 0;
+}

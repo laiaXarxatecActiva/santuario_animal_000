@@ -124,20 +124,21 @@ SESSION_SECRET=3f9a...(64 caracteres)
 
 Los demás valores ya sirven tal cual si has seguido los pasos anteriores. Qué hace cada uno:
 
-| Variable                          | Valor por defecto                                              | Para qué sirve                                                                                                      |
-| --------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                        | `development`                                                  | Modo de ejecución. Déjalo así                                                                                       |
-| `PORT`                            | `3000`                                                         | Puerto de la API                                                                                                    |
-| `CLIENT_URL`                      | `http://localhost:5173`                                        | Dirección de la web, para los enlaces de los correos                                                                |
-| `DATABASE_URL`                    | `postgres://sanctuary:sanctuary@localhost:5432/sanctuary`      | Base de datos de la aplicación (`usuario:contraseña@servidor:puerto/base`)                                          |
-| `TEST_DATABASE_URL`               | `postgres://sanctuary:sanctuary@localhost:5432/sanctuary_test` | Base de datos de los tests                                                                                          |
-| `UPLOADS_DIR`                     | `./uploads`                                                    | Carpeta donde se guardan las fotos subidas (dentro de `server/`)                                                    |
-| `SESSION_SECRET`                  | _(vacío)_                                                      | **Obligatorio.** Clave aleatoria de 32+ caracteres                                                                  |
-| `SMTP_HOST` / `SMTP_PORT`         | `localhost` / `1025`                                           | Servidor de correo (Mailpit)                                                                                        |
-| `SMTP_USER` / `SMTP_PASSWORD`     | _(vacíos)_                                                     | Usuario y contraseña del correo. En local no hacen falta                                                            |
-| `MAIL_FROM`                       | `"Santuario <no-reply@santuario.test>"`                        | Remitente de los correos                                                                                            |
-| `PAYMENT_SIMULATION_MODE`         | `always_succeed`                                               | Resultado de los pagos simulados: `always_succeed` (siempre bien), `always_fail` (siempre mal) o `random` (al azar) |
-| `PAYMENT_SIMULATION_FAILURE_RATE` | `0.2`                                                          | Con `random`, probabilidad de que un pago falle (0,2 = 20 %)                                                        |
+| Variable                          | Valor por defecto                                              | Para qué sirve                                                                                                                      |
+| --------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                        | `development`                                                  | Modo de ejecución. Déjalo así                                                                                                       |
+| `PORT`                            | `3000`                                                         | Puerto de la API                                                                                                                    |
+| `CLIENT_URL`                      | `http://localhost:5173`                                        | Dirección de la web, para los enlaces de los correos                                                                                |
+| `DATABASE_URL`                    | `postgres://sanctuary:sanctuary@localhost:5432/sanctuary`      | Base de datos de la aplicación (`usuario:contraseña@servidor:puerto/base`)                                                          |
+| `TEST_DATABASE_URL`               | `postgres://sanctuary:sanctuary@localhost:5432/sanctuary_test` | Base de datos de los tests                                                                                                          |
+| `UPLOADS_DIR`                     | `./uploads`                                                    | Carpeta donde se guardan las fotos subidas (dentro de `server/`)                                                                    |
+| `SESSION_SECRET`                  | _(vacío)_                                                      | **Obligatorio.** Clave aleatoria de 32+ caracteres                                                                                  |
+| `SMTP_HOST` / `SMTP_PORT`         | `localhost` / `1025`                                           | Servidor de correo (Mailpit)                                                                                                        |
+| `SMTP_USER` / `SMTP_PASSWORD`     | _(vacíos)_                                                     | Usuario y contraseña del correo. En local no hacen falta                                                                            |
+| `MAIL_FROM`                       | `"Santuario <no-reply@santuario.test>"`                        | Remitente de los correos                                                                                                            |
+| `PAYMENT_SIMULATION_MODE`         | `always_succeed`                                               | Resultado de los pagos simulados: `always_succeed` (siempre bien), `always_fail` (siempre mal) o `random` (al azar)                 |
+| `PAYMENT_SIMULATION_FAILURE_RATE` | `0.2`                                                          | Con `random`, probabilidad de que un pago falle (0,2 = 20 %)                                                                        |
+| `JOBS_ENABLED`                    | `true`                                                         | Tareas programadas diarias (cobro de cuotas a las 03:00, cancelar pendientes de más de 7 días, cerrar bajas). `false` las desactiva |
 
 > El `.env` nunca se sube a GitHub (está en el `.gitignore`). Si cambias algo con la aplicación arrancada, párala y vuelve a arrancarla.
 
@@ -235,17 +236,18 @@ Las fotos que subas desde el panel se guardan en `server/uploads/` (tampoco se s
 
 Todos se ejecutan desde la carpeta principal del proyecto.
 
-| Comando                 | Qué hace                                                                            |
-| ----------------------- | ----------------------------------------------------------------------------------- |
-| `npm install`           | Instala las dependencias                                                            |
-| `npm run dev`           | Arranca la API y la web en modo desarrollo                                          |
-| `npm run db:reset`      | ⚠️ Borra y vuelve a crear la base de datos de la aplicación con los datos de prueba |
-| `npm run db:reset:test` | Lo mismo con la base de datos de los tests                                          |
-| `npm run users:file`    | Regenera `USUARIOS_PRUEBA.txt`                                                      |
-| `npm test`              | Pasa todos los tests automáticos                                                    |
-| `npm run typecheck`     | Comprueba los tipos de TypeScript                                                   |
-| `npm run lint`          | Busca errores con ESLint                                                            |
-| `npm run format`        | Da formato al código con Prettier                                                   |
+| Comando                  | Qué hace                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `npm install`            | Instala las dependencias                                                            |
+| `npm run dev`            | Arranca la API y la web en modo desarrollo                                          |
+| `npm run db:reset`       | ⚠️ Borra y vuelve a crear la base de datos de la aplicación con los datos de prueba |
+| `npm run db:reset:test`  | Lo mismo con la base de datos de los tests                                          |
+| `npm run users:file`     | Regenera `USUARIOS_PRUEBA.txt`                                                      |
+| `npm run job -- <tarea>` | Lanza ya una tarea programada: `billing`, `expire-pending` o `finish-cancelled`     |
+| `npm test`               | Pasa todos los tests automáticos                                                    |
+| `npm run typecheck`      | Comprueba los tipos de TypeScript                                                   |
+| `npm run lint`           | Busca errores con ESLint                                                            |
+| `npm run format`         | Da formato al código con Prettier                                                   |
 
 Para pasar solo una parte de los tests: `npm test -w server` (solo la API), `npm test -w client` (solo la web), `npm test -w server -- -t "CU-13"` (los de un caso de uso).
 
