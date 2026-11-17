@@ -1,7 +1,7 @@
 import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, tokenSchema } from '@sanctuary/shared';
 import type { Request, RequestHandler } from 'express';
 import { UnauthorizedError } from '../errors/app-error.js';
-import { cookieOptions, destroySession, regenerateSession, SESSION_COOKIE } from '../middlewares/session.js';
+import { cookieOptions, destroySession, regenerateSession, sessionCookieName } from '../middlewares/session.js';
 import { validated } from '../middlewares/validate.js';
 import type { AuthService } from '../servicios/auth.service.js';
 
@@ -38,7 +38,7 @@ export function createAuthController(service: AuthService, { secureCookies }: { 
 
   const logout: RequestHandler = async (req, res) => {
     await destroySession(req);
-    res.clearCookie(SESSION_COOKIE, cookieOptions(secureCookies));
+    res.clearCookie(sessionCookieName(secureCookies), cookieOptions(secureCookies));
     res.status(204).end();
   };
 

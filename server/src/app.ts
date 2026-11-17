@@ -94,6 +94,9 @@ export function createApp(options: AppOptions): Express {
       secret: options.sessionSecret,
       secure: production,
       prune: options.pruneSessions ?? false,
+      logError: logger
+        ? (error) => logger.error({ err: error }, 'No se han podido borrar las sesiones caducadas')
+        : undefined,
     }),
     createLoadUser(authService.findSessionUser),
   );

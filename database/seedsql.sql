@@ -123,15 +123,20 @@ CREATE TABLE user_tokens (
 
 CREATE INDEX user_tokens_user_idx ON user_tokens (user_id, type);
 
--- Sesiones de express-session, gestionadas por connect-pg-simple
--- (configurado con tableName: 'user_sessions'). La aplicación no la toca.
+-- Sesiones de express-session, guardadas por el store propio de
+-- server/src/middlewares/session.ts. Solo se guarda el SHA-256 del
+-- identificador de la cookie: quien lea la tabla no puede suplantar a nadie.
+-- user_id se copia de sess.userId para cerrar todas las sesiones de un usuario.
 CREATE TABLE user_sessions (
-    sid     VARCHAR      NOT NULL COLLATE "default" PRIMARY KEY,
-    sess    JSON         NOT NULL,
-    expire  TIMESTAMP(6) NOT NULL
+    sid_hash  CHAR(64)    PRIMARY KEY,
+    user_id   INTEGER     REFERENCES users (id) ON DELETE CASCADE,
+    sess      JSONB       NOT NULL,
+    expire    TIMESTAMPTZ NOT NULL,
+    CONSTRAINT user_sessions_sid_hash_format CHECK (sid_hash ~ '^[0-9a-f]{64}$')
 );
 
 CREATE INDEX user_sessions_expire_idx ON user_sessions (expire);
+CREATE INDEX user_sessions_user_id_idx ON user_sessions (user_id);
 
 -- -----------------------------------------------------------------------------
 -- 3. Especies y animales

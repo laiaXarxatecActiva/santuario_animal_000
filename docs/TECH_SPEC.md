@@ -60,7 +60,7 @@ Todas son gratuitas y de código abierto. Se usa la última versión estable dis
 | Necesidad | Librería | Notas |
 | --- | --- | --- |
 | Acceso a datos | `pg` (node-postgres) | SQL escrito a mano y **siempre parametrizado** (`$1, $2…`). Sin ORM. |
-| Sesiones | `express-session` + `connect-pg-simple` | Sesiones guardadas en la tabla `user_sessions` |
+| Sesiones | `express-session` + store propio (`middlewares/session.ts`) | Sesiones guardadas en la tabla `user_sessions`, solo con el SHA-256 del identificador |
 | Hash de contraseñas | `crypto.argon2` (nativo de Node) | Argon2id, el algoritmo recomendado por OWASP, sin dependencias ni compilación. |
 | Validación | `zod` | Esquemas compartidos con el cliente en `shared/` |
 | Subida de archivos | `multer` | Fotos y vídeos |
@@ -122,7 +122,7 @@ flowchart LR
 
 ### 5.2 Flujo de una petición
 
-1. El navegador envía la petición con la cookie de sesión (`sid`).
+1. El navegador envía la petición con la cookie de sesión (`sid`; `__Host-sid` en producción).
 2. `express-session` carga la sesión desde `user_sessions`, y el middleware `loadUser` carga el usuario.
 3. La ruta aplica `requireAuth` y `requireRole(...)` si corresponde.
 4. `validate(schema)` valida `body`, `params` y `query` con Zod. Si falla, responde con un error 400.
@@ -286,7 +286,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | Notificación | `notifications` | |
 | Registro_Actividad | `activity_logs` | Fase 3; la tabla existe desde el principio |
 | *(nuevo)* | `user_tokens` | Tokens de verificación de email y recuperación de contraseña |
-| *(nuevo)* | `user_sessions` | Sesiones (la gestiona `connect-pg-simple`) |
+| *(nuevo)* | `user_sessions` | Sesiones (las gestiona el store propio de `middlewares/session.ts`) |
 | *(nuevo)* | `update_reads` | Marca de «leído» del muro de actualizaciones |
 
 ### 8.2 Columnas añadidas y por qué
@@ -378,7 +378,7 @@ Las fechas de `TEST_DATA.sql` son relativas al día de carga, así que los escen
 
 ### 9.1 Decisión: sesiones con cookie
 
-Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` + `connect-pg-simple`) en lugar de JWT, porque:
+Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` con un store propio) en lugar de JWT, porque:
 
 - Es más sencillo: no hay que gestionar tokens de refresco ni listas de revocación.
 - Cerrar sesión, desactivar una cuenta o cambiar de rol tiene efecto inmediato (se borran o invalidan sus sesiones).
@@ -387,12 +387,15 @@ Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` + `c
 
 | Parámetro de la cookie | Valor |
 | --- | --- |
-| Nombre | `sid` |
+| Nombre | `sid` en local; `__Host-sid` en producción (el prefijo obliga al navegador a exigir `Secure`, `Path=/` y que no haya `Domain`) |
 | `httpOnly` | `true` |
 | `sameSite` | `lax` |
+| `path` | `/`, sin `Domain` |
 | `secure` | `true` en producción (HTTPS); `false` en local |
 | Duración | 7 días, renovada con cada petición (`rolling: true`) |
 | Secreto | `SESSION_SECRET` (variable de entorno, mínimo 32 caracteres aleatorios) |
+
+El store propio (`PgSessionStore`, en `server/src/middlewares/session.ts`; SQL en `models/session.model.ts`) guarda en `user_sessions` **solo el SHA-256 del identificador** (`sid_hash`), nunca el identificador: quien lea la tabla o una copia de seguridad no puede suplantar a nadie. Además, la cookie va firmada con `SESSION_SECRET`. La caducidad se comprueba en el servidor (`expire > NOW()`), no solo en la cookie, y las sesiones caducadas se borran cada 15 minutos. La columna `user_id` permite cerrar todas las sesiones de un usuario.
 
 Al iniciar sesión se regenera el identificador de sesión (`req.session.regenerate`) para evitar la fijación de sesión. La sesión guarda solo `userId`; el usuario y su rol se leen de la base de datos en cada petición, para que los cambios de rol o la desactivación se apliquen al momento.
 
@@ -675,7 +678,7 @@ export interface StorageService {
 | `monthly-digest` | Día 1, 09:00 | Email resumen para adoptantes con `monthly_digest` y novedades en el mes anterior | CU-46 |
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
 
-Las sesiones caducadas las elimina `connect-pg-simple` automáticamente. Los tokens caducados se borran en la tarea `expire-pending`.
+Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
 
 ### 11.5 Servicios de la Fase 3
 

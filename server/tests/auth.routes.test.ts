@@ -35,7 +35,7 @@ const usuario = async (email: string) => {
 };
 
 const sesionesDe = async (userId: number) => {
-  const { rows } = await t.pool.query("SELECT sid FROM user_sessions WHERE (sess ->> 'userId')::int = $1", [userId]);
+  const { rows } = await t.pool.query('SELECT 1 FROM user_sessions WHERE user_id = $1', [userId]);
   return rows.length;
 };
 

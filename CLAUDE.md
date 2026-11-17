@@ -69,13 +69,13 @@ Módulos: `shared` y `server` usan `NodeNext`, así que los imports relativos ll
 ## Stack
 
 - Compartido: esquemas Zod, tipos de la API y constantes.
-- Servidor: Express 5 + TypeScript, `pg` sin ORM, express-session + connect-pg-simple.
+- Servidor: Express 5 + TypeScript, `pg` sin ORM, express-session con un store propio en PostgreSQL que guarda el SHA-256 del identificador.
 - Cliente: React 19 + Vite, React Query, react-hook-form, i18next.
 - Requisitos: Node 24.7+ (por `crypto.argon2`), PostgreSQL 14+ y Mailpit (SMTP en el 1025, interfaz en http://localhost:8025). `docker-compose.yml` (opcional) levanta Postgres 16, con `sanctuary` y `sanctuary_test` (`database/docker-init.sql`), y Mailpit.
 
 ## Arquitectura
 
-Flujo de una petición: cookie de sesión `sid` → `loadUser` (usuario y rol se releen de la BD en cada petición) → `requireAuth` / `requireRole(...)` / `requireVerifiedEmail` → `validate(zodSchema)` → controlador → servicio (caso de uso) → dominio y modelos → JSON en camelCase → `errorHandler` central.
+Flujo de una petición: cookie de sesión `sid` (`__Host-sid` en producción) → `loadUser` (usuario y rol se releen de la BD en cada petición) → `requireAuth` / `requireRole(...)` / `requireVerifiedEmail` → `validate(zodSchema)` → controlador → servicio (caso de uso) → dominio y modelos → JSON en camelCase → `errorHandler` central.
 
 - **Rutas y middlewares**: solo conexión, autenticación y validación.
 - **Controladores**: llaman al caso de uso. Sin SQL y sin reglas de negocio.
