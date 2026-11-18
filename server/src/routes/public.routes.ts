@@ -11,6 +11,8 @@ export function createPublicRoutes(service: PublicCatalogService): Router {
 
   router.get('/home', c.home);
   router.get('/animals', validate({ query: catalogQuerySchema }), c.listAnimals);
+  // CU-12: antes que `/animals/:id`.
+  router.get('/animals/memorial', c.listMemorial);
   router.get('/animals/:id', validate({ params: idParamsSchema }), c.getAnimal);
   router.get('/animals/:id/updates', validate({ params: idParamsSchema, query: paginationQuerySchema }), c.listUpdates);
   router.get('/species', c.listSpecies);

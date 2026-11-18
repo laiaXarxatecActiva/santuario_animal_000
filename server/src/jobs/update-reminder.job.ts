@@ -2,6 +2,7 @@ import { diasEntre, necesitaRecordatorio } from '../dominio/actualizaciones.js';
 import * as dashboardModel from '../models/dashboard.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import type { JobDeps } from './job.types.js';
+import { avisos } from '../servicios/textos-avisos.js';
 
 export interface UpdateReminderResult {
   /** Animales con 12 días o más sin actualización. */
@@ -23,7 +24,7 @@ export async function runUpdateReminder({ db, reloj }: JobDeps): Promise<UpdateR
     if (!necesitaRecordatorio(dias)) continue;
     resultado.animals += 1;
     resultado.notified += await notificationModel.createUpdateReminders(db, {
-      message: `${animal.name} lleva ${dias} días sin actualización.`,
+      message: avisos.sinActualizar(animal.name, dias),
       link: `/admin/animals/${animal.id}`,
       hoy,
       ahora: reloj.ahora(),

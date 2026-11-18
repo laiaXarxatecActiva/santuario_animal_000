@@ -105,6 +105,7 @@ describe('user.model', () => {
       emailNotifications: true,
       emailFrequency: 'monthly_digest',
       showPublicName: true,
+      preferredLanguage: 'es',
     });
     expect(await findProfile(db.pool, 9999)).toBeNull();
   });

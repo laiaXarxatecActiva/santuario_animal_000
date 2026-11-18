@@ -52,6 +52,7 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
     expect(within(datos).getByText('lucia.martinez@correo.test')).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
       'Tus datos',
+      'Idioma',
       'Notificaciones',
       'Privacidad',
       'Contraseña',
@@ -63,7 +64,11 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
     apiPerfil({ ...perfilLucia, firstName: 'Nuria', role: 'caretaker' });
     renderRoute('/profile');
     await seccion('Tus datos');
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Tus datos', 'Contraseña']);
+    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+      'Tus datos',
+      'Idioma',
+      'Contraseña',
+    ]);
   });
 
   it('el teléfono solo admite dígitos y añade los guiones solo', async () => {

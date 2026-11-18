@@ -78,6 +78,8 @@ export interface AdminAnimalDto extends AdminAnimalListItemDto {
   healthSummary: string | null;
   /** Fecha del fallecimiento o traslado. */
   statusChangedAt: string | null;
+  /** CU-12: aparece en «En memoria» (solo fallecidos, RN-22). */
+  showInMemorial: boolean;
   /** Adopciones pendientes, activas o pausadas: las que cerraría un fallecimiento o traslado. */
   openAdoptions: number;
   /** Ha tenido alguna adopción: entonces no se puede borrar (RN-17). */
@@ -266,4 +268,22 @@ export interface AdminDonationsPage {
 /** CU-39 paso 3: lo cobrado en cada mes (`YYYY-MM`), también los meses sin donaciones. */
 export interface AdminDonationMonthlyTotalsDto {
   data: { month: string; total: string; count: number }[];
+}
+
+/**
+ * GET /api/admin/stats (CU-41). Los meses van en `YYYY-MM`, todos los del rango
+ * (también los que están a 0). Las tres listas son la situación actual.
+ */
+export interface AdminStatsDto {
+  range: { from: string; to: string };
+  /** Lo cobrado (`completed`) cada mes, con cuotas y donaciones por separado. */
+  revenueByMonth: { month: string; fees: string; donations: string }[];
+  /** Adopciones que empezaron (`start_date`) y que se cerraron tras empezar (`end_date`). */
+  adoptionsByMonth: { month: string; started: number; ended: number }[];
+  /** Hasta 5 animales con más adopciones activas. */
+  mostAdopted: { animal: { id: number; name: string }; activeAdoptions: number }[];
+  /** En el santuario o en tratamiento y sin ninguna adopción activa. */
+  withoutAdopters: { id: number; name: string; species: string }[];
+  /** Adopciones activas por plan. */
+  activeByPlan: { plan: { id: number; name: string }; count: number }[];
 }

@@ -2,11 +2,13 @@ import { ARCHIVED_ANIMAL_STATUSES, type AnimalStatus } from '@sanctuary/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   adminApi,
+  type AdminActivityLogsParams,
   type AdminAdoptionsParams,
   type AdminAnimalsParams,
   type AdminDonationMonthlyParams,
   type AdminDonationsParams,
   type AdminPaymentsParams,
+  type AdminStatsParams,
   type AdminUpdatesParams,
   type AdminUsersParams,
 } from '../api/admin';
@@ -17,6 +19,36 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+/** CU-41: estadísticas del rango elegido (por defecto, los últimos 12 meses). */
+export const useAdminStats = (params: AdminStatsParams) =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'stats', params],
+    queryFn: () => adminApi.stats(params),
+    placeholderData: keepPreviousData,
+  });
+
+/** CU-42: registro de actividad con filtros y páginas. */
+export const useAdminActivityLogs = (params: AdminActivityLogsParams, enabled = true) =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'activity', params],
+    queryFn: () => adminApi.activityLogs(params),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+
+/** Trabajadores (administradores y cuidadores), para el filtro de usuario de CU-42. */
+export const useWorkers = () =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'users', 'workers'],
+    queryFn: async () => {
+      const [admins, cuidadores] = await Promise.all([
+        adminApi.users.list({ role: 'admin', pageSize: 100 }),
+        adminApi.users.list({ role: 'caretaker', pageSize: 100 }),
+      ]);
+      return [...admins.data, ...cuidadores.data].sort((a, b) => a.firstName.localeCompare(b.firstName, 'es'));
+    },
+  });
 
 export const ADMIN_DONATIONS_KEY = [...ADMIN_KEY, 'donations'] as const;
 
@@ -117,6 +149,15 @@ export const adminPhotosKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'phot
 /** CU-29: galería del animal en el panel. */
 export const useAdminPhotos = (animalId: number) =>
   useQuery({ queryKey: adminPhotosKey(animalId), queryFn: () => adminApi.photos.list(animalId).then((r) => r.data) });
+
+export const adminVetRecordsKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'vet-records', animalId] as const;
+
+/** CU-34: historial veterinario del animal, del más reciente al más antiguo. */
+export const useVetRecords = (animalId: number) =>
+  useQuery({
+    queryKey: adminVetRecordsKey(animalId),
+    queryFn: () => adminApi.vetRecords.list(animalId).then((r) => r.data),
+  });
 
 export const ADMIN_UPDATES_KEY = [...ADMIN_KEY, 'updates'] as const;
 

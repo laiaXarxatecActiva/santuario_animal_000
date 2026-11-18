@@ -1,6 +1,8 @@
+import type { Language } from '@sanctuary/shared';
 import { extracto, mesAnterior } from '../dominio/avisos.js';
 import * as digestModel from '../models/digest.model.js';
 import { monthlyDigestEmail, type ResumenAnimal } from '../services/email/templates/monthly-digest.js';
+import { LOCALES } from '../utils/format.js';
 import type { JobDeps } from './job.types.js';
 
 export interface MonthlyDigestResult {
@@ -10,9 +12,9 @@ export interface MonthlyDigestResult {
 
 const LARGO_EXTRACTO = 200;
 
-/** «enero de 2030» a partir del primer día del mes. */
-function nombreDelMes(desde: string): string {
-  return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+/** «enero de 2030» («gener de 2030», «January 2030») a partir del primer día del mes. */
+function nombreDelMes(desde: string, idioma: Language = 'es'): string {
+  return new Intl.DateTimeFormat(LOCALES[idioma], { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
     new Date(`${desde}T12:00:00Z`),
   );
 }
@@ -30,7 +32,6 @@ export async function runMonthlyDigest({
   logError,
 }: JobDeps): Promise<MonthlyDigestResult> {
   const periodo = mesAnterior(reloj.hoy());
-  const monthName = nombreDelMes(periodo.desde);
   const resultado: MonthlyDigestResult = { sent: 0, errors: 0 };
 
   for (const destinatario of await digestModel.listRecipients(db, periodo.desde)) {
@@ -54,7 +55,8 @@ export async function runMonthlyDigest({
         to: destinatario.email,
         ...monthlyDigestEmail({
           firstName: destinatario.firstName,
-          monthName,
+          monthName: nombreDelMes(periodo.desde, destinatario.language),
+          language: destinatario.language,
           animals: [...animales.values()],
           settingsUrl: new URL('/profile', clientUrl).toString(),
         }),

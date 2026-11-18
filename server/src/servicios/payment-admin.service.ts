@@ -26,6 +26,7 @@ import * as adoptionModel from '../models/adoption.model.js';
 import * as animalModel from '../models/animal.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as paymentModel from '../models/payment.model.js';
+import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { adoptionWelcomeEmail } from '../services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../services/email/templates/payment-completed.js';
@@ -34,6 +35,7 @@ import { generarCsv, importeCsv } from '../utils/csv.js';
 import { formatFecha } from '../utils/format.js';
 import { referenciaManual } from '../utils/referencias.js';
 import { devolverPago, emailDevolucion, notificarDevolucion } from './devolucion.js';
+import { avisos } from './textos-avisos.js';
 
 export interface PaymentAdminServiceDeps {
   db: Pool;
@@ -160,7 +162,7 @@ export function createPaymentAdminService({
         await notificarDevolucion(client, devuelto);
         return devuelto;
       });
-      await enviar(emailDevolucion(pago, clientUrl));
+      await enviar(emailDevolucion(pago, clientUrl, await userModel.findLanguage(db, pago.adopter.id)));
       return paymentModel.toAdminListItem(pago);
     },
 
@@ -208,8 +210,8 @@ export function createPaymentAdminService({
           userId: adopcion.adopter.id,
           type: primerPago ? 'adoption_welcome' : 'payment_completed',
           message: primerPago
-            ? `¡Ya adoptas a ${adopcion.animal.name}! Gracias por tu apoyo.`
-            : `Hemos registrado el pago de la cuota de ${adopcion.animal.name}. ¡Gracias!`,
+            ? avisos.adopcionActiva(adopcion.animal.name)
+            : avisos.cuotaRegistrada(adopcion.animal.name),
           link: `/my-animals/${adopcion.animal.id}`,
         });
         return { pagoId, primerPago, cuota };
@@ -227,6 +229,7 @@ export function createPaymentAdminService({
           periodEnd: pago.periodEnd,
           reference,
           url: new URL('/my-animals', clientUrl).toString(),
+          language: await userModel.findLanguage(db, pago.adopter.id),
         };
         await enviar({
           to: pago.adopter.email,

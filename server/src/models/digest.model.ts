@@ -1,3 +1,4 @@
+import type { Language } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
 
@@ -7,6 +8,7 @@ export interface DestinatarioResumen {
   userId: number;
   firstName: string;
   email: string;
+  language: Language;
 }
 
 /**
@@ -14,14 +16,14 @@ export interface DestinatarioResumen {
  * recibido para el mes que empieza en `desde`.
  */
 export async function listRecipients(db: Queryable, desde: string): Promise<DestinatarioResumen[]> {
-  const { rows } = await db.query<{ id: number; first_name: string; email: string }>(
-    `SELECT id, first_name, email FROM users
+  const { rows } = await db.query<{ id: number; first_name: string; email: string; preferred_language: Language }>(
+    `SELECT id, first_name, email, preferred_language FROM users
       WHERE role = 'adopter' AND is_active AND email_notifications AND email_frequency = 'monthly_digest'
         AND digest_sent_for IS DISTINCT FROM $1::date
       ORDER BY id`,
     [desde],
   );
-  return rows.map((r) => ({ userId: r.id, firstName: r.first_name, email: r.email }));
+  return rows.map((r) => ({ userId: r.id, firstName: r.first_name, email: r.email, language: r.preferred_language }));
 }
 
 export interface ActualizacionResumen {

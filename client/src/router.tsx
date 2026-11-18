@@ -6,10 +6,14 @@ import { PublicLayout } from './layouts/PublicLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ActivityAdminPage } from './pages/admin/ActivityAdminPage';
+import { StatsAdminPage } from './pages/admin/StatsAdminPage';
 import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
 import { AnimalDataTab } from './pages/admin/AnimalDataTab';
 import { AnimalPhotosTab } from './pages/admin/AnimalPhotosTab';
 import { AnimalUpdatesTab } from './pages/admin/AnimalUpdatesTab';
+import { AnimalVetTab } from './pages/admin/AnimalVetTab';
+import { VetRecordsAdminPage } from './pages/admin/VetRecordsAdminPage';
 import { UpdateFormPage } from './pages/admin/UpdateFormPage';
 import { UpdatesAdminPage } from './pages/admin/UpdatesAdminPage';
 import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
@@ -31,7 +35,6 @@ import { AdoptPage } from './pages/adopter/AdoptPage';
 import { ContributionsPage } from './pages/adopter/ContributionsPage';
 import { FeedPage } from './pages/adopter/FeedPage';
 import { MyAnimalsPage } from './pages/adopter/MyAnimalsPage';
-import { ReceiptPage } from './pages/adopter/ReceiptPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -44,6 +47,8 @@ import { CookiesPage } from './pages/public/CookiesPage';
 import { DonatePage } from './pages/public/DonatePage';
 import { HomePage } from './pages/public/HomePage';
 import { HowItWorksPage } from './pages/public/HowItWorksPage';
+import { MemorialAnimalPage } from './pages/public/MemorialAnimalPage';
+import { MemorialPage } from './pages/public/MemorialPage';
 import { PrivacyPage } from './pages/public/PrivacyPage';
 
 // Rutas del navegador (TECH_SPEC §12.1). Las demás llegarán con sus casos de uso.
@@ -66,9 +71,11 @@ export const routes: RouteObject[] = [
               { index: true, element: <AnimalDataTab /> },
               { path: 'photos', element: <AnimalPhotosTab /> },
               { path: 'updates', element: <AnimalUpdatesTab /> },
+              { path: 'vet', element: <AnimalVetTab /> },
             ],
           },
           { path: 'species', element: <SpeciesAdminPage /> },
+          { path: 'vet-records', element: <VetRecordsAdminPage /> },
           { path: 'updates', element: <UpdatesAdminPage /> },
           { path: 'updates/new', element: <UpdateFormPage /> },
           { path: 'updates/:id', element: <UpdateFormPage /> },
@@ -86,6 +93,8 @@ export const routes: RouteObject[] = [
               { path: 'donations', element: <DonationsAdminPage /> },
               { path: 'donations/new', element: <NewDonationPage /> },
               { path: 'plans', element: <PlansAdminPage /> },
+              { path: 'stats', element: <StatsAdminPage /> },
+              { path: 'activity', element: <ActivityAdminPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },
@@ -102,6 +111,8 @@ export const routes: RouteObject[] = [
       { path: 'how-it-works', element: <HowItWorksPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: 'donate', element: <DonatePage /> },
+      { path: 'memorial', element: <MemorialPage /> },
+      { path: 'memorial/:id', element: <MemorialAnimalPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'cookies', element: <CookiesPage /> },
       { path: 'adopt/:animalId', element: <AdoptPage /> },
@@ -113,7 +124,6 @@ export const routes: RouteObject[] = [
           { path: 'my-animals/:animalId', element: <AdoptedAnimalPage /> },
           { path: 'feed', element: <FeedPage /> },
           { path: 'my-contributions', element: <ContributionsPage /> },
-          { path: 'my-contributions/receipts/:kind/:id', element: <ReceiptPage /> },
         ],
       },
       {

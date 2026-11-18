@@ -251,6 +251,13 @@ export class AnimalHasAdoptionsError extends ConflictError {
 }
 
 // CU-28 2b (CHECK animals_archived_not_adoptable).
+// CU-12 y RN-22.
+export class MemorialOnlyDeceasedError extends FieldRuleError {
+  constructor() {
+    super('MEMORIAL_ONLY_DECEASED', 'showInMemorial', 'Solo un animal fallecido puede aparecer en «En memoria».');
+  }
+}
+
 export class ArchivedAnimalNotAdoptableError extends FieldRuleError {
   constructor() {
     super(
@@ -360,6 +367,13 @@ export class AdoptionCancelAlreadyRequestedError extends ConflictError {
 }
 
 /** CU-19 4a: los pagos fallidos o pendientes no tienen recibo. */
+// CU-22 1a.
+export class CertificateNotAvailableError extends BusinessRuleError {
+  constructor() {
+    super('CERTIFICATE_NOT_AVAILABLE', 'El certificado solo está disponible con la adopción activa.');
+  }
+}
+
 export class ReceiptNotAvailableError extends BusinessRuleError {
   constructor() {
     super('RECEIPT_NOT_AVAILABLE', 'Este pago no tiene recibo porque no se ha cobrado.');

@@ -1,9 +1,11 @@
 import { withTransaction } from '../db/transaction.js';
 import { limitePagoPendiente } from '../dominio/adopcion.js';
+import * as activityModel from '../models/activity-log.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import type { JobDeps } from './job.types.js';
+import { avisos } from '../servicios/textos-avisos.js';
 
 export interface ExpirePendingResult {
   cancelled: number;
@@ -19,10 +21,18 @@ export async function runExpirePending({ db, reloj }: JobDeps): Promise<ExpirePe
   const canceladas = await withTransaction(db, async (client) => {
     const cerradas = await adoptionModel.cancelExpiredPending(client, limitePagoPendiente(reloj.ahora()), reloj.hoy());
     for (const adopcion of cerradas) {
+      // CU-42: las tareas automáticas se anotan como «Sistema».
+      await activityModel.create(client, {
+        userId: null,
+        action: 'update',
+        tableName: 'adoptions',
+        recordId: adopcion.id,
+        details: { status: ['pending', 'cancelled'], reason: 'payment_not_completed' },
+      });
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'adoption_cancelled',
-        message: `Tu adopción de ${adopcion.animalName} se ha cancelado porque no se completó el pago en 7 días. Puedes intentarlo de nuevo cuando quieras.`,
+        message: avisos.caducada(adopcion.animalName),
         link: `/animals/${adopcion.animalId}`,
       });
     }

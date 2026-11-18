@@ -31,3 +31,8 @@ export function sePuedeBorrar(tieneHistorialDeAdopciones: boolean): boolean {
 export function requiereMensajeDeDespedida(nuevo: AnimalStatus, adopcionesAbiertas: number): boolean {
   return nuevo === 'deceased' && adopcionesAbiertas > 0;
 }
+
+/** CU-12 y RN-22: solo un animal fallecido puede aparecer en «En memoria». */
+export function puedeEstarEnMemoria(status: AnimalStatus, showInMemorial: boolean): boolean {
+  return !showInMemorial || status === 'deceased';
+}

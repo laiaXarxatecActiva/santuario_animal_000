@@ -28,3 +28,7 @@ const CINCO_MINUTOS = 5 * 60 * 1000;
 export const useSpecies = () =>
   useQuery({ queryKey: ['species'], queryFn: publicApi.species, staleTime: CINCO_MINUTOS });
 export const usePlans = () => useQuery({ queryKey: ['plans'], queryFn: publicApi.plans, staleTime: CINCO_MINUTOS });
+
+/** CU-12: animales de «En memoria» (la cabecera y el pie lo usan para mostrar el enlace). */
+export const useMemorial = () =>
+  useQuery({ queryKey: ['memorial'], queryFn: publicApi.memorial, staleTime: CINCO_MINUTOS });

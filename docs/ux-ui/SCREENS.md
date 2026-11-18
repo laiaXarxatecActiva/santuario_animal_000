@@ -47,13 +47,15 @@ Hay tres plantillas (*layouts*) que envuelven a todas las pantallas:
 └────────────────────────────────────┘
 ```
 
+El selector de idioma (Fase 3, `DESIGN_SYSTEM.md` §8.7) cambia toda la interfaz al momento. Con sesión, guarda además el idioma en la cuenta, que se usa para los emails y los PDF; al entrar, la web pasa al idioma de la cuenta. Sin sesión, se recuerda en el navegador. Los contenidos escritos por el santuario (nombres, historias, actualizaciones, planes) no se traducen.
+
 Contenido según quién navega:
 
 | Usuario | Enlaces | Derecha |
 | --- | --- | --- |
-| Visitante | Animales · Cómo funciona · Donar · Sobre el santuario |  · [Entrar] · [■ Registrarse] (en escritorio) |
-| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
-| Trabajador | Animales · Cómo funciona · Donar · **Panel** | ·  · menú de usuario: Mi perfil, Cerrar sesión |
+| Visitante | Animales · Cómo funciona · Donar · Sobre el santuario | Idioma ·  · [Entrar] · [■ Registrarse] (en escritorio) |
+| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
+| Trabajador | Animales · Cómo funciona · Donar · **Panel** | · Idioma ·  · menú de usuario: Mi perfil, Cerrar sesión |
 
 **Menú de hamburguesa (móvil y tablet)** desplegado bajo la cabecera:
 
@@ -306,6 +308,10 @@ El formulario («Escríbenos») va en una tarjeta a la derecha desde `lg`. Al en
 
 Introducción breve y respetuosa, y una cuadrícula de tarjetas como la del catálogo, sin contador de adoptantes y con las fechas «2022 – 2026». Tono sobrio: sin el separador decorativo caramelo ni botones de adopción.
 
+- Cada tarjeta abre `/memorial/:id`: la ficha de solo lectura (galería, especie y sexo, «Llegó al santuario el…», «Nos dejó el…», su historia y sus noticias públicas), sin tarjeta de adopción ni contador de adoptantes.
+- El enlace «En memoria» va en el pie (columna «Explorar») y solo aparece si hay algún animal marcado (CU-12 2a). Si se entra por la URL sin animales marcados: estado vacío con el icono `dove` y «Por ahora no hay ningún animal en esta sección».
+- En el panel, la casilla «Mostrar en «En memoria»» está en la ventana de fallecimiento (CU-33) y, para los fallecidos, en la pestaña «Datos».
+
 ### 3.8 Autenticación — CU-07 a CU-10
 
 Todas las pantallas de autenticación comparten el mismo esquema: **una tarjeta centrada** de 440 px de ancho máximo (todo el ancho en móvil) sobre el fondo de la página.
@@ -412,7 +418,9 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   Faro · Finalizada el 21 oct · Faro nos dejó.  ¿Quieres continuar con otro animal?
 ```
 
-**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Certificado, Darme de baja); el botón principal va a todo el ancho.
+**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Darme de baja); el botón principal va a todo el ancho.
+
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, descarga `certificado-<animal>.pdf`) y [Ver] (fantasma, lo abre en otra pestaña). En las demás no aparece (1a).
 
 - «Darme de baja» y «Cambiar plan» están en el menú «⋯» en escritorio también, para no saturar la tarjeta.
 - **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
@@ -459,10 +467,10 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
 
 - Arriba, tarjetas de resumen: «Aportado en 2026: 87,00 €» y «Desde que empezaste: 152,00 €».
 - Pestañas **Cuotas** y **Donaciones**.
-- En escritorio, una tabla (fecha, concepto, importe, estado, [Recibo]). En móvil, una lista de tarjetas compactas, como en el panel.
+- En escritorio, una tabla (fecha, concepto, importe, estado y los enlaces del recibo en PDF). En móvil, una lista de tarjetas compactas, como en el panel.
 - Filtro por año («Todos los años» por defecto). Sin filtro, la primera tarjeta muestra el año más reciente con aportaciones.
 - Concepto de las cuotas: «Cuota de Rufo · del 5 nov 2026 al 4 dic 2026»; de las donaciones, «Donación». Estados con las insignias de §8.6 del sistema de diseño.
-- [Recibo] solo en las cobradas y las devueltas (CU-19 4a). Abre `/my-contributions/receipts/:kind/:id` (`kind` = `payment` o `donation`): el recibo imprimible (sistema de diseño §8.9) con el santuario, quién paga, el concepto (con el plan en las cuotas), el importe, la fecha, la forma de pago, la referencia, el estado («Devuelto el…» si se devolvió) y «Pago simulado» si lo es.
+- Recibo solo en las cobradas y las devueltas (CU-19 4a): dos enlaces, «Ver PDF» (icono `file-pdf`, lo abre en otra pestaña, desde donde se puede imprimir) y «Descargar PDF» (icono `download`, guarda `recibo-<referencia>.pdf`). El PDF lleva el santuario, quién paga, el concepto (con el plan en las cuotas), el importe, la fecha, la forma de pago, la referencia, el estado («Devuelto el…» si se devolvió) y «Pago simulado» si lo es. Desde la Fase 3 ya no hay página HTML del recibo.
 - Sin aportaciones: estado vacío «Todavía no hay aportaciones».
 
 ### 4.6 Mi perfil (`/profile`) — CU-23, CU-24, CU-25
@@ -470,12 +478,13 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
 Una columna (máximo 560 px), con secciones separadas por títulos h2 y cada una con su propio botón de guardar y sus propios avisos:
 
 1. **Tus datos:** nombre, apellidos, teléfono; el email solo se muestra. [■ Guardar cambios].
-2. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes». [■ Guardar].
-3. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
-4. **Contraseña:** actual, nueva, repetir. [■ Cambiar contraseña].
-5. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
+2. **Idioma** (Fase 3): «Idioma de la web y de los emails», con la ayuda «También el de los certificados y recibos en PDF». [■ Guardar]. Al guardar, la web cambia a ese idioma.
+3. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes». [■ Guardar].
+4. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
+5. **Contraseña:** actual, nueva, repetir. [■ Cambiar contraseña].
+6. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
 
-Los trabajadores ven solo las secciones 1 y 4.
+Los trabajadores ven solo las secciones 1, 2 y 5.
 
 ### 4.7 Notificaciones (`/notifications`) — CU-18
 
@@ -659,7 +668,7 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 | Nueva adopción manual | Adoptante (buscador), animal (solo adoptables), plan, método del primer pago, notas |
 | Registro manual de pago o donación | Formulario corto con el método (efectivo o transferencia), el importe y la fecha |
 | Planes | Una tarjeta editable en línea por plan (de entrada, los tres de RN-04): nombre, importe, descripción, por defecto, activo y número de adopciones activas. Botón «Nuevo plan» con una ventana emergente (siempre mensual). Al cambiar un importe con adopciones activas, aviso `warning` con «Confirmar y guardar» antes de guardar. |
-| Estadísticas (Fase 3) | Selector de rango de fechas + gráficos en tarjetas (dos columnas en escritorio, una en móvil). Los colores de los gráficos salen de la paleta: terracota para cuotas, oliva para donaciones. |
+| Estadísticas (Fase 3, `/admin/stats`) | Filtros «Desde» y «Hasta» (en la URL; por defecto, los últimos 12 meses) y, debajo, «Del nov 25 al nov 26». Tarjetas (dos columnas en escritorio, una en móvil): «Ingresos por mes» (`BarChart`, terracota cuotas y oliva donaciones), «Adopciones nuevas y bajas» (`BarChart`, terracota nuevas y oliva bajas), «Animales más adoptados» y «Adopciones activas por plan» (`BarList`) y «Animales sin adoptantes» (lista con enlace a la ficha del panel). Las tres últimas llevan la nota «Situación actual (no depende del rango)». Sin datos: «No hay datos en este rango» en cada gráfico (3a). Enlace «Estadísticas» (icono `chart-column`) en la sección «Administración» del menú. |
 | Registro de actividad (Fase 3) | Listado con el patrón común; filtros por usuario, tabla, acción y fechas |
 
 ## 6. Estados generales

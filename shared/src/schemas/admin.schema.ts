@@ -249,6 +249,8 @@ export const animalBodySchema = z
     healthSummary: textoOpcional(2000),
     isAdoptable: z.boolean(),
     isPublished: z.boolean(),
+    /** CU-12: solo para fallecidos (RN-22). Sin el campo, no cambia. */
+    showInMemorial: z.boolean().optional(),
   })
   .refine((a) => a.approxBirthDate === null || a.approxBirthDate <= a.arrivalDate, {
     path: ['approxBirthDate'],
@@ -263,6 +265,8 @@ export const animalStatusBodySchema = z.object({
   date: fecha('La fecha no es válida.').optional(),
   /** CU-33 paso 3: mensaje redactado para los adoptantes (fallecimiento); vacío cuenta como ausente. */
   message: textoSinVacio(10000),
+  /** CU-12: en un fallecimiento, mostrarlo en «En memoria». */
+  showInMemorial: z.boolean().optional(),
 });
 export type AnimalStatusBody = z.input<typeof animalStatusBodySchema>;
 export type AnimalStatusData = z.infer<typeof animalStatusBodySchema>;
@@ -415,3 +419,7 @@ export const manualDonationSchema = z.object({
 });
 export type ManualDonationBody = z.input<typeof manualDonationSchema>;
 export type ManualDonationInput = z.output<typeof manualDonationSchema>;
+
+/** CU-41 paso 2: rango de las estadísticas (por defecto, los últimos 12 meses). */
+export const adminStatsQuerySchema = z.object({ from: diaOpcional, to: diaOpcional }).superRefine(rangoValido);
+export type AdminStatsQuery = z.infer<typeof adminStatsQuerySchema>;

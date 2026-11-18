@@ -11,6 +11,7 @@ import { AnimalStatusBadges } from '../../components/AnimalStatusBadges';
 import { Button, ButtonLink } from '../../components/Button';
 import { TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
+import { Switch } from '../../components/Switch';
 import { ADMIN_KEY, adminAnimalKey, useAdminAnimal } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { ApiError } from '../../api/client';
@@ -78,6 +79,9 @@ export function AnimalAdminPage() {
         <NavLink to={`/admin/animals/${datos.id}/updates`} className={styles.tab}>
           {t('admin.animal.tabUpdates')}
         </NavLink>
+        <NavLink to={`/admin/animals/${datos.id}/vet`} className={styles.tab}>
+          {t('admin.animal.tabVet')}
+        </NavLink>
       </nav>
       <Outlet context={{ animal: datos, avisar: setAviso } satisfies AnimalTabContext} />
     </div>
@@ -95,13 +99,15 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
   // CU-33 paso 3: mensaje para los adoptantes (fallecimiento con adopciones abiertas).
   const [mensaje, setMensaje] = useState('');
   const [errorMensaje, setErrorMensaje] = useState<string | null>(null);
+  // CU-12: en un fallecimiento, mostrarlo en «En memoria».
+  const [enMemoria, setEnMemoria] = useState(false);
   const [borrando, setBorrando] = useState(false);
   const archivado = esArchivado(animal.status);
 
   const pideMensaje = archivarComo === 'deceased' && animal.openAdoptions > 0;
 
   const cambiarEstado = useMutation({
-    mutationFn: (cambio: { status: AnimalStatus; date?: string; message?: string }) =>
+    mutationFn: (cambio: { status: AnimalStatus; date?: string; message?: string; showInMemorial?: boolean }) =>
       adminApi.animals.changeStatus(animal.id, cambio),
     onSuccess: async (actualizado) => {
       setArchivarComo(null);
@@ -130,7 +136,12 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
       setErrorMensaje(t('admin.animal.farewellRequired'));
       return;
     }
-    cambiarEstado.mutate({ status: archivarComo, date: fecha, ...(pideMensaje ? { message: mensaje } : {}) });
+    cambiarEstado.mutate({
+      status: archivarComo,
+      date: fecha,
+      ...(pideMensaje ? { message: mensaje } : {}),
+      ...(archivarComo === 'deceased' && enMemoria ? { showInMemorial: true } : {}),
+    });
   };
 
   const borrar = useMutation({
@@ -155,6 +166,7 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
       setFecha(hoyLocal());
       setMensaje('');
       setErrorMensaje(null);
+      setEnMemoria(false);
       setArchivarComo(status);
     } else {
       cambiarEstado.mutate({ status });
@@ -261,6 +273,14 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
                 setMensaje(e.target.value);
                 setErrorMensaje(null);
               }}
+            />
+          )}
+          {archivarComo === 'deceased' && (
+            <Switch
+              label={t('admin.animal.showInMemorial')}
+              help={t('admin.animal.showInMemorialHelp')}
+              checked={enMemoria}
+              onChange={(e) => setEnMemoria(e.target.checked)}
             />
           )}
         </div>

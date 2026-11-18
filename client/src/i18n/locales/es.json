@@ -28,7 +28,8 @@
     "profile": "Mi perfil",
     "logout": "Cerrar sesión",
     "userMenu": "Menú de {{name}}",
-    "feedUnread": "Novedades, {{count}} sin leer"
+    "feedUnread": "Novedades, {{count}} sin leer",
+    "memorial": "En memoria"
   },
   "theme": {
     "toDark": "Activar modo oscuro",
@@ -446,13 +447,14 @@
       "failed": "Fallido",
       "pending": "Pendiente",
       "refunded": "Devuelto"
-    }
+    },
+    "viewPdf": "Ver PDF",
+    "downloadPdf": "Descargar PDF",
+    "viewReceipt": "Ver el recibo {{reference}} (PDF)",
+    "downloadReceipt": "Descargar el recibo {{reference}} (PDF)"
   },
   "receipt": {
     "title": "Recibo",
-    "back": "Volver a mis aportaciones",
-    "print": "Imprimir",
-    "errorLoading": "No hemos podido cargar este recibo",
     "payer": "Pagado por",
     "paidAt": "Fecha del pago",
     "method": "Forma de pago",
@@ -462,7 +464,6 @@
       "bank_transfer": "Transferencia",
       "card": "Tarjeta"
     },
-    "paymentConceptPlan": "Cuota de {{name}} · Plan {{plan}} · del {{from}} al {{to}}",
     "refundedOn": "Devuelto el {{date}}",
     "simulated": "Pago simulado: no se ha realizado ningún cargo real."
   },
@@ -544,6 +545,11 @@
       "password": "Contraseña",
       "submit": "Eliminar cuenta",
       "submitting": "Eliminando…"
+    },
+    "language": {
+      "title": "Idioma",
+      "label": "Idioma de la web y de los emails",
+      "help": "También el de los certificados y recibos en PDF."
     }
   },
   "admin": {
@@ -561,7 +567,10 @@
       "users": "Usuarios",
       "adoptions": "Adopciones",
       "payments": "Pagos",
-      "donations": "Donaciones"
+      "donations": "Donaciones",
+      "activity": "Actividad",
+      "vet": "Veterinario",
+      "stats": "Estadísticas"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -697,7 +706,10 @@
       "statusSince": "Desde el {{date}}",
       "sexUnknown": "Desconocido",
       "tabPhotos": "Fotos",
-      "tabUpdates": "Actualizaciones"
+      "tabUpdates": "Actualizaciones",
+      "tabVet": "Veterinario",
+      "showInMemorial": "Mostrar en «En memoria»",
+      "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar."
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -986,6 +998,110 @@
       "emailHelp": "Sin email no podremos enviarle el agradecimiento ni avisarle si hubiera que devolverla.",
       "created": "Donación registrada.",
       "anonymousLabel": "Donación anónima"
+    },
+    "activity": {
+      "title": "Registro de actividad",
+      "when": "Fecha",
+      "user": "Usuario",
+      "system": "Sistema",
+      "action": "Acción",
+      "table": "Tabla",
+      "record": "Registro",
+      "details": "Detalles",
+      "showDetails": "Ver detalles",
+      "empty": "No hay actividad con estos filtros",
+      "loadError": "No hemos podido cargar el registro de actividad",
+      "workerTitle": "Actividad",
+      "workerEmpty": "Todavía no ha hecho cambios en el panel",
+      "seeAll": "Ver toda su actividad",
+      "actions": {
+        "create": "Creación",
+        "update": "Modificación",
+        "delete": "Borrado",
+        "archive": "Archivo"
+      },
+      "tables": {
+        "animals": "Animales",
+        "species": "Especies",
+        "photos": "Fotos",
+        "animal_updates": "Actualizaciones",
+        "vet_records": "Historial veterinario",
+        "adoption_plans": "Planes",
+        "users": "Usuarios",
+        "adoptions": "Adopciones",
+        "payments": "Pagos",
+        "donations": "Donaciones"
+      },
+      "fields": {
+        "name": "Nombre",
+        "status": "Estado",
+        "reason": "Motivo",
+        "date": "Fecha",
+        "role": "Rol",
+        "method": "Forma de pago",
+        "amount": "Importe",
+        "manual": "Registro manual",
+        "title": "Título",
+        "visibility": "Visibilidad",
+        "animalId": "Animal",
+        "userId": "Usuario",
+        "planId": "Plan",
+        "refund": "Devolución",
+        "action": "Acción",
+        "invitationResent": "Invitación reenviada",
+        "recordDate": "Fecha del registro",
+        "type": "Tipo",
+        "showInMemorial": "En memoria"
+      }
+    },
+    "vet": {
+      "pageTitle": "Historial veterinario",
+      "title": "Historial veterinario de {{name}}",
+      "internal": "Solo lo ve el personal. A los adoptantes les llega el resumen de salud de la pestaña «Datos».",
+      "animal": "Animal",
+      "chooseAnimal": "Elige un animal",
+      "pickAnimal": "Elige un animal para ver su historial.",
+      "new": "Nuevo registro",
+      "editTitle": "Editar el registro",
+      "date": "Fecha",
+      "type": "Tipo",
+      "description": "Descripción",
+      "weight": "Peso",
+      "weightKg": "Peso (kg)",
+      "veterinarian": "Veterinario",
+      "kg": "{{value}} kg",
+      "weightTitle": "Evolución del peso",
+      "empty": "Todavía no hay registros veterinarios",
+      "loadError": "No hemos podido cargar el historial veterinario",
+      "created": "Registro añadido.",
+      "updated": "Registro guardado.",
+      "deleted": "Registro borrado.",
+      "confirmDelete": "¿Borrar este registro?",
+      "deleteSummary": "Se borrará el registro de {{type}} del {{date}}. No se puede deshacer.",
+      "types": {
+        "checkup": "Revisión",
+        "vaccine": "Vacuna",
+        "treatment": "Tratamiento",
+        "surgery": "Cirugía"
+      }
+    },
+    "stats": {
+      "title": "Estadísticas",
+      "from": "Desde",
+      "to": "Hasta",
+      "range": "Del {{from}} al {{to}}",
+      "loadError": "No hemos podido cargar las estadísticas",
+      "revenue": "Ingresos por mes",
+      "fees": "Cuotas",
+      "donations": "Donaciones",
+      "adoptions": "Adopciones nuevas y bajas",
+      "started": "Nuevas",
+      "ended": "Bajas",
+      "mostAdopted": "Animales más adoptados",
+      "byPlan": "Adopciones activas por plan",
+      "withoutAdopters": "Animales sin adoptantes",
+      "currentNote": "Situación actual (no depende del rango).",
+      "allAdopted": "Todos los animales tienen al menos un adoptante."
     }
   },
   "viewer": {
@@ -1091,5 +1207,36 @@
     "readAll": "Marcar todas como leídas",
     "delete": "Borrar: {{message}}",
     "errorLoading": "No hemos podido cargar tus notificaciones"
+  },
+  "charts": {
+    "empty": "No hay datos en este rango",
+    "showData": "Ver los datos",
+    "lineSummary": "{{title}}: {{count}} valores, desde {{first}} hasta {{last}}.",
+    "barSummary": "{{title}}: {{count}} meses, de {{first}} a {{last}}."
+  },
+  "memorial": {
+    "title": "En memoria",
+    "intro": "Aquí recordamos a los animales que vivieron con nosotros y ya no están. Gracias a quienes los acompañaron.",
+    "empty": "Por ahora no hay ningún animal en esta sección.",
+    "loadError": "No hemos podido cargar esta sección",
+    "notFound": "No encontramos a este animal en «En memoria».",
+    "back": "Volver a «En memoria»",
+    "arrived": "Llegó al santuario el {{date}}",
+    "died": "Nos dejó el {{date}}",
+    "news": "Sus noticias"
+  },
+  "certificate": {
+    "download": "Certificado",
+    "downloadOf": "Descargar el certificado de {{name}} (PDF)",
+    "view": "Ver",
+    "viewOf": "Ver el certificado de {{name}} (PDF)"
+  },
+  "language": {
+    "label": "Idioma",
+    "names": {
+      "es": "Castellano",
+      "ca": "Valencià",
+      "en": "English"
+    }
   }
 }

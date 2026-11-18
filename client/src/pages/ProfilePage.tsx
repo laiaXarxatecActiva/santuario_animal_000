@@ -2,8 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   changePasswordFormSchema,
   deleteAccountSchema,
+  isLanguage,
+  LANGUAGES,
   profileDataSchema,
   type EmailFrequency,
+  type Language,
   type ProfileDto,
 } from '@sanctuary/shared';
 import { useState, type ReactNode } from 'react';
@@ -14,11 +17,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '../api/client';
 import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
-import { PasswordField, TextField } from '../components/FormFields';
+import { PasswordField, SelectField, TextField } from '../components/FormFields';
 import { Modal } from '../components/Modal';
 import { Switch } from '../components/Switch';
 import { useChangePassword, useDeleteAccount, useProfile, useUpdateProfile } from '../hooks/useProfile';
 import { SESSION_KEY } from '../hooks/useSession';
+import { cambiarIdioma, idiomaActual } from '../i18n/idioma';
 import { flashState } from '../utils/flash';
 import { applyFieldErrors, errorMessage } from '../utils/apiErrors';
 import { formatPhone } from '../utils/phone';
@@ -50,6 +54,7 @@ export function ProfilePage() {
     contenido = (
       <>
         <TusDatos perfil={perfil.data} />
+        <Idioma perfil={perfil.data} />
         {adoptante && <Notificaciones perfil={perfil.data} />}
         {adoptante && <Privacidad perfil={perfil.data} />}
         <Contrasena />
@@ -151,6 +156,44 @@ function TusDatos({ perfil }: { perfil: ProfileDto }) {
         <div>
           <Button type="submit" disabled={guardar.isPending}>
             {guardar.isPending ? t('profile.saving') : t('profile.data.submit')}
+          </Button>
+        </div>
+      </form>
+    </Seccion>
+  );
+}
+
+/** Fase 3: idioma de la web, de los emails y de los PDF. */
+function Idioma({ perfil }: { perfil: ProfileDto }) {
+  const { t } = useTranslation();
+  const guardar = useUpdateProfile();
+  const [idioma, setIdioma] = useState<Language>(perfil.preferredLanguage ?? idiomaActual());
+
+  return (
+    <Seccion id="perfil-idioma" titulo={t('profile.language.title')}>
+      <form
+        className={styles.form}
+        onSubmit={(e) => {
+          e.preventDefault();
+          guardar.mutate({ preferredLanguage: idioma }, { onSuccess: () => void cambiarIdioma(idioma) });
+        }}
+      >
+        <SelectField
+          label={t('profile.language.label')}
+          help={t('profile.language.help')}
+          value={idioma}
+          onChange={(e) => isLanguage(e.target.value) && setIdioma(e.target.value)}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l} value={l} lang={l}>
+              {t(`language.names.${l}`)}
+            </option>
+          ))}
+        </SelectField>
+        <Resultado ok={guardar.isSuccess} error={guardar.error} mensaje={t('profile.saved')} />
+        <div>
+          <Button type="submit" disabled={guardar.isPending}>
+            {guardar.isPending ? t('profile.saving') : t('profile.save')}
           </Button>
         </div>
       </form>

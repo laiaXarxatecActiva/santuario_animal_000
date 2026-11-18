@@ -2,6 +2,7 @@ import {
   isWorkerRole,
   type AdoptionDto,
   type CreateAdoptionInput,
+  type Language,
   type PayAdoptionResponse,
   type SessionUser,
   type SimulatedOutcome,
@@ -43,8 +44,8 @@ import { adoptionCancelledEmail } from '../services/email/templates/adoption-can
 import { adoptionWelcomeEmail } from '../services/email/templates/adoption-welcome.js';
 import { paymentCompletedEmail } from '../services/email/templates/payment-completed.js';
 import { planChangedEmail } from '../services/email/templates/plan-changed.js';
-import { formatEuros, formatFecha } from '../utils/format.js';
 import type { PaymentGateway } from '../services/payment/payment.service.js';
+import { avisos } from './textos-avisos.js';
 
 export interface AdoptionServiceDeps {
   db: Pool;
@@ -134,6 +135,7 @@ export function createAdoptionService({
         amount: adopcion.plan.monthlyAmount,
         ...pago,
         url: new URL('/my-animals', clientUrl).toString(),
+        language: user.preferredLanguage,
       };
       // Los emails de pagos se envían siempre, sin mirar las preferencias (RN-19).
       await email.send({
@@ -186,9 +188,7 @@ export function createAdoptionService({
         await notificationModel.create(client, {
           userId,
           type: primerPago ? 'adoption_welcome' : 'payment_completed',
-          message: primerPago
-            ? `¡Ya adoptas a ${adopcion.animal.name}! Gracias por tu apoyo.`
-            : `Hemos cobrado la cuota de ${adopcion.animal.name}. ¡Gracias!`,
+          message: primerPago ? avisos.adopcionActiva(adopcion.animal.name) : avisos.cuotaCobrada(adopcion.animal.name),
           link: `/my-animals/${adopcion.animal.id}`,
         });
       }
@@ -205,11 +205,11 @@ export function createAdoptionService({
   /** Envía un email al adoptante; un fallo nunca deshace la operación. */
   async function enviarAlAdoptante(
     userId: number,
-    plantilla: (firstName: string) => { subject: string; text: string; html: string },
+    plantilla: (firstName: string, language: Language | undefined) => { subject: string; text: string; html: string },
   ): Promise<void> {
     try {
       const user = await userModel.findById(db, userId);
-      if (user) await email.send({ to: user.email, ...plantilla(user.firstName) });
+      if (user) await email.send({ to: user.email, ...plantilla(user.firstName, user.preferredLanguage) });
     } catch (error) {
       logEmailError(error);
     }
@@ -239,7 +239,7 @@ export function createAdoptionService({
         await notificationModel.create(client, {
           userId,
           type: 'plan_changed',
-          message: `A partir del ${formatFecha(adopcion.nextBillingDate)}, tu cuota de ${adopcion.animal.name} será de ${formatEuros(plan.monthlyAmount)} (plan ${plan.name}).`,
+          message: avisos.cambioDePlan(adopcion.animal.name, adopcion.nextBillingDate, plan.monthlyAmount, plan.name),
           link: `/my-animals/${adopcion.animal.id}`,
         });
       }
@@ -249,9 +249,10 @@ export function createAdoptionService({
     const { adopcion, cambio, plan } = resultado;
     if (cambio.tipo === 'programado' && adopcion.nextBillingDate) {
       const fromDate = adopcion.nextBillingDate;
-      await enviarAlAdoptante(userId, (firstName) =>
+      await enviarAlAdoptante(userId, (firstName, language) =>
         planChangedEmail({
           firstName,
+          language,
           animalName: adopcion.animal.name,
           planName: plan.name,
           amount: plan.monthlyAmount,
@@ -278,19 +279,17 @@ export function createAdoptionService({
       await notificationModel.create(client, {
         userId,
         type: 'adoption_cancelled',
-        message:
-          baja.status === 'active'
-            ? `Has solicitado la baja de ${nombre}. La adopción sigue activa hasta el ${formatFecha(baja.endDate)} y no se te volverá a cobrar.`
-            : `Tu adopción de ${nombre} ha terminado. No se te cobrará nada más.`,
+        message: baja.status === 'active' ? avisos.bajaSolicitada(nombre, baja.endDate) : avisos.bajaTerminada(nombre),
         link: `/my-animals/${adopcion.animal.id}`,
       });
       return { adopcion, baja };
     });
 
     const status = baja.status === 'cancelled' || baja.status === 'finished' ? baja.status : 'active';
-    await enviarAlAdoptante(userId, (firstName) =>
+    await enviarAlAdoptante(userId, (firstName, language) =>
       adoptionCancelledEmail({
         firstName,
+        language,
         animalName: adopcion.animal.name,
         status,
         endDate: baja.endDate,

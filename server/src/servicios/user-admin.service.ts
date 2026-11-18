@@ -101,7 +101,11 @@ export function createUserAdminService({
     try {
       await email.send({
         to: user.email,
-        ...workerInvitationEmail({ firstName: user.firstName, url: url.toString() }),
+        ...workerInvitationEmail({
+          firstName: user.firstName,
+          url: url.toString(),
+          language: await userModel.findLanguage(db, user.id),
+        }),
       });
     } catch (error) {
       logEmailError(error);

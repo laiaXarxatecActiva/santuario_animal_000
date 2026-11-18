@@ -330,5 +330,5 @@ El desarrollo va por fases (TECH_SPEC §16):
 
 - ✅ **Fase 1 (MVP):** web pública, cuentas, adopción con pago simulado, área del adoptante, perfil y panel de animales, fotos, especies y actualizaciones.
 - ✅ **Fase 2:** cobro mensual automático, cambio de plan y baja, donaciones, notificaciones, recibos, contacto, baja de cuenta, administración de usuarios, adopciones, pagos, donaciones y planes, y pruebas en el navegador.
-- ⏳ **Fase 3:** extras (historial veterinario, estadísticas, certificados en PDF, adopción regalo, valenciano e inglés).
+- ✅ **Fase 3:** registro de actividad, historial veterinario, «En memoria», certificado y recibos en PDF, estadísticas, y la web, los emails y los PDF en castellano, valenciano e inglés (selector de idioma en la cabecera). La adopción regalo se ha descartado.
 - ⏳ **Fase 4:** publicación en internet.

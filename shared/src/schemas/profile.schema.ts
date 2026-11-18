@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LANGUAGES } from '../constants/languages.js';
 import { EMAIL_FREQUENCIES } from '../constants/users.js';
 import { nuevaPassword, telefono, textoObligatorio } from './fields.js';
 
@@ -19,6 +20,7 @@ export const updateProfileSchema = z
     emailNotifications: z.boolean().optional(),
     emailFrequency: z.enum(EMAIL_FREQUENCIES).optional(),
     showPublicName: z.boolean().optional(),
+    preferredLanguage: z.enum(LANGUAGES, { error: 'Elige un idioma de la lista.' }).optional(),
   })
   .refine((datos) => Object.values(datos).some((valor) => valor !== undefined), {
     error: 'No hay cambios que guardar.',

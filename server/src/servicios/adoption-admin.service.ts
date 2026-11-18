@@ -6,6 +6,7 @@ import {
   type AdminAdoptionsQuery,
   type AdminAdoptionStatusInput,
   type AdoptionAdminAction,
+  type Language,
   type NotificationType,
   type Paginated,
   type SessionUser,
@@ -41,6 +42,7 @@ import { adoptionWelcomeEmail } from '../services/email/templates/adoption-welco
 import type { PaymentGateway } from '../services/payment/payment.service.js';
 import { referenciaManual } from '../utils/referencias.js';
 import { devolverPago, emailDevolucion, notificarDevolucion } from './devolucion.js';
+import { avisos, type Textos } from './textos-avisos.js';
 
 export interface AdoptionAdminServiceDeps {
   db: Pool;
@@ -66,16 +68,10 @@ const ETIQUETA: Record<AdoptionAdminAction, string> = {
 };
 
 // Aviso en la campana. La nota interna del administrador nunca se enseña al adoptante.
-const AVISO: Record<AdoptionAdminAction, { type: NotificationType; mensaje: (animal: string) => string }> = {
-  pause: {
-    type: 'system',
-    mensaje: (animal) => `Hemos pausado tu adopción de ${animal}. Mientras esté pausada no se te cobrará nada.`,
-  },
-  resume: { type: 'system', mensaje: (animal) => `Hemos reanudado tu adopción de ${animal}.` },
-  cancel: {
-    type: 'adoption_cancelled',
-    mensaje: (animal) => `Hemos cancelado tu adopción de ${animal}. No se te volverá a cobrar.`,
-  },
+const AVISO: Record<AdoptionAdminAction, { type: NotificationType; mensaje: (animal: string) => Textos }> = {
+  pause: { type: 'system', mensaje: avisos.pausadaPorAdmin },
+  resume: { type: 'system', mensaje: avisos.reanudadaPorAdmin },
+  cancel: { type: 'adoption_cancelled', mensaje: avisos.canceladaPorAdmin },
 };
 
 const nombreDe = (persona: { firstName: string; lastName: string }) => `${persona.firstName} ${persona.lastName}`;
@@ -108,10 +104,13 @@ export function createAdoptionAdminService({
   }
 
   /** Envía un email al adoptante; un fallo nunca deshace la operación. */
-  async function enviar(userId: number, plantilla: (firstName: string) => ReturnType<typeof adoptionWelcomeEmail>) {
+  async function enviar(
+    userId: number,
+    plantilla: (firstName: string, language: Language | undefined) => ReturnType<typeof adoptionWelcomeEmail>,
+  ) {
     try {
       const user = await userModel.findById(db, userId);
-      if (user) await email.send({ to: user.email, ...plantilla(user.firstName) });
+      if (user) await email.send({ to: user.email, ...plantilla(user.firstName, user.preferredLanguage) });
     } catch (error) {
       logEmailError(error);
     }
@@ -199,16 +198,17 @@ export function createAdoptionAdminService({
         await notificationModel.create(client, {
           userId: datos.userId,
           type: 'adoption_welcome',
-          message: `¡Ya adoptas a ${animal.name}! Gracias por tu apoyo.`,
+          message: avisos.adopcionActiva(animal.name),
           link: `/my-animals/${animal.id}`,
         });
         return nuevaId;
       });
 
       // Los emails de pagos se envían siempre, sin mirar las preferencias (RN-19).
-      await enviar(datos.userId, (firstName) =>
+      await enviar(datos.userId, (firstName, language) =>
         adoptionWelcomeEmail({
           firstName,
+          language,
           animalName: animal.name,
           planName: plan.name,
           amount: plan.monthlyAmount,
@@ -260,16 +260,18 @@ export function createAdoptionAdminService({
         return { adopcion: actual, devuelto };
       });
 
-      await enviar(adopcion.adopter.id, (firstName) =>
+      await enviar(adopcion.adopter.id, (firstName, language) =>
         adoptionAdminChangeEmail({
           firstName,
+          language,
           animalName: adopcion.animal.name,
           action: cambio.action,
           date: cambio.action === 'resume' ? adopcion.nextBillingDate : null,
           url: urlMisAnimales(),
         }),
       );
-      const avisoDevolucion = devuelto && emailDevolucion(devuelto, clientUrl);
+      const avisoDevolucion =
+        devuelto && emailDevolucion(devuelto, clientUrl, await userModel.findLanguage(db, devuelto.adopter.id));
       if (avisoDevolucion) {
         try {
           await email.send(avisoDevolucion);

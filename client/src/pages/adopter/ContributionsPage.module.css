@@ -70,3 +70,11 @@
 .none {
   color: var(--color-text-muted);
 }
+
+/* CU-19: «Ver PDF» y «Descargar PDF» del recibo. */
+.receiptLinks {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  white-space: nowrap;
+}

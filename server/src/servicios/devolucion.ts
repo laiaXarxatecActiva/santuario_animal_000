@@ -1,3 +1,4 @@
+import type { Language } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { pasaPorPasarela, puedeDevolverse } from '../dominio/pagos-admin.js';
 import { NotFoundError, PaymentNotRefundableError, RefundFailedError } from '../errors/app-error.js';
@@ -5,7 +6,7 @@ import * as notificationModel from '../models/notification.model.js';
 import * as paymentModel from '../models/payment.model.js';
 import { paymentRefundedEmail } from '../services/email/templates/payment-refunded.js';
 import type { PaymentGateway } from '../services/payment/payment.service.js';
-import { formatEuros } from '../utils/format.js';
+import { avisos } from './textos-avisos.js';
 
 /**
  * CU-38 A1 (también al cancelar una adopción, CU-37 A3): devuelve un pago
@@ -33,7 +34,7 @@ export async function notificarDevolucion(client: Queryable, pago: paymentModel.
   await notificationModel.create(client, {
     userId: pago.adopter.id,
     type: 'system',
-    message: `Te hemos devuelto ${formatEuros(pago.amount)} de la cuota de ${pago.animal.name}.`,
+    message: avisos.cuotaDevuelta(pago.animal.name, pago.amount),
     link: '/my-contributions',
   });
 }
@@ -42,6 +43,7 @@ export async function notificarDevolucion(client: Queryable, pago: paymentModel.
 export function emailDevolucion(
   pago: paymentModel.AdminPayment,
   clientUrl: string,
+  language: Language = 'es',
 ): { to: string; subject: string; text: string; html: string } | null {
   if (pago.adopter.email === '') return null;
   return {
@@ -54,6 +56,7 @@ export function emailDevolucion(
       periodEnd: pago.periodEnd,
       online: pasaPorPasarela(pago.method),
       url: new URL('/my-contributions', clientUrl).toString(),
+      language,
     }),
   };
 }

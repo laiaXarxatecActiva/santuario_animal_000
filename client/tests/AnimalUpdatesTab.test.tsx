@@ -44,7 +44,7 @@ describe('CU-31 pestaña «Actualizaciones» de la ficha del animal (SCREENS §5
     await waitFor(() => expect(pedidas('/api/admin/updates').at(-1)?.searchParams.get('animalId')).toBe('1'));
     // El animal ya está elegido: no se filtra por animal.
     expect(screen.queryByLabelText('Animal')).not.toBeInTheDocument();
-    expect(within(pestañas()).getAllByRole('link')).toHaveLength(3);
+    expect(within(pestañas()).getAllByRole('link')).toHaveLength(4);
   });
 
   it('un animal fallecido o trasladado no admite nuevas actualizaciones', async () => {

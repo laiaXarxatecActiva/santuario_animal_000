@@ -1,4 +1,4 @@
-import type { NotificationDto, NotificationType } from '@sanctuary/shared';
+import type { Language, NotificationDto, NotificationType } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
 
@@ -28,16 +28,27 @@ export function mapRow(row: NotificationRow): NotificationDto {
 const COLUMNAS = 'id, type, message, link, is_read, created_at';
 const FILTRO = 'user_id = $1 AND ($2::boolean = FALSE OR NOT is_read)';
 
+/**
+ * Fase 3: un texto por idioma; se guarda el del idioma de cada destinatario.
+ * Con un solo texto, el mismo para todos.
+ */
+export type MensajeAviso = string | Record<Language, string>;
+
+const textos = (m: MensajeAviso): [string, string, string] => (typeof m === 'string' ? [m, m, m] : [m.es, m.ca, m.en]);
+
+/** Elige en SQL el texto del idioma del usuario `u`; los textos van en los parámetros `$n`, `$n+1` y `$n+2`. */
+const SEGUN_IDIOMA = (n: number) =>
+  `CASE u.preferred_language WHEN 'ca' THEN $${n + 1}::text WHEN 'en' THEN $${n + 2}::text ELSE $${n}::text END`;
+
 export async function create(
   db: Queryable,
-  datos: { userId: number; type: NotificationType; message: string; link: string | null },
+  datos: { userId: number; type: NotificationType; message: MensajeAviso; link: string | null },
 ): Promise<void> {
-  await db.query('INSERT INTO notifications (user_id, type, message, link) VALUES ($1, $2, $3, $4)', [
-    datos.userId,
-    datos.type,
-    datos.message,
-    datos.link,
-  ]);
+  await db.query(
+    `INSERT INTO notifications (user_id, type, message, link)
+     SELECT u.id, $2, ${SEGUN_IDIOMA(4)}, $3 FROM users u WHERE u.id = $1`,
+    [datos.userId, datos.type, datos.link, ...textos(datos.message)],
+  );
 }
 
 export async function count(db: Queryable, userId: number, filtros: { unread: boolean }): Promise<number> {
@@ -90,15 +101,14 @@ export async function remove(db: Queryable, userId: number, id: number): Promise
 export async function createForUsers(
   db: Queryable,
   userIds: readonly number[],
-  datos: { type: NotificationType; message: string; link: string | null },
+  datos: { type: NotificationType; message: MensajeAviso; link: string | null },
 ): Promise<void> {
   if (userIds.length === 0) return;
-  await db.query('INSERT INTO notifications (user_id, type, message, link) SELECT unnest($1::int[]), $2, $3, $4', [
-    userIds,
-    datos.type,
-    datos.message,
-    datos.link,
-  ]);
+  await db.query(
+    `INSERT INTO notifications (user_id, type, message, link)
+     SELECT u.id, $2, ${SEGUN_IDIOMA(4)}, $3 FROM users u WHERE u.id = ANY($1::int[]) ORDER BY u.id`,
+    [userIds, datos.type, datos.link, ...textos(datos.message)],
+  );
 }
 
 /**
@@ -107,18 +117,21 @@ export async function createForUsers(
  */
 export async function createUpdateReminders(
   db: Queryable,
-  datos: { message: string; link: string; hoy: string; ahora: Date },
+  datos: { message: MensajeAviso; link: string; hoy: string; ahora: Date },
 ): Promise<number> {
+  const [es, ca, en] = textos(datos.message);
   const { rowCount } = await db.query(
     `INSERT INTO notifications (user_id, type, message, link, created_at)
-     SELECT u.id, 'update_reminder', $1::text, $2::text, $4::timestamptz
+     SELECT u.id, 'update_reminder',
+            CASE u.preferred_language WHEN 'ca' THEN $5::text WHEN 'en' THEN $6::text ELSE $1::text END,
+            $2::text, $4::timestamptz
        FROM users u
       WHERE u.role IN ('caretaker', 'admin') AND u.is_active
         AND NOT EXISTS (
           SELECT 1 FROM notifications n
            WHERE n.user_id = u.id AND n.type = 'update_reminder' AND n.link = $2::text
              AND (n.created_at AT TIME ZONE '${ZONA_HORARIA_SANTUARIO}')::date = $3::date)`,
-    [datos.message, datos.link, datos.hoy, datos.ahora],
+    [es, datos.link, datos.hoy, datos.ahora, ca, en],
   );
   return rowCount ?? 0;
 }

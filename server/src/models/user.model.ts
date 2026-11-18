@@ -2,11 +2,13 @@ import type {
   AdminUserListItemDto,
   AdminUserSort,
   EmailFrequency,
+  Language,
   ProfileDto,
   Role,
   UpdateProfileInput,
   UserAccountStatus,
 } from '@sanctuary/shared';
+import { DEFAULT_LANGUAGE } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { esErrorPg, PG_UNIQUE_VIOLATION } from '../db/pg-errors.js';
 import { estadoCuenta } from '../dominio/usuarios-admin.js';
@@ -22,6 +24,8 @@ interface UserRow {
   email_verified: boolean;
   is_active: boolean;
   anonymized_at: Date | null;
+  /** Siempre llega de la BD; opcional solo para construir filas a mano. */
+  preferred_language?: Language;
 }
 
 /** Usuario con los datos que necesita la autenticación. El hash nunca sale de la API. */
@@ -35,9 +39,12 @@ export interface User {
   emailVerified: boolean;
   isActive: boolean;
   anonymizedAt: Date | null;
+  /** Idioma de los emails y los PDF (Fase 3). Si falta, castellano. */
+  preferredLanguage?: Language;
 }
 
-const COLUMNAS = 'id, first_name, last_name, email, password_hash, role, email_verified, is_active, anonymized_at';
+const COLUMNAS =
+  'id, first_name, last_name, email, password_hash, role, email_verified, is_active, anonymized_at, preferred_language';
 
 export function mapRow(row: UserRow): User {
   return {
@@ -50,6 +57,7 @@ export function mapRow(row: UserRow): User {
     emailVerified: row.email_verified,
     isActive: row.is_active,
     anonymizedAt: row.anonymized_at,
+    preferredLanguage: row.preferred_language,
   };
 }
 
@@ -64,22 +72,40 @@ export async function findById(db: Queryable, id: number): Promise<User | null> 
   return rows[0] ? mapRow(rows[0]) : null;
 }
 
+/** Idioma de los emails de un usuario (Fase 3); castellano si no existe. */
+export async function findLanguage(db: Queryable, id: number): Promise<Language> {
+  const { rows } = await db.query<{ preferred_language: Language }>(
+    'SELECT preferred_language FROM users WHERE id = $1',
+    [id],
+  );
+  return rows[0]?.preferred_language ?? DEFAULT_LANGUAGE;
+}
+
 export interface NewAdopter {
   firstName: string;
   lastName: string;
   email: string;
   passwordHash: string;
   privacyAcceptedAt: Date;
+  preferredLanguage?: Language;
 }
 
 /** CU-07: el registro público crea siempre adoptantes con el email sin verificar (RN-02). */
 export async function create(db: Queryable, datos: NewAdopter): Promise<User> {
   try {
     const { rows } = await db.query<UserRow>(
-      `INSERT INTO users (first_name, last_name, email, password_hash, role, email_verified, privacy_accepted_at)
-       VALUES ($1, $2, $3, $4, 'adopter', FALSE, $5)
+      `INSERT INTO users (first_name, last_name, email, password_hash, role, email_verified, privacy_accepted_at,
+                          preferred_language)
+       VALUES ($1, $2, $3, $4, 'adopter', FALSE, $5, $6)
        RETURNING ${COLUMNAS}`,
-      [datos.firstName, datos.lastName, datos.email, datos.passwordHash, datos.privacyAcceptedAt],
+      [
+        datos.firstName,
+        datos.lastName,
+        datos.email,
+        datos.passwordHash,
+        datos.privacyAcceptedAt,
+        datos.preferredLanguage ?? DEFAULT_LANGUAGE,
+      ],
     );
     return mapRow(rows[0] as UserRow);
   } catch (error) {
@@ -113,6 +139,7 @@ interface ProfileRow {
   email_notifications: boolean;
   email_frequency: EmailFrequency;
   show_public_name: boolean;
+  preferred_language: Language;
 }
 
 export function mapProfileRow(row: ProfileRow): ProfileDto {
@@ -125,12 +152,14 @@ export function mapProfileRow(row: ProfileRow): ProfileDto {
     emailNotifications: row.email_notifications,
     emailFrequency: row.email_frequency,
     showPublicName: row.show_public_name,
+    preferredLanguage: row.preferred_language,
   };
 }
 
 export async function findProfile(db: Queryable, id: number): Promise<ProfileDto | null> {
   const { rows } = await db.query<ProfileRow>(
-    `SELECT first_name, last_name, email, phone, role, email_notifications, email_frequency, show_public_name
+    `SELECT first_name, last_name, email, phone, role, email_notifications, email_frequency, show_public_name,
+            preferred_language
        FROM users WHERE id = $1`,
     [id],
   );
@@ -145,6 +174,7 @@ const COLUMNAS_PERFIL: Record<keyof UpdateProfileInput, string> = {
   emailNotifications: 'email_notifications',
   emailFrequency: 'email_frequency',
   showPublicName: 'show_public_name',
+  preferredLanguage: 'preferred_language',
 };
 
 /** Actualiza solo los campos presentes. */

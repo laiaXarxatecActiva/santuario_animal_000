@@ -194,7 +194,8 @@ export function AnimalProfile({ animal, breadcrumb, notice, aside, extra, news }
   );
 }
 
-function Galeria({ animal }: { animal: PublicAnimalDto }) {
+/** Galería de fotos con visor; también la usa la ficha de «En memoria» (CU-12). */
+export function Galeria({ animal }: { animal: Pick<PublicAnimalDto, 'name' | 'photos' | 'coverPhoto'> }) {
   const { t } = useTranslation();
   const fotos = animal.photos.length > 0 ? animal.photos : animal.coverPhoto ? [animal.coverPhoto] : [];
   const [actual, setActual] = useState(0);

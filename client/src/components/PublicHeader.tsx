@@ -8,6 +8,7 @@ import { useUnreadCount } from '../hooks/useFeed';
 import { useLogout, useSession } from '../hooks/useSession';
 import { ButtonLink } from './Button';
 import iconStyles from './IconButton.module.css';
+import { LanguageSelect } from './LanguageSelect';
 import { Logo } from './Logo';
 import { NotificationBell } from './NotificationBell';
 import styles from './PublicHeader.module.css';
@@ -97,6 +98,7 @@ export function PublicHeader() {
         </nav>
         <div className={styles.actions}>
           {user && <NotificationBell />}
+          <LanguageSelect />
           <ThemeToggle />
           {!isLoading && (
             <div className={styles.desktopAuth}>

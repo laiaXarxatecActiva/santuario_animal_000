@@ -1,3 +1,4 @@
+import type { Language } from '../constants/languages.js';
 import type { Role } from '../constants/roles.js';
 import type { EmailFrequency } from '../constants/users.js';
 
@@ -11,4 +12,10 @@ export interface ProfileDto {
   emailNotifications: boolean;
   emailFrequency: EmailFrequency;
   showPublicName: boolean;
+  /**
+   * Fase 3: idioma de la interfaz, los emails y los PDF. La API siempre lo
+   * envía; es opcional en el tipo para que los datos de prueba anteriores
+   * sigan valiendo (sin él, castellano).
+   */
+  preferredLanguage?: Language;
 }

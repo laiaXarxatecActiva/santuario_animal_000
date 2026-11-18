@@ -21,6 +21,7 @@ interface AnimalAdminRow extends CoverRow {
   health_summary: string | null;
   status: AnimalStatus;
   status_changed_at: string | null;
+  show_in_memorial: boolean;
   is_adoptable: boolean;
   is_published: boolean;
   active_adopters: number;
@@ -43,6 +44,7 @@ export function mapRow(row: AnimalAdminRow): AdminAnimalDto {
     healthSummary: row.health_summary,
     status: row.status,
     statusChangedAt: row.status_changed_at,
+    showInMemorial: row.show_in_memorial,
     isAdoptable: row.is_adoptable,
     isPublished: row.is_published,
     activeAdopters: row.active_adopters,
@@ -56,7 +58,7 @@ export function mapRow(row: AnimalAdminRow): AdminAnimalDto {
 const SELECT = `
   SELECT a.id, a.name, a.species_id, s.name AS species_name, a.breed, a.sex,
          a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament, a.special_needs,
-         a.health_summary, a.status, a.status_changed_at, a.is_adoptable, a.is_published,
+         a.health_summary, a.status, a.status_changed_at, a.show_in_memorial, a.is_adoptable, a.is_published,
          ad.active_adopters, ad.open_adoptions, ad.has_adoption_history,
          ${COLUMNAS_PORTADA}
     FROM animals a
@@ -222,6 +224,11 @@ export async function updateStatus(
       WHERE id = $1`,
     [id, cambio.status, cambio.statusChangedAt, cambio.archivar],
   );
+}
+
+/** CU-12: aparece o no en «En memoria» (la BD exige que esté fallecido). */
+export async function setShowInMemorial(db: Queryable, id: number, show: boolean): Promise<void> {
+  await db.query('UPDATE animals SET show_in_memorial = $2 WHERE id = $1', [id, show]);
 }
 
 /** A4: borra el animal; sus fotos, actualizaciones y lecturas caen en cascada. */

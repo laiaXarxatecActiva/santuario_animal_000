@@ -6,6 +6,7 @@ import {
   type AnimalUpdateDto,
   type CatalogQuery,
   type HomeDto,
+  type MemorialAnimalDto,
   type Paginated,
   type PaginationQuery,
   type PublicAnimalDto,
@@ -28,6 +29,9 @@ export interface PublicCatalogDeps {
   db: Queryable;
   reloj: Reloj;
 }
+
+/** Actualizaciones públicas que se muestran en la ficha de «En memoria». */
+const MAX_MEMORIAL_UPDATES = 50;
 
 const meta = ({ page, pageSize, total, totalPages }: Pagina) => ({ page, pageSize, total, totalPages });
 
@@ -158,6 +162,33 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
         data: actualizaciones.map((u) => ({ ...u, photos: fotos.get(u.id) ?? [] })),
         meta: meta(pagina),
       };
+    },
+
+    /**
+     * CU-12: fallecidos marcados, cada uno con su ficha de solo lectura: fotos
+     * y actualizaciones públicas (nunca el contenido de los adoptantes).
+     */
+    async listMemorial(): Promise<{ data: MemorialAnimalDto[] }> {
+      const animales = await animalModel.listMemorial(db);
+      const data = await Promise.all(
+        animales.map(async (animal) => {
+          const [photos, actualizaciones] = await Promise.all([
+            photoModel.listGallery(db, animal.id, { includeAdopters: false }),
+            updateModel.listByAnimal(db, animal.id, { includeAdopters: false, limit: MAX_MEMORIAL_UPDATES, offset: 0 }),
+          ]);
+          const fotos = await photoModel.listByUpdates(
+            db,
+            actualizaciones.map((u) => u.id),
+            { includeAdopters: false },
+          );
+          return {
+            ...animal,
+            photos,
+            updates: actualizaciones.map((u) => ({ ...u, photos: fotos.get(u.id) ?? [] })),
+          };
+        }),
+      );
+      return { data };
     },
 
     /** Especies para los filtros del catálogo (CU-02). */

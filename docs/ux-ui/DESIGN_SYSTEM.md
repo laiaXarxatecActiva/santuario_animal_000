@@ -266,6 +266,13 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Vídeo | `video` |
 | Anterior / siguiente (visor de fotos) | `chevron-left` / `chevron-right` |
 | Ampliar una foto | `expand` |
+| En memoria (Fase 3) | `dove` |
+| Historial veterinario (menú del panel, Fase 3) | `stethoscope` |
+| Registro de actividad (Fase 3) | `clock-rotate-left` |
+| Estadísticas (Fase 3) | `chart-column` |
+| Certificado de adopción (Fase 3) | `certificate` |
+| Ver un PDF (recibo, Fase 3) | `file-pdf` |
+| Idioma (Fase 3) | `language` |
 
 ### 6.2 Logo provisional
 
@@ -466,9 +473,10 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 **Cabecera** (web pública y área del adoptante):
 
 - Fondo `--color-surface-alt`, borde inferior fino, altura de 64 px, fija en la parte superior al desplazar (`position: sticky`).
-- Izquierda: logo. Centro (escritorio): enlaces principales. Derecha: campana (con sesión), botón de tema, acceso o menú de usuario.
+- Izquierda: logo. Centro (escritorio): enlaces principales. Derecha: campana (con sesión), selector de idioma, botón de tema, acceso o menú de usuario.
 - **Desde `lg` (1024 px):** enlaces visibles. El enlace activo está subrayado con una línea terracota de 2 px.
-- **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **botón de tema y la campana siguen visibles** fuera del menú.
+- **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **selector de idioma, el botón de tema y la campana siguen visibles** fuera del menú.
+- **Selector de idioma** (`LanguageSelect`, Fase 3): lista desplegable nativa (`<select>`) de 44 px de alto, con borde `--color-border`, `--radius-pill`, fondo transparente (al pasar el ratón, `--color-surface-alt`), texto `--font-size-sm` y el icono `language` en `--color-text-muted` dentro, a la izquierda. Etiqueta «Idioma» solo para lectores de pantalla. Cada idioma se nombra en su propia lengua y con su `lang`: «Castellano», «Valencià», «English». También está en la cabecera del panel.
 - **Menú de hamburguesa:** panel que se despliega bajo la cabecera a todo el ancho, con fondo `--color-surface`. Enlaces en lista con zona pulsable de 48 px. Se cierra con Esc, con ✕ o al elegir un enlace. El botón tiene `aria-expanded` y `aria-controls`.
 - **Menú de usuario** (con sesión, desde `lg`): botón `outline` con el icono `circle-user`, el nombre y `chevron-down`, con `aria-expanded` y `aria-controls`. Despliega bajo el botón un panel alineado a la derecha, de 240 px, con fondo `--color-surface`, borde fino y `--radius-md`; enlaces en lista con zona pulsable de 44 px y, al final, separado por una línea, «Cerrar sesión» (`right-from-bracket`). Se cierra con Esc, al pulsar fuera o al elegir una opción. Por debajo de `lg`, sus opciones van al final del menú de hamburguesa.
 
@@ -500,6 +508,9 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | **Migas de pan** | En la ficha del animal y en el panel: «Animales › Rufo». `--font-size-sm`. |
 | **Zona de subida** (`MediaUploader`) | Recuadro con borde discontinuo `--color-border` y `--radius-lg`, fondo `--color-surface-alt` al arrastrar archivos encima. Dentro: icono `camera`, «Arrastra aquí las fotos o vídeos», botón `outline` «Elegir archivos» y la ayuda con los formatos y tamaños. Debajo, un grupo por archivo (nombre del archivo como leyenda) con el campo «Texto alternativo» (obligatorio), el desplegable «Visibilidad» si procede y el botón `icon` «Quitar». Si se eligen más de 10 archivos, aviso `warning`. |
 | **Cuadrícula de fotos** (`PhotoGrid`) | Miniaturas cuadradas en rejilla (2 columnas en móvil, 4 desde `md`), con borde fino y `--radius-md`. Bajo cada una: insignias «Portada» (`primary`), «Pública» o «Solo adoptantes» (`neutral`/`info`) y «Vídeo»; y una fila de botones `icon` compactos: portada (`star`, con `aria-pressed`; desactivado si no puede ser portada), subir y bajar, editar y borrar. En escritorio, además, se arrastran para ordenarlas; la miniatura que se arrastra baja su opacidad. |
+| **Gráfico de barras** (`BarChart`, Fase 3) | Estadísticas (CU-41). SVG dibujado en el propio componente, sin librerías. Barras verticales agrupadas por mes, con la esquina superior en `--radius-sm`; cada serie con su color de marca: la primera `--color-primary` (cuotas) y la segunda `--color-secondary` (donaciones). Cuatro líneas guía horizontales en `--color-border` y etiquetas de los ejes en `--color-text-muted`, `--font-size-xs` y `tabular-nums`. Encima, la leyenda: un cuadrado de 12 px del color de la serie y su nombre (el color nunca es la única pista). El SVG lleva `role="img"` y un `aria-label` que resume el gráfico; debajo, un `<details>` «Ver los datos» con la misma información en una tabla. Sin datos en el rango: el texto «No hay datos en este rango» en lugar del gráfico. Ocupa todo el ancho de su tarjeta y conserva la proporción 2:1. |
+| **Gráfico de evolución** (`LineChart`, Fase 3) | Evolución del peso en el historial veterinario (CU-34). Mismo SVG, ejes, accesibilidad y estado vacío que el gráfico de barras, con una línea de 2 px en `--color-primary` y un punto de 6 px por cada valor; el eje horizontal muestra la primera y la última fecha. Con un solo valor se dibuja solo el punto. |
+| **Lista de barras** (`BarList`, Fase 3) | Rankings y repartos de las estadísticas (animales más adoptados, adopciones por plan). Una fila por elemento: el nombre a la izquierda, la cifra a la derecha (`tabular-nums`) y debajo una barra de 8 px con fondo `--color-primary-soft` y relleno `--color-primary` proporcional al valor más alto, con `--radius-pill`. Es una lista HTML (`<ol>`), así que no necesita tabla aparte. |
 | **Separador decorativo** | Línea fina caramelo (`--color-accent`) de 48 px bajo los títulos de sección de la página de inicio. Solo decorativa. |
 
 ### 8.10 Panel de gestión

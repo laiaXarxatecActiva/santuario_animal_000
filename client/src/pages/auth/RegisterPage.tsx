@@ -13,6 +13,7 @@ import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
 import { safeNext } from '../../utils/redirect';
 import styles from './AuthPages.module.css';
+import { conIdioma } from '../../i18n/idioma';
 
 const CAMPOS = ['firstName', 'lastName', 'email', 'password', 'passwordConfirm', 'privacyAccepted'] as const;
 
@@ -50,7 +51,10 @@ export function RegisterPage() {
     <AuthCard title={t('auth.register.title')}>
       <p className={styles.intro}>{t('auth.register.intro')}</p>
       {registro.isError && <Alert type="error">{errorMessage(t, registro.error)}</Alert>}
-      <form noValidate onSubmit={handleSubmit((datos) => registro.mutate(datos))}>
+      <form
+        noValidate
+        onSubmit={handleSubmit((datos) => registro.mutate({ ...datos, ...conIdioma('preferredLanguage') }))}
+      >
         <TextField
           label={t('auth.register.firstName')}
           autoComplete="given-name"

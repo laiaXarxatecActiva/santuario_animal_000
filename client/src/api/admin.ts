@@ -1,4 +1,8 @@
 import type {
+  ActivityLogsPage,
+  AdminActivityLogsQuery,
+  AdminStatsDto,
+  AdminStatsQuery,
   AdminDonationListItemDto,
   AdminDonationMonthlyQuery,
   AdminDonationMonthlyTotalsDto,
@@ -37,6 +41,8 @@ import type {
   SpeciesAdminDto,
   SpeciesBody,
   AnimalStatusBody,
+  VetRecordBody,
+  VetRecordDto,
 } from '@sanctuary/shared';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './client';
 
@@ -47,10 +53,18 @@ export type AdminAdoptionsParams = Partial<AdminAdoptionsQuery>;
 export type AdminPaymentsParams = Partial<AdminPaymentsQuery>;
 export type AdminDonationsParams = Partial<AdminDonationsQuery>;
 export type AdminDonationMonthlyParams = Partial<AdminDonationMonthlyQuery>;
+export type AdminActivityLogsParams = Partial<AdminActivityLogsQuery>;
+export type AdminStatsParams = Partial<AdminStatsQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-41 (solo administradores, solo lectura).
+  stats: (params: AdminStatsParams) => apiGet<AdminStatsDto>('/api/admin/stats', params),
+
+  // CU-42 (solo administradores, solo lectura).
+  activityLogs: (params: AdminActivityLogsParams) => apiGet<ActivityLogsPage>('/api/admin/activity-logs', params),
 
   // CU-39 (solo administradores).
   donations: {
@@ -108,6 +122,15 @@ export const adminApi = {
     changeStatus: (id: number, body: AnimalStatusBody) =>
       apiPatch<AdminAnimalDto>(`/api/admin/animals/${id}/status`, body),
     remove: (id: number) => apiDelete(`/api/admin/animals/${id}`),
+  },
+
+  // CU-34: historial veterinario (interno).
+  vetRecords: {
+    list: (animalId: number) => apiGet<{ data: VetRecordDto[] }>(`/api/admin/animals/${animalId}/vet-records`),
+    create: (animalId: number, body: VetRecordBody) =>
+      apiPost<VetRecordDto>(`/api/admin/animals/${animalId}/vet-records`, body),
+    update: (id: number, body: VetRecordBody) => apiPut<VetRecordDto>(`/api/admin/vet-records/${id}`, body),
+    remove: (id: number) => apiDelete(`/api/admin/vet-records/${id}`),
   },
 
   // CU-29: galería de un animal.

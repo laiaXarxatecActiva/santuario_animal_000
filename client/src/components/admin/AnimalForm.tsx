@@ -27,6 +27,7 @@ export const ANIMAL_FIELDS = [
   'healthSummary',
   'isAdoptable',
   'isPublished',
+  'showInMemorial',
 ] as const;
 
 interface AnimalFormProps {
@@ -50,6 +51,8 @@ const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
   healthSummary: a?.healthSummary ?? '',
   isAdoptable: a?.isAdoptable ?? true,
   isPublished: a?.isPublished ?? false,
+  // CU-12: solo un fallecido puede aparecer en «En memoria» (RN-22).
+  ...(a?.status === 'deceased' ? { showInMemorial: a.showInMemorial } : {}),
 });
 
 // Formulario de alta y edición de un animal (CU-28, SCREENS §5.4 pestaña «Datos»).
@@ -139,6 +142,22 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
             <p className={styles.error} role="alert">
               {errors.isAdoptable.message}
             </p>
+          )}
+          {animal?.status === 'deceased' && (
+            <Controller
+              control={control}
+              name="showInMemorial"
+              render={({ field }) => (
+                <Switch
+                  label={t('admin.animal.showInMemorial')}
+                  help={t('admin.animal.showInMemorialHelp')}
+                  name={field.name}
+                  ref={field.ref}
+                  checked={Boolean(field.value)}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                />
+              )}
+            />
           )}
         </fieldset>
       </div>

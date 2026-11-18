@@ -9,8 +9,9 @@ import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { SelectField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
+import { ActivityLogTable } from '../../components/admin/ActivityLogTable';
 import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
-import { ADMIN_USERS_KEY, useAdminUser } from '../../hooks/useAdmin';
+import { ADMIN_USERS_KEY, useAdminActivityLogs, useAdminUser } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatShortDate, formatShortInstant } from '../../utils/format';
@@ -161,6 +162,7 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
 
       {esAdoptante && <Adopciones usuario={usuario} />}
       {esAdoptante && <Aportaciones usuario={usuario} />}
+      {isWorkerRole(usuario.role) && <Actividad userId={usuario.id} />}
 
       <Modal
         open={confirmando}
@@ -181,6 +183,35 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
         {esAdoptante && adopcionesAbiertas && <p>{t('admin.users.deactivateAdoptions')}</p>}
       </Modal>
     </div>
+  );
+}
+
+const ACTIVIDAD_RECIENTE = 10;
+
+/** SCREENS §5.6: la actividad reciente de un trabajador (CU-42). */
+function Actividad({ userId }: { userId: number }) {
+  const { t } = useTranslation();
+  const registro = useAdminActivityLogs({ userId, pageSize: ACTIVIDAD_RECIENTE });
+  return (
+    <section aria-labelledby="actividad" className={styles.page}>
+      <h2 id="actividad">{t('admin.activity.workerTitle')}</h2>
+      {registro.isError ? (
+        <p>{t('admin.activity.loadError')}</p>
+      ) : !registro.data ? (
+        <p aria-busy="true">{t('common.loading')}</p>
+      ) : registro.data.data.length === 0 ? (
+        <p>{t('admin.activity.workerEmpty')}</p>
+      ) : (
+        <>
+          <ActivityLogTable entries={registro.data.data} showUser={false} />
+          {registro.data.meta.total > ACTIVIDAD_RECIENTE && (
+            <Link to={`/admin/activity?userId=${userId}`} className={styles.nameLink}>
+              {t('admin.activity.seeAll')}
+            </Link>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

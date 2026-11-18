@@ -622,7 +622,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 2. El sistema muestra dos listados, cuotas y donaciones, con: concepto (animal y plan, o «Donación»), importe, fecha, estado (completado, fallido, pendiente, devuelto) y referencia.
 3. El sistema muestra el total aportado por año (solo pagos `completed`).
 4. El adoptante pulsa «Recibo» en un pago o donación completado.
-5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, referencia y la indicación «Pago simulado». En la Fase 2 es una página HTML imprimible; desde la Fase 3, un PDF descargable.
+5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, referencia y la indicación «Pago simulado». En la Fase 2 era una página HTML imprimible; desde la Fase 3 es un PDF que se puede abrir en el navegador (para verlo o imprimirlo) o descargar.
 
 **Flujos alternativos**
 
@@ -713,7 +713,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. En «Mis animales», el adoptante pulsa «Certificado».
 2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
-3. El navegador descarga el archivo `certificado-<animal>.pdf`.
+3. El navegador descarga el archivo `certificado-<animal>.pdf`. También se puede abrir en el navegador para verlo o imprimirlo.
 
 **Flujos alternativos**
 
@@ -741,7 +741,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
    - recibir emails: sí o no (`email_notifications`);
    - frecuencia: un email por actualización o un resumen mensual (`email_frequency`);
    - aparecer como adoptante en la ficha pública de sus animales (`show_public_name`);
-   - idioma (Fase 3).
+   - idioma de la web, de los emails y de los PDF: castellano, valenciano o inglés (`preferred_language`, Fase 3; también para los trabajadores).
 3. El usuario modifica los datos y guarda.
 4. El sistema valida y guarda los cambios y muestra «Cambios guardados».
 
@@ -814,11 +814,13 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-17, RN-20.
 
-### CU-26 — Regalar una adopción
+### CU-26 — Regalar una adopción (descartado)
+
+> **Descartado** (decisión de la responsable del proyecto, noviembre de 2026): la adopción regalo no aporta lo suficiente para el santuario y no se implementa. Se conserva la descripción como referencia. La columna `adoptions.gifted_by_user_id` sigue en el esquema (la Fase 3 no cambia el esquema), siempre a `NULL`.
 
 | Actor principal | Fase |
 | --- | --- |
-| Adoptante | 3 |
+| Adoptante | 3 (descartado) |
 
 **Precondiciones**
 
@@ -846,7 +848,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-03, RN-05, RN-13.
 
-**Notas:** antes de implementar este caso hay que decidir quién paga las cuotas siguientes: quien regala (durante cuántos meses) o quien recibe. Es una decisión funcional pendiente (`TECH_SPEC.md` §18, cuestión 6).
+**Notas:** la decisión pendiente sobre quién paga las cuotas siguientes (`TECH_SPEC.md` §18, cuestión 6) ya no hace falta: el caso se ha descartado.
 
 ## 7. Panel: cuidador y administrador
 
@@ -1317,14 +1319,17 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 2. Elige un rango de fechas (por defecto, los últimos 12 meses).
 3. El sistema muestra:
    - ingresos por mes, con cuotas y donaciones por separado (gráfico de barras);
-   - animales más adoptados (adopciones activas);
-   - animales sin adoptantes;
+   - animales más adoptados (los 5 con más adopciones activas);
+   - animales sin adoptantes (en el santuario o en tratamiento, sin adopciones activas);
    - adopciones nuevas y bajas por mes;
    - reparto de adopciones activas por plan.
+
+   Los ingresos y las adopciones por mes dependen del rango; las otras tres listas son la situación actual.
 
 **Flujos alternativos**
 
 - **3a.** No hay datos en el rango: se indica en cada gráfico.
+- **2a.** El rango es al revés o supera los 60 meses: error en el campo de la fecha.
 
 **Postcondiciones**
 

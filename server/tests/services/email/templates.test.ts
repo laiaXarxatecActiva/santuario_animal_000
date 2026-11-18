@@ -73,6 +73,12 @@ describe('plantillas de pagos (CU-13, CU-14)', () => {
     expect(email.text).toContain('Pago simulado');
   });
 
+  it('CU-22: adoption-welcome indica dónde descargar el certificado', () => {
+    const email = adoptionWelcomeEmail(recibo);
+    expect(email.text).toContain('Desde «Mis animales» puedes descargar el certificado de adopción de Brisa.');
+    expect(email.html).toContain('certificado de adopción de Brisa');
+  });
+
   it('payment-completed confirma la cuota cobrada', () => {
     const email = paymentCompletedEmail(recibo);
     expect(email.subject).toBe('Cuota cobrada: Brisa');

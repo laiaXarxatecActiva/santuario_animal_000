@@ -36,7 +36,7 @@ La aplicación tiene tres caras sobre una misma base de datos PostgreSQL:
 | **Local primero** | Todo debe funcionar en el ordenador de desarrollo sin conexión a servicios externos. El despliegue es la última fase. |
 | **Proyecto académico** | La pasarela de pago es simulada. Los emails en desarrollo van a un buzón local de pruebas (Mailpit), nunca a direcciones reales. |
 | **Desarrollo asistido por IA** | Convenciones explícitas, estructura predecible y pruebas automáticas para validar lo generado. |
-| **Idioma** | Interfaz y documentación en castellano. Código, SQL, nombres de archivos y directorios, rutas de la API y valores de estado en inglés. La estructura debe permitir añadir valenciano e inglés (Fase 3). |
+| **Idioma** | Documentación en castellano. Interfaz, emails y PDF en castellano, valenciano e inglés (Fase 3). Código, SQL, nombres de archivos y directorios, rutas de la API y valores de estado en inglés. |
 | **Versión de PostgreSQL** | El SQL debe funcionar en PostgreSQL 14 o superior, para usar la versión que haya instalada en cada ordenador. Probado en PostgreSQL 16. |
 
 ## 4. Tecnologías
@@ -230,8 +230,15 @@ sanctuary/
 | Identificadores de código, SQL, rutas de la API, archivos y directorios | Inglés | `AdoptionModel.findOpenByUser`, `GET /api/me/adoptions` |
 | Valores de estado y tipos | Inglés | `active`, `deceased`, `per_update` |
 | Comentarios en el código y en el SQL | Castellano | `-- Solo los adoptantes pueden adoptar` |
-| Textos de la interfaz, emails y mensajes de error para el usuario | Castellano (vía i18n) | `t('adoption.errors.alreadyAdopted')` |
+| Textos de la interfaz, emails y mensajes de error para el usuario | Castellano, valenciano e inglés (vía i18n; ver §7.1.1) | `t('adoption.errors.alreadyAdopted')` |
 | Datos de ejemplo | Castellano | Nombres de animales e historias |
+
+#### 7.1.1 Varios idiomas (Fase 3)
+
+- **Interfaz:** `client/src/i18n/locales/{es,ca,en}.json`, con las mismas claves (lo comprueba `client/tests/locales.test.ts`). El idioma inicial es el elegido en el navegador (`localStorage.language`), si no el del navegador y, si no, castellano (`i18n/idioma.ts`). Con sesión manda `preferredLanguage` de la cuenta. El selector de la cabecera y la sección «Idioma» del perfil lo cambian y lo guardan con `PATCH /api/me/profile`. Los formatos de fechas, importes y listas (`utils/format.ts`) siguen el idioma y `<html lang>` cambia con él.
+- **Mensajes de validación:** se escriben una vez, en castellano, en los esquemas Zod compartidos y en el servidor; `FieldError` los traduce al mostrarlos (`i18n/mensajesValidacion.ts`). Los errores de negocio se traducen por su `code` (`errors.<CODE>`).
+- **Emails, avisos de la campana y PDF:** en el idioma del destinatario (`users.preferred_language`). Las plantillas reciben `language`; los avisos se guardan ya traducidos (`servicios/textos-avisos.ts`, el modelo elige el texto con `CASE u.preferred_language`); el certificado y los recibos usan `dominio/documentos.ts`. Una donación sin cuenta usa el idioma de la web al donar (`language` en `POST /api/donations`). El buzón interno del contacto sigue en castellano.
+- **No se traducen** los contenidos que escribe el santuario (animales, especies, actualizaciones, planes) ni el nombre «Santuario de Animales», que es una marca.
 | Mensajes de commit | Inglés (Conventional Commits) | `feat(adoptions): add plan change (CU-20)` |
 
 ### 7.2 Nombres
@@ -295,7 +302,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | --- | --- |
 | `users.email_notifications`, `users.email_frequency` | Preferencias de notificación: email sí/no y frecuencia (`per_update` o `monthly_digest`) |
 | `users.digest_sent_for` | Primer día del último mes resumido por `monthly-digest`: como máximo un resumen al mes, aunque la tarea se repita (CU-46) |
-| `users.preferred_language` | Preparado para varios idiomas (Fase 3) |
+| `users.preferred_language` | Idioma de la web, los emails y los PDF (`es`, `ca`, `en`; Fase 3) |
 | `users.privacy_accepted_at` | Consentimiento RGPD al registrarse |
 | `users.anonymized_at` | Baja con anonimización, conservando pagos y donaciones |
 | `users.last_login_at` | Información para el panel |
@@ -307,7 +314,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `adoptions.next_plan_id` | El cambio de plan se aplica en la siguiente cuota |
 | `adoptions.cancel_requested_at` | La baja mantiene la adopción activa hasta el final del mes pagado |
 | `adoptions.end_reason` | Motivo de cierre (baja, impago, fallecimiento, traslado…) |
-| `adoptions.gifted_by_user_id` | Adopción regalo (Fase 3) |
+| `adoptions.gifted_by_user_id` | Adopción regalo (CU-26, descartada en la Fase 3: la columna se conserva, siempre a `NULL`) |
 | `adoptions.created_by`, `adoptions.notes` | Adopciones creadas a mano por un administrador |
 | `payments.period_start`, `payments.period_end` | Mes cubierto por cada cuota; evita cobros duplicados |
 | `payments.plan_id` | Plan con el que se cobró la cuota; el recibo lo muestra aunque la adopción cambie de plan después |
@@ -502,7 +509,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/animals` | Público | Catálogo. Filtros: `speciesId`, `sex`, `minAge`, `maxAge`, `adoptable`, `q` (nombre). Orden: `-arrivalDate` (más recientes), `name`, `adopterCount` (menos adoptantes). Solo animales publicados en estado `in_sanctuary` o `in_treatment`. | CU-02 |
 | GET | `/api/animals/:id` | Público | Ficha pública. `exclusiveAccess` indica si quien consulta es adoptante activo del animal o trabajador; en ese caso incluye `healthSummary` y las fotos `adopters` (con su `visibility`). | CU-03, CU-16 |
 | GET | `/api/animals/:id/updates` | Público | Actualizaciones públicas, o todas si el usuario es adoptante activo del animal o trabajador; al adoptante se le indica `isRead` | CU-03, CU-16 |
-| GET | `/api/animals/memorial` | Público | Animales con `show_in_memorial = TRUE` (Fase 3) | CU-12 |
+| GET | `/api/animals/memorial` | Público | Animales fallecidos con `show_in_memorial = TRUE` (Fase 3), del fallecimiento más reciente al más antiguo. Cada uno trae lo que necesita su ficha de solo lectura: foto de portada, especie, llegada (`arrivalDate`), fallecimiento (`deathDate`), historia, fotos públicas y actualizaciones públicas (como mucho 50). Sin datos de adopción. En el panel, `showInMemorial` se marca al registrar el fallecimiento (`PATCH …/status`) o en la edición (`PUT /api/admin/animals/:id`); solo vale para fallecidos (422 `MEMORIAL_ONLY_DECEASED`) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
 | POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName?, donorEmail?, isAnonymous, message?, simulatedOutcome? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
@@ -518,14 +525,14 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`. Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
 | PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio si es el plan actual). Solo `active` sin baja (422 `PLAN_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-20 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja (`{}`): la activa sigue hasta el último día pagado, la pendiente pasa a `cancelled` y la pausada a `finished`. Baja ya pedida: 409 `ADOPTION_CANCEL_ALREADY_REQUESTED`; cerrada: 422 `ADOPTION_CLOSED`. Devuelve la adopción | CU-21 |
-| GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) | CU-22 |
+| GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) de una adopción propia `active` (si no, 422 `CERTIFICATE_NOT_AVAILABLE`): nombre del adoptante, nombre, especie y foto de portada del animal (sin foto si no tiene o no se puede leer) y fecha de inicio. Se abre en el navegador (`inline`) o, con `?download=1`, se descarga como `certificado-<animal>.pdf`. `Cache-Control: no-store` | CU-22 |
 | GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
 | GET | `/api/me/contributions` | `{ payments, donations, totals: { allTime, years } }`: cuotas y donaciones con mi cuenta, las más recientes primero. `?year=` filtra los listados (no los totales); los totales solo suman lo cobrado | CU-19 |
 | GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`), con el plan con el que se cobró (`payments.plan_id`) | CU-19 |
 | GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
-| POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
+| GET | `/api/me/payments/:id/receipt.pdf`, `/api/me/donations/:id/receipt.pdf` | Recibo en PDF (Fase 3) con los mismos datos y reglas; `inline` o, con `?download=1`, descarga de `recibo-<referencia>.pdf`. `Cache-Control: no-store` | CU-19 |
 
 ### 10.5 Cualquier usuario autenticado
 
@@ -593,7 +600,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/admin/donations/monthly-totals` | `{ data: [{ month: 'YYYY-MM', total, count }] }`: lo cobrado (`completed`) cada mes, con `q`, `method`, `from` y `to`. Sin fechas, los últimos 12 meses; los meses sin donaciones salen a 0 | CU-39 |
 | GET / POST | `/api/admin/plans` | Listado y alta | CU-40 |
 | PUT | `/api/admin/plans/:id` | Nombre, importe, descripción, plan por defecto, activo | CU-40 |
-| GET | `/api/admin/stats` | Estadísticas (Fase 3) | CU-41 |
+| GET | `/api/admin/stats` | Estadísticas (Fase 3), solo admin. `?from&to` (días; se toman sus meses; por defecto los últimos 12 meses, como mucho 60: si no, 400 en `from`). Devuelve `range`, `revenueByMonth` (lo `completed` por mes, cuotas y donaciones por separado, igual que los ingresos del escritorio), `adoptionsByMonth` (`started` por `start_date`; `ended` por `end_date` de las `cancelled`/`finished` que llegaron a empezar), y la situación actual: `mostAdopted` (5 con más adopciones activas), `withoutAdopters` (en el santuario o en tratamiento sin adopciones activas) y `activeByPlan`. Todos los meses del rango, también los que están a 0 | CU-41 |
 | GET | `/api/admin/activity-logs` | Registro de actividad (Fase 3) | CU-42 |
 | POST | `/api/admin/jobs/:jobName/run` | Ejecuta una tarea programada a mano (pruebas y demostraciones) | CU-43 a CU-47 |
 
@@ -686,7 +693,7 @@ Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteEx
 
 ### 11.5 Servicios de la Fase 3
 
-- **`PdfService`:** certificado de adopción y recibos en PDF con `pdfkit`. Hasta la Fase 3, los recibos se muestran como una página HTML imprimible.
+- **`PdfService`** (`server/src/services/pdf/pdf.service.ts`): certificado de adopción y recibos en PDF con `pdfkit` (licencia MIT). Los textos los escribe el dominio (`dominio/documentos.ts`); las fotos WebP se convierten a PNG con `sharp`. Los PDF no se guardan. Desde la Fase 3 los recibos de «Mis aportaciones» son solo PDF (la página HTML imprimible se ha retirado); el recibo en pantalla tras una donación (CU-05) se mantiene.
 - **`ActivityLogService`:** `log(userId, action, tableName, recordId, details)`, llamado desde los controladores del panel después de cada operación de escritura. Nunca guarda contraseñas ni tokens.
 
 ## 12. Cliente (Vista)
@@ -703,14 +710,13 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/how-it-works` | Cómo funciona la adopción simbólica | Público |
 | `/donate` | Donar | Público |
 | `/about` | Sobre el santuario y contacto | Público |
-| `/memorial` | En memoria (Fase 3) | Público |
+| `/memorial`, `/memorial/:id` | En memoria y ficha de solo lectura (Fase 3) | Público |
 | `/register`, `/login`, `/verify-email`, `/forgot-password`, `/reset-password` | Autenticación | Público |
 | `/adopt/:animalId` | Elegir plan y pagar | Adoptante |
 | `/my-animals` | Mis animales | Adoptante |
 | `/my-animals/:animalId` | Ficha ampliada | Adoptante |
 | `/feed` | Muro de actualizaciones | Adoptante |
 | `/my-contributions` | Mis aportaciones | Adoptante |
-| `/my-contributions/receipts/:kind/:id` | Recibo imprimible (`kind` = `payment` o `donation`) | Adoptante |
 | `/profile` | Mi perfil | Autenticado |
 | `/notifications` | Notificaciones | Autenticado |
 | `/admin` | Escritorio | Cuidador, admin |
@@ -724,7 +730,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 - **Estado del servidor** con React Query; **sesión** en `SessionContext` (se carga con `GET /api/auth/me` al arrancar).
 - **Formularios** con `react-hook-form` y los esquemas Zod de `shared/`. Los errores del servidor (`details`) se muestran junto al campo correspondiente.
-- **Textos** siempre con `t('clave')` desde `i18n/locales/es.json`. Nunca texto fijo en los componentes.
+- **Textos** siempre con `t('clave')` desde `i18n/locales/` (`es.json`, `ca.json` y `en.json`, con las mismas claves). Nunca texto fijo en los componentes.
 - **Importes** con `Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })` y **fechas** con `Intl.DateTimeFormat('es-ES')`.
 - **Antes de adoptar**, la interfaz explica que la adopción es simbólica, que el animal no sale del santuario y que puede tener varios adoptantes.
 - **Pasarela simulada:** una pantalla propia con un aviso claro de «Pago simulado: no se realizará ningún cargo real» y los botones de resultado.
@@ -746,7 +752,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | **Rendimiento** | Paginación en todos los listados; índices definidos en `seedsql.sql`; miniaturas en las tarjetas del catálogo |
 | **Copias de seguridad** | Script `npm run db:backup` (`pg_dump` a `backups/<fecha>.sql`) y copia de `server/uploads/`. En local se ejecuta a mano; en la Fase 4 se automatiza. |
 | **Logs** | `pino`: peticiones, errores y resultado de las tareas programadas. Nunca se registran contraseñas, tokens ni cookies. |
-| **Idioma** | Castellano; `i18next` preparado para valenciano (`ca`) e inglés (`en`) en la Fase 3 |
+| **Idioma** | Castellano, valenciano (`ca`) e inglés (`en`) con `i18next` (Fase 3) |
 | **Zona horaria** | `Europe/Madrid` para las tareas y la presentación de fechas; la base de datos guarda `TIMESTAMPTZ` |
 
 ## 14. Configuración y entorno local
@@ -894,14 +900,14 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 | Estadísticas | CU-41 |
 | Registro de actividad | CU-42 |
 | Certificado de adopción en PDF y recibos en PDF | CU-22, CU-19 |
-| Adopción regalo | CU-26 |
+| ~~Adopción regalo~~ (descartada: no se implementa) | CU-26 |
 | Sección «En memoria» | CU-12 |
-| Valenciano e inglés (archivos `ca.json` y `en.json`, selector de idioma, `preferred_language`) | — |
+| Valenciano e inglés (archivos `ca.json` y `en.json`, selector de idioma, `preferred_language`; también emails, avisos y PDF) | — |
 
 **Criterios de aceptación:**
 
-- [ ] Ninguna funcionalidad de la Fase 3 requiere cambios en la estructura de la base de datos.
-- [ ] Las pruebas de las fases 1 y 2 siguen pasando.
+- [x] Ninguna funcionalidad de la Fase 3 requiere cambios en la estructura de la base de datos (`database/` no cambia en toda la fase).
+- [x] Las pruebas de las fases 1 y 2 siguen pasando (`npm test` y `npm run test:e2e`).
 
 ### Fase 4 — Despliegue (fase final)
 
@@ -945,7 +951,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 | Ampliación | Cómo hacerla |
 | --- | --- |
 | **Nueva especie** (por ejemplo, lince ibérico) | Alta desde el panel (CU-30). Si la especie tiene razas, se usa `animals.breed`. No requiere cambios de código. |
-| **Nuevo idioma** | Añadir `client/src/i18n/locales/<código>.json` y el valor en el `CHECK` de `users.preferred_language` |
+| **Nuevo idioma** | Añadir `client/src/i18n/locales/<código>.json`, el código en `shared/src/constants/languages.ts` y en el `CHECK` de `users.preferred_language`, sus textos en las plantillas de email, en `textos-avisos.ts`, en `dominio/documentos.ts` y en `i18n/mensajesValidacion.ts` |
 | **Pasarela de pago real** | Nueva clase que implemente `PaymentGateway`; se elige por configuración. Ver el anexo «Paso a producción real». |
 | **Nuevo tipo de notificación** | Añadir el valor al `CHECK` de `notifications.type`, a las constantes de `shared/` y crear la plantilla de email |
 | **Nuevo estado de animal** | Añadir el valor al `CHECK` de `animals.status`, a `shared/constants/status.ts` y a las traducciones |
@@ -964,7 +970,7 @@ Estas decisiones funcionales no están en el diseño. Hasta que se decidan, se a
 | 3 | ¿Puede adoptar o donar con su cuenta un usuario con el email sin verificar? | Puede iniciar sesión y navegar, pero debe verificar el email antes de adoptar (`requireVerifiedEmail`). Donar siempre se permite, incluso sin cuenta. |
 | 4 | ¿Las fotos y vídeos `adopters` deben estar protegidos frente a quien conozca la URL? | No: basta con URLs no adivinables (UUID). Se puede reforzar en la Fase 4. |
 | 5 | ¿Qué plan se aplica si el administrador desactiva un plan con adopciones activas? | Las adopciones existentes siguen con ese plan; solo deja de ofrecerse en nuevas adopciones |
-| 6 | Adopción regalo (Fase 3): ¿quién paga las cuotas después de la primera, quien regala o quien la recibe? | Sin decidir; debe resolverse antes de implementar CU-26. La base de datos ya admite ambos casos (`adoptions.gifted_by_user_id`). |
+| 6 | Adopción regalo (Fase 3): ¿quién paga las cuotas después de la primera, quien regala o quien la recibe? | **Cerrada: CU-26 se descarta** (noviembre de 2026). No se implementa; `adoptions.gifted_by_user_id` se conserva en el esquema, siempre a `NULL`. |
 
 ## 19. Glosario
 

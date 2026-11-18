@@ -1,6 +1,8 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   faArrowUpRightFromSquare,
+  faChartColumn,
+  faClockRotateLeft,
   faBars,
   faFeather,
   faGauge,
@@ -10,6 +12,7 @@ import {
   faUsers,
   faFileSignature,
   faMoneyBillWave,
+  faStethoscope,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Alert } from '../components/Alert';
 import iconStyles from '../components/IconButton.module.css';
+import { LanguageSelect } from '../components/LanguageSelect';
 import { Logo } from '../components/Logo';
 import { NotificationBell } from '../components/NotificationBell';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -52,6 +56,7 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/animals', key: 'admin.nav.animals', icon: faFeather },
       { to: '/admin/updates', key: 'admin.nav.updates', icon: faNewspaper },
       { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
+      { to: '/admin/vet-records', key: 'admin.nav.vet', icon: faStethoscope },
     ],
   },
   {
@@ -63,6 +68,8 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/payments', key: 'admin.nav.payments', icon: faMoneyBillWave },
       { to: '/admin/donations', key: 'admin.nav.donations', icon: faHandHoldingHeart },
       { to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart },
+      { to: '/admin/stats', key: 'admin.nav.stats', icon: faChartColumn },
+      { to: '/admin/activity', key: 'admin.nav.activity', icon: faClockRotateLeft },
     ],
   },
 ];
@@ -115,6 +122,7 @@ export function AdminLayout() {
         <span className={styles.title}>{t('admin.nav.title')}</span>
         <div className={styles.actions}>
           {user && <NotificationBell />}
+          <LanguageSelect />
           <ThemeToggle />
           {user && <UserMenu name={user.firstName} links={MENU_USUARIO} onLogout={() => logout.mutate()} />}
         </div>

@@ -1,3 +1,4 @@
+import { LANGUAGES } from '../constants/languages.js';
 import { z } from 'zod';
 import { SIMULATED_OUTCOMES } from '../constants/status.js';
 import { emailValido, textoOpcional } from './fields.js';
@@ -28,6 +29,8 @@ export const donationSchema = z.object({
   isAnonymous: z.boolean().default(false),
   message: textoOpcional(1000),
   simulatedOutcome: z.enum(SIMULATED_OUTCOMES).optional(),
+  /** Fase 3: idioma de la web al donar, para el email de agradecimiento sin cuenta. */
+  language: z.enum(LANGUAGES).optional(),
 });
 export type DonationInput = z.input<typeof donationSchema>;
 export type DonationData = z.output<typeof donationSchema>;
