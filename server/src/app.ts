@@ -33,6 +33,7 @@ import { createDashboardService } from './servicios/dashboard.service.js';
 import { createPlanAdminService } from './servicios/plan-admin.service.js';
 import { createUserAdminService } from './servicios/user-admin.service.js';
 import { createAdoptionAdminService } from './servicios/adoption-admin.service.js';
+import { createPaymentAdminService } from './servicios/payment-admin.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createNotificationService } from './servicios/notification.service.js';
 import { createMediaUploader } from './servicios/media-upload.service.js';
@@ -166,9 +167,18 @@ export function createApp(options: AppOptions): Express {
         clientUrl: options.clientUrl,
         logEmailError,
       }),
+      payments: createPaymentAdminService({
+        db,
+        reloj,
+        payments: options.payments,
+        email: options.email,
+        clientUrl: options.clientUrl,
+        logEmailError,
+      }),
       adoptions: createAdoptionAdminService({
         db,
         reloj,
+        payments: options.payments,
         email: options.email,
         clientUrl: options.clientUrl,
         logEmailError,

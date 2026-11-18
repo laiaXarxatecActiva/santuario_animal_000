@@ -9,6 +9,7 @@ import {
   faTags,
   faUsers,
   faFileSignature,
+  faMoneyBillWave,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -59,6 +60,7 @@ const GRUPOS: readonly Grupo[] = [
     links: [
       { to: '/admin/users', key: 'admin.nav.users', icon: faUsers },
       { to: '/admin/adoptions', key: 'admin.nav.adoptions', icon: faFileSignature },
+      { to: '/admin/payments', key: 'admin.nav.payments', icon: faMoneyBillWave },
       { to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart },
     ],
   },

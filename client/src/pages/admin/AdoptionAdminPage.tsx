@@ -1,4 +1,10 @@
-import type { AdminAdoptionDetailDto, AdoptionAdminAction } from '@sanctuary/shared';
+import {
+  MANUAL_PAYMENT_METHODS,
+  manualPaymentSchema,
+  type AdminAdoptionDetailDto,
+  type AdoptionAdminAction,
+  type ManualPaymentMethod,
+} from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,9 +13,10 @@ import { adminApi } from '../../api/admin';
 import { AdoptionStatusBadge } from '../../components/AdoptionStatusBadge';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { TextAreaField } from '../../components/FormFields';
+import { ApiError } from '../../api/client';
+import { Checkbox, SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
-import { ADMIN_ADOPTIONS_KEY, useAdminAdoption } from '../../hooks/useAdmin';
+import { ADMIN_ADOPTIONS_KEY, ADMIN_PAYMENTS_KEY, useAdminAdoption } from '../../hooks/useAdmin';
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatShortDate, formatShortInstant } from '../../utils/format';
 import { parseId } from '../../utils/routeParams';
@@ -46,16 +53,18 @@ function Ficha({ adopcion }: { adopcion: AdminAdoptionDetailDto }) {
   const queryClient = useQueryClient();
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [ventana, setVentana] = useState<AccionConMotivo | null>(null);
+  const [registrando, setRegistrando] = useState(false);
   const adoptante = `${adopcion.adopter.firstName} ${adopcion.adopter.lastName}`;
   const abierta = ['pending', 'active', 'paused'].includes(adopcion.status);
 
   const cambiar = useMutation({
-    mutationFn: (body: { action: AdoptionAdminAction; notes?: string }) =>
+    mutationFn: (body: { action: AdoptionAdminAction; notes?: string; refundLastPayment?: boolean }) =>
       adminApi.adoptions.changeStatus(adopcion.id, body),
     onSuccess: async (_datos, body) => {
       setVentana(null);
       setAviso({ type: 'success', message: t(`admin.adoptions.done.${body.action}`) });
       await queryClient.invalidateQueries({ queryKey: ADMIN_ADOPTIONS_KEY });
+      await queryClient.invalidateQueries({ queryKey: ADMIN_PAYMENTS_KEY });
     },
     onError: (error) => {
       setVentana(null);
@@ -71,6 +80,12 @@ function Ficha({ adopcion }: { adopcion: AdminAdoptionDetailDto }) {
       <div className={styles.header}>
         <h1>{`${adopcion.animal.name} · ${adoptante}`}</h1>
         <div className={styles.headerActions}>
+          {/* CU-38 A2: solo si hay una cuota pendiente (la calcula el servidor). */}
+          {adopcion.pendingFee && (
+            <Button variant="outline" onClick={() => setRegistrando(true)}>
+              {t('admin.payments.register')}
+            </Button>
+          )}
           {/* A1: solo una activa sin baja solicitada (el servidor también lo comprueba). */}
           {adopcion.status === 'active' && !adopcion.cancelRequested && (
             <Button variant="outline" onClick={() => setVentana('pause')}>
@@ -150,7 +165,21 @@ function Ficha({ adopcion }: { adopcion: AdminAdoptionDetailDto }) {
           accion={ventana}
           enviando={cambiar.isPending}
           onCerrar={() => setVentana(null)}
-          onConfirmar={(notes) => cambiar.mutate({ action: ventana, notes })}
+          ultimaCuota={ventana === 'cancel' ? adopcion.lastRefundablePayment : null}
+          onConfirmar={(notes, devolver) =>
+            cambiar.mutate(devolver ? { action: ventana, notes, refundLastPayment: true } : { action: ventana, notes })
+          }
+        />
+      )}
+      {registrando && adopcion.pendingFee && (
+        <VentanaPago
+          adopcion={adopcion}
+          cuota={adopcion.pendingFee}
+          onCerrar={() => setRegistrando(false)}
+          onTerminar={(resultado) => {
+            setRegistrando(false);
+            setAviso(resultado);
+          }}
         />
       )}
     </div>
@@ -161,16 +190,20 @@ function Ficha({ adopcion }: { adopcion: AdminAdoptionDetailDto }) {
 function VentanaMotivo({
   accion,
   enviando,
+  ultimaCuota,
   onCerrar,
   onConfirmar,
 }: {
   accion: AccionConMotivo;
   enviando: boolean;
+  /** CU-38: al cancelar, la última cuota cobrada que se puede devolver. */
+  ultimaCuota: { id: number; amount: string } | null;
   onCerrar: () => void;
-  onConfirmar: (notas: string) => void;
+  onConfirmar: (notas: string, devolver: boolean) => void;
 }) {
   const { t } = useTranslation();
   const [motivo, setMotivo] = useState('');
+  const [devolver, setDevolver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const confirmar = () => {
@@ -178,7 +211,7 @@ function VentanaMotivo({
       setError(t('admin.adoptions.reasonRequired'));
       return;
     }
-    onConfirmar(motivo.trim());
+    onConfirmar(motivo.trim(), devolver);
   };
 
   return (
@@ -209,6 +242,117 @@ function VentanaMotivo({
           setError(null);
         }}
       />
+      {ultimaCuota && (
+        <Checkbox
+          label={t('admin.payments.refundLast', { amount: formatCurrency(ultimaCuota.amount) })}
+          checked={devolver}
+          onChange={(e) => setDevolver(e.target.checked)}
+        />
+      )}
+    </Modal>
+  );
+}
+
+/** El importe con coma, como se escribe en castellano: `"5.00"` → `"5,00"`. */
+const importeEditable = (importe: string) => importe.replace('.', ',');
+
+/** CU-38 A2: registra la cuota pendiente cobrada fuera de la web. */
+function VentanaPago({
+  adopcion,
+  cuota,
+  onCerrar,
+  onTerminar,
+}: {
+  adopcion: AdminAdoptionDetailDto;
+  cuota: { periodStart: string; periodEnd: string; amount: string };
+  onCerrar: () => void;
+  onTerminar: (aviso: Aviso) => void;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [importe, setImporte] = useState(importeEditable(cuota.amount));
+  const [metodo, setMetodo] = useState<ManualPaymentMethod | ''>('');
+  const [errores, setErrores] = useState<Partial<Record<'amount' | 'method', string>>>({});
+
+  const registrar = useMutation({
+    mutationFn: adminApi.payments.create,
+    onSuccess: async () => {
+      onTerminar({ type: 'success', message: t('admin.payments.registered') });
+      await queryClient.invalidateQueries({ queryKey: ADMIN_ADOPTIONS_KEY });
+      await queryClient.invalidateQueries({ queryKey: ADMIN_PAYMENTS_KEY });
+    },
+    onError: (error) => {
+      // A2a: aquí «la cuota ya está pagada» se explica como periodo.
+      const clave = error instanceof ApiError ? `admin.payments.errors.${error.code}` : '';
+      onTerminar({ type: 'error', message: clave && t(clave) !== clave ? t(clave) : errorMessage(t, error) });
+    },
+  });
+
+  const enviar = () => {
+    const body = { adoptionId: adopcion.id, amount: importe, method: metodo };
+    // Las mismas reglas que el servidor (esquema compartido), para avisar antes de enviar.
+    const resultado = manualPaymentSchema.safeParse(body);
+    if (!resultado.success) {
+      const nuevos: typeof errores = {};
+      for (const issue of resultado.error.issues) {
+        const campo = issue.path[0];
+        if ((campo === 'amount' || campo === 'method') && !nuevos[campo]) nuevos[campo] = issue.message;
+      }
+      setErrores(nuevos);
+      return;
+    }
+    registrar.mutate({ adoptionId: adopcion.id, amount: importe, method: resultado.data.method });
+  };
+
+  return (
+    <Modal
+      open
+      title={t('admin.payments.registerTitle')}
+      onClose={onCerrar}
+      footer={
+        <>
+          <Button variant="outline" data-autofocus onClick={onCerrar}>
+            {t('admin.adoptions.back')}
+          </Button>
+          <Button disabled={registrar.isPending} onClick={enviar}>
+            {t('admin.payments.register')}
+          </Button>
+        </>
+      }
+    >
+      <p>
+        {t('admin.payments.feePeriod', {
+          from: formatShortDate(cuota.periodStart),
+          to: formatShortDate(cuota.periodEnd),
+        })}
+      </p>
+      <p>{t(adopcion.status === 'pending' ? 'admin.payments.activatesPending' : 'admin.payments.advancesBilling')}</p>
+      <TextField
+        label={t('admin.payments.amountLabel')}
+        inputMode="decimal"
+        value={importe}
+        error={errores.amount}
+        onChange={(e) => {
+          setImporte(e.target.value);
+          setErrores((previos) => ({ ...previos, amount: undefined }));
+        }}
+      />
+      <SelectField
+        label={t('admin.payments.method')}
+        value={metodo}
+        error={errores.method}
+        onChange={(e) => {
+          setMetodo(e.target.value as ManualPaymentMethod | '');
+          setErrores((previos) => ({ ...previos, method: undefined }));
+        }}
+      >
+        <option value="">{t('form.choose')}</option>
+        {MANUAL_PAYMENT_METHODS.map((m) => (
+          <option key={m} value={m}>
+            {t(`admin.adoptions.methods.${m}`)}
+          </option>
+        ))}
+      </SelectField>
     </Modal>
   );
 }

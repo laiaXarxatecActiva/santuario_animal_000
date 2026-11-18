@@ -245,7 +245,10 @@
     "LAST_ACTIVE_ADMIN": "Es el último administrador activo: nombra antes a otro administrador.",
     "INVITATION_NOT_PENDING": "Esta cuenta no tiene ninguna invitación pendiente.",
     "ADOPTER_NOT_AVAILABLE": "Esta cuenta no existe o no está activa.",
-    "ADOPTION_ACTION_NOT_ALLOWED": "Esta acción no se puede hacer con la adopción en su estado actual."
+    "ADOPTION_ACTION_NOT_ALLOWED": "Esta acción no se puede hacer con la adopción en su estado actual.",
+    "PAYMENT_NOT_REFUNDABLE": "Solo se puede devolver un pago cobrado.",
+    "REFUND_FAILED": "La pasarela no ha podido hacer la devolución. Inténtalo más tarde.",
+    "MANUAL_PAYMENT_NOT_ALLOWED": "Esta adopción no tiene ninguna cuota pendiente de pago."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -555,7 +558,8 @@
       "updates": "Actualizaciones",
       "plans": "Planes",
       "users": "Usuarios",
-      "adoptions": "Adopciones"
+      "adoptions": "Adopciones",
+      "payments": "Pagos"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -906,6 +910,36 @@
       "created": "Adopción creada. Hemos avisado al adoptante.",
       "errors": {
         "ADOPTION_ALREADY_OPEN": "Esta persona ya tiene una adopción en curso de este animal."
+      }
+    },
+    "payments": {
+      "title": "Pagos",
+      "export": "Exportar CSV",
+      "status": "Estado",
+      "method": "Forma de pago",
+      "from": "Desde",
+      "to": "Hasta",
+      "collected": "Cobrado con estos filtros: {{amount}}",
+      "empty": "No hay pagos con estos filtros",
+      "loadError": "No hemos podido cargar los pagos",
+      "refund": "Devolver",
+      "refundNamed": "Devolver {{amount}} a {{name}}",
+      "confirmRefund": "¿Devolver este pago?",
+      "refundSummary": "Se devolverán {{amount}} a {{name}} (cuota de {{animal}}). Le avisaremos por email y en la web.",
+      "refundOnline": "Se pagó en la web: la devolución se hace por el mismo medio.",
+      "refundManual": "Se pagó en efectivo o por transferencia: el dinero se devuelve a mano; aquí solo queda anotado.",
+      "refundKeepsAdoption": "La adopción no cambia. Si hay que cerrarla, cancélala desde su ficha.",
+      "refunded": "Pago devuelto. Hemos avisado al adoptante.",
+      "register": "Registrar pago",
+      "registerTitle": "Registrar un pago",
+      "feePeriod": "Cuota del {{from}} al {{to}}",
+      "advancesBilling": "Si estaba pausada, vuelve a estar activa. El próximo cobro pasa al mes siguiente.",
+      "activatesPending": "La adopción se activa hoy, como si hubiera pagado en la web.",
+      "amountLabel": "Importe (€)",
+      "registered": "Pago registrado. Hemos enviado el recibo al adoptante.",
+      "refundLast": "Devolver también la última cuota cobrada ({{amount}})",
+      "errors": {
+        "PAYMENT_ALREADY_COMPLETED": "Este periodo ya está pagado."
       }
     }
   },

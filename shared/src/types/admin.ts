@@ -205,4 +205,34 @@ export interface AdminAdoptionDetailDto extends AdminAdoptionListItemDto {
   notes: string | null;
   createdBy: AdminPersonRef | null;
   payments: AdminAdoptionPaymentDto[];
+  /** CU-38 A2: cuota que se puede registrar a mano ahora (o `null` si no hay ninguna). */
+  pendingFee: { periodStart: string; periodEnd: string; amount: string } | null;
+  /** CU-38 (al cancelar, CU-37 A3): última cuota cobrada, la que se devolvería. */
+  lastRefundablePayment: { id: number; amount: string } | null;
+}
+
+/** CU-38 paso 2: cuota en el listado de pagos. `date` es el cobro o, si no se cobró, el intento. */
+export interface AdminPaymentListItemDto {
+  id: number;
+  adoptionId: number;
+  adopter: { id: number; firstName: string; lastName: string; email: string };
+  animal: { id: number; name: string };
+  plan: { id: number; name: string };
+  amount: string;
+  periodStart: string;
+  periodEnd: string;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  reference: string;
+  date: string;
+  refundedAt: string | null;
+  failureReason: string | null;
+  recordedBy: AdminPersonRef | null;
+}
+
+/** CU-38 paso 2: página del listado con la suma de lo cobrado con los filtros actuales. */
+export interface AdminPaymentsPage {
+  data: AdminPaymentListItemDto[];
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
+  totalCollected: string;
 }

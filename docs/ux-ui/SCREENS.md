@@ -596,7 +596,7 @@ Todos los módulos del panel (animales, actualizaciones, especies, usuarios, ado
 | Especies | Nombre, nombre científico, nº de animales | — | Editar, borrar (admin) |
 | Usuarios | Nombre, email, rol, estado, alta, último acceso | Rol, estado | Ver, activar/desactivar |
 | Adopciones | Adoptante, animal, plan, estado, inicio, próximo cobro | Búsqueda (adoptante o animal), estado, plan; `animalId` y `userId` por URL | Ver (la ficha tiene pausar/reanudar y cancelar, con el motivo en una ventana) |
-| Pagos | Fecha, adoptante, animal, periodo, importe, método, estado | Estado, método, fechas | Ver, devolver |
+| Pagos | Fecha, adoptante, animal, periodo, importe, método, estado | Búsqueda (adoptante o animal), estado, método, desde, hasta; `adoptionId` por URL | Ver la adopción, devolver (con confirmación). «Registrar pago» está en la ficha de la adopción |
 | Donaciones | Fecha, donante (o «Anónimo»), importe, método, estado | Estado, método, fechas | Ver, devolver |
 | Planes | Nombre, importe, por defecto, activo, adopciones activas | — | Editar, desactivar |
 

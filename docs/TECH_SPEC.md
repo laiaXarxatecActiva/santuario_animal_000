@@ -581,11 +581,11 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/admin/adoptions` | Listado con `?q` (adoptante por nombre o email, o animal), `status`, `planId`, `animalId`, `userId` y `sort` (lista blanca; por defecto `-createdAt`) | CU-37 |
 | GET | `/api/admin/adoptions/:id` | Detalle con sus pagos (con quién registró los manuales), las notas internas y quién la creó | CU-37 |
 | POST | `/api/admin/adoptions` | Alta manual `{ userId, animalId, planId, method, notes? }`: nace `active` con su primer pago `completed` (`cash` o `bank_transfer`, referencia `CASH-…` o `TRF-…`, `recorded_by`) y se avisa como en CU-13. El adoptante debe tener la cuenta activa (422 `ADOPTER_NOT_AVAILABLE`); no hace falta que haya verificado el email | CU-37 |
-| PATCH | `/api/admin/adoptions/:id/status` | `{ action: "pause" \| "resume" \| "cancel", notes? }`; `notes` es obligatorio para pausar y cancelar y se añade a las notas internas. 422 `ADOPTION_ACTION_NOT_ALLOWED` si la acción no corresponde al estado. Se avisa al adoptante sin enseñarle la nota | CU-37 |
-| GET | `/api/admin/payments` | Listado con filtros | CU-38 |
-| POST | `/api/admin/payments` | Registrar una cuota cobrada fuera de la web | CU-38 |
-| POST | `/api/admin/payments/:id/refund` | Devolución | CU-38 |
-| GET | `/api/admin/payments/export.csv` | Exportación CSV (filtros de fecha) | CU-38 |
+| PATCH | `/api/admin/adoptions/:id/status` | `{ action: "pause" \| "resume" \| "cancel", notes?, refundLastPayment? }`; con `refundLastPayment` (solo al cancelar) se devuelve también la última cuota cobrada en la misma transacción; `notes` es obligatorio para pausar y cancelar y se añade a las notas internas. 422 `ADOPTION_ACTION_NOT_ALLOWED` si la acción no corresponde al estado. Se avisa al adoptante sin enseñarle la nota | CU-37 |
+| GET | `/api/admin/payments` | Listado con `?q` (adoptante o animal), `status`, `method`, `from`, `to` (día del cobro o, si no se cobró, del intento, en Europe/Madrid), `adoptionId` y `sort`; devuelve además `totalCollected` (suma de los `completed` del filtro, en SQL) | CU-38 |
+| POST | `/api/admin/payments` | `{ adoptionId, amount, method }` (`cash` o `bank_transfer`): registra la cuota pendiente de la adopción (la del próximo cobro; si está pendiente de pago, el primer mes desde hoy). La adopción queda activa, aplica el cambio de plan programado y el próximo cobro avanza un mes. 422 `MANUAL_PAYMENT_NOT_ALLOWED` o `ADOPTION_PAYMENT_EXPIRED` si no hay cuota; 409 si el periodo ya está pagado | CU-38 |
+| POST | `/api/admin/payments/:id/refund` | Devolución de un pago `completed` (422 `PAYMENT_NOT_REFUNDABLE` si no). Los pagos de la web pasan por `PaymentGateway.refund`; los de efectivo o transferencia solo se marcan. Avisa al adoptante (campana y email) y no cambia la adopción | CU-38 |
+| GET | `/api/admin/payments/export.csv` | Exportación CSV con los mismos filtros, sin páginas (`;`, UTF-8 con BOM, decimales con coma, fechas `dd/mm/aaaa`, fórmulas neutralizadas). Una cuenta eliminada sale como «Usuario eliminado», sin email | CU-38 |
 | GET | `/api/admin/donations` | Listado con filtros | CU-39 |
 | POST | `/api/admin/donations` | Registro manual (efectivo o transferencia) | CU-39 |
 | POST | `/api/admin/donations/:id/refund` | Devolución | CU-39 |

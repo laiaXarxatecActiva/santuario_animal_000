@@ -199,3 +199,9 @@
   white-space: pre-wrap;
   margin: 0;
 }
+
+/* Suma de lo cobrado encima de la tabla de pagos (CU-38). */
+.collected {
+  margin: 0;
+  font-weight: 600;
+}

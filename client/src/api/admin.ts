@@ -1,4 +1,8 @@
 import type {
+  AdminPaymentListItemDto,
+  AdminPaymentsPage,
+  AdminPaymentsQuery,
+  ManualPaymentBody,
   AdminAdoptionCreateBody,
   AdminAdoptionDetailDto,
   AdminAdoptionListItemDto,
@@ -34,10 +38,18 @@ export type AdminAnimalsParams = Partial<AdminAnimalsQuery>;
 export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
 export type AdminUsersParams = Partial<AdminUsersQuery>;
 export type AdminAdoptionsParams = Partial<AdminAdoptionsQuery>;
+export type AdminPaymentsParams = Partial<AdminPaymentsQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-38 (solo administradores).
+  payments: {
+    list: (params: AdminPaymentsParams) => apiGet<AdminPaymentsPage>('/api/admin/payments', params),
+    create: (body: ManualPaymentBody) => apiPost<AdminPaymentListItemDto>('/api/admin/payments', body),
+    refund: (id: number) => apiPost<AdminPaymentListItemDto>(`/api/admin/payments/${id}/refund`),
+  },
 
   // CU-37 (solo administradores).
   adoptions: {
