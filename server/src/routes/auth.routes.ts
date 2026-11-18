@@ -18,7 +18,7 @@ export function createAuthRoutes(service: AuthService, options: { secureCookies:
   router.post('/register', ...createRegisterLimiter(), validate({ body: registerSchema }), c.register);
   router.post('/verify-email', validate({ body: tokenSchema }), c.verifyEmail);
   router.post('/resend-verification', requireAuth, createResendVerificationLimiter(), c.resendVerification);
-  router.post('/login', createLoginLimiter(), validate({ body: loginSchema }), c.login);
+  router.post('/login', ...createLoginLimiter(), validate({ body: loginSchema }), c.login);
   router.post('/logout', requireAuth, c.logout);
   router.get('/me', c.me);
   router.post('/forgot-password', validate({ body: forgotPasswordSchema }), c.forgotPassword);

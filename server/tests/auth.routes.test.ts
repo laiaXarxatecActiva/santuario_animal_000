@@ -384,6 +384,16 @@ describe('CU-09 Iniciar sesión', () => {
     const res = await request(t.app).post('/api/auth/login').send({ email: '' });
     expect(res.status).toBe(400);
   });
+
+  it('3a: una contraseña de más de 128 caracteres da el mismo error que una incorrecta', async () => {
+    const larga = 'x'.repeat(129);
+    for (const email of ['irene.dominguez@correo.test', 'nadie@correo.test']) {
+      const res = await login(request(t.app), email, larga);
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('INVALID_CREDENTIALS');
+      expect(cookieSid(res)).toBeUndefined();
+    }
+  });
 });
 
 describe('CU-10 Recuperar la contraseña', () => {

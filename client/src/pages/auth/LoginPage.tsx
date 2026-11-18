@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@sanctuary/shared';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -21,6 +21,7 @@ export function LoginPage() {
   const [params] = useSearchParams();
   const next = safeNext(params.get('next'));
   const setSession = useSetSession();
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -31,6 +32,9 @@ export function LoginPage() {
   const login = useMutation({
     mutationFn: authApi.login,
     onSuccess: (user) => {
+      // Si ya había otra cuenta abierta en este navegador, sus datos no deben
+      // seguir en la caché (igual que al cerrar sesión, CU-11).
+      queryClient.clear();
       setSession(user);
       void navigate(homeFor(user, next), { replace: true });
     },

@@ -12,17 +12,28 @@ function emailDelCuerpo(req: Request): string {
   return typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
 }
 
-/** CU-09 3c: 5 intentos fallidos de login por IP y email cada 15 minutos (TECH_SPEC §9.2). */
-export function createLoginLimiter(): RequestHandler {
-  return rateLimit({
+/**
+ * CU-09 3c (TECH_SPEC §9.2): 5 intentos fallidos de login por IP y email cada
+ * 15 minutos y, además, 50 por IP sea cual sea el email, para que desde una IP
+ * no se pueda probar una contraseña contra muchas cuentas. No hay límite solo
+ * por email: permitiría a cualquiera bloquear la cuenta de otra persona.
+ */
+export function createLoginLimiter(): RequestHandler[] {
+  const comun = {
     windowMs: 15 * MINUTO_MS,
-    limit: 5,
     skipSuccessfulRequests: true,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
-    keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? '')}|${emailDelCuerpo(req)}`,
     handler: rechazar,
-  });
+  } as const;
+  return [
+    rateLimit({ ...comun, limit: 50, keyGenerator: (req) => `ip:${ipKeyGenerator(req.ip ?? '')}` }),
+    rateLimit({
+      ...comun,
+      limit: 5,
+      keyGenerator: (req) => `${ipKeyGenerator(req.ip ?? '')}|${emailDelCuerpo(req)}`,
+    }),
+  ];
 }
 
 /**

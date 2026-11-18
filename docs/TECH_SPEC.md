@@ -409,7 +409,7 @@ Al iniciar sesión se regenera el identificador de sesión (`req.session.regener
   - Verificación de email: caduca en 24 horas.
   - Recuperación de contraseña: caduca en 1 hora. Al usarse, se cierran todas las sesiones del usuario.
 - **Sin enumeración de cuentas**: el registro y la recuperación de contraseña responden siempre igual, exista o no el email. En el registro, si el email ya tiene cuenta no se crea nada y se avisa por email a su dueño (CU-07 3a); el registro nunca abre sesión. El login responde con el mismo error para email inexistente y contraseña incorrecta, y compara con un hash ficticio cuando el email no existe, para que tarde lo mismo.
-- Límites de intentos (`express-rate-limit`, en memoria; con varias instancias habría que compartir los contadores): 5 intentos fallidos de login por IP y email cada 15 minutos; registro, 20 por hora por IP y 3 por hora por email; reenvío de la verificación, 3 por hora por usuario; cambio de contraseña, 5 intentos fallidos por usuario cada 15 minutos.
+- Límites de intentos (`express-rate-limit`, en memoria; con varias instancias habría que compartir los contadores): 5 intentos fallidos de login por IP y email y 50 por IP cada 15 minutos; registro, 20 por hora por IP y 3 por hora por email; reenvío de la verificación, 3 por hora por usuario; cambio de contraseña, 5 intentos fallidos por usuario cada 15 minutos.
 
 ### 9.3 Creación de cuentas
 

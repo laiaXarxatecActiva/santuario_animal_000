@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { sessionUser } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { SESSION_KEY } from '../src/hooks/useSession';
 import { ADOPTER_HOME, WORKER_HOME } from '../src/utils/redirect';
 
 async function entrar(email = 'lucia.martinez@correo.test', password = 'Lucia.buitres1') {
@@ -64,6 +65,17 @@ describe('CU-09 Iniciar sesión', () => {
     await entrar();
     expect(await screen.findByRole('alert')).toHaveTextContent(mensaje);
     expect(router.state.location.pathname).toBe('/login');
+  });
+
+  it('al entrar descarta los datos que quedaban de otra cuenta', async () => {
+    mockApi({ '/api/auth/login': { body: { user: sessionUser() } } });
+    const { router, queryClient } = renderRoute('/login');
+    await screen.findByRole('button', { name: 'Entrar' });
+    queryClient.setQueryData(['me', 'adoptions'], ['datos de la cuenta anterior']);
+    await entrar();
+    await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));
+    expect(queryClient.getQueryData(['me', 'adoptions'])).toBeUndefined();
+    expect(queryClient.getQueryData(SESSION_KEY)).toEqual(sessionUser());
   });
 
   it('muestra el aviso que llega de otra página (contraseña cambiada)', async () => {
