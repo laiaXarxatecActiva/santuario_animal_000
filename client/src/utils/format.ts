@@ -4,6 +4,7 @@
 const ZONA_SANTUARIO = 'Europe/Madrid';
 
 const moneda = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+const decimal = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
 const fechaLarga = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric',
   month: 'long',
@@ -37,6 +38,11 @@ const lista = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' });
 /** `'5.00'` → `'5,00 €'`. */
 export function formatCurrency(amount: string): string {
   return moneda.format(Number(amount));
+}
+
+/** `'8.40'` → `'8,4'` (pesos y otras cifras con decimales; solo para mostrar). */
+export function formatDecimal(value: string): string {
+  return decimal.format(Number(value));
 }
 
 /** Año de una fecha `YYYY-MM-DD`, sin convertirla a Date (evita saltos de zona horaria). */

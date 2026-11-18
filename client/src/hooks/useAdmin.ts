@@ -141,6 +141,15 @@ export const adminPhotosKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'phot
 export const useAdminPhotos = (animalId: number) =>
   useQuery({ queryKey: adminPhotosKey(animalId), queryFn: () => adminApi.photos.list(animalId).then((r) => r.data) });
 
+export const adminVetRecordsKey = (animalId: number) => [...ADMIN_ANIMALS_KEY, 'vet-records', animalId] as const;
+
+/** CU-34: historial veterinario del animal, del más reciente al más antiguo. */
+export const useVetRecords = (animalId: number) =>
+  useQuery({
+    queryKey: adminVetRecordsKey(animalId),
+    queryFn: () => adminApi.vetRecords.list(animalId).then((r) => r.data),
+  });
+
 export const ADMIN_UPDATES_KEY = [...ADMIN_KEY, 'updates'] as const;
 
 /** CU-31: listado de actualizaciones con filtros y páginas. */

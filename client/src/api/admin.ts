@@ -39,6 +39,8 @@ import type {
   SpeciesAdminDto,
   SpeciesBody,
   AnimalStatusBody,
+  VetRecordBody,
+  VetRecordDto,
 } from '@sanctuary/shared';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './client';
 
@@ -114,6 +116,15 @@ export const adminApi = {
     changeStatus: (id: number, body: AnimalStatusBody) =>
       apiPatch<AdminAnimalDto>(`/api/admin/animals/${id}/status`, body),
     remove: (id: number) => apiDelete(`/api/admin/animals/${id}`),
+  },
+
+  // CU-34: historial veterinario (interno).
+  vetRecords: {
+    list: (animalId: number) => apiGet<{ data: VetRecordDto[] }>(`/api/admin/animals/${animalId}/vet-records`),
+    create: (animalId: number, body: VetRecordBody) =>
+      apiPost<VetRecordDto>(`/api/admin/animals/${animalId}/vet-records`, body),
+    update: (id: number, body: VetRecordBody) => apiPut<VetRecordDto>(`/api/admin/vet-records/${id}`, body),
+    remove: (id: number) => apiDelete(`/api/admin/vet-records/${id}`),
   },
 
   // CU-29: galería de un animal.

@@ -26,6 +26,7 @@ import {
   speciesBodySchema,
   updateCreateBodySchema,
   updateEditBodySchema,
+  vetRecordBodySchema,
   WORKER_ROLES,
   workerCreateSchema,
 } from '@sanctuary/shared';
@@ -41,6 +42,7 @@ import { createPhotoAdminController } from '../controllers/photo-admin.controlle
 import { createPlanAdminController } from '../controllers/plan-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
 import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
+import { createVetRecordAdminController } from '../controllers/vet-record-admin.controller.js';
 import { createUserAdminController } from '../controllers/user-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
@@ -58,6 +60,7 @@ import type { PlanAdminService } from '../servicios/plan-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
 import type { UpdateAdminService } from '../servicios/update-admin.service.js';
 import type { UserAdminService } from '../servicios/user-admin.service.js';
+import type { VetRecordAdminService } from '../servicios/vet-record-admin.service.js';
 
 export interface AdminRoutesDeps {
   dashboard: DashboardService;
@@ -70,6 +73,7 @@ export interface AdminRoutesDeps {
   adoptions: AdoptionAdminService;
   payments: PaymentAdminService;
   donations: DonationAdminService;
+  vetRecords: VetRecordAdminService;
   jobs: JobRunner;
   /** Anota las escrituras del panel (CU-42). */
   activity: ActivityLogService;
@@ -137,6 +141,17 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     actualizaciones.update,
   );
   router.delete('/updates/:id', conId, actualizaciones.remove);
+
+  // CU-34: historial veterinario (interno). Borrar, solo administradores.
+  const veterinario = createVetRecordAdminController(deps.vetRecords, deps.activity);
+  router.get('/animals/:id/vet-records', conId, veterinario.list);
+  router.post(
+    '/animals/:id/vet-records',
+    validate({ params: idParamsSchema, body: vetRecordBodySchema }),
+    veterinario.create,
+  );
+  router.put('/vet-records/:id', validate({ params: idParamsSchema, body: vetRecordBodySchema }), veterinario.update);
+  router.delete('/vet-records/:id', soloAdmin, conId, veterinario.remove);
 
   // CU-40: planes de adopción (TECH_SPEC §10.7), solo administradores.
   const planes = createPlanAdminController(deps.plans, deps.activity);

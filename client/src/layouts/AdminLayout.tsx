@@ -11,6 +11,7 @@ import {
   faUsers,
   faFileSignature,
   faMoneyBillWave,
+  faStethoscope,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -53,6 +54,7 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/animals', key: 'admin.nav.animals', icon: faFeather },
       { to: '/admin/updates', key: 'admin.nav.updates', icon: faNewspaper },
       { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
+      { to: '/admin/vet-records', key: 'admin.nav.vet', icon: faStethoscope },
     ],
   },
   {

@@ -45,6 +45,7 @@ import { createProfileService } from './servicios/profile.service.js';
 import { createPublicCatalogService } from './servicios/public-catalog.service.js';
 import { createSpeciesAdminService } from './servicios/species-admin.service.js';
 import { createUpdateAdminService } from './servicios/update-admin.service.js';
+import { createVetRecordAdminService } from './servicios/vet-record-admin.service.js';
 
 export interface AppOptions {
   db: Pool;
@@ -201,6 +202,7 @@ export function createApp(options: AppOptions): Express {
         logEmailError,
       }),
       photos: createPhotoAdminService({ db, media }),
+      vetRecords: createVetRecordAdminService({ db, reloj }),
       updates: createUpdateAdminService({
         db,
         reloj,

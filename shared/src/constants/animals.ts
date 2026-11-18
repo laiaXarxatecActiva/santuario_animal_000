@@ -23,3 +23,7 @@ export type CatalogSort = (typeof CATALOG_SORTS)[number];
 
 // Número máximo de animales destacados en la página de inicio (CU-01).
 export const FEATURED_ANIMALS_LIMIT = 6;
+
+// CU-34: tipos de registro veterinario. Deben coincidir con el CHECK de vet_records.type.
+export const VET_RECORD_TYPES = ['checkup', 'vaccine', 'treatment', 'surgery'] as const;
+export type VetRecordType = (typeof VET_RECORD_TYPES)[number];

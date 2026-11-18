@@ -78,6 +78,9 @@ export function AnimalAdminPage() {
         <NavLink to={`/admin/animals/${datos.id}/updates`} className={styles.tab}>
           {t('admin.animal.tabUpdates')}
         </NavLink>
+        <NavLink to={`/admin/animals/${datos.id}/vet`} className={styles.tab}>
+          {t('admin.animal.tabVet')}
+        </NavLink>
       </nav>
       <Outlet context={{ animal: datos, avisar: setAviso } satisfies AnimalTabContext} />
     </div>

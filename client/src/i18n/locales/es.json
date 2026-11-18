@@ -562,7 +562,8 @@
       "adoptions": "Adopciones",
       "payments": "Pagos",
       "donations": "Donaciones",
-      "activity": "Actividad"
+      "activity": "Actividad",
+      "vet": "Veterinario"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -698,7 +699,8 @@
       "statusSince": "Desde el {{date}}",
       "sexUnknown": "Desconocido",
       "tabPhotos": "Fotos",
-      "tabUpdates": "Actualizaciones"
+      "tabUpdates": "Actualizaciones",
+      "tabVet": "Veterinario"
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -1037,7 +1039,40 @@
         "planId": "Plan",
         "refund": "Devolución",
         "action": "Acción",
-        "invitationResent": "Invitación reenviada"
+        "invitationResent": "Invitación reenviada",
+        "recordDate": "Fecha del registro",
+        "type": "Tipo"
+      }
+    },
+    "vet": {
+      "pageTitle": "Historial veterinario",
+      "title": "Historial veterinario de {{name}}",
+      "internal": "Solo lo ve el personal. A los adoptantes les llega el resumen de salud de la pestaña «Datos».",
+      "animal": "Animal",
+      "chooseAnimal": "Elige un animal",
+      "pickAnimal": "Elige un animal para ver su historial.",
+      "new": "Nuevo registro",
+      "editTitle": "Editar el registro",
+      "date": "Fecha",
+      "type": "Tipo",
+      "description": "Descripción",
+      "weight": "Peso",
+      "weightKg": "Peso (kg)",
+      "veterinarian": "Veterinario",
+      "kg": "{{value}} kg",
+      "weightTitle": "Evolución del peso",
+      "empty": "Todavía no hay registros veterinarios",
+      "loadError": "No hemos podido cargar el historial veterinario",
+      "created": "Registro añadido.",
+      "updated": "Registro guardado.",
+      "deleted": "Registro borrado.",
+      "confirmDelete": "¿Borrar este registro?",
+      "deleteSummary": "Se borrará el registro de {{type}} del {{date}}. No se puede deshacer.",
+      "types": {
+        "checkup": "Revisión",
+        "vaccine": "Vacuna",
+        "treatment": "Tratamiento",
+        "surgery": "Cirugía"
       }
     }
   },
@@ -1144,5 +1179,11 @@
     "readAll": "Marcar todas como leídas",
     "delete": "Borrar: {{message}}",
     "errorLoading": "No hemos podido cargar tus notificaciones"
+  },
+  "charts": {
+    "empty": "No hay datos en este rango",
+    "showData": "Ver los datos",
+    "lineSummary": "{{title}}: {{count}} valores, desde {{first}} hasta {{last}}.",
+    "barSummary": "{{title}}: {{count}} meses. {{totals}}"
   }
 }
