@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatMonth,
+  todayInSanctuary,
   formatCurrency,
   formatDate,
   formatList,
@@ -60,5 +62,17 @@ describe('fechas cortas y día anterior (CU-19, CU-21)', () => {
     expect(previousDay('2026-12-05')).toBe('2026-12-04');
     expect(previousDay('2026-03-01')).toBe('2026-02-28');
     expect(previousDay('2027-01-01')).toBe('2026-12-31');
+  });
+});
+
+describe('mes y día de hoy (CU-39)', () => {
+  it('«2026-11» → «noviembre de 2026»', () => {
+    expect(formatMonth('2026-11')).toBe('noviembre de 2026');
+    expect(formatMonth('2027-01')).toBe('enero de 2027');
+  });
+
+  it('el día de hoy es el del santuario, no el de UTC', () => {
+    expect(todayInSanctuary(new Date('2026-11-18T22:30:00Z'))).toBe('2026-11-18');
+    expect(todayInSanctuary(new Date('2026-11-18T23:30:00Z'))).toBe('2026-11-19');
   });
 });

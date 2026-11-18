@@ -1,4 +1,10 @@
 import type {
+  AdminDonationListItemDto,
+  AdminDonationMonthlyQuery,
+  AdminDonationMonthlyTotalsDto,
+  AdminDonationsPage,
+  AdminDonationsQuery,
+  ManualDonationBody,
   AdminPaymentListItemDto,
   AdminPaymentsPage,
   AdminPaymentsQuery,
@@ -39,10 +45,21 @@ export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
 export type AdminUsersParams = Partial<AdminUsersQuery>;
 export type AdminAdoptionsParams = Partial<AdminAdoptionsQuery>;
 export type AdminPaymentsParams = Partial<AdminPaymentsQuery>;
+export type AdminDonationsParams = Partial<AdminDonationsQuery>;
+export type AdminDonationMonthlyParams = Partial<AdminDonationMonthlyQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-39 (solo administradores).
+  donations: {
+    list: (params: AdminDonationsParams) => apiGet<AdminDonationsPage>('/api/admin/donations', params),
+    monthlyTotals: (params: AdminDonationMonthlyParams) =>
+      apiGet<AdminDonationMonthlyTotalsDto>('/api/admin/donations/monthly-totals', params),
+    create: (body: ManualDonationBody) => apiPost<AdminDonationListItemDto>('/api/admin/donations', body),
+    refund: (id: number) => apiPost<AdminDonationListItemDto>(`/api/admin/donations/${id}/refund`),
+  },
 
   // CU-38 (solo administradores).
   payments: {

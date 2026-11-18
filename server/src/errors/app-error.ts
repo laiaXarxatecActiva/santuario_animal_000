@@ -489,6 +489,13 @@ export class PaymentNotRefundableError extends BusinessRuleError {
 }
 
 // CU-38 A1: la pasarela no ha podido hacer la devolución.
+/** CU-39 A2: solo se devuelve una donación cobrada. */
+export class DonationNotRefundableError extends BusinessRuleError {
+  constructor() {
+    super('DONATION_NOT_REFUNDABLE', 'Solo se puede devolver una donación cobrada.');
+  }
+}
+
 export class RefundFailedError extends BusinessRuleError {
   constructor() {
     super('REFUND_FAILED', 'La pasarela no ha podido hacer la devolución. Inténtalo más tarde.');

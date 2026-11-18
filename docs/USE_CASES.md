@@ -1258,6 +1258,11 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - **A1. Registrar una donación manual** recibida fuera de la web (efectivo o transferencia): importe, fecha, donante (opcional), anónima sí o no y mensaje. El sistema la guarda como `completed` con `recorded_by` = el administrador.
 - **A2. Devolver** una donación `completed`, con confirmación: pasa a `refunded`.
+- **Concreciones:**
+  - Paso 2: el administrador ve «Anónimo» y, debajo, el nombre y el email si se dieron. También hay un buscador por nombre o email del donante.
+  - Paso 3: la pestaña «Por meses» usa los filtros «desde» y «hasta» (sin ellos, los últimos 12 meses) y muestra también los meses sin donaciones, a 0 €.
+  - A1: la fecha es hoy por defecto y se puede elegir un día anterior, nunca uno futuro. Con email, el donante recibe el agradecimiento con el recibo, como en CU-05.
+  - A2: como en CU-38, una donación en efectivo o por transferencia solo se marca como devuelta. Se avisa al donante por email si lo dio y en la campana si tiene cuenta; si no hay ninguna de las dos cosas, la ventana de confirmación lo dice. El formulario público de donar (CU-05) avisa de esto a quien dona sin cuenta de adoptante.
 
 **Postcondiciones**
 

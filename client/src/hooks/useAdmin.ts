@@ -4,6 +4,8 @@ import {
   adminApi,
   type AdminAdoptionsParams,
   type AdminAnimalsParams,
+  type AdminDonationMonthlyParams,
+  type AdminDonationsParams,
   type AdminPaymentsParams,
   type AdminUpdatesParams,
   type AdminUsersParams,
@@ -15,6 +17,24 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+export const ADMIN_DONATIONS_KEY = [...ADMIN_KEY, 'donations'] as const;
+
+/** CU-39 paso 2: listado con filtros, páginas y suma de lo recaudado. */
+export const useAdminDonations = (params: AdminDonationsParams) =>
+  useQuery({
+    queryKey: [...ADMIN_DONATIONS_KEY, 'list', params],
+    queryFn: () => adminApi.donations.list(params),
+    placeholderData: keepPreviousData,
+  });
+
+/** CU-39 paso 3: lo cobrado cada mes. Solo se pide al abrir la pestaña. */
+export const useAdminDonationMonthlyTotals = (params: AdminDonationMonthlyParams, enabled: boolean) =>
+  useQuery({
+    queryKey: [...ADMIN_DONATIONS_KEY, 'monthly', params],
+    queryFn: () => adminApi.donations.monthlyTotals(params),
+    enabled,
+  });
 
 export const ADMIN_PAYMENTS_KEY = [...ADMIN_KEY, 'payments'] as const;
 

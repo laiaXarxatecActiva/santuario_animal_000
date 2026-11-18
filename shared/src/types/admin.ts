@@ -236,3 +236,34 @@ export interface AdminPaymentsPage {
   meta: { page: number; pageSize: number; total: number; totalPages: number };
   totalCollected: string;
 }
+
+/** CU-39 paso 2: donación en el panel. El administrador ve el nombre aunque sea anónima. */
+export interface AdminDonationListItemDto {
+  id: number;
+  /** Cuenta del adoptante que la hizo, si la hizo con sesión. */
+  userId: number | null;
+  donorName: string | null;
+  donorEmail: string | null;
+  isAnonymous: boolean;
+  amount: string;
+  message: string | null;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  reference: string;
+  /** Instante del cobro o, si no se cobró, del intento. */
+  date: string;
+  refundedAt: string | null;
+  failureReason: string | null;
+  recordedBy: AdminPersonRef | null;
+}
+
+export interface AdminDonationsPage {
+  data: AdminDonationListItemDto[];
+  meta: { page: number; pageSize: number; total: number; totalPages: number };
+  totalCollected: string;
+}
+
+/** CU-39 paso 3: lo cobrado en cada mes (`YYYY-MM`), también los meses sin donaciones. */
+export interface AdminDonationMonthlyTotalsDto {
+  data: { month: string; total: string; count: number }[];
+}
