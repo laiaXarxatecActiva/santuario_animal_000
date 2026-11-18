@@ -307,7 +307,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `adoptions.next_plan_id` | El cambio de plan se aplica en la siguiente cuota |
 | `adoptions.cancel_requested_at` | La baja mantiene la adopción activa hasta el final del mes pagado |
 | `adoptions.end_reason` | Motivo de cierre (baja, impago, fallecimiento, traslado…) |
-| `adoptions.gifted_by_user_id` | Adopción regalo (Fase 3) |
+| `adoptions.gifted_by_user_id` | Adopción regalo (CU-26, descartada en la Fase 3: la columna se conserva, siempre a `NULL`) |
 | `adoptions.created_by`, `adoptions.notes` | Adopciones creadas a mano por un administrador |
 | `payments.period_start`, `payments.period_end` | Mes cubierto por cada cuota; evita cobros duplicados |
 | `payments.plan_id` | Plan con el que se cobró la cuota; el recibo lo muestra aunque la adopción cambie de plan después |
@@ -526,7 +526,6 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`), con el plan con el que se cobró (`payments.plan_id`) | CU-19 |
 | GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
 | GET | `/api/me/payments/:id/receipt.pdf`, `/api/me/donations/:id/receipt.pdf` | Recibo en PDF (Fase 3) con los mismos datos y reglas; `inline` o, con `?download=1`, descarga de `recibo-<referencia>.pdf`. `Cache-Control: no-store` | CU-19 |
-| POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
 
 ### 10.5 Cualquier usuario autenticado
 
@@ -894,7 +893,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 | Estadísticas | CU-41 |
 | Registro de actividad | CU-42 |
 | Certificado de adopción en PDF y recibos en PDF | CU-22, CU-19 |
-| Adopción regalo | CU-26 |
+| ~~Adopción regalo~~ (descartada: no se implementa) | CU-26 |
 | Sección «En memoria» | CU-12 |
 | Valenciano e inglés (archivos `ca.json` y `en.json`, selector de idioma, `preferred_language`) | — |
 
@@ -964,7 +963,7 @@ Estas decisiones funcionales no están en el diseño. Hasta que se decidan, se a
 | 3 | ¿Puede adoptar o donar con su cuenta un usuario con el email sin verificar? | Puede iniciar sesión y navegar, pero debe verificar el email antes de adoptar (`requireVerifiedEmail`). Donar siempre se permite, incluso sin cuenta. |
 | 4 | ¿Las fotos y vídeos `adopters` deben estar protegidos frente a quien conozca la URL? | No: basta con URLs no adivinables (UUID). Se puede reforzar en la Fase 4. |
 | 5 | ¿Qué plan se aplica si el administrador desactiva un plan con adopciones activas? | Las adopciones existentes siguen con ese plan; solo deja de ofrecerse en nuevas adopciones |
-| 6 | Adopción regalo (Fase 3): ¿quién paga las cuotas después de la primera, quien regala o quien la recibe? | Sin decidir; debe resolverse antes de implementar CU-26. La base de datos ya admite ambos casos (`adoptions.gifted_by_user_id`). |
+| 6 | Adopción regalo (Fase 3): ¿quién paga las cuotas después de la primera, quien regala o quien la recibe? | **Cerrada: CU-26 se descarta** (noviembre de 2026). No se implementa; `adoptions.gifted_by_user_id` se conserva en el esquema, siempre a `NULL`. |
 
 ## 19. Glosario
 

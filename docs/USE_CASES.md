@@ -814,11 +814,13 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-17, RN-20.
 
-### CU-26 — Regalar una adopción
+### CU-26 — Regalar una adopción (descartado)
+
+> **Descartado** (decisión de la responsable del proyecto, noviembre de 2026): la adopción regalo no aporta lo suficiente para el santuario y no se implementa. Se conserva la descripción como referencia. La columna `adoptions.gifted_by_user_id` sigue en el esquema (la Fase 3 no cambia el esquema), siempre a `NULL`.
 
 | Actor principal | Fase |
 | --- | --- |
-| Adoptante | 3 |
+| Adoptante | 3 (descartado) |
 
 **Precondiciones**
 
@@ -846,7 +848,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-03, RN-05, RN-13.
 
-**Notas:** antes de implementar este caso hay que decidir quién paga las cuotas siguientes: quien regala (durante cuántos meses) o quien recibe. Es una decisión funcional pendiente (`TECH_SPEC.md` §18, cuestión 6).
+**Notas:** la decisión pendiente sobre quién paga las cuotas siguientes (`TECH_SPEC.md` §18, cuestión 6) ya no hace falta: el caso se ha descartado.
 
 ## 7. Panel: cuidador y administrador
 
