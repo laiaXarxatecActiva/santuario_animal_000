@@ -246,6 +246,7 @@ Todos se ejecutan desde la carpeta principal del proyecto.
 | `npm run users:file`     | Regenera `USUARIOS_PRUEBA.txt`                                                                                       |
 | `npm run job -- <tarea>` | Lanza ya una tarea programada: `billing`, `expire-pending`, `finish-cancelled`, `monthly-digest` o `update-reminder` |
 | `npm test`               | Pasa todos los tests automáticos                                                                                     |
+| `npm run test:e2e`       | Pasa las pruebas en el navegador ([ver abajo](#pruebas-en-el-navegador))                                             |
 | `npm run typecheck`      | Comprueba los tipos de TypeScript                                                                                    |
 | `npm run lint`           | Busca errores con ESLint                                                                                             |
 | `npm run format`         | Da formato al código con Prettier                                                                                    |
@@ -253,6 +254,29 @@ Todos se ejecutan desde la carpeta principal del proyecto.
 Para pasar solo una parte de los tests: `npm test -w server` (solo la API), `npm test -w client` (solo la web), `npm test -w server -- -t "CU-13"` (los de un caso de uso).
 
 Los tests de la API usan la base de datos `sanctuary_test` (nunca tocan la tuya), así que necesitan PostgreSQL arrancado y `TEST_DATABASE_URL` en el `.env`.
+
+### Pruebas en el navegador
+
+`npm run test:e2e` usa [Playwright](https://playwright.dev/) para abrir la web en un navegador y recorrerla como lo haría una persona: registrarse, verificar el email, adoptar y pagar; publicar una actualización y verla en el muro; donar sin cuenta; y comprobar que los avisos por email llegan a Mailpit según las preferencias de cada adoptante. Están en `e2e/tests/`. No forman parte de `npm test` porque tardan más y necesitan Mailpit.
+
+1. La primera vez, descarga el navegador que usan (Chromium, unos 170 MB; no toca los navegadores que ya tengas):
+
+   ```bash
+   npx -w e2e playwright install chromium
+   ```
+
+2. Arranca PostgreSQL y Mailpit (con Docker: `docker compose up -d`).
+3. Ejecuta `npm run test:e2e`.
+
+Las pruebas arrancan su propia copia de la aplicación (API en el puerto 3100 y web en el 5174) sobre la base de datos de los tests, que reinician al empezar, así que puedes tenerlas en marcha a la vez que `npm run dev`.
+
+Para ver lo que hacen:
+
+| Comando                             | Qué hace                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run test:e2e -- --headed`      | Abre la ventana del navegador mientras pasan las pruebas                     |
+| `npm run test:e2e -- --ui`          | Abre una ventana para lanzarlas una a una y ver cada paso                    |
+| `npx -w e2e playwright show-report` | Abre el informe de la última ejecución (con captura y traza si alguna falla) |
 
 ---
 
@@ -266,6 +290,8 @@ Los tests de la API usan la base de datos `sanctuary_test` (nunca tocan la tuya)
 | `Falta TEST_DATABASE_URL`                                                                     | Añádela al `.env` (está en `.env.example`)                                                                                                                                                        |
 | `EADDRINUSE ... 3000`                                                                         | Ya hay otra copia de la aplicación (u otro programa) usando el puerto de la API. Cierra la otra terminal o cambia `PORT`                                                                          |
 | `Port 5173 is in use, trying another one...`                                                  | La web arranca en otro puerto (por ejemplo, 5174) y lo indica en la terminal: ábrela en ese. Los enlaces de los correos seguirán apuntando al 5173, así que es mejor cerrar lo que lo esté usando |
+| `No se puede conectar con Mailpit` al pasar `npm run test:e2e`                                | Las pruebas en el navegador necesitan Mailpit para leer el email de verificación. Arráncalo (`docker compose up -d mailpit`) y vuelve a lanzarlas                                                 |
+| `Executable doesn't exist` al pasar `npm run test:e2e`                                        | Falta el navegador de Playwright: `npx -w e2e playwright install chromium`                                                                                                                        |
 | No llegan los correos                                                                         | Mailpit no está arrancado. Comprueba http://localhost:8025                                                                                                                                        |
 | «Demasiados intentos; espera unos minutos.» al iniciar sesión                                 | Tras 5 intentos fallidos con el mismo email, o 50 con cualquier email desde el mismo equipo, se bloquea 15 minutos. Reiniciar `npm run dev` lo desbloquea                                         |
 | Los animales salen sin foto                                                                   | Es lo esperado sin las fotos de ejemplo ([sección 5](#5-correos-pagos-y-fotos))                                                                                                                   |
@@ -276,13 +302,14 @@ Los tests de la API usan la base de datos `sanctuary_test` (nunca tocan la tuya)
 
 ## 8. Estructura y documentación
 
-Es un monorepo con tres partes (_workspaces_ de npm):
+Es un monorepo con cuatro partes (_workspaces_ de npm):
 
 ```text
 SantuarioAnimal/
 ├── client/     Web: React 19 + Vite, React Query, react-hook-form, i18next
 ├── server/     API: Express 5 + TypeScript, PostgreSQL con pg (sin ORM)
-├── shared/     Esquemas Zod, tipos y constantes que usan las otras dos
+├── shared/     Esquemas Zod, tipos y constantes que usan client y server
+├── e2e/        Pruebas en el navegador con Playwright
 ├── database/   seedsql.sql (estructura) y TEST_DATA.sql (datos de prueba)
 └── docs/       Especificaciones
 ```
@@ -302,6 +329,6 @@ SantuarioAnimal/
 El desarrollo va por fases (TECH_SPEC §16):
 
 - ✅ **Fase 1 (MVP):** web pública, cuentas, adopción con pago simulado, área del adoptante, perfil y panel de animales, fotos, especies y actualizaciones.
-- ⏳ **Fase 2:** cobro mensual automático, cambio de plan y baja, donaciones, notificaciones, recibos, contacto, baja de cuenta y administración de usuarios y pagos. Hasta entonces, los enlaces «Donar» y el formulario de contacto todavía no funcionan.
+- ✅ **Fase 2:** cobro mensual automático, cambio de plan y baja, donaciones, notificaciones, recibos, contacto, baja de cuenta, administración de usuarios, adopciones, pagos, donaciones y planes, y pruebas en el navegador.
 - ⏳ **Fase 3:** extras (historial veterinario, estadísticas, certificados en PDF, adopción regalo, valenciano e inglés).
 - ⏳ **Fase 4:** publicación en internet.
