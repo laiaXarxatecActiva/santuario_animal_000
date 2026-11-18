@@ -1,10 +1,11 @@
-import type {
-  LoginInput,
-  RegisterInput,
-  ResetPasswordInput,
-  SessionUser,
-  UserTokenType,
-  VerifyEmailResponse,
+import {
+  PASSWORD_MAX_LENGTH,
+  type LoginInput,
+  type RegisterInput,
+  type ResetPasswordInput,
+  type SessionUser,
+  type UserTokenType,
+  type VerifyEmailResponse,
 } from '@sanctuary/shared';
 import { randomUUID } from 'node:crypto';
 import type { Pool } from 'pg';
@@ -50,8 +51,11 @@ export function toSessionUser(user: userModel.User): SessionUser {
 // solo destruye la sesión y lo resuelve el controlador.
 export function createAuthService({ db, reloj, email, clientUrl, logEmailError = () => {} }: AuthServiceDeps) {
   // Hash con el que se compara cuando el email no existe, para que la
-  // respuesta tarde lo mismo y no revele qué cuentas existen.
-  let hashFalso: Promise<string> | undefined;
+  // respuesta tarde lo mismo y no revele qué cuentas existen. Se calcula al
+  // crear el servicio para que tampoco tarde más el primer intento.
+  const hashFalso = hashPassword(randomUUID());
+  // Si fallara, el error sale al usarlo en `login`, no como promesa sin capturar.
+  hashFalso.catch(() => {});
 
   async function enviar(mensaje: EmailMessage): Promise<void> {
     try {
@@ -165,8 +169,10 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
 
   /** CU-09: comprueba las credenciales y guarda el último acceso. */
   async function login({ email: correo, password }: LoginInput): Promise<SessionUser> {
+    // Ninguna contraseña válida pasa del máximo (TECH_SPEC §9.2): se rechaza como
+    // incorrecta sin calcular el hash, para que un texto enorme no cargue el servidor.
+    if (password.length > PASSWORD_MAX_LENGTH) throw new InvalidCredentialsError();
     const user = await userModel.findByEmail(db, correo);
-    hashFalso ??= hashPassword(randomUUID());
     const correcta = await verifyPassword(password, user?.passwordHash ?? (await hashFalso));
     if (!user || !correcta) throw new InvalidCredentialsError();
     if (!cuentaActiva(user)) throw new AccountInactiveError();

@@ -1,9 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { relojFijo } from '../src/dominio/reloj.js';
-import { UnauthorizedError } from '../src/errors/app-error.js';
+import { InvalidCredentialsError, UnauthorizedError } from '../src/errors/app-error.js';
 import { createEmailService, createMemoryMailer } from '../src/services/email/email.service.js';
 import { createAuthService, toSessionUser } from '../src/servicios/auth.service.js';
+import type * as Passwords from '../src/utils/passwords.js';
+import { verifyPassword } from '../src/utils/passwords.js';
 import { usarBaseDeDatos } from './helpers/db-fixture.js';
+
+// Espía sobre la comprobación de contraseñas; sigue llamando a la función real.
+vi.mock('../src/utils/passwords.js', async (importOriginal) => {
+  const real = await importOriginal<typeof Passwords>();
+  return { ...real, verifyPassword: vi.fn(real.verifyPassword) };
+});
 
 const db = usarBaseDeDatos();
 const mailer = createMemoryMailer();
@@ -57,5 +65,14 @@ describe('auth.service', () => {
     await servicio().forgotPassword('lucia.martinez@correo.test');
     expect(errores).toHaveLength(1);
     expect(mailer.outbox).toHaveLength(0);
+  });
+
+  it('CU-09 3a: una contraseña de más de 128 caracteres se rechaza sin calcular el hash', async () => {
+    vi.mocked(verifyPassword).mockClear();
+    const auth = servicio();
+    await expect(auth.login({ email: 'lucia.martinez@correo.test', password: 'x'.repeat(129) })).rejects.toBeInstanceOf(
+      InvalidCredentialsError,
+    );
+    expect(verifyPassword).not.toHaveBeenCalled();
   });
 });

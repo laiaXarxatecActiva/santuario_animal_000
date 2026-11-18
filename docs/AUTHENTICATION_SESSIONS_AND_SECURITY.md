@@ -92,10 +92,12 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - Después del registro, el cliente lleva a «Iniciar sesión».
 
 **Login** (CU-09):
-- Da el mismo error (`INVALID_CREDENTIALS`) si el email no existe y si la contraseña es incorrecta. Cuando el email no existe, compara con un hash ficticio para que tarde lo mismo.
+- Da el mismo error (`INVALID_CREDENTIALS`) si el email no existe y si la contraseña es incorrecta. Cuando el email no existe, compara con un hash ficticio para que tarde lo mismo. Ese hash se calcula al crear el servicio, para que tampoco tarde más el primer intento.
+- Una contraseña de más de 128 caracteres recibe el mismo `INVALID_CREDENTIALS` (ninguna contraseña válida es tan larga), sin buscar el usuario ni calcular el hash. En el registro, en la recuperación y en el cambio de contraseña, en cambio, es un error de validación (400) con su mensaje.
 - Una cuenta desactivada recibe 403, pero solo tras dar la contraseña correcta.
 - Se puede entrar con el email sin verificar. Lo que exige verificarlo es adoptar (`requireVerifiedEmail`).
 - Se crea una sesión nueva y solo se devuelven los datos públicos del usuario (`toSessionUser`: id, nombre, apellidos, email, rol, `emailVerified`).
+- En el cliente, al entrar se vacía la caché de React Query, para que no queden datos de otra cuenta abierta antes en el mismo navegador.
 
 **Recuperación** (CU-10):
 - La respuesta es siempre la misma, exista o no el email.
@@ -128,7 +130,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 
 | Riesgo | Protección en este proyecto |
 | --- | --- |
-| Fuerza bruta en el login | 5 intentos fallidos por IP y email cada 15 minutos |
+| Fuerza bruta en el login | 5 intentos fallidos por IP y email cada 15 minutos, y 50 por IP sea cual sea el email (frena probar una contraseña contra muchas cuentas). No hay límite solo por email, porque permitiría bloquear la cuenta de otra persona |
 | Abuso del registro (inundar un buzón) | 20 registros por hora por IP y 3 por hora por email |
 | Enumeración de usuarios | Registro, login y recuperación responden igual y tardan lo mismo (§5) |
 | Fijación de sesión | Identificador nuevo al iniciar sesión |
@@ -140,7 +142,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Cabeceras HTTP | `helmet` (CSP, `nosniff`, `X-Frame-Options`, `Referrer-Policy: no-referrer`, HSTS) y sin `X-Powered-By` |
 | Redirecciones abiertas | `safeNext` solo acepta rutas internas (`/…`, nunca `//` ni `/\`) |
 | Inyección SQL | Solo consultas parametrizadas; ordenación con lista blanca |
-| Cuerpos enormes | JSON de 100 kB como máximo; contraseñas de 128 caracteres como máximo |
+| Cuerpos enormes | JSON de 100 kB como máximo; contraseñas de 128 caracteres como máximo (en el login, más larga = credenciales incorrectas, sin calcular el hash) |
 | Fugas en los logs | pino oculta `cookie`, `authorization`, `set-cookie`, `password`, `newPassword`, `currentPassword` y `token` |
 
 **Límites de intentos**:
@@ -186,6 +188,9 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | En la base de datos solo está el hash del identificador de sesión y del token | `server/tests/session.test.ts`, `server/tests/models/session.model.test.ts`, `server/tests/auth.routes.test.ts` |
 | Las sesiones caducadas o borradas no valen | `server/tests/session.test.ts` |
 | Login sin enumeración, sesión nueva al entrar, límite de intentos | `server/tests/auth.routes.test.ts` (CU-09) |
+| Límites del login por IP y email y solo por IP | `server/tests/rate-limit.test.ts` |
+| Contraseña de más de 128 caracteres en el login: sin calcular el hash | `server/tests/auth.service.test.ts` |
+| Al entrar, el cliente descarta los datos de otra cuenta | `client/tests/LoginPage.test.tsx` |
 | Registro sin enumeración, sin sesión, con límite por email | `server/tests/auth.routes.test.ts` (CU-07) |
 | Límites de los formularios públicos (donación, contacto) | `server/tests/donations.routes.test.ts` (CU-05), `server/tests/contact.routes.test.ts` (CU-06) |
 | El asunto del contacto no admite saltos de línea (inyección de cabeceras) | `shared/tests/contact.schema.test.ts` |

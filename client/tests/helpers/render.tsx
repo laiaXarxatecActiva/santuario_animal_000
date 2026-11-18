@@ -69,5 +69,5 @@ export function renderRoute(path: string) {
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
-  return { ...utils, router };
+  return { ...utils, router, queryClient };
 }
