@@ -5,7 +5,8 @@
   "workspaces": [
     "shared",
     "server",
-    "client"
+    "client",
+    "e2e"
   ],
   "engines": {
     "node": ">=24.7"
@@ -20,7 +21,8 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "job": "npm run job -w server --"
+    "job": "npm run job -w server --",
+    "test:e2e": "npm run test:e2e -w e2e --"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

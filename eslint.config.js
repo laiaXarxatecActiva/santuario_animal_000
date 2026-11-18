@@ -13,6 +13,6 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
-  { files: ['server/**/*.ts', 'shared/**/*.ts', '*.js'], languageOptions: { globals: globals.node } },
+  { files: ['server/**/*.ts', 'shared/**/*.ts', 'e2e/**/*.ts', '*.js'], languageOptions: { globals: globals.node } },
   { files: ['client/**/*.{ts,tsx}'], languageOptions: { globals: globals.browser } },
 );
