@@ -32,6 +32,13 @@ export const PAYMENT_STATUSES = ['pending', 'completed', 'failed', 'refunded'] a
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export const PAYMENT_METHODS = ['simulated', 'cash', 'bank_transfer', 'card'] as const;
+// CU-37: métodos de un pago registrado a mano por un administrador.
+export const MANUAL_PAYMENT_METHODS = ['cash', 'bank_transfer'] as const satisfies readonly PaymentMethod[];
+export type ManualPaymentMethod = (typeof MANUAL_PAYMENT_METHODS)[number];
+
+// CU-37 A1-A3: acciones del administrador sobre una adopción.
+export const ADOPTION_ADMIN_ACTIONS = ['pause', 'resume', 'cancel'] as const;
+export type AdoptionAdminAction = (typeof ADOPTION_ADMIN_ACTIONS)[number];
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const VISIBILITIES = ['public', 'adopters'] as const;

@@ -49,6 +49,10 @@ const RUTAS: Ruta[] = [
   { metodo: 'get', patron: '/users/:id', soloAdmin: true },
   { metodo: 'patch', patron: '/users/:id', soloAdmin: true },
   { metodo: 'post', patron: '/users/:id/invitation', soloAdmin: true },
+  { metodo: 'get', patron: '/adoptions', soloAdmin: true },
+  { metodo: 'post', patron: '/adoptions', soloAdmin: true },
+  { metodo: 'get', patron: '/adoptions/:id', soloAdmin: true },
+  { metodo: 'patch', patron: '/adoptions/:id/status', soloAdmin: true },
   { metodo: 'post', patron: '/jobs/:jobName/run', soloAdmin: true },
 ];
 

@@ -243,7 +243,9 @@
     "ANONYMIZED_CANNOT_REACTIVATE": "Esta cuenta se eliminó a petición de su titular y no se puede reactivar.",
     "ROLE_CHANGE_NOT_ALLOWED": "El rol solo se puede cambiar entre cuidador y administrador.",
     "LAST_ACTIVE_ADMIN": "Es el último administrador activo: nombra antes a otro administrador.",
-    "INVITATION_NOT_PENDING": "Esta cuenta no tiene ninguna invitación pendiente."
+    "INVITATION_NOT_PENDING": "Esta cuenta no tiene ninguna invitación pendiente.",
+    "ADOPTER_NOT_AVAILABLE": "Esta cuenta no existe o no está activa.",
+    "ADOPTION_ACTION_NOT_ALLOWED": "Esta acción no se puede hacer con la adopción en su estado actual."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -552,7 +554,8 @@
       "species": "Especies",
       "updates": "Actualizaciones",
       "plans": "Planes",
-      "users": "Usuarios"
+      "users": "Usuarios",
+      "adoptions": "Adopciones"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -828,6 +831,82 @@
       "create": "Crear cuenta",
       "created": "Cuenta creada. Hemos enviado una invitación a {{email}}",
       "invitationHelp": "Le enviaremos un email con un enlace para elegir su contraseña. El enlace caduca en 24 horas."
+    },
+    "adoptions": {
+      "title": "Adopciones",
+      "new": "Nueva adopción",
+      "searchLabel": "Buscar por adoptante o animal",
+      "adopter": "Adoptante",
+      "animal": "Animal",
+      "plan": "Plan",
+      "status": "Estado",
+      "startDate": "Inicio",
+      "nextBilling": "Próximo cobro",
+      "endDate": "Fin",
+      "endReason": "Motivo del cierre",
+      "origin": "Origen",
+      "empty": "No hay adopciones con estos filtros",
+      "loadError": "No hemos podido cargar las adopciones",
+      "notFound": "Esta adopción no existe",
+      "backToList": "Volver a las adopciones",
+      "planAmount": "{{name}} · {{amount}}/mes",
+      "nextPlan": "pasará a {{name}} ({{amount}}/mes) en el próximo cobro",
+      "createdBy": "Creada a mano por {{name}}",
+      "createdOnline": "Desde la web, el {{date}}",
+      "endReasons": {
+        "user_cancelled": "Baja del adoptante",
+        "payment_not_completed": "El primer pago no se completó a tiempo",
+        "payment_failed": "No se regularizó la cuota pendiente",
+        "animal_deceased": "Fallecimiento del animal",
+        "animal_transferred": "Traslado del animal",
+        "admin_cancelled": "Cancelada por el santuario",
+        "account_deleted": "El adoptante eliminó su cuenta"
+      },
+      "payments": "Pagos",
+      "noPayments": "Todavía no hay pagos",
+      "period": "Periodo",
+      "periodRange": "{{from}} – {{to}}",
+      "method": "Forma de pago",
+      "recordedBy": "Registrado por",
+      "methods": {
+        "simulated": "Pago simulado",
+        "cash": "Efectivo",
+        "bank_transfer": "Transferencia",
+        "card": "Tarjeta"
+      },
+      "notes": "Notas internas",
+      "noNotes": "Sin notas.",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "cancel": "Cancelar adopción",
+      "back": "Volver",
+      "confirm": {
+        "pause": "¿Pausar la adopción?",
+        "cancel": "¿Cancelar la adopción?"
+      },
+      "explain": {
+        "pause": "Mientras esté pausada no se le cobrará.",
+        "cancel": "Termina hoy y no se le volverá a cobrar."
+      },
+      "notifyAdopter": "Le avisaremos por email y en la web, sin enseñarle el motivo.",
+      "reason": "Motivo (nota interna)",
+      "reasonRequired": "Escribe el motivo.",
+      "done": {
+        "pause": "Adopción pausada",
+        "resume": "Adopción reanudada",
+        "cancel": "Adopción cancelada"
+      },
+      "searchAdopter": "Buscar adoptante por nombre o email",
+      "searchAdopterButton": "Buscar adoptante",
+      "noAdopters": "No hay adoptantes activos con esa búsqueda.",
+      "planOption": "{{name}} ({{amount}}/mes)",
+      "firstPayment": "Forma del primer pago",
+      "newHelp": "La adopción queda activa al momento, con el primer pago apuntado como cobrado. Avisaremos al adoptante.",
+      "create": "Crear adopción",
+      "created": "Adopción creada. Hemos avisado al adoptante.",
+      "errors": {
+        "ADOPTION_ALREADY_OPEN": "Esta persona ya tiene una adopción en curso de este animal."
+      }
     }
   },
   "viewer": {

@@ -1,4 +1,6 @@
 import type {
+  AdminAdoptionDetailDto,
+  AdminAdoptionListItemDto,
   AdminAnimalDto,
   AdminUserDetailDto,
   AdminUserListItemDto,
@@ -325,6 +327,60 @@ export function adminUserDetail(overrides: Partial<AdminUserDetailDto> = {}): Ad
     ],
     payments: [],
     donations: [],
+    ...overrides,
+  };
+}
+
+/** CU-37: adopciones del panel. */
+export const adminAdoptions: AdminAdoptionListItemDto[] = [
+  {
+    id: 4,
+    adopter: { id: 7, firstName: 'Pablo', lastName: 'García Esteve', email: 'pablo.garcia@correo.test' },
+    animal: { id: 1, name: 'Rufo' },
+    plan: { id: 1, name: 'Simbólica', monthlyAmount: '1.00' },
+    status: 'active',
+    startDate: '2026-08-16',
+    endDate: null,
+    nextBillingDate: '2026-12-16',
+    cancelRequested: false,
+    createdAt: '2026-08-16T16:30:00.000Z',
+  },
+  {
+    id: 11,
+    adopter: { id: 10, firstName: 'Irene', lastName: 'Domínguez Prats', email: 'irene.dominguez@correo.test' },
+    animal: { id: 5, name: 'Brisa' },
+    plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+    status: 'pending',
+    startDate: null,
+    endDate: null,
+    nextBillingDate: null,
+    cancelRequested: false,
+    createdAt: '2026-11-16T10:00:00.000Z',
+  },
+];
+
+export function adminAdoptionDetail(overrides: Partial<AdminAdoptionDetailDto> = {}): AdminAdoptionDetailDto {
+  return {
+    ...(adminAdoptions[0] as AdminAdoptionListItemDto),
+    nextPlan: null,
+    endReason: null,
+    notes: 'Alta en la jornada de puertas abiertas.',
+    createdBy: { id: 1, name: 'Marta Soler Ferrer' },
+    payments: [
+      {
+        id: 40,
+        amount: '1.00',
+        periodStart: '2026-08-16',
+        periodEnd: '2026-09-15',
+        method: 'cash',
+        status: 'completed',
+        reference: 'CASH-20260816-ABCDE12345',
+        paidAt: '2026-08-16T16:30:00.000Z',
+        refundedAt: null,
+        failureReason: null,
+        recordedBy: { id: 1, name: 'Marta Soler Ferrer' },
+      },
+    ],
     ...overrides,
   };
 }

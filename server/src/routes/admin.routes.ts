@@ -1,4 +1,7 @@
 import {
+  adminAdoptionCreateSchema,
+  adminAdoptionsQuerySchema,
+  adminAdoptionStatusSchema,
   adminAnimalsQuerySchema,
   adminUpdatesQuerySchema,
   adminUserPatchSchema,
@@ -19,6 +22,7 @@ import {
   workerCreateSchema,
 } from '@sanctuary/shared';
 import { Router } from 'express';
+import { createAdoptionAdminController } from '../controllers/adoption-admin.controller.js';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
 import { createJobController } from '../controllers/job.controller.js';
@@ -31,6 +35,7 @@ import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import type { JobRunner } from '../jobs/registry.js';
+import type { AdoptionAdminService } from '../servicios/adoption-admin.service.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
@@ -47,6 +52,7 @@ export interface AdminRoutesDeps {
   updates: UpdateAdminService;
   plans: PlanAdminService;
   users: UserAdminService;
+  adoptions: AdoptionAdminService;
   jobs: JobRunner;
 }
 
@@ -130,6 +136,18 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     usuarios.update,
   );
   router.post('/users/:id/invitation', soloAdmin, conId, usuarios.resendInvitation);
+
+  // CU-37: adopciones (TECH_SPEC §10.7), solo administradores.
+  const adopciones = createAdoptionAdminController(deps.adoptions);
+  router.get('/adoptions', soloAdmin, validate({ query: adminAdoptionsQuerySchema }), adopciones.list);
+  router.post('/adoptions', soloAdmin, validate({ body: adminAdoptionCreateSchema }), adopciones.create);
+  router.get('/adoptions/:id', soloAdmin, conId, adopciones.get);
+  router.patch(
+    '/adoptions/:id/status',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: adminAdoptionStatusSchema }),
+    adopciones.changeStatus,
+  );
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

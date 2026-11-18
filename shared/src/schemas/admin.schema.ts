@@ -2,7 +2,13 @@ import { z } from 'zod';
 import { ANIMAL_SEXES } from '../constants/animals.js';
 import { ALT_TEXT_MAX_LENGTH, MAX_FILES_PER_UPLOAD } from '../constants/media.js';
 import { ROLES, WORKER_ROLES } from '../constants/roles.js';
-import { ANIMAL_STATUSES, VISIBILITIES } from '../constants/status.js';
+import {
+  ADOPTION_ADMIN_ACTIONS,
+  ADOPTION_STATUSES,
+  ANIMAL_STATUSES,
+  MANUAL_PAYMENT_METHODS,
+  VISIBILITIES,
+} from '../constants/status.js';
 import { USER_ACCOUNT_STATUSES } from '../constants/users.js';
 import { donationAmount } from './donation.schema.js';
 import { emailValido, telefono, textoObligatorio, textoOpcional as textoSinVacio } from './fields.js';
@@ -89,6 +95,62 @@ export const workerCreateSchema = z.object({
 });
 export type WorkerCreateBody = z.input<typeof workerCreateSchema>;
 export type WorkerCreateInput = z.output<typeof workerCreateSchema>;
+
+// CU-37: listado de adopciones (lista blanca de órdenes).
+export const ADMIN_ADOPTION_SORTS = [
+  '-createdAt',
+  'createdAt',
+  '-startDate',
+  'startDate',
+  'nextBillingDate',
+  '-nextBillingDate',
+] as const;
+export type AdminAdoptionSort = (typeof ADMIN_ADOPTION_SORTS)[number];
+
+const idOpcional = z.coerce.number().int().positive().optional();
+
+export const adminAdoptionsQuerySchema = paginationQuerySchema.extend({
+  sort: z.enum(ADMIN_ADOPTION_SORTS).default('-createdAt'),
+  q: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((texto) => (texto === '' ? undefined : texto))
+    .optional(),
+  status: z.enum(ADOPTION_STATUSES).optional(),
+  planId: idOpcional,
+  animalId: idOpcional,
+  userId: idOpcional,
+});
+export type AdminAdoptionsQuery = z.infer<typeof adminAdoptionsQuerySchema>;
+
+const idElegido = (mensaje: string) =>
+  z.coerce.number({ error: mensaje }).int({ error: mensaje }).positive({ error: mensaje });
+
+/** CU-37 alta manual, paso 2: adoptante, animal, plan, método del primer pago y notas. */
+export const adminAdoptionCreateSchema = z.object({
+  userId: idElegido('Elige el adoptante.'),
+  animalId: idElegido('Elige el animal.'),
+  planId: idElegido('Elige el plan.'),
+  method: z.enum(MANUAL_PAYMENT_METHODS, { error: 'Elige cómo se ha pagado.' }),
+  notes: textoSinVacio(1000),
+});
+export type AdminAdoptionCreateBody = z.input<typeof adminAdoptionCreateSchema>;
+export type AdminAdoptionCreateInput = z.output<typeof adminAdoptionCreateSchema>;
+
+/** CU-37 A1-A3. Pausar y cancelar exigen el motivo, que se guarda en las notas internas. */
+export const adminAdoptionStatusSchema = z
+  .object({
+    action: z.enum(ADOPTION_ADMIN_ACTIONS),
+    notes: textoSinVacio(1000),
+  })
+  .superRefine((datos, ctx) => {
+    if (datos.action !== 'resume' && datos.notes === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['notes'], message: 'Escribe el motivo.' });
+    }
+  });
+export type AdminAdoptionStatusBody = z.input<typeof adminAdoptionStatusSchema>;
+export type AdminAdoptionStatusInput = z.output<typeof adminAdoptionStatusSchema>;
 
 // CU-28: campos ordenables del listado (lista blanca).
 export const ADMIN_ANIMAL_SORTS = ['name', '-name', 'arrivalDate', '-arrivalDate'] as const;

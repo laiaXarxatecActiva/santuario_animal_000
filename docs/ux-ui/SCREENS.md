@@ -595,7 +595,7 @@ Todos los módulos del panel (animales, actualizaciones, especies, usuarios, ado
 | Actualizaciones | Fecha, animal, título, visibilidad, autor | Animal, visibilidad, autor | Editar, borrar (autor o admin) |
 | Especies | Nombre, nombre científico, nº de animales | — | Editar, borrar (admin) |
 | Usuarios | Nombre, email, rol, estado, alta, último acceso | Rol, estado | Ver, activar/desactivar |
-| Adopciones | Adoptante, animal, plan, estado, inicio, próximo cobro | Estado, plan, animal | Ver, pausar/reanudar, cancelar |
+| Adopciones | Adoptante, animal, plan, estado, inicio, próximo cobro | Búsqueda (adoptante o animal), estado, plan; `animalId` y `userId` por URL | Ver (la ficha tiene pausar/reanudar y cancelar, con el motivo en una ventana) |
 | Pagos | Fecha, adoptante, animal, periodo, importe, método, estado | Estado, método, fechas | Ver, devolver |
 | Donaciones | Fecha, donante (o «Anónimo»), importe, método, estado | Estado, método, fechas | Ver, devolver |
 | Planes | Nombre, importe, por defecto, activo, adopciones activas | — | Editar, desactivar |

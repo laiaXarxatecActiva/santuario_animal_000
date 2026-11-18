@@ -193,3 +193,9 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Texto con saltos de línea guardados (notas internas, CU-37). */
+.preWrap {
+  white-space: pre-wrap;
+  margin: 0;
+}

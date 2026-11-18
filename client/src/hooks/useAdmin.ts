@@ -1,6 +1,12 @@
 import { ARCHIVED_ANIMAL_STATUSES, type AnimalStatus } from '@sanctuary/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { adminApi, type AdminAnimalsParams, type AdminUpdatesParams, type AdminUsersParams } from '../api/admin';
+import {
+  adminApi,
+  type AdminAdoptionsParams,
+  type AdminAnimalsParams,
+  type AdminUpdatesParams,
+  type AdminUsersParams,
+} from '../api/admin';
 
 export const ADMIN_KEY = ['admin'] as const;
 export const ADMIN_SPECIES_KEY = [...ADMIN_KEY, 'species'] as const;
@@ -8,6 +14,24 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+export const ADMIN_ADOPTIONS_KEY = [...ADMIN_KEY, 'adoptions'] as const;
+
+/** CU-37: listado con búsqueda, filtros y páginas. */
+export const useAdminAdoptions = (params: AdminAdoptionsParams) =>
+  useQuery({
+    queryKey: [...ADMIN_ADOPTIONS_KEY, 'list', params],
+    queryFn: () => adminApi.adoptions.list(params),
+    placeholderData: keepPreviousData,
+  });
+
+/** CU-37 paso 3: ficha de la adopción con sus pagos. */
+export const useAdminAdoption = (id: number | undefined) =>
+  useQuery({
+    queryKey: [...ADMIN_ADOPTIONS_KEY, 'detail', id ?? 0],
+    queryFn: () => adminApi.adoptions.get(id ?? 0),
+    enabled: id !== undefined,
+  });
 
 export const ADMIN_USERS_KEY = [...ADMIN_KEY, 'users'] as const;
 

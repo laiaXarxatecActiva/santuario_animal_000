@@ -14,6 +14,9 @@ import { UpdateFormPage } from './pages/admin/UpdateFormPage';
 import { UpdatesAdminPage } from './pages/admin/UpdatesAdminPage';
 import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
+import { AdoptionAdminPage } from './pages/admin/AdoptionAdminPage';
+import { AdoptionsAdminPage } from './pages/admin/AdoptionsAdminPage';
+import { NewAdoptionPage } from './pages/admin/NewAdoptionPage';
 import { NewAnimalPage } from './pages/admin/NewAnimalPage';
 import { NewWorkerPage } from './pages/admin/NewWorkerPage';
 import { PlansAdminPage } from './pages/admin/PlansAdminPage';
@@ -73,6 +76,9 @@ export const routes: RouteObject[] = [
               { path: 'users', element: <UsersAdminPage /> },
               { path: 'users/new', element: <NewWorkerPage /> },
               { path: 'users/:id', element: <UserAdminPage /> },
+              { path: 'adoptions', element: <AdoptionsAdminPage /> },
+              { path: 'adoptions/new', element: <NewAdoptionPage /> },
+              { path: 'adoptions/:id', element: <AdoptionAdminPage /> },
               { path: 'plans', element: <PlansAdminPage /> },
             ],
           },

@@ -1,4 +1,9 @@
 import type {
+  AdminAdoptionCreateBody,
+  AdminAdoptionDetailDto,
+  AdminAdoptionListItemDto,
+  AdminAdoptionsQuery,
+  AdminAdoptionStatusBody,
   AdminAnimalDto,
   AdminPhotoDto,
   AdminPlanDto,
@@ -28,10 +33,20 @@ import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './clien
 export type AdminAnimalsParams = Partial<AdminAnimalsQuery>;
 export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
 export type AdminUsersParams = Partial<AdminUsersQuery>;
+export type AdminAdoptionsParams = Partial<AdminAdoptionsQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-37 (solo administradores).
+  adoptions: {
+    list: (params: AdminAdoptionsParams) => apiGet<Paginated<AdminAdoptionListItemDto>>('/api/admin/adoptions', params),
+    get: (id: number) => apiGet<AdminAdoptionDetailDto>(`/api/admin/adoptions/${id}`),
+    create: (body: AdminAdoptionCreateBody) => apiPost<AdminAdoptionDetailDto>('/api/admin/adoptions', body),
+    changeStatus: (id: number, body: AdminAdoptionStatusBody) =>
+      apiPatch<AdminAdoptionDetailDto>(`/api/admin/adoptions/${id}/status`, body),
+  },
 
   // CU-35 y CU-36 (solo administradores).
   users: {
