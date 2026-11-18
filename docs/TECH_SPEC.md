@@ -906,8 +906,8 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 
 **Criterios de aceptación:**
 
-- [ ] Ninguna funcionalidad de la Fase 3 requiere cambios en la estructura de la base de datos.
-- [ ] Las pruebas de las fases 1 y 2 siguen pasando.
+- [x] Ninguna funcionalidad de la Fase 3 requiere cambios en la estructura de la base de datos (`database/` no cambia en toda la fase).
+- [x] Las pruebas de las fases 1 y 2 siguen pasando (`npm test` y `npm run test:e2e`).
 
 ### Fase 4 — Despliegue (fase final)
 
