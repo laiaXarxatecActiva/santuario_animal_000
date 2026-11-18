@@ -2,6 +2,7 @@ import { ARCHIVED_ANIMAL_STATUSES, type AnimalStatus } from '@sanctuary/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   adminApi,
+  type AdminActivityLogsParams,
   type AdminAdoptionsParams,
   type AdminAnimalsParams,
   type AdminDonationMonthlyParams,
@@ -17,6 +18,28 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+/** CU-42: registro de actividad con filtros y páginas. */
+export const useAdminActivityLogs = (params: AdminActivityLogsParams, enabled = true) =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'activity', params],
+    queryFn: () => adminApi.activityLogs(params),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+
+/** Trabajadores (administradores y cuidadores), para el filtro de usuario de CU-42. */
+export const useWorkers = () =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'users', 'workers'],
+    queryFn: async () => {
+      const [admins, cuidadores] = await Promise.all([
+        adminApi.users.list({ role: 'admin', pageSize: 100 }),
+        adminApi.users.list({ role: 'caretaker', pageSize: 100 }),
+      ]);
+      return [...admins.data, ...cuidadores.data].sort((a, b) => a.firstName.localeCompare(b.firstName, 'es'));
+    },
+  });
 
 export const ADMIN_DONATIONS_KEY = [...ADMIN_KEY, 'donations'] as const;
 

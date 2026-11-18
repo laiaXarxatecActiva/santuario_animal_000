@@ -22,7 +22,9 @@ import { createProfileRoutes } from './routes/profile.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
+import { createActivityLogService } from './services/activity-log.service.js';
 import { createLocalStorage } from './services/storage/local.storage.js';
+import { createActivityAdminService } from './servicios/activity-admin.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
@@ -208,6 +210,13 @@ export function createApp(options: AppOptions): Express {
         logEmailError,
       }),
       jobs,
+      activity: createActivityLogService({
+        db,
+        logError: logger
+          ? (error) => logger.error({ err: error }, 'No se ha podido anotar en el registro de actividad')
+          : undefined,
+      }),
+      activityLogs: createActivityAdminService({ db }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

@@ -1,4 +1,5 @@
 import { withTransaction } from '../db/transaction.js';
+import * as activityModel from '../models/activity-log.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import type { JobDeps } from './job.types.js';
@@ -15,6 +16,14 @@ export async function runFinishCancelled({ db, reloj }: JobDeps): Promise<Finish
   const finished = await withTransaction(db, async (client) => {
     const terminadas = await adoptionModel.finishCancelled(client, reloj.hoy());
     for (const adopcion of terminadas) {
+      // CU-42: las tareas automáticas se anotan como «Sistema».
+      await activityModel.create(client, {
+        userId: null,
+        action: 'update',
+        tableName: 'adoptions',
+        recordId: adopcion.id,
+        details: { status: ['active', 'finished'], reason: 'user_cancelled' },
+      });
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'adoption_cancelled',

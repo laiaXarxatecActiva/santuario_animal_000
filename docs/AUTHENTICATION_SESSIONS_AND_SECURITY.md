@@ -180,6 +180,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - Se guardan solo los datos necesarios para cada finalidad (RGPD en TECH_SPEC §13). Hay supresión por anonimización (CU-25).
 - Los secretos (`SESSION_SECRET`, credenciales de la base de datos y del SMTP) van en `.env`, que no se sube al repositorio. `.env.example` solo lleva valores de ejemplo.
 - Las sesiones caducadas se borran cada 15 minutos. Los tokens caducados, en la tarea `expire-pending` (Fase 2).
+- **Registro de actividad (CU-42)**: los controladores del panel anotan cada escritura con `ActivityLogService` (`server/src/services/activity-log.service.ts`). Antes de guardar, `limpiarDetalles` (`server/src/dominio/actividad.ts`) quita cualquier clave que pueda contener una contraseña, un token o un hash. El registro solo lo lee el administrador (`GET /api/admin/activity-logs`) y no hay ninguna ruta para modificarlo ni borrarlo.
 
 ## 10. Cliente
 
@@ -216,6 +217,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Cabeceras de helmet | `server/tests/app.test.ts` |
 | Las respuestas no exponen campos privados | `server/tests/auth.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | Los logs ocultan datos sensibles | `server/tests/logger.test.ts` |
+| El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
 
 ## 12. Pendiente
 

@@ -1,4 +1,6 @@
 import type {
+  ActivityLogsPage,
+  AdminActivityLogsQuery,
   AdminDonationListItemDto,
   AdminDonationMonthlyQuery,
   AdminDonationMonthlyTotalsDto,
@@ -47,10 +49,14 @@ export type AdminAdoptionsParams = Partial<AdminAdoptionsQuery>;
 export type AdminPaymentsParams = Partial<AdminPaymentsQuery>;
 export type AdminDonationsParams = Partial<AdminDonationsQuery>;
 export type AdminDonationMonthlyParams = Partial<AdminDonationMonthlyQuery>;
+export type AdminActivityLogsParams = Partial<AdminActivityLogsQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-42 (solo administradores, solo lectura).
+  activityLogs: (params: AdminActivityLogsParams) => apiGet<ActivityLogsPage>('/api/admin/activity-logs', params),
 
   // CU-39 (solo administradores).
   donations: {

@@ -561,7 +561,8 @@
       "users": "Usuarios",
       "adoptions": "Adopciones",
       "payments": "Pagos",
-      "donations": "Donaciones"
+      "donations": "Donaciones",
+      "activity": "Actividad"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -986,6 +987,58 @@
       "emailHelp": "Sin email no podremos enviarle el agradecimiento ni avisarle si hubiera que devolverla.",
       "created": "Donación registrada.",
       "anonymousLabel": "Donación anónima"
+    },
+    "activity": {
+      "title": "Registro de actividad",
+      "when": "Fecha",
+      "user": "Usuario",
+      "system": "Sistema",
+      "action": "Acción",
+      "table": "Tabla",
+      "record": "Registro",
+      "details": "Detalles",
+      "showDetails": "Ver detalles",
+      "empty": "No hay actividad con estos filtros",
+      "loadError": "No hemos podido cargar el registro de actividad",
+      "workerTitle": "Actividad",
+      "workerEmpty": "Todavía no ha hecho cambios en el panel",
+      "seeAll": "Ver toda su actividad",
+      "actions": {
+        "create": "Creación",
+        "update": "Modificación",
+        "delete": "Borrado",
+        "archive": "Archivo"
+      },
+      "tables": {
+        "animals": "Animales",
+        "species": "Especies",
+        "photos": "Fotos",
+        "animal_updates": "Actualizaciones",
+        "vet_records": "Historial veterinario",
+        "adoption_plans": "Planes",
+        "users": "Usuarios",
+        "adoptions": "Adopciones",
+        "payments": "Pagos",
+        "donations": "Donaciones"
+      },
+      "fields": {
+        "name": "Nombre",
+        "status": "Estado",
+        "reason": "Motivo",
+        "date": "Fecha",
+        "role": "Rol",
+        "method": "Forma de pago",
+        "amount": "Importe",
+        "manual": "Registro manual",
+        "title": "Título",
+        "visibility": "Visibilidad",
+        "animalId": "Animal",
+        "userId": "Usuario",
+        "planId": "Plan",
+        "refund": "Devolución",
+        "action": "Acción",
+        "invitationResent": "Invitación reenviada"
+      }
     }
   },
   "viewer": {

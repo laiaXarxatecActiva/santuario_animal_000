@@ -1,5 +1,6 @@
 import { withTransaction } from '../db/transaction.js';
 import { limitePagoPendiente } from '../dominio/adopcion.js';
+import * as activityModel from '../models/activity-log.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as tokenModel from '../models/user-token.model.js';
@@ -19,6 +20,14 @@ export async function runExpirePending({ db, reloj }: JobDeps): Promise<ExpirePe
   const canceladas = await withTransaction(db, async (client) => {
     const cerradas = await adoptionModel.cancelExpiredPending(client, limitePagoPendiente(reloj.ahora()), reloj.hoy());
     for (const adopcion of cerradas) {
+      // CU-42: las tareas automáticas se anotan como «Sistema».
+      await activityModel.create(client, {
+        userId: null,
+        action: 'update',
+        tableName: 'adoptions',
+        recordId: adopcion.id,
+        details: { status: ['pending', 'cancelled'], reason: 'payment_not_completed' },
+      });
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'adoption_cancelled',

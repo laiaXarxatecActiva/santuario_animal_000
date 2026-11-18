@@ -1,5 +1,6 @@
 import { withTransaction } from '../db/transaction.js';
 import { debeCobrarse, periodoCuota } from '../dominio/adopcion.js';
+import * as activityModel from '../models/activity-log.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as paymentModel from '../models/payment.model.js';
@@ -114,13 +115,26 @@ export async function runBilling({
 
       // 3a: cuota fallida → adopción pausada hasta que se regularice (CU-14).
       await adoptionModel.pause(client, adoptionId);
+      // CU-42: las tareas automáticas se anotan como «Sistema».
+      await activityModel.create(client, {
+        userId: null,
+        action: 'update',
+        tableName: 'adoptions',
+        recordId: adoptionId,
+        details: { status: ['active', 'paused'], reason: 'payment_failed' },
+      });
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'payment_failed',
         message: `No hemos podido cobrar la cuota de tu adopción de ${adopcion.animal.name}. La adopción está pausada hasta que se regularice el pago.`,
         link: ficha,
       });
-      const aviso = { firstName: user?.firstName ?? '', animalName: adopcion.animal.name, amount: plan.monthlyAmount, url };
+      const aviso = {
+        firstName: user?.firstName ?? '',
+        animalName: adopcion.animal.name,
+        amount: plan.monthlyAmount,
+        url,
+      };
       return {
         tipo: 'fallida',
         email: user ? () => email.send({ to: user.email, ...paymentFailedEmail(aviso) }) : undefined,
