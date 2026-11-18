@@ -545,6 +545,11 @@
       "password": "Contraseña",
       "submit": "Eliminar cuenta",
       "submitting": "Eliminando…"
+    },
+    "language": {
+      "title": "Idioma",
+      "label": "Idioma de la web y de los emails",
+      "help": "También el de los certificados y recibos en PDF."
     }
   },
   "admin": {
@@ -1225,5 +1230,13 @@
     "downloadOf": "Descargar el certificado de {{name}} (PDF)",
     "view": "Ver",
     "viewOf": "Ver el certificado de {{name}} (PDF)"
+  },
+  "language": {
+    "label": "Idioma",
+    "names": {
+      "es": "Castellano",
+      "ca": "Valencià",
+      "en": "English"
+    }
   }
 }

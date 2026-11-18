@@ -741,7 +741,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
    - recibir emails: sí o no (`email_notifications`);
    - frecuencia: un email por actualización o un resumen mensual (`email_frequency`);
    - aparecer como adoptante en la ficha pública de sus animales (`show_public_name`);
-   - idioma (Fase 3).
+   - idioma de la web, de los emails y de los PDF: castellano, valenciano o inglés (`preferred_language`, Fase 3; también para los trabajadores).
 3. El usuario modifica los datos y guarda.
 4. El sistema valida y guarda los cambios y muestra «Cambios guardados».
 

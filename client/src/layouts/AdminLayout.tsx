@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Alert } from '../components/Alert';
 import iconStyles from '../components/IconButton.module.css';
+import { LanguageSelect } from '../components/LanguageSelect';
 import { Logo } from '../components/Logo';
 import { NotificationBell } from '../components/NotificationBell';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -121,6 +122,7 @@ export function AdminLayout() {
         <span className={styles.title}>{t('admin.nav.title')}</span>
         <div className={styles.actions}>
           {user && <NotificationBell />}
+          <LanguageSelect />
           <ThemeToggle />
           {user && <UserMenu name={user.firstName} links={MENU_USUARIO} onLogout={() => logout.mutate()} />}
         </div>

@@ -21,6 +21,7 @@ import { ReceiptCard } from '../../components/ReceiptCard';
 import { useSession } from '../../hooks/useSession';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import styles from './DonatePage.module.css';
+import { conIdioma } from '../../i18n/idioma';
 
 /** Cantidades sugeridas (SCREENS §3.5); la de 20 € va marcada al entrar. */
 const SUGERIDAS = ['5', '10', '20', '50'] as const;
@@ -58,7 +59,7 @@ export function DonatePage() {
 
   const donar = useMutation({
     mutationFn: ({ datos, outcome }: { datos: DonationData; outcome: SimulatedOutcome }) =>
-      donationsApi.donate({ ...datos, simulatedOutcome: outcome }),
+      donationsApi.donate({ ...datos, simulatedOutcome: outcome, ...conIdioma('language') }),
     onSuccess: (resultado) => {
       if (resultado.status === 'completed') setHecha(resultado);
       else setFallo(t('donate.failed'));

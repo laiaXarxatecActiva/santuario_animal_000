@@ -1,5 +1,6 @@
 import { faCircleExclamation, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { isLanguage } from '@sanctuary/shared';
 import {
   useId,
   useState,
@@ -10,6 +11,7 @@ import {
   type TextareaHTMLAttributes,
 } from 'react';
 import { useTranslation } from 'react-i18next';
+import { traducirMensaje } from '../i18n/mensajesValidacion';
 import styles from './FormFields.module.css';
 
 // Campos de formulario (DESIGN_SYSTEM §8.5): etiqueta siempre visible, ayuda y
@@ -23,9 +25,13 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'childr
 }
 
 export function FieldError({ id, children }: { id: string; children: ReactNode }) {
+  // Fase 3: los mensajes de los esquemas y del servidor llegan en castellano.
+  const { i18n } = useTranslation();
+  const idioma = isLanguage(i18n.language) ? i18n.language : 'es';
   return (
     <p id={id} className={styles.error}>
-      <FontAwesomeIcon icon={faCircleExclamation} aria-hidden="true" /> {children}
+      <FontAwesomeIcon icon={faCircleExclamation} aria-hidden="true" />{' '}
+      {typeof children === 'string' ? traducirMensaje(children, idioma) : children}
     </p>
   );
 }

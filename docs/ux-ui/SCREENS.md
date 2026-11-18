@@ -47,13 +47,15 @@ Hay tres plantillas (*layouts*) que envuelven a todas las pantallas:
 └────────────────────────────────────┘
 ```
 
+El selector de idioma (Fase 3, `DESIGN_SYSTEM.md` §8.7) cambia toda la interfaz al momento. Con sesión, guarda además el idioma en la cuenta, que se usa para los emails y los PDF; al entrar, la web pasa al idioma de la cuenta. Sin sesión, se recuerda en el navegador. Los contenidos escritos por el santuario (nombres, historias, actualizaciones, planes) no se traducen.
+
 Contenido según quién navega:
 
 | Usuario | Enlaces | Derecha |
 | --- | --- | --- |
-| Visitante | Animales · Cómo funciona · Donar · Sobre el santuario |  · [Entrar] · [■ Registrarse] (en escritorio) |
-| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
-| Trabajador | Animales · Cómo funciona · Donar · **Panel** | ·  · menú de usuario: Mi perfil, Cerrar sesión |
+| Visitante | Animales · Cómo funciona · Donar · Sobre el santuario | Idioma ·  · [Entrar] · [■ Registrarse] (en escritorio) |
+| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
+| Trabajador | Animales · Cómo funciona · Donar · **Panel** | · Idioma ·  · menú de usuario: Mi perfil, Cerrar sesión |
 
 **Menú de hamburguesa (móvil y tablet)** desplegado bajo la cabecera:
 
@@ -476,12 +478,13 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
 Una columna (máximo 560 px), con secciones separadas por títulos h2 y cada una con su propio botón de guardar y sus propios avisos:
 
 1. **Tus datos:** nombre, apellidos, teléfono; el email solo se muestra. [■ Guardar cambios].
-2. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes». [■ Guardar].
-3. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
-4. **Contraseña:** actual, nueva, repetir. [■ Cambiar contraseña].
-5. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
+2. **Idioma** (Fase 3): «Idioma de la web y de los emails», con la ayuda «También el de los certificados y recibos en PDF». [■ Guardar]. Al guardar, la web cambia a ese idioma.
+3. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes». [■ Guardar].
+4. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
+5. **Contraseña:** actual, nueva, repetir. [■ Cambiar contraseña].
+6. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
 
-Los trabajadores ven solo las secciones 1 y 4.
+Los trabajadores ven solo las secciones 1, 2 y 5.
 
 ### 4.7 Notificaciones (`/notifications`) — CU-18
 

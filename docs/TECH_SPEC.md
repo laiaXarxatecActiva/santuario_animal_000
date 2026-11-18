@@ -36,7 +36,7 @@ La aplicación tiene tres caras sobre una misma base de datos PostgreSQL:
 | **Local primero** | Todo debe funcionar en el ordenador de desarrollo sin conexión a servicios externos. El despliegue es la última fase. |
 | **Proyecto académico** | La pasarela de pago es simulada. Los emails en desarrollo van a un buzón local de pruebas (Mailpit), nunca a direcciones reales. |
 | **Desarrollo asistido por IA** | Convenciones explícitas, estructura predecible y pruebas automáticas para validar lo generado. |
-| **Idioma** | Interfaz y documentación en castellano. Código, SQL, nombres de archivos y directorios, rutas de la API y valores de estado en inglés. La estructura debe permitir añadir valenciano e inglés (Fase 3). |
+| **Idioma** | Documentación en castellano. Interfaz, emails y PDF en castellano, valenciano e inglés (Fase 3). Código, SQL, nombres de archivos y directorios, rutas de la API y valores de estado en inglés. |
 | **Versión de PostgreSQL** | El SQL debe funcionar en PostgreSQL 14 o superior, para usar la versión que haya instalada en cada ordenador. Probado en PostgreSQL 16. |
 
 ## 4. Tecnologías
@@ -230,8 +230,15 @@ sanctuary/
 | Identificadores de código, SQL, rutas de la API, archivos y directorios | Inglés | `AdoptionModel.findOpenByUser`, `GET /api/me/adoptions` |
 | Valores de estado y tipos | Inglés | `active`, `deceased`, `per_update` |
 | Comentarios en el código y en el SQL | Castellano | `-- Solo los adoptantes pueden adoptar` |
-| Textos de la interfaz, emails y mensajes de error para el usuario | Castellano (vía i18n) | `t('adoption.errors.alreadyAdopted')` |
+| Textos de la interfaz, emails y mensajes de error para el usuario | Castellano, valenciano e inglés (vía i18n; ver §7.1.1) | `t('adoption.errors.alreadyAdopted')` |
 | Datos de ejemplo | Castellano | Nombres de animales e historias |
+
+#### 7.1.1 Varios idiomas (Fase 3)
+
+- **Interfaz:** `client/src/i18n/locales/{es,ca,en}.json`, con las mismas claves (lo comprueba `client/tests/locales.test.ts`). El idioma inicial es el elegido en el navegador (`localStorage.language`), si no el del navegador y, si no, castellano (`i18n/idioma.ts`). Con sesión manda `preferredLanguage` de la cuenta. El selector de la cabecera y la sección «Idioma» del perfil lo cambian y lo guardan con `PATCH /api/me/profile`. Los formatos de fechas, importes y listas (`utils/format.ts`) siguen el idioma y `<html lang>` cambia con él.
+- **Mensajes de validación:** se escriben una vez, en castellano, en los esquemas Zod compartidos y en el servidor; `FieldError` los traduce al mostrarlos (`i18n/mensajesValidacion.ts`). Los errores de negocio se traducen por su `code` (`errors.<CODE>`).
+- **Emails, avisos de la campana y PDF:** en el idioma del destinatario (`users.preferred_language`). Las plantillas reciben `language`; los avisos se guardan ya traducidos (`servicios/textos-avisos.ts`, el modelo elige el texto con `CASE u.preferred_language`); el certificado y los recibos usan `dominio/documentos.ts`. Una donación sin cuenta usa el idioma de la web al donar (`language` en `POST /api/donations`). El buzón interno del contacto sigue en castellano.
+- **No se traducen** los contenidos que escribe el santuario (animales, especies, actualizaciones, planes) ni el nombre «Santuario de Animales», que es una marca.
 | Mensajes de commit | Inglés (Conventional Commits) | `feat(adoptions): add plan change (CU-20)` |
 
 ### 7.2 Nombres
@@ -295,7 +302,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | --- | --- |
 | `users.email_notifications`, `users.email_frequency` | Preferencias de notificación: email sí/no y frecuencia (`per_update` o `monthly_digest`) |
 | `users.digest_sent_for` | Primer día del último mes resumido por `monthly-digest`: como máximo un resumen al mes, aunque la tarea se repita (CU-46) |
-| `users.preferred_language` | Preparado para varios idiomas (Fase 3) |
+| `users.preferred_language` | Idioma de la web, los emails y los PDF (`es`, `ca`, `en`; Fase 3) |
 | `users.privacy_accepted_at` | Consentimiento RGPD al registrarse |
 | `users.anonymized_at` | Baja con anonimización, conservando pagos y donaciones |
 | `users.last_login_at` | Información para el panel |
@@ -723,7 +730,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 
 - **Estado del servidor** con React Query; **sesión** en `SessionContext` (se carga con `GET /api/auth/me` al arrancar).
 - **Formularios** con `react-hook-form` y los esquemas Zod de `shared/`. Los errores del servidor (`details`) se muestran junto al campo correspondiente.
-- **Textos** siempre con `t('clave')` desde `i18n/locales/es.json`. Nunca texto fijo en los componentes.
+- **Textos** siempre con `t('clave')` desde `i18n/locales/` (`es.json`, `ca.json` y `en.json`, con las mismas claves). Nunca texto fijo en los componentes.
 - **Importes** con `Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })` y **fechas** con `Intl.DateTimeFormat('es-ES')`.
 - **Antes de adoptar**, la interfaz explica que la adopción es simbólica, que el animal no sale del santuario y que puede tener varios adoptantes.
 - **Pasarela simulada:** una pantalla propia con un aviso claro de «Pago simulado: no se realizará ningún cargo real» y los botones de resultado.
@@ -745,7 +752,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | **Rendimiento** | Paginación en todos los listados; índices definidos en `seedsql.sql`; miniaturas en las tarjetas del catálogo |
 | **Copias de seguridad** | Script `npm run db:backup` (`pg_dump` a `backups/<fecha>.sql`) y copia de `server/uploads/`. En local se ejecuta a mano; en la Fase 4 se automatiza. |
 | **Logs** | `pino`: peticiones, errores y resultado de las tareas programadas. Nunca se registran contraseñas, tokens ni cookies. |
-| **Idioma** | Castellano; `i18next` preparado para valenciano (`ca`) e inglés (`en`) en la Fase 3 |
+| **Idioma** | Castellano, valenciano (`ca`) e inglés (`en`) con `i18next` (Fase 3) |
 | **Zona horaria** | `Europe/Madrid` para las tareas y la presentación de fechas; la base de datos guarda `TIMESTAMPTZ` |
 
 ## 14. Configuración y entorno local
@@ -895,7 +902,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 | Certificado de adopción en PDF y recibos en PDF | CU-22, CU-19 |
 | ~~Adopción regalo~~ (descartada: no se implementa) | CU-26 |
 | Sección «En memoria» | CU-12 |
-| Valenciano e inglés (archivos `ca.json` y `en.json`, selector de idioma, `preferred_language`) | — |
+| Valenciano e inglés (archivos `ca.json` y `en.json`, selector de idioma, `preferred_language`; también emails, avisos y PDF) | — |
 
 **Criterios de aceptación:**
 
@@ -944,7 +951,7 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 | Ampliación | Cómo hacerla |
 | --- | --- |
 | **Nueva especie** (por ejemplo, lince ibérico) | Alta desde el panel (CU-30). Si la especie tiene razas, se usa `animals.breed`. No requiere cambios de código. |
-| **Nuevo idioma** | Añadir `client/src/i18n/locales/<código>.json` y el valor en el `CHECK` de `users.preferred_language` |
+| **Nuevo idioma** | Añadir `client/src/i18n/locales/<código>.json`, el código en `shared/src/constants/languages.ts` y en el `CHECK` de `users.preferred_language`, sus textos en las plantillas de email, en `textos-avisos.ts`, en `dominio/documentos.ts` y en `i18n/mensajesValidacion.ts` |
 | **Pasarela de pago real** | Nueva clase que implemente `PaymentGateway`; se elige por configuración. Ver el anexo «Paso a producción real». |
 | **Nuevo tipo de notificación** | Añadir el valor al `CHECK` de `notifications.type`, a las constantes de `shared/` y crear la plantilla de email |
 | **Nuevo estado de animal** | Añadir el valor al `CHECK` de `animals.status`, a `shared/constants/status.ts` y a las traducciones |

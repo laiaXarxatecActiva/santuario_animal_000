@@ -473,9 +473,10 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 **Cabecera** (web pública y área del adoptante):
 
 - Fondo `--color-surface-alt`, borde inferior fino, altura de 64 px, fija en la parte superior al desplazar (`position: sticky`).
-- Izquierda: logo. Centro (escritorio): enlaces principales. Derecha: campana (con sesión), botón de tema, acceso o menú de usuario.
+- Izquierda: logo. Centro (escritorio): enlaces principales. Derecha: campana (con sesión), selector de idioma, botón de tema, acceso o menú de usuario.
 - **Desde `lg` (1024 px):** enlaces visibles. El enlace activo está subrayado con una línea terracota de 2 px.
-- **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **botón de tema y la campana siguen visibles** fuera del menú.
+- **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **selector de idioma, el botón de tema y la campana siguen visibles** fuera del menú.
+- **Selector de idioma** (`LanguageSelect`, Fase 3): lista desplegable nativa (`<select>`) de 44 px de alto, con borde `--color-border`, `--radius-pill`, fondo transparente (al pasar el ratón, `--color-surface-alt`), texto `--font-size-sm` y el icono `language` en `--color-text-muted` dentro, a la izquierda. Etiqueta «Idioma» solo para lectores de pantalla. Cada idioma se nombra en su propia lengua y con su `lang`: «Castellano», «Valencià», «English». También está en la cabecera del panel.
 - **Menú de hamburguesa:** panel que se despliega bajo la cabecera a todo el ancho, con fondo `--color-surface`. Enlaces en lista con zona pulsable de 48 px. Se cierra con Esc, con ✕ o al elegir un enlace. El botón tiene `aria-expanded` y `aria-controls`.
 - **Menú de usuario** (con sesión, desde `lg`): botón `outline` con el icono `circle-user`, el nombre y `chevron-down`, con `aria-expanded` y `aria-controls`. Despliega bajo el botón un panel alineado a la derecha, de 240 px, con fondo `--color-surface`, borde fino y `--radius-md`; enlaces en lista con zona pulsable de 44 px y, al final, separado por una línea, «Cerrar sesión» (`right-from-bracket`). Se cierra con Esc, al pulsar fuera o al elegir una opción. Por debajo de `lg`, sus opciones van al final del menú de hamburguesa.
 

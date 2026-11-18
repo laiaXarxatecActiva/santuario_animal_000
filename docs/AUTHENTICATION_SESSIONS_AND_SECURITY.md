@@ -183,6 +183,8 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - **Registro de actividad (CU-42)**: los controladores del panel anotan cada escritura con `ActivityLogService` (`server/src/services/activity-log.service.ts`). Antes de guardar, `limpiarDetalles` (`server/src/dominio/actividad.ts`) quita cualquier clave que pueda contener una contraseña, un token o un hash. El registro solo lo lee el administrador (`GET /api/admin/activity-logs`) y no hay ninguna ruta para modificarlo ni borrarlo.
 - **Certificado y recibos en PDF (CU-22, CU-19)**: `server/src/routes/document.routes.ts`, solo para adoptantes (`requireRole('adopter')`) y siempre sobre recursos propios (el filtro por usuario va en la consulta; uno ajeno es 404). El PDF se genera al momento, no se guarda y se envía con `Cache-Control: no-store`. El nombre del archivo se limpia (`nombreArchivo`, solo letras, números y guiones) antes de ponerlo en `Content-Disposition`. La foto del certificado se lee con `StorageService.read`, que no admite rutas fuera de `uploads/`.
 
+- **Idioma (Fase 3)**: no añade rutas. `PATCH /api/me/profile` y `POST /api/auth/register` aceptan `preferredLanguage` y `POST /api/donations` acepta `language`, siempre validados con `z.enum(LANGUAGES)` (solo `es`, `ca` o `en`). En el SQL de los avisos el idioma elige entre textos que van como parámetros; nunca se concatena.
+
 ## 10. Cliente
 
 - El cliente nunca ve ni guarda el token de sesión: lo gestiona el navegador con la cookie `HttpOnly`.
@@ -219,6 +221,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Las respuestas no exponen campos privados | `server/tests/auth.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | Los logs ocultan datos sensibles | `server/tests/logger.test.ts` |
 | Certificado y recibos en PDF: solo adoptantes, solo los propios (ajeno → 404), sin caché | `server/tests/documents.routes.test.ts` (CU-22, CU-19), `server/tests/documentos.test.ts` |
+| El idioma solo admite `es`, `ca` o `en`; emails, avisos y PDF en el idioma de cada persona | `server/tests/idioma.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
 
 ## 12. Pendiente
