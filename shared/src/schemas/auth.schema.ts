@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { LANGUAGES } from '../constants/languages.js';
 import { emailValido, nuevaPassword, textoObligatorio as texto } from './fields.js';
 
 export { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from './fields.js';
@@ -25,6 +26,8 @@ export const registerSchema = z
     password: nuevaPassword,
     passwordConfirm: z.string(),
     privacyAccepted: z.literal(true, { error: 'Tienes que aceptar la política de privacidad.' }),
+    /** Fase 3: el idioma con el que se usaba la web (emails y PDF en ese idioma). */
+    preferredLanguage: z.enum(LANGUAGES, { error: 'Elige un idioma de la lista.' }).optional(),
   })
   .refine(coinciden, errorCoinciden);
 export type RegisterInput = z.infer<typeof registerSchema>;

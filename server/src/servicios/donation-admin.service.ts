@@ -19,13 +19,15 @@ import type { Reloj } from '../dominio/reloj.js';
 import { DonationNotRefundableError, NotFoundError, RefundFailedError, ValidationError } from '../errors/app-error.js';
 import * as donationModel from '../models/donation.model.js';
 import * as notificationModel from '../models/notification.model.js';
+import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { donationRefundedEmail } from '../services/email/templates/donation-refunded.js';
 import { donationThanksEmail } from '../services/email/templates/donation-thanks.js';
 import type { PaymentGateway } from '../services/payment/payment.service.js';
 import { generarCsv, importeCsv } from '../utils/csv.js';
-import { formatEuros, formatFecha } from '../utils/format.js';
+import { formatFecha } from '../utils/format.js';
 import { referenciaManual } from '../utils/referencias.js';
+import { avisos } from './textos-avisos.js';
 
 export interface DonationAdminServiceDeps {
   db: Pool;
@@ -177,6 +179,7 @@ export function createDonationAdminService({
             paidAt: new Date(donacion.date),
             reference,
             simulated: false,
+            language: donacion.userId === null ? undefined : await userModel.findLanguage(db, donacion.userId),
           }),
         });
       }
@@ -202,7 +205,7 @@ export function createDonationAdminService({
           await notificationModel.create(client, {
             userId: devuelta.userId,
             type: 'system',
-            message: `Te hemos devuelto tu donación de ${formatEuros(devuelta.amount)}.`,
+            message: avisos.donacionDevuelta(devuelta.amount),
             link: '/my-contributions',
           });
         }
@@ -216,6 +219,7 @@ export function createDonationAdminService({
             amount: donacion.amount,
             reference: donacion.reference,
             online: pasaPorPasarela(donacion.method),
+            language: donacion.userId === null ? undefined : await userModel.findLanguage(db, donacion.userId),
           }),
         });
       }

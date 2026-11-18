@@ -3,6 +3,7 @@ import * as activityModel from '../models/activity-log.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import type { JobDeps } from './job.types.js';
+import { avisos } from '../servicios/textos-avisos.js';
 
 export interface FinishCancelledResult {
   finished: number;
@@ -27,7 +28,7 @@ export async function runFinishCancelled({ db, reloj }: JobDeps): Promise<Finish
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'adoption_cancelled',
-        message: `Tu adopción de ${adopcion.animalName} ha terminado. Gracias por tu apoyo durante este tiempo; puedes volver a adoptar cuando quieras.`,
+        message: avisos.finalizada(adopcion.animalName),
         link: '/animals',
       });
     }

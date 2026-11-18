@@ -7,7 +7,7 @@ import * as notificationModel from '../models/notification.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { donationThanksEmail } from '../services/email/templates/donation-thanks.js';
 import type { PaymentGateway } from '../services/payment/payment.service.js';
-import { formatEuros } from '../utils/format.js';
+import { avisos } from './textos-avisos.js';
 
 export interface DonationServiceDeps {
   db: Pool;
@@ -51,7 +51,7 @@ export function createDonationService({ db, reloj, payments, email, logEmailErro
         await notificationModel.create(client, {
           userId: adoptante.id,
           type: 'donation_thanks',
-          message: `Gracias por tu donación de ${formatEuros(datos.amount)}.`,
+          message: avisos.gracias(datos.amount),
           link: '/my-contributions',
         });
       }
@@ -68,6 +68,7 @@ export function createDonationService({ db, reloj, payments, email, logEmailErro
             amount: donacion.amount,
             paidAt: new Date(donacion.paidAt),
             reference: donacion.reference,
+            language: adoptante?.preferredLanguage ?? datos.language,
           }),
         });
       } catch (error) {

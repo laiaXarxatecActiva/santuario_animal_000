@@ -1,8 +1,9 @@
 import PDFDocument from 'pdfkit';
 import sharp from 'sharp';
+import type { Language } from '@sanctuary/shared';
 import {
   NOMBRE_SANTUARIO,
-  NOTA_ACADEMICA,
+  NOTAS_ACADEMICAS,
   type ContenidoCertificado,
   type ContenidoRecibo,
 } from '../../dominio/documentos.js';
@@ -26,13 +27,15 @@ export interface PdfService {
 }
 
 /** Recoge el documento en un Buffer cuando pdfkit termina de escribirlo. */
-function generar(titulo: string, dibujar: (doc: PDFKit.PDFDocument) => void): Promise<Buffer> {
+const IDIOMAS_PDF: Record<Language, string> = { es: 'es-ES', ca: 'ca-ES', en: 'en-GB' };
+
+function generar(titulo: string, idioma: Language, dibujar: (doc: PDFKit.PDFDocument) => void): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4',
       margin: MARGEN,
       info: { Title: titulo, Author: NOMBRE_SANTUARIO },
-      lang: 'es-ES',
+      lang: IDIOMAS_PDF[idioma],
     });
     const trozos: Buffer[] = [];
     doc.on('data', (trozo: Buffer) => trozos.push(trozo));
@@ -57,20 +60,24 @@ async function aPng(foto: Buffer | null): Promise<Buffer | null> {
   }
 }
 
-function pie(doc: PDFKit.PDFDocument) {
+function pie(doc: PDFKit.PDFDocument, idioma: Language) {
   const ancho = doc.page.width - MARGEN * 2;
   doc
     .font('Helvetica')
     .fontSize(8)
     .fillColor(COLOR.secundario)
-    .text(NOTA_ACADEMICA, MARGEN, doc.page.height - MARGEN - 10, { width: ancho, align: 'center', lineBreak: false });
+    .text(NOTAS_ACADEMICAS[idioma], MARGEN, doc.page.height - MARGEN - 10, {
+      width: ancho,
+      align: 'center',
+      lineBreak: false,
+    });
 }
 
 export function createPdfService(): PdfService {
   return {
     async certificate(contenido, foto) {
       const png = await aPng(foto);
-      return generar(contenido.titulo, (doc) => {
+      return generar(contenido.titulo, contenido.idioma, (doc) => {
         const { width, height } = doc.page;
         const ancho = width - MARGEN * 2;
         // Marco doble en terracota.
@@ -121,19 +128,19 @@ export function createPdfService(): PdfService {
         doc.moveDown(1.5);
         doc.font('Helvetica-Oblique').fontSize(10).fillColor(COLOR.secundario);
         doc.text(contenido.nota, MARGEN + 40, doc.y, { width: ancho - 80, align: 'center' });
-        pie(doc);
+        pie(doc, contenido.idioma);
       });
     },
 
     receipt(contenido) {
-      return generar(contenido.titulo, (doc) => {
+      return generar(contenido.titulo, contenido.idioma, (doc) => {
         const ancho = doc.page.width - MARGEN * 2;
         const etiqueta = 140;
 
         // Cabecera: santuario a la izquierda y «Recibo» a la derecha.
         const arriba = doc.y;
         doc.font('Helvetica-Bold').fontSize(16).fillColor(COLOR.texto).text(NOMBRE_SANTUARIO, MARGEN, arriba);
-        doc.font('Helvetica').fontSize(9).fillColor(COLOR.secundario).text(NOTA_ACADEMICA);
+        doc.font('Helvetica').fontSize(9).fillColor(COLOR.secundario).text(NOTAS_ACADEMICAS[contenido.idioma]);
         doc
           .font('Helvetica-Bold')
           .fontSize(24)
@@ -148,7 +155,7 @@ export function createPdfService(): PdfService {
           .stroke();
         doc.moveDown(1.2);
 
-        for (const [nombre, valor] of contenido.filas) {
+        for (const [i, [nombre, valor]] of contenido.filas.entries()) {
           const y = doc.y;
           doc
             .font('Helvetica')
@@ -156,7 +163,7 @@ export function createPdfService(): PdfService {
             .fillColor(COLOR.secundario)
             .text(nombre, MARGEN, y, { width: etiqueta - 12 });
           const finEtiqueta = doc.y;
-          const importe = nombre === 'Importe';
+          const importe = i === contenido.filaImporte;
           doc
             .font(importe ? 'Helvetica-Bold' : 'Helvetica')
             .fontSize(importe ? 16 : 11)
@@ -176,7 +183,7 @@ export function createPdfService(): PdfService {
             .fillColor(COLOR.texto)
             .text(contenido.aviso, MARGEN + 12, y + 10, { width: ancho - 24 });
         }
-        pie(doc);
+        pie(doc, contenido.idioma);
       });
     },
   };

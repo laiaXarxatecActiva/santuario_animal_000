@@ -5,6 +5,7 @@ import * as adoptionModel from '../models/adoption.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import type { JobDeps } from './job.types.js';
+import { avisos } from '../servicios/textos-avisos.js';
 
 export interface ExpirePendingResult {
   cancelled: number;
@@ -31,7 +32,7 @@ export async function runExpirePending({ db, reloj }: JobDeps): Promise<ExpirePe
       await notificationModel.create(client, {
         userId: adopcion.userId,
         type: 'adoption_cancelled',
-        message: `Tu adopción de ${adopcion.animalName} se ha cancelado porque no se completó el pago en 7 días. Puedes intentarlo de nuevo cuando quieras.`,
+        message: avisos.caducada(adopcion.animalName),
         link: `/animals/${adopcion.animalId}`,
       });
     }

@@ -36,6 +36,7 @@ import * as photoModel from '../models/photo.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { newUpdateEmail } from '../services/email/templates/new-update.js';
 import { urlsDe, type MediaUploader, type MedioGuardado } from './media-upload.service.js';
+import { avisos } from './textos-avisos.js';
 
 export interface UpdateAdminServiceDeps {
   db: Pool;
@@ -185,7 +186,7 @@ export function createUpdateAdminService({
             adoptantes.map((a) => a.userId),
             {
               type: 'new_update',
-              message: `Nueva actualización de ${nombre}: «${datos.title}».`,
+              message: avisos.nuevaActualizacion(nombre, datos.title),
               link: `/my-animals/${datos.animalId}`,
             },
           );
@@ -203,6 +204,7 @@ export function createUpdateAdminService({
                 title: datos.title,
                 excerpt: extracto(datos.body, LARGO_EXTRACTO),
                 url,
+                language: adoptante.language,
               }),
             });
           } catch (error) {

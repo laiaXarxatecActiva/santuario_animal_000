@@ -42,6 +42,7 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
       emailNotifications: true,
       emailFrequency: 'per_update',
       showPublicName: true,
+      preferredLanguage: 'es',
     });
   });
 

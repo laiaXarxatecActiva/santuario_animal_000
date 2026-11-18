@@ -45,6 +45,7 @@ describe('auth.service', () => {
       email: 'marta@santuario.test',
       role: 'admin',
       emailVerified: true,
+      preferredLanguage: 'es',
     });
   });
 

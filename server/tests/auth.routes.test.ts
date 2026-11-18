@@ -302,6 +302,7 @@ describe('CU-09 Iniciar sesión', () => {
         email: 'lucia.martinez@correo.test',
         role: 'adopter',
         emailVerified: true,
+        preferredLanguage: 'es',
       },
     });
     expect(cookieSid(res)).toBeDefined();

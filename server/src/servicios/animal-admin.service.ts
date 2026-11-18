@@ -29,6 +29,7 @@ import * as speciesModel from '../models/species.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { adoptionClosedEmail } from '../services/email/templates/adoption-closed.js';
+import { avisos } from './textos-avisos.js';
 
 export interface AnimalAdminServiceDeps {
   db: Pool;
@@ -153,10 +154,7 @@ export function createAnimalAdminService({
           }
           await notificationModel.createForUsers(client, afectados, {
             type: 'adoption_closed',
-            message:
-              motivo === 'animal_deceased'
-                ? `Lamentamos comunicarte que ${actual.name} ha fallecido. Tu adopción se ha cerrado.`
-                : `${actual.name} se ha trasladado a otro centro. Tu adopción se ha cerrado.`,
+            message: motivo === 'animal_deceased' ? avisos.fallecido(actual.name) : avisos.trasladado(actual.name),
             link: '/animals',
           });
         }
@@ -178,6 +176,7 @@ export function createAnimalAdminService({
                 reason: motivo,
                 message: cambio.message ?? null,
                 catalogUrl,
+                language: usuario.preferredLanguage,
               }),
             });
           } catch (error) {

@@ -5,6 +5,7 @@ import type {
   AdoptionEndReason,
   AdoptionStatus,
   EmailFrequency,
+  Language,
   PhotoDto,
 } from '@sanctuary/shared';
 import { escaparLike, sinTildes } from '../db/busqueda.js';
@@ -229,6 +230,7 @@ export interface AdoptanteAvisable {
   email: string;
   emailNotifications: boolean;
   emailFrequency: EmailFrequency;
+  language: Language;
 }
 
 /** CU-31 paso 4: adoptantes con adopción activa del animal (una fila por persona). */
@@ -239,8 +241,9 @@ export async function listActiveAdopters(db: Queryable, animalId: number): Promi
     email: string;
     email_notifications: boolean;
     email_frequency: EmailFrequency;
+    preferred_language: Language;
   }>(
-    `SELECT DISTINCT u.id, u.first_name, u.email, u.email_notifications, u.email_frequency
+    `SELECT DISTINCT u.id, u.first_name, u.email, u.email_notifications, u.email_frequency, u.preferred_language
        FROM adoptions ad JOIN users u ON u.id = ad.user_id
       WHERE ad.animal_id = $1 AND ad.status = 'active'
       ORDER BY u.id`,
@@ -252,6 +255,7 @@ export async function listActiveAdopters(db: Queryable, animalId: number): Promi
     email: r.email,
     emailNotifications: r.email_notifications,
     emailFrequency: r.email_frequency,
+    language: r.preferred_language,
   }));
 }
 

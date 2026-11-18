@@ -1,4 +1,6 @@
+import type { Language } from '@sanctuary/shared';
 import { formatEuros, formatFecha } from '../../../utils/format.js';
+import { PAGO_SIMULADO } from './textos.js';
 
 // Datos del recibo de una cuota, comunes a adoption-welcome y payment-completed.
 export interface ReceiptData {
@@ -11,14 +13,34 @@ export interface ReceiptData {
   reference: string;
   /** Enlace a «Mis animales». */
   url: string;
+  /** Idioma del destinatario (Fase 3); por defecto, castellano. */
+  language?: Language;
 }
 
 export function lineasRecibo(datos: ReceiptData): string[] {
-  return [
-    `Recibo: ${datos.animalName} · Plan ${datos.planName}`,
-    `Importe: ${formatEuros(datos.amount)}`,
-    `Periodo: del ${formatFecha(datos.periodStart)} al ${formatFecha(datos.periodEnd)}`,
-    `Referencia: ${datos.reference}`,
-    'Pago simulado: no se ha realizado ningún cargo real.',
-  ];
+  const idioma = datos.language ?? 'es';
+  const importe = formatEuros(datos.amount, idioma);
+  const desde = formatFecha(datos.periodStart);
+  const hasta = formatFecha(datos.periodEnd);
+  const lineas = {
+    es: [
+      `Recibo: ${datos.animalName} · Plan ${datos.planName}`,
+      `Importe: ${importe}`,
+      `Periodo: del ${desde} al ${hasta}`,
+      `Referencia: ${datos.reference}`,
+    ],
+    ca: [
+      `Rebut: ${datos.animalName} · Pla ${datos.planName}`,
+      `Import: ${importe}`,
+      `Període: del ${desde} al ${hasta}`,
+      `Referència: ${datos.reference}`,
+    ],
+    en: [
+      `Receipt: ${datos.animalName} · ${datos.planName} plan`,
+      `Amount: ${importe}`,
+      `Period: ${desde} to ${hasta}`,
+      `Reference: ${datos.reference}`,
+    ],
+  }[idioma];
+  return [...lineas, PAGO_SIMULADO[idioma]];
 }

@@ -1,5 +1,6 @@
+import type { ReceiptDto } from '@sanctuary/shared';
 import type { Pool } from 'pg';
-import { contenidoCertificado, contenidoRecibo, nombreArchivo } from '../dominio/documentos.js';
+import { contenidoCertificado, contenidoRecibo, nombreArchivo, PREFIJOS } from '../dominio/documentos.js';
 import { CertificateNotAvailableError, NotFoundError } from '../errors/app-error.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as userModel from '../models/user.model.js';
@@ -34,6 +35,15 @@ export function createDocumentService({ db, pdf, storage, contributions }: Docum
     }
   }
 
+  /** El recibo en el idioma del usuario (Fase 3). */
+  async function reciboPdf(userId: number, recibo: ReceiptDto): Promise<DocumentoPdf> {
+    const idioma = await userModel.findLanguage(db, userId);
+    return {
+      filename: nombreArchivo(PREFIJOS[idioma].recibo, recibo.reference),
+      pdf: await pdf.receipt(contenidoRecibo(recibo, idioma)),
+    };
+  }
+
   return {
     async certificate(userId: number, adoptionId: number): Promise<DocumentoPdf> {
       const adopcion = await adoptionModel.findOwnedById(db, userId, adoptionId);
@@ -42,26 +52,26 @@ export function createDocumentService({ db, pdf, storage, contributions }: Docum
       if (adopcion.status !== 'active' || !adopcion.startDate) throw new CertificateNotAvailableError();
       const usuario = await userModel.findById(db, userId);
       if (!usuario) throw new NotFoundError();
-      const contenido = contenidoCertificado({
-        adopterName: `${usuario.firstName} ${usuario.lastName}`,
-        animalName: adopcion.animal.name,
-        speciesName: adopcion.animal.species,
-        startDate: adopcion.startDate,
-      });
+      const idioma = usuario.preferredLanguage ?? 'es';
+      const contenido = contenidoCertificado(
+        {
+          adopterName: `${usuario.firstName} ${usuario.lastName}`,
+          animalName: adopcion.animal.name,
+          speciesName: adopcion.animal.species,
+          startDate: adopcion.startDate,
+        },
+        idioma,
+      );
       return {
-        filename: nombreArchivo('certificado', adopcion.animal.name),
+        filename: nombreArchivo(PREFIJOS[idioma].certificado, adopcion.animal.name),
         pdf: await pdf.certificate(contenido, await portada(adopcion.animal.coverPhoto?.url)),
       };
     },
 
-    async paymentReceipt(userId: number, paymentId: number): Promise<DocumentoPdf> {
-      const recibo = await contributions.paymentReceipt(userId, paymentId);
-      return { filename: nombreArchivo('recibo', recibo.reference), pdf: await pdf.receipt(contenidoRecibo(recibo)) };
-    },
+    paymentReceipt: async (userId: number, paymentId: number) =>
+      reciboPdf(userId, await contributions.paymentReceipt(userId, paymentId)),
 
-    async donationReceipt(userId: number, donationId: number): Promise<DocumentoPdf> {
-      const recibo = await contributions.donationReceipt(userId, donationId);
-      return { filename: nombreArchivo('recibo', recibo.reference), pdf: await pdf.receipt(contenidoRecibo(recibo)) };
-    },
+    donationReceipt: async (userId: number, donationId: number) =>
+      reciboPdf(userId, await contributions.donationReceipt(userId, donationId)),
   };
 }

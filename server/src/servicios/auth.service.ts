@@ -44,7 +44,7 @@ export interface AuthServiceDeps {
 
 export function toSessionUser(user: userModel.User): SessionUser {
   const { id, firstName, lastName, email, role, emailVerified } = user;
-  return { id, firstName, lastName, email, role, emailVerified };
+  return { id, firstName, lastName, email, role, emailVerified, preferredLanguage: user.preferredLanguage ?? 'es' };
 }
 
 // Casos de uso de la cuenta: CU-07, CU-08, CU-09 y CU-10. CU-11 (cerrar sesión)
@@ -86,7 +86,11 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
   }
 
   async function enviarVerificacion(user: userModel.User, token: string): Promise<void> {
-    const contenido = verifyEmailEmail({ firstName: user.firstName, url: enlace('/verify-email', token) });
+    const contenido = verifyEmailEmail({
+      firstName: user.firstName,
+      url: enlace('/verify-email', token),
+      language: user.preferredLanguage,
+    });
     await enviar({ to: user.email, ...contenido });
   }
 
@@ -106,6 +110,7 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
       firstName: user.firstName,
       loginUrl: new URL('/login', clientUrl).toString(),
       forgotPasswordUrl: new URL('/forgot-password', clientUrl).toString(),
+      language: user.preferredLanguage,
     });
     await enviar({ to: user.email, ...contenido });
   }
@@ -131,6 +136,7 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
           email: datos.email,
           passwordHash,
           privacyAcceptedAt: reloj.ahora(),
+          preferredLanguage: datos.preferredLanguage,
         });
         return { user: creado, token: await crearToken(client, creado.id, 'email_verification') };
       });
@@ -185,7 +191,11 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
     const user = await userModel.findByEmail(db, correo);
     if (!user || !cuentaActiva(user)) return;
     const token = await sustituirToken(user.id, 'password_reset');
-    const contenido = resetPasswordEmail({ firstName: user.firstName, url: enlace('/reset-password', token) });
+    const contenido = resetPasswordEmail({
+      firstName: user.firstName,
+      url: enlace('/reset-password', token),
+      language: user.preferredLanguage,
+    });
     await enviar({ to: user.email, ...contenido });
   }
 
