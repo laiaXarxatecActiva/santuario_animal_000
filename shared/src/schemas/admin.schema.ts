@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import { ANIMAL_SEXES } from '../constants/animals.js';
 import { ALT_TEXT_MAX_LENGTH, MAX_FILES_PER_UPLOAD } from '../constants/media.js';
+import { ROLES, WORKER_ROLES } from '../constants/roles.js';
 import { ANIMAL_STATUSES, VISIBILITIES } from '../constants/status.js';
+import { USER_ACCOUNT_STATUSES } from '../constants/users.js';
 import { donationAmount } from './donation.schema.js';
-import { textoObligatorio, textoOpcional as textoSinVacio } from './fields.js';
+import { emailValido, telefono, textoObligatorio, textoOpcional as textoSinVacio } from './fields.js';
 import { paginationQuerySchema } from './pagination.schema.js';
 
 // Esquemas del panel de gestión (TECH_SPEC §10.6).
@@ -48,6 +50,45 @@ export const planUpdateBodySchema = planCreateBodySchema.extend({
   confirmAmountChange: z.boolean().default(false),
 });
 export type PlanUpdateBody = z.input<typeof planUpdateBodySchema>;
+
+// CU-35: listado de usuarios. Ordenación con lista blanca.
+export const ADMIN_USER_SORTS = ['name', '-name', 'createdAt', '-createdAt', 'lastLoginAt', '-lastLoginAt'] as const;
+export type AdminUserSort = (typeof ADMIN_USER_SORTS)[number];
+
+export const adminUsersQuerySchema = paginationQuerySchema.extend({
+  sort: z.enum(ADMIN_USER_SORTS).default('name'),
+  q: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((texto) => (texto === '' ? undefined : texto))
+    .optional(),
+  role: z.enum(ROLES).optional(),
+  status: z.enum(USER_ACCOUNT_STATUSES).optional(),
+});
+export type AdminUsersQuery = z.infer<typeof adminUsersQuerySchema>;
+
+/** CU-35 4 y A1: o se activa/desactiva la cuenta, o se cambia el rol (solo de trabajador). */
+export const adminUserPatchSchema = z
+  .strictObject({
+    isActive: z.boolean().optional(),
+    role: z.enum(WORKER_ROLES).optional(),
+  })
+  .refine((datos) => (datos.isActive === undefined) !== (datos.role === undefined), {
+    error: 'Indica solo uno de los cambios: el estado o el rol.',
+  });
+export type AdminUserPatchBody = z.infer<typeof adminUserPatchSchema>;
+
+/** CU-36 paso 2: nuevo trabajador. El teléfono es opcional. */
+export const workerCreateSchema = z.object({
+  firstName: textoObligatorio(100, 'Escribe el nombre.'),
+  lastName: textoObligatorio(150, 'Escribe los apellidos.'),
+  email: emailValido,
+  phone: telefono.optional().transform((valor) => valor ?? null),
+  role: z.enum(WORKER_ROLES, { error: 'Elige el rol.' }),
+});
+export type WorkerCreateBody = z.input<typeof workerCreateSchema>;
+export type WorkerCreateInput = z.output<typeof workerCreateSchema>;
 
 // CU-28: campos ordenables del listado (lista blanca).
 export const ADMIN_ANIMAL_SORTS = ['name', '-name', 'arrivalDate', '-arrivalDate'] as const;

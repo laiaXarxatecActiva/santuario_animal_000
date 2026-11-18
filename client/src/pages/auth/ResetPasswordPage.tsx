@@ -15,13 +15,16 @@ import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
 import styles from './AuthPages.module.css';
 
-// CU-10 pasos 4-6 (`/reset-password?token=...`). También servirá a los
-// trabajadores invitados para elegir su contraseña (CU-36).
+// CU-10 pasos 4-6 (`/reset-password?token=...`). También lo usan los
+// trabajadores invitados para elegir su contraseña (CU-36, `&invite=1`). Ese
+// parámetro solo cambia los textos: lo que da acceso es el token.
 export function ResetPasswordPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const token = params.get('token') ?? '';
+  const invitacion = params.get('invite') === '1';
+  const titulo = invitacion ? t('auth.reset.inviteTitle') : t('auth.reset.title');
   const setSession = useSetSession();
   const {
     register,
@@ -40,7 +43,10 @@ export function ResetPasswordPage() {
       setSession(null);
       void navigate('/login', {
         replace: true,
-        state: flashState({ type: 'success', message: t('auth.reset.success') }),
+        state: flashState({
+          type: 'success',
+          message: invitacion ? t('auth.reset.inviteSuccess') : t('auth.reset.success'),
+        }),
       });
     },
     onError: (error) => applyFieldErrors(error, setError, ['password', 'passwordConfirm']),
@@ -55,7 +61,7 @@ export function ResetPasswordPage() {
 
   if (token === '') {
     return (
-      <AuthCard title={t('auth.reset.title')}>
+      <AuthCard title={titulo}>
         <Alert type="error">{t('auth.verify.invalid')}</Alert>
         {pedirOtro}
       </AuthCard>
@@ -63,11 +69,12 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthCard title={t('auth.reset.title')}>
+    <AuthCard title={titulo}>
       {cambio.isError && (
         <Alert type="error">
-          {errorMessage(t, cambio.error)}
-          {tokenInvalido && <span className={styles.linkList}>{pedirOtro}</span>}
+          {/* CU-36 4a: una invitación caducada la reenvía un administrador, no «¿Has olvidado tu contraseña?». */}
+          {invitacion && tokenInvalido ? t('auth.reset.inviteInvalid') : errorMessage(t, cambio.error)}
+          {tokenInvalido && !invitacion && <span className={styles.linkList}>{pedirOtro}</span>}
         </Alert>
       )}
       <form noValidate onSubmit={handleSubmit((datos) => cambio.mutate(datos))}>

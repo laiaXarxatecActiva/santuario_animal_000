@@ -1,4 +1,8 @@
 import type { AnimalSex } from '../constants/animals.js';
+import type { Role } from '../constants/roles.js';
+import type { AdoptionStatus } from '../constants/status.js';
+import type { UserAccountStatus } from '../constants/users.js';
+import type { ContributionDonationDto, ContributionPaymentDto } from './contribution.js';
 import type { AnimalStatus, Visibility } from '../constants/status.js';
 import type { PhotoDto } from './public.js';
 
@@ -122,4 +126,39 @@ export interface AdminUpdateDto extends AdminUpdateListItemDto {
 /** CU-31 paso 5: respuesta al publicar, con los adoptantes avisados. */
 export interface AdminUpdateCreatedDto extends AdminUpdateDto {
   notifiedAdopters: number;
+}
+
+/** Fila del listado de usuarios (CU-35). Nunca lleva el hash ni datos internos. */
+export interface AdminUserListItemDto {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: Role;
+  status: UserAccountStatus;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+/** Adopción en la ficha de un usuario (CU-35 paso 3). */
+export interface AdminUserAdoptionDto {
+  id: number;
+  animal: { id: number; name: string };
+  plan: { id: number; name: string; monthlyAmount: string };
+  status: AdoptionStatus;
+  startDate: string | null;
+  endDate: string | null;
+  nextBillingDate: string | null;
+  cancelRequested: boolean;
+}
+
+/** Ficha de un usuario (CU-35 paso 3). Las adopciones y aportaciones solo existen para adoptantes. */
+export interface AdminUserDetailDto extends AdminUserListItemDto {
+  phone: string | null;
+  emailVerified: boolean;
+  /** CU-36 4a: trabajador activo que todavía no ha entrado nunca. */
+  invitationPending: boolean;
+  adoptions: AdminUserAdoptionDto[];
+  payments: ContributionPaymentDto[];
+  donations: ContributionDonationDto[];
 }

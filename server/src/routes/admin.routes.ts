@@ -1,6 +1,8 @@
 import {
   adminAnimalsQuerySchema,
   adminUpdatesQuerySchema,
+  adminUserPatchSchema,
+  adminUsersQuerySchema,
   animalBodySchema,
   animalStatusBodySchema,
   coverBodySchema,
@@ -14,6 +16,7 @@ import {
   updateCreateBodySchema,
   updateEditBodySchema,
   WORKER_ROLES,
+  workerCreateSchema,
 } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
@@ -23,6 +26,7 @@ import { createPhotoAdminController } from '../controllers/photo-admin.controlle
 import { createPlanAdminController } from '../controllers/plan-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
 import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
+import { createUserAdminController } from '../controllers/user-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
@@ -33,6 +37,7 @@ import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
 import type { PlanAdminService } from '../servicios/plan-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
 import type { UpdateAdminService } from '../servicios/update-admin.service.js';
+import type { UserAdminService } from '../servicios/user-admin.service.js';
 
 export interface AdminRoutesDeps {
   dashboard: DashboardService;
@@ -41,6 +46,7 @@ export interface AdminRoutesDeps {
   photos: PhotoAdminService;
   updates: UpdateAdminService;
   plans: PlanAdminService;
+  users: UserAdminService;
   jobs: JobRunner;
 }
 
@@ -111,6 +117,19 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.get('/plans', soloAdmin, planes.list);
   router.post('/plans', soloAdmin, validate({ body: planCreateBodySchema }), planes.create);
   router.put('/plans/:id', soloAdmin, validate({ params: idParamsSchema, body: planUpdateBodySchema }), planes.update);
+
+  // CU-35 y CU-36: usuarios y cuentas de trabajador (TECH_SPEC §10.7), solo administradores.
+  const usuarios = createUserAdminController(deps.users);
+  router.get('/users', soloAdmin, validate({ query: adminUsersQuerySchema }), usuarios.list);
+  router.post('/users', soloAdmin, validate({ body: workerCreateSchema }), usuarios.create);
+  router.get('/users/:id', soloAdmin, conId, usuarios.get);
+  router.patch(
+    '/users/:id',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: adminUserPatchSchema }),
+    usuarios.update,
+  );
+  router.post('/users/:id/invitation', soloAdmin, conId, usuarios.resendInvitation);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

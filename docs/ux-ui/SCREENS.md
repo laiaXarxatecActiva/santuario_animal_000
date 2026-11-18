@@ -653,7 +653,7 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 
 | Pantalla | Descripción |
 | --- | --- |
-| Detalle de usuario | Tarjeta con datos y estado + pestañas «Adopciones» y «Aportaciones» (adoptantes) o «Actividad» (trabajadores, Fase 3). Acciones: activar/desactivar, cambiar rol (trabajadores), reenviar invitación. |
+| Detalle de usuario | Datos y estado + secciones «Adopciones» y «Aportaciones» una debajo de otra (adoptantes) o «Actividad» (trabajadores, Fase 3). Acciones: activar/desactivar (con confirmación; si es un adoptante con adopciones abiertas, avisa de que se darán de baja), cambiar rol (trabajadores activos), reenviar invitación (trabajadores que nunca han entrado). El administrador no ve «Desactivar» en su propia ficha. |
 | Nuevo trabajador | Formulario corto: nombre, apellidos, email, teléfono, rol (cuidador/administrador). Tras crearlo: aviso `success` «Hemos enviado una invitación a…». |
 | Detalle de adopción | Datos, notas internas, tabla de pagos y acciones (pausar, reanudar, cancelar), cada una con su ventana de confirmación y nota obligatoria |
 | Nueva adopción manual | Adoptante (buscador), animal (solo adoptables), plan, método del primer pago, notas |

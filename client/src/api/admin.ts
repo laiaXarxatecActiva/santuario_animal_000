@@ -2,6 +2,10 @@ import type {
   AdminAnimalDto,
   AdminPhotoDto,
   AdminPlanDto,
+  AdminUserDetailDto,
+  AdminUserListItemDto,
+  AdminUserPatchBody,
+  AdminUsersQuery,
   AdminUpdateCreatedDto,
   AdminUpdateDto,
   AdminUpdateListItemDto,
@@ -10,6 +14,7 @@ import type {
   PhotoUploadResultDto,
   PlanCreateBody,
   PlanUpdateBody,
+  WorkerCreateBody,
   AdminAnimalsQuery,
   AnimalBody,
   DashboardDto,
@@ -22,10 +27,20 @@ import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './clien
 
 export type AdminAnimalsParams = Partial<AdminAnimalsQuery>;
 export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
+export type AdminUsersParams = Partial<AdminUsersQuery>;
 
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-35 y CU-36 (solo administradores).
+  users: {
+    list: (params: AdminUsersParams) => apiGet<Paginated<AdminUserListItemDto>>('/api/admin/users', params),
+    get: (id: number) => apiGet<AdminUserDetailDto>(`/api/admin/users/${id}`),
+    update: (id: number, body: AdminUserPatchBody) => apiPatch<AdminUserDetailDto>(`/api/admin/users/${id}`, body),
+    createWorker: (body: WorkerCreateBody) => apiPost<AdminUserDetailDto>('/api/admin/users', body),
+    resendInvitation: (id: number) => apiPost<void>(`/api/admin/users/${id}/invitation`, {}),
+  },
 
   // CU-40 (solo administradores).
   plans: {

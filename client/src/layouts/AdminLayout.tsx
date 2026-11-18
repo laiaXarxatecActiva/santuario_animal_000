@@ -7,6 +7,7 @@ import {
   faHandHoldingHeart,
   faNewspaper,
   faTags,
+  faUsers,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -54,7 +55,10 @@ const GRUPOS: readonly Grupo[] = [
   {
     key: 'admin.nav.groupAdmin',
     roles: ['admin'],
-    links: [{ to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart }],
+    links: [
+      { to: '/admin/users', key: 'admin.nav.users', icon: faUsers },
+      { to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart },
+    ],
   },
 ];
 
