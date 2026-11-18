@@ -10,12 +10,12 @@ import {
   type Paginated,
   type SessionUser,
 } from '@sanctuary/shared';
-import { randomBytes } from 'node:crypto';
 import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
 import { esAdoptable, periodoCuota } from '../dominio/adopcion.js';
-import { anotar, cierreAdmin, comprobarAccion, prefijoReferenciaManual } from '../dominio/adopciones-admin.js';
+import { anotar, cierreAdmin, comprobarAccion } from '../dominio/adopciones-admin.js';
+import { cuotaPendiente } from '../dominio/pagos-admin.js';
 import { paginar } from '../dominio/paginacion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import {
@@ -25,6 +25,7 @@ import {
   AnimalNotAdoptableError,
   AnimalNotAvailableError,
   NotFoundError,
+  PaymentNotRefundableError,
   PlanNotAvailableError,
   WorkerCannotAdoptError,
 } from '../errors/app-error.js';
@@ -37,10 +38,15 @@ import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { adoptionAdminChangeEmail } from '../services/email/templates/adoption-admin-change.js';
 import { adoptionWelcomeEmail } from '../services/email/templates/adoption-welcome.js';
+import type { PaymentGateway } from '../services/payment/payment.service.js';
+import { referenciaManual } from '../utils/referencias.js';
+import { devolverPago, emailDevolucion, notificarDevolucion } from './devolucion.js';
 
 export interface AdoptionAdminServiceDeps {
   db: Pool;
   reloj: Reloj;
+  /** Pasarela, para devolver la última cuota al cancelar (CU-38). */
+  payments: PaymentGateway;
   email: EmailService;
   /** URL del cliente, para los enlaces de los emails. */
   clientUrl: string;
@@ -78,6 +84,7 @@ const nombreDe = (persona: { firstName: string; lastName: string }) => `${person
 export function createAdoptionAdminService({
   db,
   reloj,
+  payments,
   email,
   clientUrl,
   logEmailError = () => {},
@@ -87,7 +94,17 @@ export function createAdoptionAdminService({
   async function detalle(q: Queryable, id: number): Promise<AdminAdoptionDetailDto> {
     const adopcion = await adoptionModel.findForAdmin(q, id);
     if (!adopcion) throw new NotFoundError(NO_EXISTE);
-    return { ...adopcion, payments: await paymentModel.listByAdoptionForAdmin(q, id) };
+    const cuota = cuotaPendiente({ ...adopcion, createdAt: new Date(adopcion.createdAt) }, reloj.ahora(), reloj.hoy());
+    return {
+      ...adopcion,
+      payments: await paymentModel.listByAdoptionForAdmin(q, id),
+      pendingFee: cuota && {
+        periodStart: cuota.periodStart,
+        periodEnd: cuota.periodEnd,
+        amount: cuota.plan.monthlyAmount,
+      },
+      lastRefundablePayment: await paymentModel.findLastCompletedForAdoption(q, id),
+    };
   }
 
   /** Envía un email al adoptante; un fallo nunca deshace la operación. */
@@ -153,9 +170,7 @@ export function createAdoptionAdminService({
 
       const hoy = reloj.hoy();
       const periodo = periodoCuota(hoy);
-      const reference = `${prefijoReferenciaManual(datos.method)}-${hoy.replaceAll('-', '')}-${randomBytes(5)
-        .toString('hex')
-        .toUpperCase()}`;
+      const reference = referenciaManual(datos.method, hoy);
       const notes = datos.notes
         ? anotar(null, { fecha: hoy, accion: 'Alta manual', autor: nombreDe(actor), texto: datos.notes })
         : null;
@@ -213,7 +228,7 @@ export function createAdoptionAdminService({
       cambio: AdminAdoptionStatusInput,
     ): Promise<AdminAdoptionDetailDto> {
       const hoy = reloj.hoy();
-      const adopcion = await withTransaction(db, async (client) => {
+      const { adopcion, devuelto } = await withTransaction(db, async (client) => {
         const actual = await adoptionModel.findForAdmin(client, id, true);
         if (!actual) throw new NotFoundError(NO_EXISTE);
         if (comprobarAccion(actual, cambio.action)) throw new AdoptionActionNotAllowedError();
@@ -233,7 +248,16 @@ export function createAdoptionAdminService({
           message: aviso.mensaje(actual.animal.name),
           link: `/my-animals/${actual.animal.id}`,
         });
-        return actual;
+        // CU-38: al cancelar, la última cuota cobrada se puede devolver en la misma operación.
+        let devuelto: paymentModel.AdminPayment | null = null;
+        if (cambio.action === 'cancel' && cambio.refundLastPayment) {
+          const ultimo = await paymentModel.findLastCompletedForAdoption(client, id);
+          if (!ultimo) throw new PaymentNotRefundableError();
+          await devolverPago(client, payments, ultimo.id, reloj.ahora());
+          devuelto = await paymentModel.findForAdmin(client, ultimo.id);
+          if (devuelto) await notificarDevolucion(client, devuelto);
+        }
+        return { adopcion: actual, devuelto };
       });
 
       await enviar(adopcion.adopter.id, (firstName) =>
@@ -245,6 +269,14 @@ export function createAdoptionAdminService({
           url: urlMisAnimales(),
         }),
       );
+      const avisoDevolucion = devuelto && emailDevolucion(devuelto, clientUrl);
+      if (avisoDevolucion) {
+        try {
+          await email.send(avisoDevolucion);
+        } catch (error) {
+          logEmailError(error);
+        }
+      }
       return detalle(db, id);
     },
   };

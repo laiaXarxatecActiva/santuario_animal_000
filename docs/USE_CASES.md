@@ -1196,7 +1196,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - **A1. Pausar** una adopción `active` (sin baja solicitada): pasa a `paused` (deja de cobrarse) con una nota obligatoria.
 - **A2. Reanudar** una adopción `paused`: pasa a `active`. Si `next_billing_date` ya ha pasado, se cobrará en el siguiente ciclo de CU-43.
-- **A3. Cancelar** una adopción abierta: pasa a `cancelled` (`admin_cancelled`) con `end_date` = hoy y una nota obligatoria. Se pregunta si se devuelve la última cuota (CU-38; hasta entonces, la devolución se hará desde «Pagos»).
+- **A3. Cancelar** una adopción abierta: pasa a `cancelled` (`admin_cancelled`) con `end_date` = hoy y una nota obligatoria. La ventana ofrece devolver también la última cuota cobrada (CU-38 A1), en la misma operación.
 - **Notas internas:** cada alta, pausa, reanudación o cancelación con nota añade una línea «fecha · acción · autor: texto» al final de `adoptions.notes`, sin borrar las anteriores. El adoptante recibe un aviso (campana y email) de cada cambio, pero nunca ve la nota.
 - **2a.** El adoptante ya tiene una adopción abierta de ese animal, el animal no es adoptable o el usuario no es adoptante: no se permite (RN-03, RN-05, RN-06).
 
@@ -1227,6 +1227,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **A1. Devolver** un pago `completed`: el administrador confirma; el sistema llama a `refund` de la pasarela simulada, marca el pago como `refunded` con `refunded_at` y avisa al adoptante. La adopción no cambia; si debe cerrarse, se usa CU-37.
 - **A2. Registrar un pago manual** de una adopción (cobrado fuera de la web): el administrador indica la adopción, el periodo, el importe y el método. Si la adopción estaba `paused` por ese periodo, pasa a `active` y avanza `next_billing_date`.
 - **A2a.** Ya hay un pago válido de ese periodo: «Este periodo ya está pagado».
+- **Concreción de A2:** se registra desde la ficha de la adopción y solo la cuota pendiente: la que empieza en `next_billing_date` (activa o pausada, sin baja solicitada) o, en una pendiente de pago dentro de sus 7 días, el primer mes desde hoy. El importe propuesto es el del plan (el programado, si lo hay, que se aplica en esa cuota) y se puede cambiar. Después la adopción queda activa y `next_billing_date` avanza un mes; se avisa al adoptante con el recibo.
+- **Concreción de A1:** un pago en efectivo o por transferencia también se devuelve; el dinero se entrega a mano y en la web solo se marca como `refunded`.
 - **A1a.** Intentar devolver un pago que no está `completed`: no se permite.
 
 **Postcondiciones**

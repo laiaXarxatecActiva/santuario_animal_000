@@ -1,5 +1,6 @@
 import type {
   AdminAdoptionDetailDto,
+  AdminPaymentListItemDto,
   AdminAdoptionListItemDto,
   AdminAnimalDto,
   AdminUserDetailDto,
@@ -366,6 +367,8 @@ export function adminAdoptionDetail(overrides: Partial<AdminAdoptionDetailDto> =
     endReason: null,
     notes: 'Alta en la jornada de puertas abiertas.',
     createdBy: { id: 1, name: 'Marta Soler Ferrer' },
+    pendingFee: { periodStart: '2026-12-16', periodEnd: '2027-01-15', amount: '1.00' },
+    lastRefundablePayment: { id: 40, amount: '1.00' },
     payments: [
       {
         id: 40,
@@ -384,3 +387,41 @@ export function adminAdoptionDetail(overrides: Partial<AdminAdoptionDetailDto> =
     ...overrides,
   };
 }
+
+/** CU-38: pagos del panel. */
+export const adminPayments: AdminPaymentListItemDto[] = [
+  {
+    id: 70,
+    adoptionId: 14,
+    adopter: { id: 12, firstName: 'Raquel', lastName: 'Font Escrivà', email: 'raquel.font@correo.test' },
+    animal: { id: 9, name: 'Ébano' },
+    plan: { id: 3, name: 'Extraordinaria' },
+    amount: '12.00',
+    periodStart: '2026-10-15',
+    periodEnd: '2026-11-14',
+    method: 'cash',
+    status: 'completed',
+    reference: 'CASH-A0014-20261015',
+    date: '2026-10-15T09:15:00.000Z',
+    refundedAt: null,
+    failureReason: null,
+    recordedBy: { id: 1, name: 'Marta Soler Ferrer' },
+  },
+  {
+    id: 71,
+    adoptionId: 7,
+    adopter: { id: 8, firstName: 'Elena', lastName: 'Rubio Sanz', email: 'elena.rubio@correo.test' },
+    animal: { id: 11, name: 'Lupe' },
+    plan: { id: 2, name: 'Usual' },
+    amount: '5.00',
+    periodStart: '2026-11-03',
+    periodEnd: '2026-12-02',
+    method: 'simulated',
+    status: 'failed',
+    reference: 'SIM-20261103-ABCDE',
+    date: '2026-11-03T03:00:00.000Z',
+    refundedAt: null,
+    failureReason: 'Tarjeta rechazada',
+    recordedBy: null,
+  },
+];

@@ -1,4 +1,7 @@
 import {
+  adminPaymentsExportQuerySchema,
+  adminPaymentsQuerySchema,
+  manualPaymentSchema,
   adminAdoptionCreateSchema,
   adminAdoptionsQuerySchema,
   adminAdoptionStatusSchema,
@@ -23,6 +26,7 @@ import {
 } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createAdoptionAdminController } from '../controllers/adoption-admin.controller.js';
+import { createPaymentAdminController } from '../controllers/payment-admin.controller.js';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
 import { createJobController } from '../controllers/job.controller.js';
@@ -36,6 +40,7 @@ import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import type { JobRunner } from '../jobs/registry.js';
 import type { AdoptionAdminService } from '../servicios/adoption-admin.service.js';
+import type { PaymentAdminService } from '../servicios/payment-admin.service.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
@@ -53,6 +58,7 @@ export interface AdminRoutesDeps {
   plans: PlanAdminService;
   users: UserAdminService;
   adoptions: AdoptionAdminService;
+  payments: PaymentAdminService;
   jobs: JobRunner;
 }
 
@@ -148,6 +154,13 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     validate({ params: idParamsSchema, body: adminAdoptionStatusSchema }),
     adopciones.changeStatus,
   );
+
+  // CU-38: pagos (TECH_SPEC §10.7), solo administradores. `export.csv` va antes que `/:id`.
+  const pagos = createPaymentAdminController(deps.payments);
+  router.get('/payments', soloAdmin, validate({ query: adminPaymentsQuerySchema }), pagos.list);
+  router.get('/payments/export.csv', soloAdmin, validate({ query: adminPaymentsExportQuerySchema }), pagos.exportCsv);
+  router.post('/payments', soloAdmin, validate({ body: manualPaymentSchema }), pagos.create);
+  router.post('/payments/:id/refund', soloAdmin, conId, pagos.refund);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

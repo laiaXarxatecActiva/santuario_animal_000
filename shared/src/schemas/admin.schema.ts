@@ -7,6 +7,8 @@ import {
   ADOPTION_STATUSES,
   ANIMAL_STATUSES,
   MANUAL_PAYMENT_METHODS,
+  PAYMENT_METHODS,
+  PAYMENT_STATUSES,
   VISIBILITIES,
 } from '../constants/status.js';
 import { USER_ACCOUNT_STATUSES } from '../constants/users.js';
@@ -138,19 +140,77 @@ export const adminAdoptionCreateSchema = z.object({
 export type AdminAdoptionCreateBody = z.input<typeof adminAdoptionCreateSchema>;
 export type AdminAdoptionCreateInput = z.output<typeof adminAdoptionCreateSchema>;
 
-/** CU-37 A1-A3. Pausar y cancelar exigen el motivo, que se guarda en las notas internas. */
+/**
+ * CU-37 A1-A3. Pausar y cancelar exigen el motivo, que se guarda en las notas
+ * internas. Al cancelar se puede devolver también la última cuota cobrada (CU-38).
+ */
 export const adminAdoptionStatusSchema = z
   .object({
     action: z.enum(ADOPTION_ADMIN_ACTIONS),
     notes: textoSinVacio(1000),
+    refundLastPayment: z.boolean().optional(),
   })
   .superRefine((datos, ctx) => {
     if (datos.action !== 'resume' && datos.notes === undefined) {
       ctx.addIssue({ code: 'custom', path: ['notes'], message: 'Escribe el motivo.' });
     }
+    if (datos.refundLastPayment === true && datos.action !== 'cancel') {
+      ctx.addIssue({ code: 'custom', path: ['refundLastPayment'], message: 'Solo se devuelve al cancelar.' });
+    }
   });
 export type AdminAdoptionStatusBody = z.input<typeof adminAdoptionStatusSchema>;
 export type AdminAdoptionStatusInput = z.output<typeof adminAdoptionStatusSchema>;
+
+// CU-38: pagos de las adopciones (lista blanca de órdenes).
+export const ADMIN_PAYMENT_SORTS = ['-date', 'date', '-amount', 'amount'] as const;
+export type AdminPaymentSort = (typeof ADMIN_PAYMENT_SORTS)[number];
+
+const diaOpcional = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, { error: 'Usa el formato AAAA-MM-DD.' })
+  .optional()
+  .or(z.literal('').transform(() => undefined));
+
+/** Filtros del listado y de la exportación CSV (CU-38 paso 2). */
+const filtrosPagos = {
+  sort: z.enum(ADMIN_PAYMENT_SORTS).default('-date'),
+  q: z
+    .string()
+    .trim()
+    .max(100)
+    .transform((texto) => (texto === '' ? undefined : texto))
+    .optional(),
+  status: z.enum(PAYMENT_STATUSES).optional(),
+  method: z.enum(PAYMENT_METHODS).optional(),
+  from: diaOpcional,
+  to: diaOpcional,
+  adoptionId: idOpcional,
+};
+
+const rangoValido = (datos: { from?: string | undefined; to?: string | undefined }, ctx: z.RefinementCtx) => {
+  if (datos.from && datos.to && datos.from > datos.to) {
+    ctx.addIssue({ code: 'custom', path: ['to'], message: 'La fecha final no puede ser anterior a la inicial.' });
+  }
+};
+
+export const adminPaymentsExportQuerySchema = z.object(filtrosPagos).superRefine(rangoValido);
+export type AdminPaymentsExportQuery = z.infer<typeof adminPaymentsExportQuerySchema>;
+
+export const adminPaymentsQuerySchema = paginationQuerySchema.extend(filtrosPagos).superRefine(rangoValido);
+export type AdminPaymentsQuery = z.infer<typeof adminPaymentsQuerySchema>;
+
+/**
+ * CU-38 A2: pago cobrado fuera de la web. El periodo lo calcula el servidor
+ * (la cuota pendiente de la adopción); el importe lo indica el administrador.
+ */
+export const manualPaymentSchema = z.object({
+  adoptionId: idElegido('Elige la adopción.'),
+  amount: donationAmount,
+  method: z.enum(MANUAL_PAYMENT_METHODS, { error: 'Elige cómo se ha pagado.' }),
+});
+export type ManualPaymentBody = z.input<typeof manualPaymentSchema>;
+export type ManualPaymentInput = z.output<typeof manualPaymentSchema>;
 
 // CU-28: campos ordenables del listado (lista blanca).
 export const ADMIN_ANIMAL_SORTS = ['name', '-name', 'arrivalDate', '-arrivalDate'] as const;

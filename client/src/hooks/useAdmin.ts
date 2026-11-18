@@ -4,6 +4,7 @@ import {
   adminApi,
   type AdminAdoptionsParams,
   type AdminAnimalsParams,
+  type AdminPaymentsParams,
   type AdminUpdatesParams,
   type AdminUsersParams,
 } from '../api/admin';
@@ -14,6 +15,16 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+export const ADMIN_PAYMENTS_KEY = [...ADMIN_KEY, 'payments'] as const;
+
+/** CU-38: listado con filtros, páginas y suma de lo cobrado. */
+export const useAdminPayments = (params: AdminPaymentsParams) =>
+  useQuery({
+    queryKey: [...ADMIN_PAYMENTS_KEY, 'list', params],
+    queryFn: () => adminApi.payments.list(params),
+    placeholderData: keepPreviousData,
+  });
 
 export const ADMIN_ADOPTIONS_KEY = [...ADMIN_KEY, 'adoptions'] as const;
 

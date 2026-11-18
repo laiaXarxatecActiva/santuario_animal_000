@@ -473,3 +473,31 @@ export class AdoptionActionNotAllowedError extends BusinessRuleError {
     super('ADOPTION_ACTION_NOT_ALLOWED', 'Esta acción no se puede hacer con la adopción en su estado actual.');
   }
 }
+
+// CU-38 A2a: ya hay un pago válido de ese periodo.
+export class PeriodAlreadyPaidError extends ConflictError {
+  constructor() {
+    super('PAYMENT_ALREADY_COMPLETED', 'Este periodo ya está pagado.');
+  }
+}
+
+// CU-38 A1a: solo se devuelve un pago cobrado.
+export class PaymentNotRefundableError extends BusinessRuleError {
+  constructor() {
+    super('PAYMENT_NOT_REFUNDABLE', 'Solo se puede devolver un pago cobrado.');
+  }
+}
+
+// CU-38 A1: la pasarela no ha podido hacer la devolución.
+export class RefundFailedError extends BusinessRuleError {
+  constructor() {
+    super('REFUND_FAILED', 'La pasarela no ha podido hacer la devolución. Inténtalo más tarde.');
+  }
+}
+
+// CU-38 A2: la adopción no tiene ninguna cuota que se pueda registrar a mano.
+export class ManualPaymentNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super('MANUAL_PAYMENT_NOT_ALLOWED', 'Esta adopción no tiene ninguna cuota pendiente de pago.');
+  }
+}
