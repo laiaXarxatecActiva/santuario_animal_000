@@ -7,6 +7,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ActivityAdminPage } from './pages/admin/ActivityAdminPage';
+import { StatsAdminPage } from './pages/admin/StatsAdminPage';
 import { AnimalAdminPage } from './pages/admin/AnimalAdminPage';
 import { AnimalDataTab } from './pages/admin/AnimalDataTab';
 import { AnimalPhotosTab } from './pages/admin/AnimalPhotosTab';
@@ -92,6 +93,7 @@ export const routes: RouteObject[] = [
               { path: 'donations', element: <DonationsAdminPage /> },
               { path: 'donations/new', element: <NewDonationPage /> },
               { path: 'plans', element: <PlansAdminPage /> },
+              { path: 'stats', element: <StatsAdminPage /> },
               { path: 'activity', element: <ActivityAdminPage /> },
             ],
           },

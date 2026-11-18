@@ -27,6 +27,7 @@ import { createActivityLogService } from './services/activity-log.service.js';
 import { createPdfService } from './services/pdf/pdf.service.js';
 import { createLocalStorage } from './services/storage/local.storage.js';
 import { createActivityAdminService } from './servicios/activity-admin.service.js';
+import { createStatsAdminService } from './servicios/stats-admin.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
 import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
@@ -231,6 +232,7 @@ export function createApp(options: AppOptions): Express {
           : undefined,
       }),
       activityLogs: createActivityAdminService({ db }),
+      stats: createStatsAdminService({ db, reloj }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

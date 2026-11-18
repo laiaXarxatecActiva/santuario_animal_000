@@ -1,5 +1,6 @@
 import {
   adminActivityLogsQuerySchema,
+  adminStatsQuerySchema,
   adminDonationMonthlyQuerySchema,
   adminDonationsExportQuerySchema,
   adminDonationsQuerySchema,
@@ -37,6 +38,7 @@ import { createDonationAdminController } from '../controllers/donation-admin.con
 import { createPaymentAdminController } from '../controllers/payment-admin.controller.js';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
+import { createStatsAdminController } from '../controllers/stats-admin.controller.js';
 import { createJobController } from '../controllers/job.controller.js';
 import { createPhotoAdminController } from '../controllers/photo-admin.controller.js';
 import { createPlanAdminController } from '../controllers/plan-admin.controller.js';
@@ -55,6 +57,7 @@ import type { DonationAdminService } from '../servicios/donation-admin.service.j
 import type { PaymentAdminService } from '../servicios/payment-admin.service.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
+import type { StatsAdminService } from '../servicios/stats-admin.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
 import type { PlanAdminService } from '../servicios/plan-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
@@ -78,6 +81,7 @@ export interface AdminRoutesDeps {
   /** Anota las escrituras del panel (CU-42). */
   activity: ActivityLogService;
   activityLogs: ActivityAdminService;
+  stats: StatsAdminService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -212,6 +216,14 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   // CU-42: registro de actividad, solo lectura y solo administradores.
   const actividad = createActivityAdminController(deps.activityLogs);
   router.get('/activity-logs', soloAdmin, validate({ query: adminActivityLogsQuerySchema }), actividad.list);
+
+  // CU-41: estadísticas, solo lectura y solo administradores.
+  router.get(
+    '/stats',
+    soloAdmin,
+    validate({ query: adminStatsQuerySchema }),
+    createStatsAdminController(deps.stats).get,
+  );
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

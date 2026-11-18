@@ -564,7 +564,8 @@
       "payments": "Pagos",
       "donations": "Donaciones",
       "activity": "Actividad",
-      "vet": "Veterinario"
+      "vet": "Veterinario",
+      "stats": "Estadísticas"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -1078,6 +1079,24 @@
         "treatment": "Tratamiento",
         "surgery": "Cirugía"
       }
+    },
+    "stats": {
+      "title": "Estadísticas",
+      "from": "Desde",
+      "to": "Hasta",
+      "range": "Del {{from}} al {{to}}",
+      "loadError": "No hemos podido cargar las estadísticas",
+      "revenue": "Ingresos por mes",
+      "fees": "Cuotas",
+      "donations": "Donaciones",
+      "adoptions": "Adopciones nuevas y bajas",
+      "started": "Nuevas",
+      "ended": "Bajas",
+      "mostAdopted": "Animales más adoptados",
+      "byPlan": "Adopciones activas por plan",
+      "withoutAdopters": "Animales sin adoptantes",
+      "currentNote": "Situación actual (no depende del rango).",
+      "allAdopted": "Todos los animales tienen al menos un adoptante."
     }
   },
   "viewer": {
@@ -1188,7 +1207,7 @@
     "empty": "No hay datos en este rango",
     "showData": "Ver los datos",
     "lineSummary": "{{title}}: {{count}} valores, desde {{first}} hasta {{last}}.",
-    "barSummary": "{{title}}: {{count}} meses. {{totals}}"
+    "barSummary": "{{title}}: {{count}} meses, de {{first}} a {{last}}."
   },
   "memorial": {
     "title": "En memoria",

@@ -419,3 +419,7 @@ export const manualDonationSchema = z.object({
 });
 export type ManualDonationBody = z.input<typeof manualDonationSchema>;
 export type ManualDonationInput = z.output<typeof manualDonationSchema>;
+
+/** CU-41 paso 2: rango de las estadísticas (por defecto, los últimos 12 meses). */
+export const adminStatsQuerySchema = z.object({ from: diaOpcional, to: diaOpcional }).superRefine(rangoValido);
+export type AdminStatsQuery = z.infer<typeof adminStatsQuerySchema>;

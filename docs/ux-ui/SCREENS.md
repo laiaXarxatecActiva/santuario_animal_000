@@ -665,7 +665,7 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 | Nueva adopción manual | Adoptante (buscador), animal (solo adoptables), plan, método del primer pago, notas |
 | Registro manual de pago o donación | Formulario corto con el método (efectivo o transferencia), el importe y la fecha |
 | Planes | Una tarjeta editable en línea por plan (de entrada, los tres de RN-04): nombre, importe, descripción, por defecto, activo y número de adopciones activas. Botón «Nuevo plan» con una ventana emergente (siempre mensual). Al cambiar un importe con adopciones activas, aviso `warning` con «Confirmar y guardar» antes de guardar. |
-| Estadísticas (Fase 3) | Selector de rango de fechas + gráficos en tarjetas (dos columnas en escritorio, una en móvil). Los colores de los gráficos salen de la paleta: terracota para cuotas, oliva para donaciones. |
+| Estadísticas (Fase 3, `/admin/stats`) | Filtros «Desde» y «Hasta» (en la URL; por defecto, los últimos 12 meses) y, debajo, «Del nov 25 al nov 26». Tarjetas (dos columnas en escritorio, una en móvil): «Ingresos por mes» (`BarChart`, terracota cuotas y oliva donaciones), «Adopciones nuevas y bajas» (`BarChart`, terracota nuevas y oliva bajas), «Animales más adoptados» y «Adopciones activas por plan» (`BarList`) y «Animales sin adoptantes» (lista con enlace a la ficha del panel). Las tres últimas llevan la nota «Situación actual (no depende del rango)». Sin datos: «No hay datos en este rango» en cada gráfico (3a). Enlace «Estadísticas» (icono `chart-column`) en la sección «Administración» del menú. |
 | Registro de actividad (Fase 3) | Listado con el patrón común; filtros por usuario, tabla, acción y fechas |
 
 ## 6. Estados generales

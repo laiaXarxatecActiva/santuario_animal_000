@@ -594,7 +594,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/admin/donations/monthly-totals` | `{ data: [{ month: 'YYYY-MM', total, count }] }`: lo cobrado (`completed`) cada mes, con `q`, `method`, `from` y `to`. Sin fechas, los últimos 12 meses; los meses sin donaciones salen a 0 | CU-39 |
 | GET / POST | `/api/admin/plans` | Listado y alta | CU-40 |
 | PUT | `/api/admin/plans/:id` | Nombre, importe, descripción, plan por defecto, activo | CU-40 |
-| GET | `/api/admin/stats` | Estadísticas (Fase 3) | CU-41 |
+| GET | `/api/admin/stats` | Estadísticas (Fase 3), solo admin. `?from&to` (días; se toman sus meses; por defecto los últimos 12 meses, como mucho 60: si no, 400 en `from`). Devuelve `range`, `revenueByMonth` (lo `completed` por mes, cuotas y donaciones por separado, igual que los ingresos del escritorio), `adoptionsByMonth` (`started` por `start_date`; `ended` por `end_date` de las `cancelled`/`finished` que llegaron a empezar), y la situación actual: `mostAdopted` (5 con más adopciones activas), `withoutAdopters` (en el santuario o en tratamiento sin adopciones activas) y `activeByPlan`. Todos los meses del rango, también los que están a 0 | CU-41 |
 | GET | `/api/admin/activity-logs` | Registro de actividad (Fase 3) | CU-42 |
 | POST | `/api/admin/jobs/:jobName/run` | Ejecuta una tarea programada a mano (pruebas y demostraciones) | CU-43 a CU-47 |
 

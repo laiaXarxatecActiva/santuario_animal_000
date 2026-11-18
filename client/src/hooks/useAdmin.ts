@@ -8,6 +8,7 @@ import {
   type AdminDonationMonthlyParams,
   type AdminDonationsParams,
   type AdminPaymentsParams,
+  type AdminStatsParams,
   type AdminUpdatesParams,
   type AdminUsersParams,
 } from '../api/admin';
@@ -18,6 +19,14 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+/** CU-41: estadísticas del rango elegido (por defecto, los últimos 12 meses). */
+export const useAdminStats = (params: AdminStatsParams) =>
+  useQuery({
+    queryKey: [...ADMIN_KEY, 'stats', params],
+    queryFn: () => adminApi.stats(params),
+    placeholderData: keepPreviousData,
+  });
 
 /** CU-42: registro de actividad con filtros y páginas. */
 export const useAdminActivityLogs = (params: AdminActivityLogsParams, enabled = true) =>

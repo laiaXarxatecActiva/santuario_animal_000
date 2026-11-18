@@ -269,3 +269,21 @@ export interface AdminDonationsPage {
 export interface AdminDonationMonthlyTotalsDto {
   data: { month: string; total: string; count: number }[];
 }
+
+/**
+ * GET /api/admin/stats (CU-41). Los meses van en `YYYY-MM`, todos los del rango
+ * (también los que están a 0). Las tres listas son la situación actual.
+ */
+export interface AdminStatsDto {
+  range: { from: string; to: string };
+  /** Lo cobrado (`completed`) cada mes, con cuotas y donaciones por separado. */
+  revenueByMonth: { month: string; fees: string; donations: string }[];
+  /** Adopciones que empezaron (`start_date`) y que se cerraron tras empezar (`end_date`). */
+  adoptionsByMonth: { month: string; started: number; ended: number }[];
+  /** Hasta 5 animales con más adopciones activas. */
+  mostAdopted: { animal: { id: number; name: string }; activeAdoptions: number }[];
+  /** En el santuario o en tratamiento y sin ninguna adopción activa. */
+  withoutAdopters: { id: number; name: string; species: string }[];
+  /** Adopciones activas por plan. */
+  activeByPlan: { plan: { id: number; name: string }; count: number }[];
+}

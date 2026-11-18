@@ -1317,14 +1317,17 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 2. Elige un rango de fechas (por defecto, los últimos 12 meses).
 3. El sistema muestra:
    - ingresos por mes, con cuotas y donaciones por separado (gráfico de barras);
-   - animales más adoptados (adopciones activas);
-   - animales sin adoptantes;
+   - animales más adoptados (los 5 con más adopciones activas);
+   - animales sin adoptantes (en el santuario o en tratamiento, sin adopciones activas);
    - adopciones nuevas y bajas por mes;
    - reparto de adopciones activas por plan.
+
+   Los ingresos y las adopciones por mes dependen del rango; las otras tres listas son la situación actual.
 
 **Flujos alternativos**
 
 - **3a.** No hay datos en el rango: se indica en cada gráfico.
+- **2a.** El rango es al revés o supera los 60 meses: error en el campo de la fecha.
 
 **Postcondiciones**
 

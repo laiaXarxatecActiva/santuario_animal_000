@@ -1,6 +1,7 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   faArrowUpRightFromSquare,
+  faChartColumn,
   faClockRotateLeft,
   faBars,
   faFeather,
@@ -66,6 +67,7 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/payments', key: 'admin.nav.payments', icon: faMoneyBillWave },
       { to: '/admin/donations', key: 'admin.nav.donations', icon: faHandHoldingHeart },
       { to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart },
+      { to: '/admin/stats', key: 'admin.nav.stats', icon: faChartColumn },
       { to: '/admin/activity', key: 'admin.nav.activity', icon: faClockRotateLeft },
     ],
   },

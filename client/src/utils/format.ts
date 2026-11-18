@@ -25,6 +25,9 @@ const fechaCortaInstante = new Intl.DateTimeFormat('es-ES', {
   year: 'numeric',
   timeZone: ZONA_SANTUARIO,
 });
+const mesCorto = new Intl.DateTimeFormat('es-ES', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+const monedaEje = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const entero = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 0 });
 const mesAnio = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 // `en-CA` escribe las fechas como `YYYY-MM-DD`.
 const diaIso = new Intl.DateTimeFormat('en-CA', {
@@ -83,6 +86,21 @@ export function previousDay(date: string): string {
 /** `'2026-11'` → «noviembre de 2026» (CU-39, total por mes). */
 export function formatMonth(month: string): string {
   return mesAnio.format(new Date(`${month}-01T00:00:00Z`));
+}
+
+/** `'2026-11'` → «nov 26» (ejes de los gráficos, CU-41). */
+export function formatShortMonth(month: string): string {
+  return mesCorto.format(new Date(`${month}-01T00:00:00Z`));
+}
+
+/** Marca del eje de un gráfico de importes: `250` → «250 €». */
+export function formatCurrencyAxis(value: number): string {
+  return monedaEje.format(value);
+}
+
+/** Cantidades enteras: `1200` → «1200». */
+export function formatNumber(value: number): string {
+  return entero.format(value);
 }
 
 /**
