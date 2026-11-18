@@ -15,6 +15,7 @@ import { createAdminRoutes } from './routes/admin.routes.js';
 import { createAdoptionRoutes } from './routes/adoption.routes.js';
 import { createAuthRoutes } from './routes/auth.routes.js';
 import { createContributionRoutes } from './routes/contribution.routes.js';
+import { createDocumentRoutes } from './routes/document.routes.js';
 import { createDonationRoutes } from './routes/donation.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
 import { createNotificationRoutes } from './routes/notification.routes.js';
@@ -23,6 +24,7 @@ import { createPublicRoutes } from './routes/public.routes.js';
 import type { EmailService } from './services/email/email.service.js';
 import type { PaymentGateway } from './services/payment/payment.service.js';
 import { createActivityLogService } from './services/activity-log.service.js';
+import { createPdfService } from './services/pdf/pdf.service.js';
 import { createLocalStorage } from './services/storage/local.storage.js';
 import { createActivityAdminService } from './servicios/activity-admin.service.js';
 import { createAdoptionService } from './servicios/adoption.service.js';
@@ -30,6 +32,7 @@ import { createAuthService } from './servicios/auth.service.js';
 import { createAnimalAdminService } from './servicios/animal-admin.service.js';
 import { createContactService } from './servicios/contact.service.js';
 import { createContributionService } from './servicios/contribution.service.js';
+import { createDocumentService } from './servicios/document.service.js';
 import { createDonationService } from './servicios/donation.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
 import { createPlanAdminService } from './servicios/plan-admin.service.js';
@@ -107,8 +110,9 @@ export function createApp(options: AppOptions): Express {
   });
 
   // Fotos y vídeos (TECH_SPEC §11.3), en la carpeta que se sirve en /uploads.
+  const storage = createLocalStorage(uploadsDir);
   const media = createMediaUploader(
-    createLocalStorage(uploadsDir),
+    storage,
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
 
@@ -144,7 +148,15 @@ export function createApp(options: AppOptions): Express {
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
-  app.use('/api', createContributionRoutes(createContributionService({ db })));
+  const contributionService = createContributionService({ db });
+  app.use('/api', createContributionRoutes(contributionService));
+  // CU-22 y CU-19: certificado y recibos en PDF.
+  app.use(
+    '/api',
+    createDocumentRoutes(
+      createDocumentService({ db, pdf: createPdfService(), storage, contributions: contributionService }),
+    ),
+  );
   app.use(
     '/api',
     createDonationRoutes(

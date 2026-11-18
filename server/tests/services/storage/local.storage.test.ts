@@ -44,4 +44,11 @@ describe('TECH_SPEC §11.3 LocalStorage', () => {
     expect(storage.pathFromUrl('https://otro.example/a.webp')).toBeNull();
     expect(storage.pathFromUrl('/uploads/../secreto')).toBeNull();
   });
+
+  it('read devuelve el contenido, o null si el archivo no existe', async () => {
+    await storage.save(Buffer.from('leer'), 'animals/7/leer.webp', 'image/webp');
+    expect((await storage.read('animals/7/leer.webp'))?.toString()).toBe('leer');
+    expect(await storage.read('animals/7/no-existe.webp')).toBeNull();
+    await expect(storage.read('../fuera.txt')).rejects.toThrow(RangeError);
+  });
 });

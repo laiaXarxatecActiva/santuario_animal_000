@@ -271,6 +271,7 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Registro de actividad (Fase 3) | `clock-rotate-left` |
 | Estadísticas (Fase 3) | `chart-column` |
 | Certificado de adopción (Fase 3) | `certificate` |
+| Ver un PDF (recibo, Fase 3) | `file-pdf` |
 | Idioma (Fase 3) | `language` |
 
 ### 6.2 Logo provisional

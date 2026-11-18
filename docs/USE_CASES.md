@@ -622,7 +622,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 2. El sistema muestra dos listados, cuotas y donaciones, con: concepto (animal y plan, o «Donación»), importe, fecha, estado (completado, fallido, pendiente, devuelto) y referencia.
 3. El sistema muestra el total aportado por año (solo pagos `completed`).
 4. El adoptante pulsa «Recibo» en un pago o donación completado.
-5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, referencia y la indicación «Pago simulado». En la Fase 2 es una página HTML imprimible; desde la Fase 3, un PDF descargable.
+5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, referencia y la indicación «Pago simulado». En la Fase 2 era una página HTML imprimible; desde la Fase 3 es un PDF que se puede abrir en el navegador (para verlo o imprimirlo) o descargar.
 
 **Flujos alternativos**
 
@@ -713,7 +713,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. En «Mis animales», el adoptante pulsa «Certificado».
 2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
-3. El navegador descarga el archivo `certificado-<animal>.pdf`.
+3. El navegador descarga el archivo `certificado-<animal>.pdf`. También se puede abrir en el navegador para verlo o imprimirlo.
 
 **Flujos alternativos**
 

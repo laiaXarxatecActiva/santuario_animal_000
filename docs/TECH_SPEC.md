@@ -518,13 +518,14 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`. Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
 | PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio si es el plan actual). Solo `active` sin baja (422 `PLAN_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-20 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja (`{}`): la activa sigue hasta el último día pagado, la pendiente pasa a `cancelled` y la pausada a `finished`. Baja ya pedida: 409 `ADOPTION_CANCEL_ALREADY_REQUESTED`; cerrada: 422 `ADOPTION_CLOSED`. Devuelve la adopción | CU-21 |
-| GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) | CU-22 |
+| GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) de una adopción propia `active` (si no, 422 `CERTIFICATE_NOT_AVAILABLE`): nombre del adoptante, nombre, especie y foto de portada del animal (sin foto si no tiene o no se puede leer) y fecha de inicio. Se abre en el navegador (`inline`) o, con `?download=1`, se descarga como `certificado-<animal>.pdf`. `Cache-Control: no-store` | CU-22 |
 | GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |
 | GET | `/api/me/contributions` | `{ payments, donations, totals: { allTime, years } }`: cuotas y donaciones con mi cuenta, las más recientes primero. `?year=` filtra los listados (no los totales); los totales solo suman lo cobrado | CU-19 |
 | GET | `/api/me/payments/:id/receipt` | Datos del recibo de una cuota cobrada o devuelta (fallida o pendiente: 422 `RECEIPT_NOT_AVAILABLE`), con el plan con el que se cobró (`payments.plan_id`) | CU-19 |
 | GET | `/api/me/donations/:id/receipt` | Datos del recibo de una donación cobrada o devuelta | CU-19 |
+| GET | `/api/me/payments/:id/receipt.pdf`, `/api/me/donations/:id/receipt.pdf` | Recibo en PDF (Fase 3) con los mismos datos y reglas; `inline` o, con `?download=1`, descarga de `recibo-<referencia>.pdf`. `Cache-Control: no-store` | CU-19 |
 | POST | `/api/me/gifts` | Regalar una adopción (Fase 3) | CU-26 |
 
 ### 10.5 Cualquier usuario autenticado
@@ -686,7 +687,7 @@ Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteEx
 
 ### 11.5 Servicios de la Fase 3
 
-- **`PdfService`:** certificado de adopción y recibos en PDF con `pdfkit`. Hasta la Fase 3, los recibos se muestran como una página HTML imprimible.
+- **`PdfService`** (`server/src/services/pdf/pdf.service.ts`): certificado de adopción y recibos en PDF con `pdfkit` (licencia MIT). Los textos los escribe el dominio (`dominio/documentos.ts`); las fotos WebP se convierten a PNG con `sharp`. Los PDF no se guardan. Desde la Fase 3 los recibos de «Mis aportaciones» son solo PDF (la página HTML imprimible se ha retirado); el recibo en pantalla tras una donación (CU-05) se mantiene.
 - **`ActivityLogService`:** `log(userId, action, tableName, recordId, details)`, llamado desde los controladores del panel después de cada operación de escritura. Nunca guarda contraseñas ni tokens.
 
 ## 12. Cliente (Vista)
@@ -710,7 +711,6 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/my-animals/:animalId` | Ficha ampliada | Adoptante |
 | `/feed` | Muro de actualizaciones | Adoptante |
 | `/my-contributions` | Mis aportaciones | Adoptante |
-| `/my-contributions/receipts/:kind/:id` | Recibo imprimible (`kind` = `payment` o `donation`) | Adoptante |
 | `/profile` | Mi perfil | Autenticado |
 | `/notifications` | Notificaciones | Autenticado |
 | `/admin` | Escritorio | Cuidador, admin |

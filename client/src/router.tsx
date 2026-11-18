@@ -34,7 +34,6 @@ import { AdoptPage } from './pages/adopter/AdoptPage';
 import { ContributionsPage } from './pages/adopter/ContributionsPage';
 import { FeedPage } from './pages/adopter/FeedPage';
 import { MyAnimalsPage } from './pages/adopter/MyAnimalsPage';
-import { ReceiptPage } from './pages/adopter/ReceiptPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -123,7 +122,6 @@ export const routes: RouteObject[] = [
           { path: 'my-animals/:animalId', element: <AdoptedAnimalPage /> },
           { path: 'feed', element: <FeedPage /> },
           { path: 'my-contributions', element: <ContributionsPage /> },
-          { path: 'my-contributions/receipts/:kind/:id', element: <ReceiptPage /> },
         ],
       },
       {

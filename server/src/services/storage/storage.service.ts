@@ -4,6 +4,8 @@
 export interface StorageService {
   /** Guarda el archivo en `path` (relativa, p. ej. `animals/1/x.webp`) y devuelve su URL pública. */
   save(file: Buffer, path: string, contentType: string): Promise<string>;
+  /** Contenido del archivo, o `null` si no existe (p. ej., para el certificado, CU-22). */
+  read(path: string): Promise<Buffer | null>;
   /** Borra el archivo; no falla si ya no existe. */
   delete(path: string): Promise<void>;
   /** Ruta de un archivo a partir de su URL pública, o `null` si la URL no es de este almacenamiento. */

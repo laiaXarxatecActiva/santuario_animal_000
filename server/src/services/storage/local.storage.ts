@@ -1,4 +1,4 @@
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, normalize, resolve, sep } from 'node:path';
 import type { StorageService } from './storage.service.js';
 
@@ -34,6 +34,15 @@ export function createLocalStorage(baseDir: string): StorageService {
       await mkdir(dirname(destino), { recursive: true });
       await writeFile(destino, file);
       return PREFIJO_URL + rutaSegura(path);
+    },
+
+    async read(path) {
+      try {
+        return await readFile(absoluta(path));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+        throw error;
+      }
     },
 
     async delete(path) {

@@ -181,6 +181,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 - Los secretos (`SESSION_SECRET`, credenciales de la base de datos y del SMTP) van en `.env`, que no se sube al repositorio. `.env.example` solo lleva valores de ejemplo.
 - Las sesiones caducadas se borran cada 15 minutos. Los tokens caducados, en la tarea `expire-pending` (Fase 2).
 - **Registro de actividad (CU-42)**: los controladores del panel anotan cada escritura con `ActivityLogService` (`server/src/services/activity-log.service.ts`). Antes de guardar, `limpiarDetalles` (`server/src/dominio/actividad.ts`) quita cualquier clave que pueda contener una contraseña, un token o un hash. El registro solo lo lee el administrador (`GET /api/admin/activity-logs`) y no hay ninguna ruta para modificarlo ni borrarlo.
+- **Certificado y recibos en PDF (CU-22, CU-19)**: `server/src/routes/document.routes.ts`, solo para adoptantes (`requireRole('adopter')`) y siempre sobre recursos propios (el filtro por usuario va en la consulta; uno ajeno es 404). El PDF se genera al momento, no se guarda y se envía con `Cache-Control: no-store`. El nombre del archivo se limpia (`nombreArchivo`, solo letras, números y guiones) antes de ponerlo en `Content-Disposition`. La foto del certificado se lee con `StorageService.read`, que no admite rutas fuera de `uploads/`.
 
 ## 10. Cliente
 
@@ -217,6 +218,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Cabeceras de helmet | `server/tests/app.test.ts` |
 | Las respuestas no exponen campos privados | `server/tests/auth.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | Los logs ocultan datos sensibles | `server/tests/logger.test.ts` |
+| Certificado y recibos en PDF: solo adoptantes, solo los propios (ajeno → 404), sin caché | `server/tests/documents.routes.test.ts` (CU-22, CU-19), `server/tests/documentos.test.ts` |
 | El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
 
 ## 12. Pendiente

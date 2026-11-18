@@ -1,4 +1,4 @@
-import { faFeather } from '@fortawesome/free-solid-svg-icons';
+import { faCertificate, faFeather } from '@fortawesome/free-solid-svg-icons';
 import { isOpenAdoptionStatus, type AdoptionDto, type AdoptionPlanDto, type SimulatedOutcome } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
@@ -250,6 +250,31 @@ function TarjetaAdopcion({
         )}
         <div className={styles.actions}>
           <ButtonLink to={`/my-animals/${animal.id}`}>{t('myAnimals.seeProfile', { name: animal.name })}</ButtonLink>
+          {/* CU-22: certificado en PDF mientras la adopción está activa (1a). */}
+          {adopcion.status === 'active' && (
+            <>
+              <ButtonLink
+                variant="outline"
+                icon={faCertificate}
+                to={`/api/me/adoptions/${adopcion.id}/certificate?download=1`}
+                reloadDocument
+                download
+                aria-label={t('certificate.downloadOf', { name: animal.name })}
+              >
+                {t('certificate.download')}
+              </ButtonLink>
+              <ButtonLink
+                variant="ghost"
+                to={`/api/me/adoptions/${adopcion.id}/certificate`}
+                reloadDocument
+                target="_blank"
+                rel="noopener"
+                aria-label={t('certificate.viewOf', { name: animal.name })}
+              >
+                {t('certificate.view')}
+              </ButtonLink>
+            </>
+          )}
         </div>
       </div>
     </article>

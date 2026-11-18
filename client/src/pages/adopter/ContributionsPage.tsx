@@ -1,8 +1,8 @@
-import { faReceipt } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faFilePdf, faReceipt } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { ContributionDonationDto, ContributionPaymentDto, PaymentStatus } from '@sanctuary/shared';
 import { useId, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { Alert } from '../../components/Alert';
 import { Badge, type BadgeTone } from '../../components/Badge';
 import { Button } from '../../components/Button';
@@ -179,7 +179,28 @@ function Fila({
       <td data-label={t('contributions.reference')} className={styles.reference}>
         {referencia}
       </td>
-      <td>{tieneRecibo(status) && <Link to={recibo}>{t('contributions.receipt')}</Link>}</td>
+      <td>
+        {tieneRecibo(status) && (
+          // CU-19 5: el recibo es un PDF que se abre (para verlo o imprimirlo) o se descarga.
+          <span className={styles.receiptLinks}>
+            <a
+              href={recibo}
+              target="_blank"
+              rel="noopener"
+              aria-label={t('contributions.viewReceipt', { reference: referencia })}
+            >
+              <FontAwesomeIcon icon={faFilePdf} aria-hidden="true" /> {t('contributions.viewPdf')}
+            </a>
+            <a
+              href={`${recibo}?download=1`}
+              download
+              aria-label={t('contributions.downloadReceipt', { reference: referencia })}
+            >
+              <FontAwesomeIcon icon={faDownload} aria-hidden="true" /> {t('contributions.downloadPdf')}
+            </a>
+          </span>
+        )}
+      </td>
     </tr>
   );
 }
@@ -203,7 +224,7 @@ function TablaCuotas({ cuotas }: { cuotas: ContributionPaymentDto[] }) {
             importe={c.amount}
             status={c.status}
             referencia={c.reference}
-            recibo={`/my-contributions/receipts/payment/${c.id}`}
+            recibo={`/api/me/payments/${c.id}/receipt.pdf`}
           />
         ))}
       </tbody>
@@ -226,7 +247,7 @@ function TablaDonaciones({ donaciones }: { donaciones: ContributionDonationDto[]
             importe={d.amount}
             status={d.status}
             referencia={d.reference}
-            recibo={`/my-contributions/receipts/donation/${d.id}`}
+            recibo={`/api/me/donations/${d.id}/receipt.pdf`}
           />
         ))}
       </tbody>

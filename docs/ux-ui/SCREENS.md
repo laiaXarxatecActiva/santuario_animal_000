@@ -416,7 +416,9 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   Faro · Finalizada el 21 oct · Faro nos dejó.  ¿Quieres continuar con otro animal?
 ```
 
-**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Certificado, Darme de baja); el botón principal va a todo el ancho.
+**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Darme de baja); el botón principal va a todo el ancho.
+
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, descarga `certificado-<animal>.pdf`) y [Ver] (fantasma, lo abre en otra pestaña). En las demás no aparece (1a).
 
 - «Darme de baja» y «Cambiar plan» están en el menú «⋯» en escritorio también, para no saturar la tarjeta.
 - **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
@@ -463,10 +465,10 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
 
 - Arriba, tarjetas de resumen: «Aportado en 2026: 87,00 €» y «Desde que empezaste: 152,00 €».
 - Pestañas **Cuotas** y **Donaciones**.
-- En escritorio, una tabla (fecha, concepto, importe, estado, [Recibo]). En móvil, una lista de tarjetas compactas, como en el panel.
+- En escritorio, una tabla (fecha, concepto, importe, estado y los enlaces del recibo en PDF). En móvil, una lista de tarjetas compactas, como en el panel.
 - Filtro por año («Todos los años» por defecto). Sin filtro, la primera tarjeta muestra el año más reciente con aportaciones.
 - Concepto de las cuotas: «Cuota de Rufo · del 5 nov 2026 al 4 dic 2026»; de las donaciones, «Donación». Estados con las insignias de §8.6 del sistema de diseño.
-- [Recibo] solo en las cobradas y las devueltas (CU-19 4a). Abre `/my-contributions/receipts/:kind/:id` (`kind` = `payment` o `donation`): el recibo imprimible (sistema de diseño §8.9) con el santuario, quién paga, el concepto (con el plan en las cuotas), el importe, la fecha, la forma de pago, la referencia, el estado («Devuelto el…» si se devolvió) y «Pago simulado» si lo es.
+- Recibo solo en las cobradas y las devueltas (CU-19 4a): dos enlaces, «Ver PDF» (icono `file-pdf`, lo abre en otra pestaña, desde donde se puede imprimir) y «Descargar PDF» (icono `download`, guarda `recibo-<referencia>.pdf`). El PDF lleva el santuario, quién paga, el concepto (con el plan en las cuotas), el importe, la fecha, la forma de pago, la referencia, el estado («Devuelto el…» si se devolvió) y «Pago simulado» si lo es. Desde la Fase 3 ya no hay página HTML del recibo.
 - Sin aportaciones: estado vacío «Todavía no hay aportaciones».
 
 ### 4.6 Mi perfil (`/profile`) — CU-23, CU-24, CU-25

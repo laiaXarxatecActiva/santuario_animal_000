@@ -72,12 +72,15 @@ describe('CU-19 Consultar mis aportaciones', () => {
       within(filas[0] as HTMLElement).getByText('Cuota de Rufo · del 5 nov 2026 al 4 dic 2026'),
     ).toBeInTheDocument();
     expect(within(filas[0] as HTMLElement).getByText('Cobrado')).toBeInTheDocument();
-    expect(within(filas[0] as HTMLElement).getByRole('link', { name: 'Recibo' })).toHaveAttribute(
-      'href',
-      '/my-contributions/receipts/payment/301',
-    );
+    // CU-19 5 (Fase 3): el recibo es un PDF que se puede ver (e imprimir) o descargar.
+    const ver = within(filas[0] as HTMLElement).getByRole('link', { name: /^Ver el recibo/ });
+    expect(ver).toHaveAttribute('href', '/api/me/payments/301/receipt.pdf');
+    expect(ver).toHaveAttribute('target', '_blank');
+    const descargar = within(filas[0] as HTMLElement).getByRole('link', { name: /^Descargar el recibo/ });
+    expect(descargar).toHaveAttribute('href', '/api/me/payments/301/receipt.pdf?download=1');
+    expect(descargar).toHaveAttribute('download');
     expect(within(filas[1] as HTMLElement).getByText('Fallido')).toBeInTheDocument();
-    expect(within(filas[1] as HTMLElement).queryByRole('link', { name: 'Recibo' })).not.toBeInTheDocument();
+    expect(within(filas[1] as HTMLElement).queryByRole('link', { name: /recibo/ })).not.toBeInTheDocument();
   });
 
   it('pestaña Donaciones', async () => {
@@ -87,9 +90,13 @@ describe('CU-19 Consultar mis aportaciones', () => {
     const donaciones = screen.getByRole('tabpanel', { name: 'Donaciones' });
     expect(within(donaciones).getByText('Donación')).toBeInTheDocument();
     expect(within(donaciones).getByText('SIM-D0001')).toBeInTheDocument();
-    expect(within(donaciones).getByRole('link', { name: 'Recibo' })).toHaveAttribute(
+    expect(within(donaciones).getByRole('link', { name: /^Ver el recibo/ })).toHaveAttribute(
       'href',
-      '/my-contributions/receipts/donation/1',
+      '/api/me/donations/1/receipt.pdf',
+    );
+    expect(within(donaciones).getByRole('link', { name: /^Descargar el recibo/ })).toHaveAttribute(
+      'href',
+      '/api/me/donations/1/receipt.pdf?download=1',
     );
   });
 
@@ -114,76 +121,17 @@ describe('CU-19 Consultar mis aportaciones', () => {
   });
 });
 
-describe('CU-19 Recibo imprimible', () => {
-  it('5: muestra el recibo de una cuota y permite imprimirlo', async () => {
-    mockApi({
-      ...conSesion,
-      '/api/me/payments/301/receipt': {
-        body: {
-          kind: 'payment',
-          id: 301,
-          reference: 'SIM-A0001-20261105',
-          amount: '5.00',
-          method: 'simulated',
-          status: 'completed',
-          paidAt: '2026-11-05T09:15:00.000Z',
-          refundedAt: null,
-          animalName: 'Rufo',
-          planName: 'Usual',
-          periodStart: '2026-11-05',
-          periodEnd: '2026-12-04',
-          payer: { fullName: 'Lucía Martínez Navarro', email: 'lucia.martinez@correo.test' },
-        },
-      },
-    });
-    renderRoute('/my-contributions/receipts/payment/301');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Recibo' })).toBeInTheDocument();
-    for (const texto of [
-      'Lucía Martínez Navarro',
-      'lucia.martinez@correo.test',
-      'Cuota de Rufo · Plan Usual · del 5 nov 2026 al 4 dic 2026',
-      '5,00 €',
-      'SIM-A0001-20261105',
-      'Pago simulado: no se ha realizado ningún cargo real.',
-    ]) {
-      expect(screen.getByText(texto)).toBeInTheDocument();
-    }
-    expect(screen.getByRole('button', { name: 'Imprimir' })).toBeInTheDocument();
+describe('CU-19 Recibo en PDF (Fase 3)', () => {
+  it('los enlaces llevan el nombre accesible con la referencia', async () => {
+    mockApi({ ...conSesion, '/api/me/contributions': { body: respuesta() } });
+    renderRoute('/my-contributions');
+    expect(await screen.findByRole('link', { name: 'Ver el recibo SIM-A0001-20261105 (PDF)' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Descargar el recibo SIM-A0001-20261105 (PDF)' })).toBeInTheDocument();
   });
 
-  it('4b: un recibo devuelto indica la fecha de la devolución', async () => {
-    mockApi({
-      ...conSesion,
-      '/api/me/donations/9/receipt': {
-        body: {
-          kind: 'donation',
-          id: 9,
-          reference: 'SIM-D0009',
-          amount: '30.00',
-          method: 'simulated',
-          status: 'refunded',
-          paidAt: '2026-11-05T13:00:00.000Z',
-          refundedAt: '2026-11-06T08:30:00.000Z',
-          animalName: null,
-          planName: null,
-          periodStart: null,
-          periodEnd: null,
-          payer: { fullName: 'Sergio Llorens Puig', email: 'sergio.llorens@correo.test' },
-        },
-      },
-    });
-    renderRoute('/my-contributions/receipts/donation/9');
-    expect(await screen.findByText('Devuelto el 6 de noviembre de 2026')).toBeInTheDocument();
-    expect(screen.getByText('Donación')).toBeInTheDocument();
-  });
-
-  it('un recibo que no existe muestra un aviso', async () => {
+  it('la antigua página HTML del recibo ya no existe', async () => {
     mockApi({ ...conSesion });
-    renderRoute('/my-contributions/receipts/payment/999');
-    expect(await screen.findByText('No hemos podido cargar este recibo')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Volver a mis aportaciones' })).toHaveAttribute(
-      'href',
-      '/my-contributions',
-    );
+    renderRoute('/my-contributions/receipts/payment/301');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Esta página ha volado lejos' })).toBeInTheDocument();
   });
 });
