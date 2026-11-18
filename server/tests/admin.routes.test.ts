@@ -41,6 +41,9 @@ const RUTAS: Ruta[] = [
   { metodo: 'get', patron: '/updates/:id' },
   { metodo: 'put', patron: '/updates/:id' },
   { metodo: 'delete', patron: '/updates/:id' },
+  { metodo: 'get', patron: '/plans', soloAdmin: true },
+  { metodo: 'post', patron: '/plans', soloAdmin: true },
+  { metodo: 'put', patron: '/plans/:id', soloAdmin: true },
   { metodo: 'post', patron: '/jobs/:jobName/run', soloAdmin: true },
 ];
 
@@ -101,9 +104,14 @@ describe('CU-27 a CU-32 Permisos del panel', () => {
     expect(res.body.error.code).toBe('FORBIDDEN');
   });
 
-  const lecturas = RUTAS.filter((r) => r.metodo === 'get');
+  const lecturas = RUTAS.filter((r) => r.metodo === 'get' && !r.soloAdmin);
   it.each(lecturas.map((r) => [nombre(r), r] as const))('%s como cuidadora o administradora → 200', async (_n, r) => {
     expect((await pedir(nuria, r)).status).toBe(200);
+    expect((await pedir(marta, r)).status).toBe(200);
+  });
+
+  const lecturasAdmin = RUTAS.filter((r) => r.metodo === 'get' && r.soloAdmin);
+  it.each(lecturasAdmin.map((r) => [nombre(r), r] as const))('%s como administradora → 200', async (_n, r) => {
     expect((await pedir(marta, r)).status).toBe(200);
   });
 });

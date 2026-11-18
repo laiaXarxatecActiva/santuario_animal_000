@@ -6,12 +6,13 @@ import { Alert } from '../../components/Alert';
 import { Button, ButtonLink } from '../../components/Button';
 import { useDashboard } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
+import { formatCurrency } from '../../utils/format';
 import styles from './DashboardPage.module.css';
 
 const PLAZO_DIAS = 14;
 
-// CU-27 Consultar el escritorio del panel (SCREENS §5.2). Los ingresos del
-// administrador llegan en la fase 2.
+// CU-27 Consultar el escritorio del panel (SCREENS §5.2). Los ingresos solo
+// llegan si quien consulta es administrador.
 export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useSession();
@@ -56,6 +57,14 @@ function Contenido({ datos }: { datos: DashboardDto }) {
           etiqueta={t('admin.dashboard.activeAdoptions', { count: datos.activeAdoptions })}
         />
         <Cifra valor={datos.pendingAdoptions} etiqueta={t('admin.dashboard.pendingAdoptions')} />
+        {datos.revenue && (
+          <Cifra valor={formatCurrency(datos.revenue.total)} etiqueta={t('admin.dashboard.revenueThisMonth')}>
+            {t('admin.dashboard.revenueDetail', {
+              fees: formatCurrency(datos.revenue.fees),
+              donations: formatCurrency(datos.revenue.donations),
+            })}
+          </Cifra>
+        )}
       </ul>
 
       <section className={styles.alerts} aria-labelledby="alertas">
@@ -79,7 +88,7 @@ function Contenido({ datos }: { datos: DashboardDto }) {
   );
 }
 
-function Cifra({ valor, etiqueta, children }: { valor: number; etiqueta: string; children?: ReactNode }) {
+function Cifra({ valor, etiqueta, children }: { valor: number | string; etiqueta: string; children?: ReactNode }) {
   return (
     <li className={styles.stat}>
       <span className={styles.value}>{valor}</span>

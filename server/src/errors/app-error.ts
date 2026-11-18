@@ -372,3 +372,46 @@ export class EmailNotSentError extends AppError {
     super(503, 'EMAIL_NOT_SENT', 'No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde.');
   }
 }
+
+/** CU-40: nombre repetido (índice `adoption_plans_name_lower_key`). */
+export class PlanAlreadyExistsError extends AppError {
+  constructor() {
+    super(409, 'PLAN_ALREADY_EXISTS', 'Ya existe un plan con este nombre.', [
+      { field: 'name', message: 'Ya existe un plan con este nombre.' },
+    ]);
+  }
+}
+
+/** CU-40 A1: el plan por defecto tiene que estar activo. */
+export class DefaultPlanMustBeActiveError extends FieldRuleError {
+  constructor() {
+    super(
+      'DEFAULT_PLAN_MUST_BE_ACTIVE',
+      'isActive',
+      'No se puede desactivar el plan por defecto sin elegir antes otro.',
+    );
+  }
+}
+
+/** CU-40 A1: siempre hay un plan por defecto; se cambia marcando otro. */
+export class DefaultPlanNeedsReplacementError extends FieldRuleError {
+  constructor() {
+    super(
+      'DEFAULT_PLAN_NEEDS_REPLACEMENT',
+      'isDefault',
+      'Siempre tiene que haber un plan por defecto: marca otro plan como plan por defecto.',
+    );
+  }
+}
+
+/** CU-40 3a: el nuevo importe afecta a adopciones activas y no se ha confirmado. */
+export class PlanAmountChangeUnconfirmedError extends ConflictError {
+  constructor(adopciones: number) {
+    super(
+      'PLAN_AMOUNT_CHANGE_UNCONFIRMED',
+      adopciones === 1
+        ? 'El nuevo importe se cobrará a la adopción activa de este plan desde su siguiente cuota. Confírmalo para guardarlo.'
+        : `El nuevo importe se cobrará a las ${adopciones} adopciones activas de este plan desde su siguiente cuota. Confírmalo para guardarlo.`,
+    );
+  }
+}

@@ -8,6 +8,8 @@ import {
   photoOrderBodySchema,
   photoPatchBodySchema,
   photoUploadBodySchema,
+  planCreateBodySchema,
+  planUpdateBodySchema,
   speciesBodySchema,
   updateCreateBodySchema,
   updateEditBodySchema,
@@ -18,6 +20,7 @@ import { createAnimalAdminController } from '../controllers/animal-admin.control
 import { createDashboardController } from '../controllers/dashboard.controller.js';
 import { createJobController } from '../controllers/job.controller.js';
 import { createPhotoAdminController } from '../controllers/photo-admin.controller.js';
+import { createPlanAdminController } from '../controllers/plan-admin.controller.js';
 import { createSpeciesAdminController } from '../controllers/species-admin.controller.js';
 import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
@@ -27,6 +30,7 @@ import type { JobRunner } from '../jobs/registry.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
 import type { PhotoAdminService } from '../servicios/photo-admin.service.js';
+import type { PlanAdminService } from '../servicios/plan-admin.service.js';
 import type { SpeciesAdminService } from '../servicios/species-admin.service.js';
 import type { UpdateAdminService } from '../servicios/update-admin.service.js';
 
@@ -36,11 +40,12 @@ export interface AdminRoutesDeps {
   animals: AnimalAdminService;
   photos: PhotoAdminService;
   updates: UpdateAdminService;
+  plans: PlanAdminService;
   jobs: JobRunner;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
-// trabajador; los borrados, además, administrador.
+// trabajador; los borrados y la administración (TECH_SPEC §10.7), además, administrador.
 export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   const router = Router();
   router.use(requireRole(...WORKER_ROLES));
@@ -100,6 +105,12 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     actualizaciones.update,
   );
   router.delete('/updates/:id', conId, actualizaciones.remove);
+
+  // CU-40: planes de adopción (TECH_SPEC §10.7), solo administradores.
+  const planes = createPlanAdminController(deps.plans);
+  router.get('/plans', soloAdmin, planes.list);
+  router.post('/plans', soloAdmin, validate({ body: planCreateBodySchema }), planes.create);
+  router.put('/plans/:id', soloAdmin, validate({ params: idParamsSchema, body: planUpdateBodySchema }), planes.update);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

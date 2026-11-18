@@ -30,6 +30,7 @@ import { createContactService } from './servicios/contact.service.js';
 import { createContributionService } from './servicios/contribution.service.js';
 import { createDonationService } from './servicios/donation.service.js';
 import { createDashboardService } from './servicios/dashboard.service.js';
+import { createPlanAdminService } from './servicios/plan-admin.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createNotificationService } from './servicios/notification.service.js';
 import { createMediaUploader } from './servicios/media-upload.service.js';
@@ -155,6 +156,7 @@ export function createApp(options: AppOptions): Express {
     createAdminRoutes({
       dashboard: createDashboardService({ db, reloj }),
       species: createSpeciesAdminService({ db }),
+      plans: createPlanAdminService({ db }),
       animals: createAnimalAdminService({
         db,
         reloj,
