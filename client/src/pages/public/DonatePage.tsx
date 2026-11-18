@@ -177,6 +177,8 @@ export function DonatePage() {
             error={errors.donorEmail?.message}
             {...register('donorEmail')}
           />
+          {/* CU-39 A2: sin email ni cuenta de adoptante no hay forma de avisarle (p. ej., de una devolución). */}
+          {(!user || isWorkerRole(user.role)) && <p className={styles.notice}>{t('donate.noNotices')}</p>}
           <Checkbox label={t('donate.anonymous')} {...register('isAnonymous')} />
           <TextAreaField
             label={t('donate.message')}

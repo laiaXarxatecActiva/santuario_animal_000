@@ -19,6 +19,8 @@ import { AdoptionsAdminPage } from './pages/admin/AdoptionsAdminPage';
 import { NewAdoptionPage } from './pages/admin/NewAdoptionPage';
 import { NewAnimalPage } from './pages/admin/NewAnimalPage';
 import { NewWorkerPage } from './pages/admin/NewWorkerPage';
+import { DonationsAdminPage } from './pages/admin/DonationsAdminPage';
+import { NewDonationPage } from './pages/admin/NewDonationPage';
 import { PaymentsAdminPage } from './pages/admin/PaymentsAdminPage';
 import { PlansAdminPage } from './pages/admin/PlansAdminPage';
 import { UserAdminPage } from './pages/admin/UserAdminPage';
@@ -81,6 +83,8 @@ export const routes: RouteObject[] = [
               { path: 'adoptions/new', element: <NewAdoptionPage /> },
               { path: 'adoptions/:id', element: <AdoptionAdminPage /> },
               { path: 'payments', element: <PaymentsAdminPage /> },
+              { path: 'donations', element: <DonationsAdminPage /> },
+              { path: 'donations/new', element: <NewDonationPage /> },
               { path: 'plans', element: <PlansAdminPage /> },
             ],
           },

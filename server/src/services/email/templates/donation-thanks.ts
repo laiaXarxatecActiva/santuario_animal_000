@@ -8,6 +8,8 @@ export function donationThanksEmail(datos: {
   amount: string;
   paidAt: Date;
   reference: string;
+  /** CU-39 A1: una donación registrada a mano no es un pago simulado. */
+  simulated?: boolean;
 }): EmailContent {
   const saludo = datos.donorName ? `Hola, ${datos.donorName}:` : 'Hola:';
   const cuerpo = 'Muchas gracias por tu donación. Nos ayuda a cuidar de los buitres que viven en el santuario.';
@@ -16,7 +18,7 @@ export function donationThanksEmail(datos: {
     `Importe: ${formatEuros(datos.amount)}`,
     `Fecha: ${formatFecha(fechaEnZonaSantuario(datos.paidAt))}`,
     `Referencia: ${datos.reference}`,
-    'Pago simulado: no se ha realizado ningún cargo real.',
+    ...(datos.simulated === false ? [] : ['Pago simulado: no se ha realizado ningún cargo real.']),
   ];
   return {
     subject: '¡Gracias por tu donación!',

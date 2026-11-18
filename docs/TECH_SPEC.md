@@ -586,11 +586,11 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/admin/payments` | `{ adoptionId, amount, method }` (`cash` o `bank_transfer`): registra la cuota pendiente de la adopción (la del próximo cobro; si está pendiente de pago, el primer mes desde hoy). La adopción queda activa, aplica el cambio de plan programado y el próximo cobro avanza un mes. 422 `MANUAL_PAYMENT_NOT_ALLOWED` o `ADOPTION_PAYMENT_EXPIRED` si no hay cuota; 409 si el periodo ya está pagado | CU-38 |
 | POST | `/api/admin/payments/:id/refund` | Devolución de un pago `completed` (422 `PAYMENT_NOT_REFUNDABLE` si no). Los pagos de la web pasan por `PaymentGateway.refund`; los de efectivo o transferencia solo se marcan. Avisa al adoptante (campana y email) y no cambia la adopción | CU-38 |
 | GET | `/api/admin/payments/export.csv` | Exportación CSV con los mismos filtros, sin páginas (`;`, UTF-8 con BOM, decimales con coma, fechas `dd/mm/aaaa`, fórmulas neutralizadas). Una cuenta eliminada sale como «Usuario eliminado», sin email | CU-38 |
-| GET | `/api/admin/donations` | Listado con filtros | CU-39 |
-| POST | `/api/admin/donations` | Registro manual (efectivo o transferencia) | CU-39 |
-| POST | `/api/admin/donations/:id/refund` | Devolución | CU-39 |
-| GET | `/api/admin/donations/export.csv` | Exportación CSV | CU-39 |
-| GET | `/api/admin/donations/monthly-totals` | Total recaudado por mes | CU-39 |
+| GET | `/api/admin/donations` | Listado con `?q` (nombre o email del donante), `status`, `method`, `from`, `to` (día del cobro o, si no se cobró, del intento, en Europe/Madrid) y `sort`; devuelve además `totalCollected` (suma de las `completed` del filtro, en SQL). El administrador ve el nombre y el email aunque la donación sea anónima | CU-39 |
+| POST | `/api/admin/donations` | `{ amount, date, method, donorName?, donorEmail?, isAnonymous, message? }` con `method` `cash` o `bank_transfer`: queda `completed`, sin cuenta vinculada y con `recorded_by`. `date` (hoy por defecto en el formulario) no puede ser futura ni inexistente (400 en el campo `date`); si es anterior a hoy, `paid_at` es el mediodía de ese día. Con email, se envía el agradecimiento con el recibo | CU-39 |
+| POST | `/api/admin/donations/:id/refund` | Devolución de una donación `completed` (422 `DONATION_NOT_REFUNDABLE` si no). Las de la web pasan por `PaymentGateway.refund`; las de efectivo o transferencia solo se marcan. Avisa al donante por email (si lo dio) y en la campana (si tiene cuenta) | CU-39 |
+| GET | `/api/admin/donations/export.csv` | Exportación CSV con los mismos filtros, sin páginas (mismo formato que la de pagos), con una columna «Anónima» | CU-39 |
+| GET | `/api/admin/donations/monthly-totals` | `{ data: [{ month: 'YYYY-MM', total, count }] }`: lo cobrado (`completed`) cada mes, con `q`, `method`, `from` y `to`. Sin fechas, los últimos 12 meses; los meses sin donaciones salen a 0 | CU-39 |
 | GET / POST | `/api/admin/plans` | Listado y alta | CU-40 |
 | PUT | `/api/admin/plans/:id` | Nombre, importe, descripción, plan por defecto, activo | CU-40 |
 | GET | `/api/admin/stats` | Estadísticas (Fase 3) | CU-41 |

@@ -1,4 +1,8 @@
 import {
+  adminDonationMonthlyQuerySchema,
+  adminDonationsExportQuerySchema,
+  adminDonationsQuerySchema,
+  manualDonationSchema,
   adminPaymentsExportQuerySchema,
   adminPaymentsQuerySchema,
   manualPaymentSchema,
@@ -26,6 +30,7 @@ import {
 } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createAdoptionAdminController } from '../controllers/adoption-admin.controller.js';
+import { createDonationAdminController } from '../controllers/donation-admin.controller.js';
 import { createPaymentAdminController } from '../controllers/payment-admin.controller.js';
 import { createAnimalAdminController } from '../controllers/animal-admin.controller.js';
 import { createDashboardController } from '../controllers/dashboard.controller.js';
@@ -40,6 +45,7 @@ import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import type { JobRunner } from '../jobs/registry.js';
 import type { AdoptionAdminService } from '../servicios/adoption-admin.service.js';
+import type { DonationAdminService } from '../servicios/donation-admin.service.js';
 import type { PaymentAdminService } from '../servicios/payment-admin.service.js';
 import type { AnimalAdminService } from '../servicios/animal-admin.service.js';
 import type { DashboardService } from '../servicios/dashboard.service.js';
@@ -59,6 +65,7 @@ export interface AdminRoutesDeps {
   users: UserAdminService;
   adoptions: AdoptionAdminService;
   payments: PaymentAdminService;
+  donations: DonationAdminService;
   jobs: JobRunner;
 }
 
@@ -161,6 +168,24 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.get('/payments/export.csv', soloAdmin, validate({ query: adminPaymentsExportQuerySchema }), pagos.exportCsv);
   router.post('/payments', soloAdmin, validate({ body: manualPaymentSchema }), pagos.create);
   router.post('/payments/:id/refund', soloAdmin, conId, pagos.refund);
+
+  // CU-39: donaciones, solo administradores. `export.csv` y `monthly-totals` van antes que `/:id`.
+  const donaciones = createDonationAdminController(deps.donations);
+  router.get('/donations', soloAdmin, validate({ query: adminDonationsQuerySchema }), donaciones.list);
+  router.get(
+    '/donations/export.csv',
+    soloAdmin,
+    validate({ query: adminDonationsExportQuerySchema }),
+    donaciones.exportCsv,
+  );
+  router.get(
+    '/donations/monthly-totals',
+    soloAdmin,
+    validate({ query: adminDonationMonthlyQuerySchema }),
+    donaciones.monthlyTotals,
+  );
+  router.post('/donations', soloAdmin, validate({ body: manualDonationSchema }), donaciones.create);
+  router.post('/donations/:id/refund', soloAdmin, conId, donaciones.refund);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

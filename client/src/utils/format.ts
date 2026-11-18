@@ -24,6 +24,14 @@ const fechaCortaInstante = new Intl.DateTimeFormat('es-ES', {
   year: 'numeric',
   timeZone: ZONA_SANTUARIO,
 });
+const mesAnio = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+// `en-CA` escribe las fechas como `YYYY-MM-DD`.
+const diaIso = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  timeZone: ZONA_SANTUARIO,
+});
 const lista = new Intl.ListFormat('es', { style: 'long', type: 'conjunction' });
 
 /** `'5.00'` → `'5,00 €'`. */
@@ -64,6 +72,19 @@ export function previousDay(date: string): string {
   const dia = new Date(`${date}T00:00:00Z`);
   dia.setUTCDate(dia.getUTCDate() - 1);
   return dia.toISOString().slice(0, 10);
+}
+
+/** `'2026-11'` → «noviembre de 2026» (CU-39, total por mes). */
+export function formatMonth(month: string): string {
+  return mesAnio.format(new Date(`${month}-01T00:00:00Z`));
+}
+
+/**
+ * Hoy en la zona del santuario (`YYYY-MM-DD`). Solo como valor propuesto en un
+ * formulario (CU-39 A1); la fecha válida la decide el servidor.
+ */
+export function todayInSanctuary(ahora: Date = new Date()): string {
+  return diaIso.format(ahora);
 }
 
 /** `['Lucía', 'Elena', 'Irene']` → «Lucía, Elena e Irene». */

@@ -103,3 +103,10 @@
     display: none;
   }
 }
+
+/* Aviso bajo el email: sin email ni cuenta no se le puede avisar (CU-39). */
+.notice {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

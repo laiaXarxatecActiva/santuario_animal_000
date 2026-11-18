@@ -359,3 +359,59 @@ export const adminUpdatesQuerySchema = paginationQuerySchema.extend({
   authorId: z.coerce.number().int().positive().optional(),
 });
 export type AdminUpdatesQuery = z.infer<typeof adminUpdatesQuerySchema>;
+
+// ---------------------------------------------------------------------------
+// CU-39 Gestionar donaciones
+// ---------------------------------------------------------------------------
+
+export const ADMIN_DONATION_SORTS = ['-date', 'date', '-amount', 'amount'] as const;
+export type AdminDonationSort = (typeof ADMIN_DONATION_SORTS)[number];
+
+/** Filtros comunes del listado, la exportación y los totales por mes (paso 2). */
+const filtrosDonaciones = {
+  q: filtrosPagos.q,
+  method: z.enum(PAYMENT_METHODS).optional(),
+  from: diaOpcional,
+  to: diaOpcional,
+};
+const filtrosListadoDonaciones = {
+  ...filtrosDonaciones,
+  sort: z.enum(ADMIN_DONATION_SORTS).default('-date'),
+  status: z.enum(PAYMENT_STATUSES).optional(),
+};
+
+export const adminDonationsExportQuerySchema = z.object(filtrosListadoDonaciones).superRefine(rangoValido);
+export type AdminDonationsExportQuery = z.infer<typeof adminDonationsExportQuerySchema>;
+
+export const adminDonationsQuerySchema = paginationQuerySchema
+  .extend(filtrosListadoDonaciones)
+  .superRefine(rangoValido);
+export type AdminDonationsQuery = z.infer<typeof adminDonationsQuerySchema>;
+
+/** Paso 3: el total por mes cuenta solo las cobradas, así que no filtra por estado. */
+export const adminDonationMonthlyQuerySchema = z.object(filtrosDonaciones).superRefine(rangoValido);
+export type AdminDonationMonthlyQuery = z.infer<typeof adminDonationMonthlyQuerySchema>;
+
+/**
+ * A1: donación recibida fuera de la web. Que la fecha exista y no sea futura lo
+ * comprueba el servidor (depende de hoy); el cliente avisa antes con `max`.
+ */
+export const manualDonationSchema = z.object({
+  amount: donationAmount,
+  date: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { error: 'Elige la fecha.' }),
+  method: z.enum(MANUAL_PAYMENT_METHODS, { error: 'Elige cómo se ha pagado.' }),
+  donorName: textoSinVacio(200),
+  donorEmail: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v === '' ? undefined : v))
+    .pipe(emailValido.optional()),
+  isAnonymous: z.boolean().default(false),
+  message: textoSinVacio(1000),
+});
+export type ManualDonationBody = z.input<typeof manualDonationSchema>;
+export type ManualDonationInput = z.output<typeof manualDonationSchema>;
