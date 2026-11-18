@@ -578,10 +578,10 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/admin/users/:id` | `{ isActive }`, o `{ role }` solo entre `caretaker` y `admin` (uno de los dos). Desactivar cierra todas las sesiones y, si es un adoptante, da de baja sus adopciones. 422 si el administrador se desactiva a sí mismo, si se reactiva una cuenta anonimizada o si el último administrador activo dejaría de serlo | CU-35 |
 | POST | `/api/admin/users/:id/invitation` | Reenvía la invitación (anula la anterior). Solo a un trabajador activo que nunca ha entrado; si no, 409 `INVITATION_NOT_PENDING` | CU-36 |
 | POST | `/api/admin/users` | Crear cuenta de trabajador | CU-36 |
-| GET | `/api/admin/adoptions` | Listado con filtros por estado, animal y adoptante | CU-37 |
-| GET | `/api/admin/adoptions/:id` | Detalle con sus pagos | CU-37 |
-| POST | `/api/admin/adoptions` | Alta manual con primer pago manual (`cash` o `bank_transfer`) | CU-37 |
-| PATCH | `/api/admin/adoptions/:id/status` | `{ action: "pause" \| "resume" \| "cancel", notes? }` | CU-37 |
+| GET | `/api/admin/adoptions` | Listado con `?q` (adoptante por nombre o email, o animal), `status`, `planId`, `animalId`, `userId` y `sort` (lista blanca; por defecto `-createdAt`) | CU-37 |
+| GET | `/api/admin/adoptions/:id` | Detalle con sus pagos (con quién registró los manuales), las notas internas y quién la creó | CU-37 |
+| POST | `/api/admin/adoptions` | Alta manual `{ userId, animalId, planId, method, notes? }`: nace `active` con su primer pago `completed` (`cash` o `bank_transfer`, referencia `CASH-…` o `TRF-…`, `recorded_by`) y se avisa como en CU-13. El adoptante debe tener la cuenta activa (422 `ADOPTER_NOT_AVAILABLE`); no hace falta que haya verificado el email | CU-37 |
+| PATCH | `/api/admin/adoptions/:id/status` | `{ action: "pause" \| "resume" \| "cancel", notes? }`; `notes` es obligatorio para pausar y cancelar y se añade a las notas internas. 422 `ADOPTION_ACTION_NOT_ALLOWED` si la acción no corresponde al estado. Se avisa al adoptante sin enseñarle la nota | CU-37 |
 | GET | `/api/admin/payments` | Listado con filtros | CU-38 |
 | POST | `/api/admin/payments` | Registrar una cuota cobrada fuera de la web | CU-38 |
 | POST | `/api/admin/payments/:id/refund` | Devolución | CU-38 |

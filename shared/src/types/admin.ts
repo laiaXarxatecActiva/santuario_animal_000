@@ -1,6 +1,6 @@
 import type { AnimalSex } from '../constants/animals.js';
 import type { Role } from '../constants/roles.js';
-import type { AdoptionStatus } from '../constants/status.js';
+import type { AdoptionEndReason, AdoptionStatus, PaymentMethod, PaymentStatus } from '../constants/status.js';
 import type { UserAccountStatus } from '../constants/users.js';
 import type { ContributionDonationDto, ContributionPaymentDto } from './contribution.js';
 import type { AnimalStatus, Visibility } from '../constants/status.js';
@@ -161,4 +161,48 @@ export interface AdminUserDetailDto extends AdminUserListItemDto {
   adoptions: AdminUserAdoptionDto[];
   payments: ContributionPaymentDto[];
   donations: ContributionDonationDto[];
+}
+
+/** CU-37: persona que creó una adopción o registró un pago a mano. */
+export interface AdminPersonRef {
+  id: number;
+  name: string;
+}
+
+/** CU-37 paso 2: fila del listado de adopciones. */
+export interface AdminAdoptionListItemDto {
+  id: number;
+  adopter: { id: number; firstName: string; lastName: string; email: string };
+  animal: { id: number; name: string };
+  plan: { id: number; name: string; monthlyAmount: string };
+  status: AdoptionStatus;
+  startDate: string | null;
+  endDate: string | null;
+  nextBillingDate: string | null;
+  cancelRequested: boolean;
+  createdAt: string;
+}
+
+/** CU-37 paso 3: pago de la adopción, con quién lo registró si fue manual. */
+export interface AdminAdoptionPaymentDto {
+  id: number;
+  amount: string;
+  periodStart: string;
+  periodEnd: string;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  reference: string;
+  paidAt: string | null;
+  refundedAt: string | null;
+  failureReason: string | null;
+  recordedBy: AdminPersonRef | null;
+}
+
+/** CU-37 paso 3: ficha de la adopción. */
+export interface AdminAdoptionDetailDto extends AdminAdoptionListItemDto {
+  nextPlan: { id: number; name: string; monthlyAmount: string } | null;
+  endReason: AdoptionEndReason | null;
+  notes: string | null;
+  createdBy: AdminPersonRef | null;
+  payments: AdminAdoptionPaymentDto[];
 }

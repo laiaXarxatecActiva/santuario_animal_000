@@ -1194,9 +1194,10 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujos alternativos**
 
-- **A1. Pausar** una adopción `active`: pasa a `paused` (deja de cobrarse) con una nota obligatoria.
+- **A1. Pausar** una adopción `active` (sin baja solicitada): pasa a `paused` (deja de cobrarse) con una nota obligatoria.
 - **A2. Reanudar** una adopción `paused`: pasa a `active`. Si `next_billing_date` ya ha pasado, se cobrará en el siguiente ciclo de CU-43.
-- **A3. Cancelar** una adopción abierta: pasa a `cancelled` (`admin_cancelled`) con `end_date` = hoy y una nota obligatoria. Se pregunta si se devuelve la última cuota (CU-38).
+- **A3. Cancelar** una adopción abierta: pasa a `cancelled` (`admin_cancelled`) con `end_date` = hoy y una nota obligatoria. Se pregunta si se devuelve la última cuota (CU-38; hasta entonces, la devolución se hará desde «Pagos»).
+- **Notas internas:** cada alta, pausa, reanudación o cancelación con nota añade una línea «fecha · acción · autor: texto» al final de `adoptions.notes`, sin borrar las anteriores. El adoptante recibe un aviso (campana y email) de cada cambio, pero nunca ve la nota.
 - **2a.** El adoptante ya tiene una adopción abierta de ese animal, el animal no es adoptable o el usuario no es adoptante: no se permite (RN-03, RN-05, RN-06).
 
 **Postcondiciones**

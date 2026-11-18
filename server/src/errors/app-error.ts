@@ -459,3 +459,17 @@ export class InvitationNotPendingError extends ConflictError {
     super('INVITATION_NOT_PENDING', 'Esta cuenta no tiene ninguna invitación pendiente.');
   }
 }
+
+// CU-37 2a: el adoptante elegido no existe o su cuenta no está activa.
+export class AdopterNotAvailableError extends BusinessRuleError {
+  constructor() {
+    super('ADOPTER_NOT_AVAILABLE', 'Esta cuenta no existe o no está activa.');
+  }
+}
+
+// CU-37 A1-A3: la acción no corresponde al estado de la adopción.
+export class AdoptionActionNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super('ADOPTION_ACTION_NOT_ALLOWED', 'Esta acción no se puede hacer con la adopción en su estado actual.');
+  }
+}

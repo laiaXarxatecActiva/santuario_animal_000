@@ -22,7 +22,7 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'childr
   ref?: Ref<HTMLInputElement>;
 }
 
-function FieldError({ id, children }: { id: string; children: ReactNode }) {
+export function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
     <p id={id} className={styles.error}>
       <FontAwesomeIcon icon={faCircleExclamation} aria-hidden="true" /> {children}
