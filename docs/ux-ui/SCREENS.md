@@ -658,7 +658,7 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 | Detalle de adopción | Datos, notas internas, tabla de pagos y acciones (pausar, reanudar, cancelar), cada una con su ventana de confirmación y nota obligatoria |
 | Nueva adopción manual | Adoptante (buscador), animal (solo adoptables), plan, método del primer pago, notas |
 | Registro manual de pago o donación | Formulario corto con el método (efectivo o transferencia), el importe y la fecha |
-| Planes | Lista de tres tarjetas editables en línea (nombre, importe, descripción, por defecto, activo). Al cambiar un importe con adopciones activas, aviso `warning` antes de guardar. |
+| Planes | Una tarjeta editable en línea por plan (de entrada, los tres de RN-04): nombre, importe, descripción, por defecto, activo y número de adopciones activas. Botón «Nuevo plan» con una ventana emergente (siempre mensual). Al cambiar un importe con adopciones activas, aviso `warning` con «Confirmar y guardar» antes de guardar. |
 | Estadísticas (Fase 3) | Selector de rango de fechas + gráficos en tarjetas (dos columnas en escritorio, una en móvil). Los colores de los gráficos salen de la paleta: terracota para cuotas, oliva para donaciones. |
 | Registro de actividad (Fase 3) | Listado con el patrón común; filtros por usuario, tabla, acción y fechas |
 

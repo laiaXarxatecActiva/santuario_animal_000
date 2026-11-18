@@ -1,4 +1,4 @@
-import type { AnimalStatus } from '@sanctuary/shared';
+import type { AnimalStatus, MonthlyRevenueDto } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
 
@@ -49,4 +49,28 @@ export async function listAnimalsWithActiveAdopters(db: Queryable): Promise<Anim
     activeAdopters: r.active_adopters,
     referenceDate: r.reference_date,
   }));
+}
+
+/**
+ * CU-27 3: lo cobrado en un mes (`YYYY-MM`, zona del santuario), con cuotas y
+ * donaciones por separado. Solo cuenta lo `completed`: lo devuelto desaparece.
+ * Las sumas se hacen en SQL para no pasar los importes por floats.
+ */
+export async function monthlyRevenue(db: Queryable, month: string): Promise<MonthlyRevenueDto> {
+  const { rows } = await db.query<{ fees: string; donations: string; total: string }>(
+    `WITH cobrado AS (
+       SELECT 'fee' AS tipo, amount, paid_at FROM payments WHERE status = 'completed'
+       UNION ALL
+       SELECT 'donation', amount, paid_at FROM donations WHERE status = 'completed'
+     ), sumas AS (
+       SELECT COALESCE(sum(amount) FILTER (WHERE tipo = 'fee'), 0)::numeric(12,2)      AS fees,
+              COALESCE(sum(amount) FILTER (WHERE tipo = 'donation'), 0)::numeric(12,2) AS donations
+         FROM cobrado
+        WHERE to_char(paid_at AT TIME ZONE '${ZONA_HORARIA_SANTUARIO}', 'YYYY-MM') = $1
+     )
+     SELECT fees::text, donations::text, (fees + donations)::text AS total FROM sumas`,
+    [month],
+  );
+  const fila = rows[0] ?? { fees: '0.00', donations: '0.00', total: '0.00' };
+  return { month, ...fila };
 }

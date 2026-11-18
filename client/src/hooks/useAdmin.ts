@@ -9,6 +9,12 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
 
+export const ADMIN_PLANS_KEY = [...ADMIN_KEY, 'plans'] as const;
+
+/** CU-40: todos los planes, con sus adopciones activas. */
+export const useAdminPlans = () =>
+  useQuery({ queryKey: ADMIN_PLANS_KEY, queryFn: () => adminApi.plans.list().then((r) => r.data) });
+
 /** CU-30: especies con su número de animales (también para los formularios y filtros). */
 export const useAdminSpecies = () =>
   useQuery({ queryKey: ADMIN_SPECIES_KEY, queryFn: () => adminApi.species.list().then((r) => r.data) });

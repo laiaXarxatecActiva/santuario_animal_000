@@ -15,6 +15,11 @@ export function tienePreferenciasDeAdoptante(role: Role): boolean {
   return role === 'adopter';
 }
 
+/** CU-27 3: los ingresos del escritorio solo los ve el administrador. */
+export function puedeVerIngresos(role: Role): boolean {
+  return role === 'admin';
+}
+
 /** CU-25 1a: solo un adoptante elimina su cuenta; la de un trabajador la desactiva un administrador. */
 export function puedeEliminarCuenta(role: Role): boolean {
   return role === 'adopter';

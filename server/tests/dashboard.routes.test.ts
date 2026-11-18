@@ -67,6 +67,42 @@ describe('CU-27 Consultar el escritorio del panel', () => {
     });
   });
 
+  it('3: el administrador ve los ingresos del mes, con cuotas y donaciones por separado', async () => {
+    const marta = await entrar('marta.soler@santuario.test', 'MartaSoler26#!');
+    const antes: DashboardDto = (await marta.get('/api/admin/dashboard')).body;
+    expect(antes.revenue?.month).toBe(t.hoy.slice(0, 7));
+    const suma = async (a: string, b: string) =>
+      (await t.pool.query<{ s: string }>('SELECT ($1::numeric + $2::numeric)::text AS s', [a, b])).rows[0]?.s;
+    expect(antes.revenue?.total).toBe(await suma(antes.revenue?.fees ?? '', antes.revenue?.donations ?? ''));
+
+    // Cuenta lo cobrado este mes; no lo devuelto ni lo del mes anterior.
+    const ahora = t.reloj.ahora();
+    const haceUnMes = new Date(ahora.getTime() - 40 * 24 * 60 * 60 * 1000);
+    await t.pool.query(
+      `INSERT INTO donations (amount, status, payment_reference, paid_at, refunded_at) VALUES
+         (2.50, 'completed', 'TEST-DASH-1', $1, NULL),
+         (7.00, 'refunded',  'TEST-DASH-2', $1, $1),
+         (9.00, 'completed', 'TEST-DASH-3', $2, NULL),
+         (4.00, 'pending',   'TEST-DASH-4', NULL, NULL)`,
+      [ahora, haceUnMes],
+    );
+    await t.pool.query(
+      `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, status, payment_reference, paid_at)
+       VALUES (1, 2, 5.00, '2000-01-01', '2000-01-31', 'completed', 'TEST-DASH-5', $1)`,
+      [ahora],
+    );
+    const despues: DashboardDto = (await marta.get('/api/admin/dashboard')).body;
+    expect(despues.revenue?.donations).toBe(await suma(antes.revenue?.donations ?? '', '2.50'));
+    expect(despues.revenue?.fees).toBe(await suma(antes.revenue?.fees ?? '', '5.00'));
+    expect(despues.revenue?.total).toBe(await suma(antes.revenue?.total ?? '', '7.50'));
+  });
+
+  it('3: el cuidador no ve los ingresos', async () => {
+    const res = await (await entrar('nuria.peris@santuario.test', 'NuriaPeris26#!')).get('/api/admin/dashboard');
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('revenue');
+  });
+
   it('RN-18: sin sesión 401 y un adoptante 403', async () => {
     expect((await request(t.app).get('/api/admin/dashboard')).status).toBe(401);
     const lucia = await entrar('lucia.martinez@correo.test', 'Lucia.buitres1');

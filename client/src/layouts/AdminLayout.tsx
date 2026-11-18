@@ -4,6 +4,7 @@ import {
   faBars,
   faFeather,
   faGauge,
+  faHandHoldingHeart,
   faNewspaper,
   faTags,
   faXmark,
@@ -49,6 +50,11 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/updates', key: 'admin.nav.updates', icon: faNewspaper },
       { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
     ],
+  },
+  {
+    key: 'admin.nav.groupAdmin',
+    roles: ['admin'],
+    links: [{ to: '/admin/plans', key: 'admin.nav.plans', icon: faHandHoldingHeart }],
   },
 ];
 

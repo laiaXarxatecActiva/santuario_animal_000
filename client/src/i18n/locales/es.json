@@ -542,7 +542,8 @@
       "viewSite": "Ver la web",
       "animals": "Animales",
       "species": "Especies",
-      "updates": "Actualizaciones"
+      "updates": "Actualizaciones",
+      "plans": "Planes"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -563,7 +564,9 @@
       "allUpToDate": "Todos los animales con adoptantes están al día",
       "loadError": "No hemos podido cargar el escritorio",
       "quickLinks": "Accesos rápidos",
-      "newAnimal": "Nuevo animal"
+      "newAnimal": "Nuevo animal",
+      "revenueThisMonth": "este mes",
+      "revenueDetail": "cuotas {{fees}} · donaciones {{donations}}"
     },
     "common": {
       "save": "Guardar",
@@ -745,6 +748,23 @@
       "deleted": "Actualización borrada.",
       "confirmDelete": "¿Borrar «{{title}}»?",
       "confirmDeleteText": "Se borrarán también sus fotos. Esta acción no se puede deshacer."
+    },
+    "plans": {
+      "title": "Planes",
+      "new": "Nuevo plan",
+      "name": "Nombre",
+      "monthlyAmount": "Importe mensual (€)",
+      "description": "Descripción",
+      "isDefault": "Plan por defecto",
+      "isActive": "Activo",
+      "activeAdoptions_one": "{{count}} adopción activa",
+      "activeAdoptions_other": "{{count}} adopciones activas",
+      "amountChangeWarning_one": "El nuevo importe se cobrará a la adopción activa de este plan desde su siguiente cuota.",
+      "amountChangeWarning_other": "El nuevo importe se cobrará a las {{count}} adopciones activas de este plan desde su siguiente cuota.",
+      "confirmAndSave": "Confirmar y guardar",
+      "saved": "Plan guardado",
+      "created": "Plan creado",
+      "loadError": "No hemos podido cargar los planes"
     }
   },
   "viewer": {

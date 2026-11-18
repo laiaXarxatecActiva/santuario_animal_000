@@ -1,12 +1,15 @@
 import type {
   AdminAnimalDto,
   AdminPhotoDto,
+  AdminPlanDto,
   AdminUpdateCreatedDto,
   AdminUpdateDto,
   AdminUpdateListItemDto,
   AdminUpdatesQuery,
   PhotoPatchBody,
   PhotoUploadResultDto,
+  PlanCreateBody,
+  PlanUpdateBody,
   AdminAnimalsQuery,
   AnimalBody,
   DashboardDto,
@@ -23,6 +26,13 @@ export type AdminUpdatesParams = Partial<AdminUpdatesQuery>;
 // Panel del personal (TECH_SPEC §10.6).
 export const adminApi = {
   dashboard: () => apiGet<DashboardDto>('/api/admin/dashboard'),
+
+  // CU-40 (solo administradores).
+  plans: {
+    list: () => apiGet<{ data: AdminPlanDto[] }>('/api/admin/plans'),
+    create: (body: PlanCreateBody) => apiPost<AdminPlanDto>('/api/admin/plans', body),
+    update: (id: number, body: PlanUpdateBody) => apiPut<AdminPlanDto>(`/api/admin/plans/${id}`, body),
+  },
 
   species: {
     list: () => apiGet<{ data: SpeciesAdminDto[] }>('/api/admin/species'),

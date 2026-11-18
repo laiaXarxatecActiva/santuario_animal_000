@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { caretaker, dashboard } from './helpers/fixtures';
+import { admin, caretaker, dashboard } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
 
 const escritorio = (body = dashboard()) =>
@@ -17,6 +17,23 @@ describe('CU-27 Consultar el escritorio del panel', () => {
       .getAllByRole('listitem')
       .map((li) => li.textContent);
     expect(tarjetas).toEqual(['15animales3 en tratamiento', '11adopciones activas', '2pendientes de pago']);
+  });
+
+  it('3: el administrador ve los ingresos del mes, con cuotas y donaciones por separado', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: admin() } },
+      '/api/admin/dashboard': {
+        body: dashboard({ revenue: { month: '2026-11', fees: '91.00', donations: '347.40', total: '438.40' } }),
+      },
+    });
+    renderRoute('/admin');
+    const resumen = await screen.findByRole('list', { name: 'Resumen' });
+    const tarjetas = within(resumen).getAllByRole('listitem');
+    expect(tarjetas).toHaveLength(4);
+    const ingresos = tarjetas[3] as HTMLElement;
+    expect(within(ingresos).getByText('438,40 €')).toBeInTheDocument();
+    expect(within(ingresos).getByText('este mes')).toBeInTheDocument();
+    expect(within(ingresos).getByText('cuotas 91,00 € · donaciones 347,40 €')).toBeInTheDocument();
   });
 
   it('2: alertas de actualización en rojo y amarillo con enlace a publicar', async () => {

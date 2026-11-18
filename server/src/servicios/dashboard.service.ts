@@ -1,7 +1,8 @@
-import { ANIMAL_STATUSES, type DashboardDto, type UpdateAlertDto } from '@sanctuary/shared';
+import { ANIMAL_STATUSES, type DashboardDto, type Role, type UpdateAlertDto } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { diasEntre, nivelAlertaActualizacion } from '../dominio/actualizaciones.js';
 import type { Reloj } from '../dominio/reloj.js';
+import { puedeVerIngresos } from '../dominio/usuario.js';
 import * as dashboardModel from '../models/dashboard.model.js';
 
 export interface DashboardServiceDeps {
@@ -11,16 +12,17 @@ export interface DashboardServiceDeps {
 
 export type DashboardService = ReturnType<typeof createDashboardService>;
 
-// CU-27: escritorio del panel (versión de la fase 1, sin ingresos).
+// CU-27: escritorio del panel. Los ingresos del mes, solo para el administrador.
 export function createDashboardService({ db, reloj }: DashboardServiceDeps) {
   return {
-    async get(): Promise<DashboardDto> {
-      const [porEstado, adopciones, animales] = await Promise.all([
+    async get(role: Role): Promise<DashboardDto> {
+      const hoy = reloj.hoy();
+      const [porEstado, adopciones, animales, ingresos] = await Promise.all([
         dashboardModel.countAnimalsByStatus(db),
         dashboardModel.countAdoptions(db),
         dashboardModel.listAnimalsWithActiveAdopters(db),
+        puedeVerIngresos(role) ? dashboardModel.monthlyRevenue(db, hoy.slice(0, 7)) : undefined,
       ]);
-      const hoy = reloj.hoy();
       const updateAlerts: UpdateAlertDto[] = animales
         .map((a) => {
           const daysWithoutUpdate = diasEntre(a.referenceDate, hoy);
@@ -39,6 +41,7 @@ export function createDashboardService({ db, reloj }: DashboardServiceDeps) {
         activeAdoptions: adopciones.active,
         pendingAdoptions: adopciones.pending,
         updateAlerts,
+        ...(ingresos && { revenue: ingresos }),
       };
     },
   };

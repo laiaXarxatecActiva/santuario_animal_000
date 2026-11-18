@@ -1,5 +1,6 @@
 import type {
   AdminAnimalDto,
+  AdminPlanDto,
   DashboardDto,
   SpeciesAdminDto,
   AdoptionDto,
@@ -236,3 +237,34 @@ export function adminAnimal(overrides: Partial<AdminAnimalDto> = {}): AdminAnima
     ...overrides,
   };
 }
+
+/** CU-40: planes del panel, como en TEST_DATA.sql. */
+export const adminPlans: AdminPlanDto[] = [
+  {
+    id: 1,
+    name: 'Simbólica',
+    monthlyAmount: '1.00',
+    description: 'Para quien quiere colaborar con lo mínimo.',
+    isDefault: false,
+    isActive: true,
+    activeAdoptions: 0,
+  },
+  {
+    id: 2,
+    name: 'Usual',
+    monthlyAmount: '5.00',
+    description: 'La opción más habitual.',
+    isDefault: true,
+    isActive: true,
+    activeAdoptions: 5,
+  },
+  {
+    id: 3,
+    name: 'Extraordinaria',
+    monthlyAmount: '12.00',
+    description: null,
+    isDefault: false,
+    isActive: false,
+    activeAdoptions: 1,
+  },
+];

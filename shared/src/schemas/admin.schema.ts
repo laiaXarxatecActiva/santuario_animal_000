@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ANIMAL_SEXES } from '../constants/animals.js';
 import { ALT_TEXT_MAX_LENGTH, MAX_FILES_PER_UPLOAD } from '../constants/media.js';
 import { ANIMAL_STATUSES, VISIBILITIES } from '../constants/status.js';
+import { donationAmount } from './donation.schema.js';
 import { textoObligatorio, textoOpcional as textoSinVacio } from './fields.js';
 import { paginationQuerySchema } from './pagination.schema.js';
 
@@ -30,6 +31,23 @@ export const speciesBodySchema = z.object({
   description: textoOpcional(2000),
 });
 export type SpeciesBody = z.input<typeof speciesBodySchema>;
+
+// CU-40: planes de adopción, siempre mensuales (RN-04). El importe es texto de
+// principio a fin, como en las donaciones (mayor que 0 y con dos decimales).
+export const planCreateBodySchema = z.object({
+  name: textoObligatorio(50, 'Escribe el nombre del plan.'),
+  monthlyAmount: donationAmount,
+  description: textoOpcional(500),
+  isDefault: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+});
+export type PlanCreateBody = z.input<typeof planCreateBodySchema>;
+
+/** 3a: `confirmAmountChange` confirma un nuevo importe para un plan con adopciones activas. */
+export const planUpdateBodySchema = planCreateBodySchema.extend({
+  confirmAmountChange: z.boolean().default(false),
+});
+export type PlanUpdateBody = z.input<typeof planUpdateBodySchema>;
 
 // CU-28: campos ordenables del listado (lista blanca).
 export const ADMIN_ANIMAL_SORTS = ['name', '-name', 'arrivalDate', '-arrivalDate'] as const;

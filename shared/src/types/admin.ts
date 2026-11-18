@@ -12,12 +12,33 @@ export interface UpdateAlertDto {
   activeAdopters: number;
 }
 
-/** GET /api/admin/dashboard (CU-27). Los ingresos llegan en la fase 2. */
+/** CU-27 3: lo cobrado en el mes en curso (solo `completed`), en euros como string. */
+export interface MonthlyRevenueDto {
+  /** `YYYY-MM`, en la zona horaria del santuario. */
+  month: string;
+  fees: string;
+  donations: string;
+  total: string;
+}
+
+/** GET /api/admin/dashboard (CU-27). `revenue` solo llega al administrador. */
 export interface DashboardDto {
   animalsByStatus: Record<AnimalStatus, number>;
   activeAdoptions: number;
   pendingAdoptions: number;
   updateAlerts: UpdateAlertDto[];
+  revenue?: MonthlyRevenueDto;
+}
+
+/** Plan de adopción en el panel (CU-40). */
+export interface AdminPlanDto {
+  id: number;
+  name: string;
+  monthlyAmount: string;
+  description: string | null;
+  isDefault: boolean;
+  isActive: boolean;
+  activeAdoptions: number;
 }
 
 /** Especie en el panel (CU-30). */
