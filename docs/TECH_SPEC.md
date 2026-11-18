@@ -285,7 +285,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | Registro_Veterinario | `vet_records` | Fase 3; la tabla existe desde el principio |
 | Notificación | `notifications` | |
 | Registro_Actividad | `activity_logs` | Fase 3; la tabla existe desde el principio |
-| *(nuevo)* | `user_tokens` | Tokens de verificación de email y recuperación de contraseña |
+| *(nuevo)* | `user_tokens` | Tokens de verificación de email, recuperación de contraseña e invitación de trabajadores |
 | *(nuevo)* | `user_sessions` | Sesiones (las gestiona el store propio de `middlewares/session.ts`) |
 | *(nuevo)* | `update_reads` | Marca de «leído» del muro de actualizaciones |
 
@@ -408,6 +408,7 @@ Al iniciar sesión se regenera el identificador de sesión (`req.session.regener
 - **Tokens de un solo uso** (`user_tokens`): 32 bytes aleatorios (`crypto.randomBytes`) enviados por email. En la base de datos se guarda su hash SHA-256.
   - Verificación de email: caduca en 24 horas.
   - Recuperación de contraseña: caduca en 1 hora. Al usarse, se cierran todas las sesiones del usuario.
+  - Invitación de un trabajador (`worker_invitation`, CU-36): caduca en 24 horas. Se usa en el mismo `POST /api/auth/reset-password` que la recuperación, con los mismos efectos. Cada tipo anula solo los suyos al pedir otro.
 - **Sin enumeración de cuentas**: el registro y la recuperación de contraseña responden siempre igual, exista o no el email. En el registro, si el email ya tiene cuenta no se crea nada y se avisa por email a su dueño (CU-07 3a); el registro nunca abre sesión. El login responde con el mismo error para email inexistente y contraseña incorrecta, y compara con un hash ficticio cuando el email no existe, para que tarde lo mismo.
 - Límites de intentos (`express-rate-limit`, en memoria; con varias instancias habría que compartir los contadores): 5 intentos fallidos de login por IP y email y 50 por IP cada 15 minutos; registro, 20 por hora por IP y 3 por hora por email; reenvío de la verificación, 3 por hora por usuario; cambio de contraseña, 5 intentos fallidos por usuario cada 15 minutos.
 
@@ -416,7 +417,7 @@ Al iniciar sesión se regenera el identificador de sesión (`req.session.regener
 | Tipo | Quién la crea | Cómo |
 | --- | --- | --- |
 | Adoptante | El propio usuario, desde el registro público | Siempre con `role = 'adopter'`, `email_verified = false`. Se envía el email de verificación. |
-| Cuidador o administrador | Un administrador, desde el panel | Sin contraseña inicial: se crea un token `password_reset` de 24 horas y se envía un email para que el trabajador elija su contraseña. `email_verified = true`. |
+| Cuidador o administrador | Un administrador, desde el panel | Sin contraseña inicial: se crea un token `worker_invitation` de 24 horas y se envía un email para que el trabajador elija su contraseña. `email_verified = true`. |
 
 El registro público **ignora** cualquier campo `role` que llegue en la petición.
 
@@ -574,7 +575,8 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | --- | --- | --- | --- |
 | GET | `/api/admin/users` | Listado con filtros por rol y estado | CU-35 |
 | GET | `/api/admin/users/:id` | Ficha con adopciones y aportaciones | CU-35 |
-| PATCH | `/api/admin/users/:id` | `{ isActive }`, o `{ role }` solo entre `caretaker` y `admin` | CU-35, CU-36 |
+| PATCH | `/api/admin/users/:id` | `{ isActive }`, o `{ role }` solo entre `caretaker` y `admin` (uno de los dos). Desactivar cierra todas las sesiones y, si es un adoptante, da de baja sus adopciones. 422 si el administrador se desactiva a sí mismo, si se reactiva una cuenta anonimizada o si el último administrador activo dejaría de serlo | CU-35 |
+| POST | `/api/admin/users/:id/invitation` | Reenvía la invitación (anula la anterior). Solo a un trabajador activo que nunca ha entrado; si no, 409 `INVITATION_NOT_PENDING` | CU-36 |
 | POST | `/api/admin/users` | Crear cuenta de trabajador | CU-36 |
 | GET | `/api/admin/adoptions` | Listado con filtros por estado, animal y adoptante | CU-37 |
 | GET | `/api/admin/adoptions/:id` | Detalle con sus pagos | CU-37 |

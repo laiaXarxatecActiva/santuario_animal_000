@@ -115,7 +115,7 @@ CREATE TABLE user_tokens (
     id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id     INTEGER      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     type        VARCHAR(30)  NOT NULL
-                CHECK (type IN ('email_verification', 'password_reset')),
+                CHECK (type IN ('email_verification', 'password_reset', 'worker_invitation')),
     token_hash  VARCHAR(255) NOT NULL UNIQUE,
     expires_at  TIMESTAMPTZ  NOT NULL,
     used_at     TIMESTAMPTZ,

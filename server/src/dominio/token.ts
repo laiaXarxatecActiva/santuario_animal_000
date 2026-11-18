@@ -6,6 +6,8 @@ const HORA_MS = 60 * 60 * 1000;
 export const DURACION_TOKEN_MS: Record<UserTokenType, number> = {
   email_verification: 24 * HORA_MS,
   password_reset: HORA_MS,
+  // CU-36: el trabajador recién creado tiene un día para elegir su contraseña.
+  worker_invitation: 24 * HORA_MS,
 };
 
 export function caducidadToken(tipo: UserTokenType, ahora: Date): Date {

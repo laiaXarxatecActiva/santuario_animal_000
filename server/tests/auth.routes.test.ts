@@ -485,6 +485,30 @@ describe('CU-10 Recuperar la contraseña', () => {
   });
 });
 
+describe('CU-36 Elegir la contraseña con la invitación', () => {
+  it('el token de invitación sirve para elegir la contraseña y después entrar', async () => {
+    await insertarToken(5, 'worker_invitation', 'invitacion-valida', 60);
+    const res = await request(t.app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'invitacion-valida', password: 'carmen-elige-1', passwordConfirm: 'carmen-elige-1' });
+    expect(res.status).toBe(204);
+    expect((await login(request(t.app), 'carmen.boix@santuario.test', 'carmen-elige-1')).status).toBe(200);
+
+    const otraVez = await request(t.app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'invitacion-valida', password: 'otra-clave-2', passwordConfirm: 'otra-clave-2' });
+    expect(otraVez.status).toBe(422);
+  });
+
+  it('una invitación caducada no vale', async () => {
+    await insertarToken(5, 'worker_invitation', 'invitacion-caducada', -1);
+    const res = await request(t.app)
+      .post('/api/auth/reset-password')
+      .send({ token: 'invitacion-caducada', password: 'carmen-elige-2', passwordConfirm: 'carmen-elige-2' });
+    expect(res.status).toBe(422);
+  });
+});
+
 describe('CU-11 Cerrar sesión', () => {
   it('destruye la sesión en el servidor y borra la cookie', async () => {
     const agent = request.agent(t.app);

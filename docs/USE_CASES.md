@@ -1127,7 +1127,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujos alternativos**
 
-- **4a.** Desactivar a un adoptante con adopciones activas: el sistema pregunta si también se dan de baja (como CU-21) o se mantienen. Por defecto, se dan de baja.
+- **4a.** Desactivar a un adoptante con adopciones abiertas: se dan de baja siempre, como en CU-21, y no se le vuelve a cobrar. La activa sigue activa hasta el último día pagado; la pendiente se cancela y la pausada termina el último día pagado (estas dos, con `end_reason = 'admin_cancelled'`). La ventana de confirmación lo avisa. Reactivar la cuenta no reabre las adopciones.
 - **4b.** El administrador intenta desactivar su propia cuenta: no se permite.
 - **4c.** Usuario anonimizado: no se puede reactivar.
 - **A1. Cambiar el rol:** solo entre `caretaker` y `admin`. No se puede convertir a un adoptante en trabajador ni al revés (RN-01, RN-03). No se permite que el último administrador activo deje de serlo.
@@ -1152,14 +1152,14 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. En «Usuarios», el administrador pulsa «Nuevo trabajador».
 2. Introduce nombre, apellidos, email, teléfono y rol (cuidador o administrador).
-3. El sistema crea la cuenta con `email_verified = TRUE`, sin contraseña utilizable, y un token `password_reset` de 24 horas.
+3. El sistema crea la cuenta con `email_verified = TRUE`, sin contraseña utilizable, y un token `worker_invitation` de 24 horas (un tipo propio: pedir «¿Has olvidado tu contraseña?» no lo anula).
 4. El sistema envía al trabajador un email de invitación con un enlace para elegir su contraseña (CU-10, desde el paso 4).
 5. El sistema muestra «Cuenta creada. Hemos enviado una invitación a [email]».
 
 **Flujos alternativos**
 
 - **3a.** El email ya está registrado: «Ya existe una cuenta con este email». Si es de un adoptante, no se convierte (RN-03).
-- **4a.** La invitación caduca sin usarse: el administrador puede reenviarla desde la ficha del usuario.
+- **4a.** La invitación caduca sin usarse: el administrador puede reenviarla desde la ficha del usuario (solo a un trabajador activo que nunca ha entrado). La nueva anula la anterior.
 
 **Postcondiciones**
 

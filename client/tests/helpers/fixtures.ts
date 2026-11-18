@@ -1,5 +1,7 @@
 import type {
   AdminAnimalDto,
+  AdminUserDetailDto,
+  AdminUserListItemDto,
   AdminPlanDto,
   DashboardDto,
   SpeciesAdminDto,
@@ -268,3 +270,61 @@ export const adminPlans: AdminPlanDto[] = [
     activeAdoptions: 1,
   },
 ];
+
+/** CU-35: usuarios del panel, como en TEST_DATA.sql. */
+export const adminUsers: AdminUserListItemDto[] = [
+  {
+    id: 6,
+    firstName: 'Lucía',
+    lastName: 'Martínez Navarro',
+    email: 'lucia.martinez@correo.test',
+    role: 'adopter',
+    status: 'active',
+    createdAt: '2025-08-12T10:00:00.000Z',
+    lastLoginAt: '2026-11-17T20:30:00.000Z',
+  },
+  {
+    id: 3,
+    firstName: 'Nuria',
+    lastName: 'Peris Gil',
+    email: 'nuria.peris@santuario.test',
+    role: 'caretaker',
+    status: 'active',
+    createdAt: '2023-11-18T10:00:00.000Z',
+    lastLoginAt: null,
+  },
+  {
+    id: 14,
+    firstName: 'Teresa',
+    lastName: 'Vicent Molina',
+    email: 'teresa.vicent@correo.test',
+    role: 'adopter',
+    status: 'inactive',
+    createdAt: '2025-01-10T10:00:00.000Z',
+    lastLoginAt: '2025-06-01T10:00:00.000Z',
+  },
+];
+
+export function adminUserDetail(overrides: Partial<AdminUserDetailDto> = {}): AdminUserDetailDto {
+  return {
+    ...(adminUsers[0] as AdminUserListItemDto),
+    phone: '612345678',
+    emailVerified: true,
+    invitationPending: false,
+    adoptions: [
+      {
+        id: 1,
+        animal: { id: 1, name: 'Rufo' },
+        plan: { id: 2, name: 'Usual', monthlyAmount: '5.00' },
+        status: 'active',
+        startDate: '2025-09-13',
+        endDate: null,
+        nextBillingDate: '2026-12-13',
+        cancelRequested: false,
+      },
+    ],
+    payments: [],
+    donations: [],
+    ...overrides,
+  };
+}

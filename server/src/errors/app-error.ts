@@ -415,3 +415,47 @@ export class PlanAmountChangeUnconfirmedError extends ConflictError {
     );
   }
 }
+
+/** CU-35 4b: el administrador no puede desactivar su propia cuenta. */
+export class CannotDeactivateSelfError extends BusinessRuleError {
+  constructor() {
+    super('CANNOT_DEACTIVATE_SELF', 'No puedes desactivar tu propia cuenta.');
+  }
+}
+
+/** CU-35 4c: una cuenta anonimizada ya no tiene datos personales. */
+export class AnonymizedCannotReactivateError extends BusinessRuleError {
+  constructor() {
+    super('ANONYMIZED_CANNOT_REACTIVATE', 'Esta cuenta se eliminó a petición de su titular y no se puede reactivar.');
+  }
+}
+
+/** CU-35 A1 (RN-01, RN-03): un adoptante no se convierte en trabajador ni al revés. */
+export class RoleChangeNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super('ROLE_CHANGE_NOT_ALLOWED', 'El rol solo se puede cambiar entre cuidador y administrador.');
+  }
+}
+
+/** CU-35 A1: siempre tiene que quedar un administrador activo. */
+export class LastActiveAdminError extends BusinessRuleError {
+  constructor() {
+    super('LAST_ACTIVE_ADMIN', 'Es el último administrador activo: nombra antes a otro administrador.');
+  }
+}
+
+/** CU-36 3a: el email ya tiene cuenta (aunque sea de un adoptante, no se convierte). */
+export class WorkerEmailTakenError extends AppError {
+  constructor() {
+    super(409, 'EMAIL_ALREADY_REGISTERED', 'Ya existe una cuenta con este email.', [
+      { field: 'email', message: 'Ya existe una cuenta con este email.' },
+    ]);
+  }
+}
+
+/** CU-36 4a: solo se reenvía a un trabajador activo que nunca ha entrado. */
+export class InvitationNotPendingError extends ConflictError {
+  constructor() {
+    super('INVITATION_NOT_PENDING', 'Esta cuenta no tiene ninguna invitación pendiente.');
+  }
+}

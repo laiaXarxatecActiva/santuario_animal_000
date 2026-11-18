@@ -37,6 +37,25 @@ describe('CU-10 Nueva contraseña', () => {
     expect(screen.getByRole('link', { name: 'Pedir otro enlace' })).toHaveAttribute('href', '/forgot-password');
   });
 
+  it('CU-36: con una invitación, el título y el aviso hablan de elegir la contraseña', async () => {
+    mockApi({ '/api/auth/reset-password': { status: 204 } });
+    const { router } = renderRoute('/reset-password?token=abc&invite=1');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Elige tu contraseña' })).toBeInTheDocument();
+    await guardar();
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
+    expect(await screen.findByText('Contraseña guardada. Ya puedes iniciar sesión.')).toBeInTheDocument();
+  });
+
+  it('CU-36 4a: invitación caducada: hay que pedir otra a un administrador', async () => {
+    mockApi({ '/api/auth/reset-password': errorApi(422, 'INVALID_TOKEN', 'x') });
+    renderRoute('/reset-password?token=caducado&invite=1');
+    await guardar();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'La invitación no es válida o ha caducado. Pide a un administrador que te envíe otra.',
+    );
+    expect(screen.queryByRole('link', { name: 'Pedir otro enlace' })).not.toBeInTheDocument();
+  });
+
   it('sin token en la URL no muestra el formulario', async () => {
     mockApi({});
     renderRoute('/reset-password');

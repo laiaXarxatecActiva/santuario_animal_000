@@ -73,9 +73,9 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 
 ## 5. Cuenta: registro, login, verificación y recuperación
 
-**Tokens de un solo uso** (verificación de email y recuperación de contraseña):
+**Tokens de un solo uso** (verificación de email, recuperación de contraseña e invitación de trabajadores):
 - Son 32 bytes de `crypto.randomBytes`. En `user_tokens` se guarda solo su SHA-256.
-- Caducan en 24 horas (verificación) o en 1 hora (recuperación).
+- Caducan en 24 horas (verificación e invitación) o en 1 hora (recuperación).
 - Se marcan como usados de forma atómica. Pedir uno nuevo invalida los anteriores del mismo tipo.
 - Viajan en el enlace del email (`?token=`) y el cliente los envía a la API en el **cuerpo** de un POST, nunca en la URL de la API.
 - Las respuestas de la API llevan `Referrer-Policy: no-referrer` (helmet).
@@ -102,6 +102,16 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 **Recuperación** (CU-10):
 - La respuesta es siempre la misma, exista o no el email.
 - Al usar el token: se marca como usado, se invalidan los demás, se guarda el nuevo hash y se cierran todas las sesiones.
+
+**Invitación de un trabajador** (CU-36):
+- Solo la crea un administrador. La cuenta nace con `email_verified = TRUE` y el hash de una contraseña aleatoria de 32 bytes que nadie conoce.
+- El token es de tipo `worker_invitation`. Se usa en `POST /api/auth/reset-password` igual que la recuperación: se marca como usado, se anulan los demás enlaces de recuperación e invitación y se cierran las sesiones.
+- El enlace lleva `&invite=1` solo para que la página diga «Elige tu contraseña»; ese parámetro no da ningún permiso.
+- Reenviarla anula la anterior, y solo se puede si el trabajador está activo y nunca ha entrado.
+
+**Desactivar una cuenta** (CU-35):
+- Solo un administrador, y nunca la suya. Se cierran todas las sesiones de esa cuenta en la misma transacción; además, `loadUser` ya rechaza una cuenta inactiva en la siguiente petición.
+- El cambio de rol no cierra sesiones, porque el rol se relee de la base de datos en cada petición. Siempre queda al menos un administrador activo.
 
 **Verificación** (CU-08):
 - El reenvío exige sesión y, como máximo, se puede pedir 3 veces por hora.
@@ -196,6 +206,8 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | El asunto del contacto no admite saltos de línea (inyección de cabeceras) | `shared/tests/contact.schema.test.ts` |
 | El logout invalida la sesión | `server/tests/auth.routes.test.ts` (CU-11) |
 | Tokens de un solo uso; la recuperación cierra todas las sesiones | `server/tests/auth.routes.test.ts` (CU-08, CU-10) |
+| La invitación sirve para elegir la contraseña, caduca en 24 horas y no la anula pedir la recuperación | `server/tests/auth.routes.test.ts`, `server/tests/token.test.ts`, `server/tests/admin-users.routes.test.ts` (CU-36) |
+| Desactivar una cuenta cierra sus sesiones; no se puede desactivar la propia ni dejar sin administrador activo | `server/tests/admin-users.routes.test.ts`, `server/tests/usuarios-admin.test.ts` (CU-35) |
 | El cambio de contraseña cierra las demás sesiones | `server/tests/profile.routes.test.ts` (CU-24) |
 | Eliminar la cuenta pide la contraseña, solo la puede usar un adoptante, anonimiza los datos y cierra todas sus sesiones | `server/tests/account-deletion.routes.test.ts` (CU-25) |
 | Rutas privadas sin sesión o sin rol | `server/tests/admin.routes.test.ts`, `server/tests/auth.middleware.test.ts` y los tests de cada router |

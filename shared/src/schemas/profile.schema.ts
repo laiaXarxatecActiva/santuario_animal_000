@@ -1,17 +1,6 @@
 import { z } from 'zod';
-import { EMAIL_FREQUENCIES, PHONE_PATTERN } from '../constants/users.js';
-import { nuevaPassword, textoObligatorio } from './fields.js';
-
-// Móvil español: se aceptan los guiones y espacios que añade el formulario y se
-// guarda solo con los dígitos. Vacío = sin teléfono.
-const telefono = z
-  .string()
-  .transform((valor) => valor.replace(/[\s-]/g, ''))
-  .refine((valor) => valor === '' || PHONE_PATTERN.test(valor), {
-    error: 'Introduce un móvil español de 9 dígitos que empiece por 6 o 7, sin el prefijo +34.',
-  })
-  .transform((valor) => (valor === '' ? null : valor))
-  .nullable();
+import { EMAIL_FREQUENCIES } from '../constants/users.js';
+import { nuevaPassword, telefono, textoObligatorio } from './fields.js';
 
 const nombre = textoObligatorio(100, 'Introduce tu nombre.');
 const apellidos = textoObligatorio(150, 'Introduce tus apellidos.');

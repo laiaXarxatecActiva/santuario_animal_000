@@ -238,7 +238,12 @@
     "RECEIPT_NOT_AVAILABLE": "Este pago no tiene recibo porque no se ha cobrado.",
     "EMAIL_NOT_SENT": "No hemos podido enviar tu mensaje. Inténtalo de nuevo más tarde.",
     "FAREWELL_MESSAGE_REQUIRED": "Escribe el mensaje para los adoptantes.",
-    "INVALID_PASSWORD": "La contraseña no es correcta."
+    "INVALID_PASSWORD": "La contraseña no es correcta.",
+    "CANNOT_DEACTIVATE_SELF": "No puedes desactivar tu propia cuenta.",
+    "ANONYMIZED_CANNOT_REACTIVATE": "Esta cuenta se eliminó a petición de su titular y no se puede reactivar.",
+    "ROLE_CHANGE_NOT_ALLOWED": "El rol solo se puede cambiar entre cuidador y administrador.",
+    "LAST_ACTIVE_ADMIN": "Es el último administrador activo: nombra antes a otro administrador.",
+    "INVITATION_NOT_PENDING": "Esta cuenta no tiene ninguna invitación pendiente."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -301,7 +306,10 @@
       "submit": "Guardar contraseña",
       "submitting": "Guardando…",
       "success": "Contraseña cambiada. Ya puedes iniciar sesión.",
-      "requestAnother": "Pedir otro enlace"
+      "requestAnother": "Pedir otro enlace",
+      "inviteTitle": "Elige tu contraseña",
+      "inviteSuccess": "Contraseña guardada. Ya puedes iniciar sesión.",
+      "inviteInvalid": "La invitación no es válida o ha caducado. Pide a un administrador que te envíe otra."
     },
     "sessionExpired": "Tu sesión ha caducado. Vuelve a iniciar sesión para continuar."
   },
@@ -543,7 +551,8 @@
       "animals": "Animales",
       "species": "Especies",
       "updates": "Actualizaciones",
-      "plans": "Planes"
+      "plans": "Planes",
+      "users": "Usuarios"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -765,6 +774,60 @@
       "saved": "Plan guardado",
       "created": "Plan creado",
       "loadError": "No hemos podido cargar los planes"
+    },
+    "users": {
+      "title": "Usuarios",
+      "newWorker": "Nuevo trabajador",
+      "searchLabel": "Buscar por nombre o email",
+      "name": "Nombre",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "email": "Email",
+      "phone": "Teléfono",
+      "role": "Rol",
+      "status": "Estado",
+      "createdAt": "Alta",
+      "lastLoginAt": "Último acceso",
+      "never": "Nunca",
+      "emailVerified": "Email verificado",
+      "roles": {
+        "adopter": "Adoptante",
+        "caretaker": "Cuidador",
+        "admin": "Administrador"
+      },
+      "statuses": {
+        "active": "Activa",
+        "inactive": "Inactiva",
+        "anonymized": "Anonimizada"
+      },
+      "empty": "No hay usuarios con estos filtros",
+      "loadError": "No hemos podido cargar los usuarios",
+      "notFound": "Este usuario no existe",
+      "backToList": "Volver a los usuarios",
+      "deactivate": "Desactivar cuenta",
+      "reactivate": "Reactivar cuenta",
+      "confirmDeactivate": "¿Desactivar la cuenta de {{name}}?",
+      "deactivateConfirm": "Desactivar",
+      "deactivateSessions": "No podrá iniciar sesión. Se cerrarán todas sus sesiones.",
+      "deactivateAdoptions": "Se darán de baja sus adopciones y no se le volverá a cobrar.",
+      "deactivated": "Cuenta desactivada",
+      "reactivated": "Cuenta reactivada",
+      "roleChanged": "Rol cambiado",
+      "changeRole": "Cambiar rol",
+      "resendInvitation": "Reenviar invitación",
+      "invitationResent": "Hemos enviado otra invitación a {{email}}",
+      "adoptions": "Adopciones",
+      "noAdoptions": "No tiene adopciones",
+      "contributions": "Aportaciones",
+      "animal": "Animal",
+      "plan": "Plan",
+      "startDate": "Inicio",
+      "nextBilling": "Próximo cobro",
+      "cancelRequested": "baja solicitada",
+      "feeFor": "Cuota de {{name}}",
+      "create": "Crear cuenta",
+      "created": "Cuenta creada. Hemos enviado una invitación a {{email}}",
+      "invitationHelp": "Le enviaremos un email con un enlace para elegir su contraseña. El enlace caduca en 24 horas."
     }
   },
   "viewer": {

@@ -1,6 +1,6 @@
 import { ARCHIVED_ANIMAL_STATUSES, type AnimalStatus } from '@sanctuary/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { adminApi, type AdminAnimalsParams, type AdminUpdatesParams } from '../api/admin';
+import { adminApi, type AdminAnimalsParams, type AdminUpdatesParams, type AdminUsersParams } from '../api/admin';
 
 export const ADMIN_KEY = ['admin'] as const;
 export const ADMIN_SPECIES_KEY = [...ADMIN_KEY, 'species'] as const;
@@ -8,6 +8,26 @@ export const ADMIN_ANIMALS_KEY = [...ADMIN_KEY, 'animals'] as const;
 
 /** CU-27: resumen del escritorio. */
 export const useDashboard = () => useQuery({ queryKey: [...ADMIN_KEY, 'dashboard'], queryFn: adminApi.dashboard });
+
+export const ADMIN_USERS_KEY = [...ADMIN_KEY, 'users'] as const;
+
+/** CU-35: listado con búsqueda, filtros y páginas. */
+export const useAdminUsers = (params: AdminUsersParams) =>
+  useQuery({
+    queryKey: [...ADMIN_USERS_KEY, 'list', params],
+    queryFn: () => adminApi.users.list(params),
+    placeholderData: keepPreviousData,
+  });
+
+export const adminUserKey = (id: number) => [...ADMIN_USERS_KEY, 'detail', id] as const;
+
+/** CU-35 paso 3: ficha del usuario. */
+export const useAdminUser = (id: number | undefined) =>
+  useQuery({
+    queryKey: adminUserKey(id ?? 0),
+    queryFn: () => adminApi.users.get(id ?? 0),
+    enabled: id !== undefined,
+  });
 
 export const ADMIN_PLANS_KEY = [...ADMIN_KEY, 'plans'] as const;
 

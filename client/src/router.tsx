@@ -15,7 +15,10 @@ import { UpdatesAdminPage } from './pages/admin/UpdatesAdminPage';
 import { AnimalsAdminPage } from './pages/admin/AnimalsAdminPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { NewAnimalPage } from './pages/admin/NewAnimalPage';
+import { NewWorkerPage } from './pages/admin/NewWorkerPage';
 import { PlansAdminPage } from './pages/admin/PlansAdminPage';
+import { UserAdminPage } from './pages/admin/UserAdminPage';
+import { UsersAdminPage } from './pages/admin/UsersAdminPage';
 import { SpeciesAdminPage } from './pages/admin/SpeciesAdminPage';
 import { AdoptedAnimalPage } from './pages/adopter/AdoptedAnimalPage';
 import { AdoptPage } from './pages/adopter/AdoptPage';
@@ -66,7 +69,12 @@ export const routes: RouteObject[] = [
           {
             // Administración (TECH_SPEC §10.7): solo administradores.
             element: <RequireRole roles={['admin']} />,
-            children: [{ path: 'plans', element: <PlansAdminPage /> }],
+            children: [
+              { path: 'users', element: <UsersAdminPage /> },
+              { path: 'users/new', element: <NewWorkerPage /> },
+              { path: 'users/:id', element: <UserAdminPage /> },
+              { path: 'plans', element: <PlansAdminPage /> },
+            ],
           },
           { path: '*', element: <NotFoundPage /> },
         ],

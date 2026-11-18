@@ -90,10 +90,10 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
     await enviar({ to: user.email, ...contenido });
   }
 
-  /** Token válido del tipo indicado o InvalidTokenError (caducado, usado, inexistente o de otro tipo). */
-  async function tokenValido(token: string, type: UserTokenType): Promise<tokenModel.UserToken> {
+  /** Token válido de uno de los tipos indicados o InvalidTokenError (caducado, usado, inexistente o de otro tipo). */
+  async function tokenValido(token: string, types: readonly UserTokenType[]): Promise<tokenModel.UserToken> {
     const encontrado = await tokenModel.findByHash(db, hashToken(token));
-    if (!encontrado || encontrado.type !== type || estadoToken(encontrado, reloj.ahora()) !== 'valid') {
+    if (!encontrado || !types.includes(encontrado.type) || estadoToken(encontrado, reloj.ahora()) !== 'valid') {
       throw new InvalidTokenError();
     }
     return encontrado;
@@ -150,7 +150,7 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
       if (user?.emailVerified) return { status: 'already_verified' };
     }
 
-    const valido = await tokenValido(token, 'email_verification');
+    const valido = await tokenValido(token, ['email_verification']);
     await withTransaction(db, async (client) => {
       if (!(await tokenModel.markUsed(client, valido.id, reloj.ahora()))) throw new InvalidTokenError();
       await userModel.markEmailVerified(client, valido.userId);
@@ -189,15 +189,20 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
     await enviar({ to: user.email, ...contenido });
   }
 
-  /** CU-10 pasos 4-5: nueva contraseña, token usado y todas las sesiones cerradas. */
+  /**
+   * CU-10 pasos 4-5: nueva contraseña, token usado y todas las sesiones cerradas.
+   * CU-36: la invitación de un trabajador usa este mismo paso con su propio token.
+   * Se anulan los demás enlaces pendientes de los dos tipos.
+   */
   async function resetPassword({ token, password }: ResetPasswordInput): Promise<void> {
-    const valido = await tokenValido(token, 'password_reset');
+    const valido = await tokenValido(token, ['password_reset', 'worker_invitation']);
     const user = await userModel.findById(db, valido.userId);
     if (!user || !cuentaActiva(user)) throw new InvalidTokenError();
     const passwordHash = await hashPassword(password);
     await withTransaction(db, async (client) => {
       if (!(await tokenModel.markUsed(client, valido.id, reloj.ahora()))) throw new InvalidTokenError();
       await tokenModel.invalidateUnused(client, user.id, 'password_reset', reloj.ahora());
+      await tokenModel.invalidateUnused(client, user.id, 'worker_invitation', reloj.ahora());
       await userModel.updatePassword(client, user.id, passwordHash);
       await sessionModel.deleteByUserId(client, user.id);
     });

@@ -257,6 +257,15 @@ export async function listDueForBilling(db: Queryable, hoy: string): Promise<num
   return rows.map((r) => r.id);
 }
 
+/** CU-35 4a: ids de las adopciones abiertas de un usuario, bloqueadas hasta el final de la transacción. */
+export async function listOpenIdsForUpdate(db: Queryable, userId: number): Promise<number[]> {
+  const { rows } = await db.query<{ id: number }>(
+    `SELECT id FROM adoptions WHERE user_id = $1 AND status IN ('pending', 'active', 'paused') ORDER BY id FOR UPDATE`,
+    [userId],
+  );
+  return rows.map((r) => r.id);
+}
+
 /** Lee la adopción bloqueando su fila hasta el final de la transacción (cobros). */
 export async function findByIdForUpdate(db: Queryable, id: number): Promise<Adoption | null> {
   const { rows } = await db.query<AdoptionRow>(`${SELECT_ADOPCION} WHERE ad.id = $1 FOR UPDATE OF ad`, [id]);

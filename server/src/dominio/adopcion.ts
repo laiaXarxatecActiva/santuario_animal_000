@@ -1,9 +1,4 @@
-import {
-  PUBLIC_ANIMAL_STATUSES,
-  type AdoptionStatus,
-  type AnimalStatus,
-  type PaymentStatus,
-} from '@sanctuary/shared';
+import { PUBLIC_ANIMAL_STATUSES, type AdoptionStatus, type AnimalStatus, type PaymentStatus } from '@sanctuary/shared';
 
 // Reglas de las adopciones (RN-06, RN-07) y de las fechas de sus cuotas.
 
@@ -89,7 +84,9 @@ export function bajaVencida(
   adopcion: { status: AdoptionStatus; cancelRequested: boolean; endDate: string | null },
   hoy: string,
 ): boolean {
-  return adopcion.status === 'active' && adopcion.cancelRequested && adopcion.endDate !== null && adopcion.endDate < hoy;
+  return (
+    adopcion.status === 'active' && adopcion.cancelRequested && adopcion.endDate !== null && adopcion.endDate < hoy
+  );
 }
 
 /** CU-20 1a: solo se cambia el plan de una adopción activa sin baja solicitada. */
@@ -114,17 +111,19 @@ export function cambioDePlan(actual: { planId: number; nextPlanId: number | null
 /**
  * CU-21 (RN-10): cómo queda la adopción tras la baja. La activa sigue activa
  * hasta el último día pagado; la pendiente se cancela (1a) y la pausada termina
- * el último día pagado (1b). `null` si ya no admite baja.
+ * el último día pagado (1b). `null` si ya no admite baja. CU-35 4a usa la misma
+ * baja al desactivar a un adoptante, con el motivo `admin_cancelled`.
  */
 export function bajaAdopcion(
   adopcion: { status: AdoptionStatus; cancelRequested: boolean; nextBillingDate: string | null },
   hoy: string,
-): { status: AdoptionStatus; endReason: 'user_cancelled' | null; endDate: string } | null {
+  motivo: 'user_cancelled' | 'admin_cancelled' = 'user_cancelled',
+): { status: AdoptionStatus; endReason: 'user_cancelled' | 'admin_cancelled' | null; endDate: string } | null {
   const ultimoPagado = adopcion.nextBillingDate === null ? null : sumarDias(adopcion.nextBillingDate, -1);
-  if (adopcion.status === 'pending') return { status: 'cancelled', endReason: 'user_cancelled', endDate: hoy };
+  if (adopcion.status === 'pending') return { status: 'cancelled', endReason: motivo, endDate: hoy };
   if (ultimoPagado === null || adopcion.cancelRequested) return null;
   if (adopcion.status === 'active') return { status: 'active', endReason: null, endDate: ultimoPagado };
-  if (adopcion.status === 'paused') return { status: 'finished', endReason: 'user_cancelled', endDate: ultimoPagado };
+  if (adopcion.status === 'paused') return { status: 'finished', endReason: motivo, endDate: ultimoPagado };
   return null;
 }
 

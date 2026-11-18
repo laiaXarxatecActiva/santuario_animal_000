@@ -13,6 +13,10 @@ describe('CU-08 y CU-10 tokens de un solo uso', () => {
     expect(DURACION_TOKEN_MS.password_reset).toBe(60 * 60 * 1000);
   });
 
+  it('CU-36: la invitación de un trabajador caduca en 24 horas', () => {
+    expect(caducidadToken('worker_invitation', ahora).toISOString()).toBe('2026-11-13T10:00:00.000Z');
+  });
+
   it('un token sin usar y sin caducar es válido', () => {
     expect(estadoToken({ expiresAt: new Date('2026-11-12T10:00:01Z'), usedAt: null }, ahora)).toBe('valid');
   });
