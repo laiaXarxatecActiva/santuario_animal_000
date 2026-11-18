@@ -1,10 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { useMemorial } from '../hooks/usePublicData';
 import styles from './Footer.module.css';
 
 // Pie de la web pública (SCREENS §2.3).
 export function Footer() {
   const { t } = useTranslation();
+  // CU-12 2a: sin animales marcados, el enlace no aparece.
+  const enMemoria = (useMemorial().data?.length ?? 0) > 0;
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.columns}`}>
@@ -23,6 +26,11 @@ export function Footer() {
             <li>
               <Link to="/donate">{t('nav.donate')}</Link>
             </li>
+            {enMemoria && (
+              <li>
+                <Link to="/memorial">{t('nav.memorial')}</Link>
+              </li>
+            )}
           </ul>
         </nav>
         <nav aria-label={t('footer.info')}>

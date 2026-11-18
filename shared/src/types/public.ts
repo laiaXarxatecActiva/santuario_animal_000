@@ -74,3 +74,21 @@ export interface AdoptionPlanDto {
   description: string | null;
   isDefault: boolean;
 }
+
+/**
+ * CU-12: animal de la sección «En memoria», con lo necesario para su ficha de
+ * solo lectura (fotos y actualizaciones públicas). Sin datos de adopción.
+ */
+export interface MemorialAnimalDto {
+  id: number;
+  name: string;
+  species: SpeciesSummary;
+  sex: AnimalSex;
+  coverPhoto: PhotoDto | null;
+  arrivalDate: string;
+  /** Fecha del fallecimiento (`YYYY-MM-DD`). */
+  deathDate: string | null;
+  rescueStory: string | null;
+  photos: PhotoDto[];
+  updates: AnimalUpdateDto[];
+}

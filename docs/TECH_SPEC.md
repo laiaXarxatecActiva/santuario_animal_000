@@ -502,7 +502,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/animals` | Público | Catálogo. Filtros: `speciesId`, `sex`, `minAge`, `maxAge`, `adoptable`, `q` (nombre). Orden: `-arrivalDate` (más recientes), `name`, `adopterCount` (menos adoptantes). Solo animales publicados en estado `in_sanctuary` o `in_treatment`. | CU-02 |
 | GET | `/api/animals/:id` | Público | Ficha pública. `exclusiveAccess` indica si quien consulta es adoptante activo del animal o trabajador; en ese caso incluye `healthSummary` y las fotos `adopters` (con su `visibility`). | CU-03, CU-16 |
 | GET | `/api/animals/:id/updates` | Público | Actualizaciones públicas, o todas si el usuario es adoptante activo del animal o trabajador; al adoptante se le indica `isRead` | CU-03, CU-16 |
-| GET | `/api/animals/memorial` | Público | Animales con `show_in_memorial = TRUE` (Fase 3) | CU-12 |
+| GET | `/api/animals/memorial` | Público | Animales fallecidos con `show_in_memorial = TRUE` (Fase 3), del fallecimiento más reciente al más antiguo. Cada uno trae lo que necesita su ficha de solo lectura: foto de portada, especie, llegada (`arrivalDate`), fallecimiento (`deathDate`), historia, fotos públicas y actualizaciones públicas (como mucho 50). Sin datos de adopción. En el panel, `showInMemorial` se marca al registrar el fallecimiento (`PATCH …/status`) o en la edición (`PUT /api/admin/animals/:id`); solo vale para fallecidos (422 `MEMORIAL_ONLY_DECEASED`) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
 | POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName?, donorEmail?, isAnonymous, message?, simulatedOutcome? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
@@ -703,7 +703,7 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/how-it-works` | Cómo funciona la adopción simbólica | Público |
 | `/donate` | Donar | Público |
 | `/about` | Sobre el santuario y contacto | Público |
-| `/memorial` | En memoria (Fase 3) | Público |
+| `/memorial`, `/memorial/:id` | En memoria y ficha de solo lectura (Fase 3) | Público |
 | `/register`, `/login`, `/verify-email`, `/forgot-password`, `/reset-password` | Autenticación | Público |
 | `/adopt/:animalId` | Elegir plan y pagar | Adoptante |
 | `/my-animals` | Mis animales | Adoptante |

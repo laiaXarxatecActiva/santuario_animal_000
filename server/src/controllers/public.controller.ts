@@ -23,6 +23,11 @@ export function createPublicController(service: PublicCatalogService) {
     res.json(await service.listUpdates(id, validated(res, 'query', paginationQuerySchema), req.user));
   };
 
+  // CU-12: sección «En memoria».
+  const listMemorial: RequestHandler = async (_req, res) => {
+    res.json(await service.listMemorial());
+  };
+
   const listSpecies: RequestHandler = async (_req, res) => {
     res.json({ data: await service.listSpecies() });
   };
@@ -31,5 +36,5 @@ export function createPublicController(service: PublicCatalogService) {
     res.json({ data: await service.listPlans() });
   };
 
-  return { home, listAnimals, getAnimal, listUpdates, listSpecies, listPlans };
+  return { home, listAnimals, getAnimal, listUpdates, listSpecies, listPlans, listMemorial };
 }

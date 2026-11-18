@@ -5,6 +5,7 @@ import { withTransaction } from '../db/transaction.js';
 import {
   motivoDeCierre,
   puedeCambiarDeEstado,
+  puedeEstarEnMemoria,
   puedeSerAdoptable,
   requiereMensajeDeDespedida,
   sePuedeBorrar,
@@ -17,6 +18,7 @@ import {
   AnimalHasAdoptionsError,
   ArchivedAnimalNotAdoptableError,
   FieldRuleError,
+  MemorialOnlyDeceasedError,
   NotFoundError,
 } from '../errors/app-error.js';
 import * as animalModel from '../models/animal-admin.model.js';
@@ -99,7 +101,11 @@ export function createAnimalAdminService({
         const actual = await buscar(client, id, true);
         await validar(client, datos);
         if (!puedeSerAdoptable(actual.status, datos.isAdoptable)) throw new ArchivedAnimalNotAdoptableError();
+        if (datos.showInMemorial !== undefined && !puedeEstarEnMemoria(actual.status, datos.showInMemorial)) {
+          throw new MemorialOnlyDeceasedError();
+        }
         await animalModel.update(client, id, datos);
+        if (datos.showInMemorial !== undefined) await animalModel.setShowInMemorial(client, id, datos.showInMemorial);
         return buscar(client, id);
       });
     },
@@ -113,6 +119,7 @@ export function createAnimalAdminService({
       const hoy = reloj.hoy();
       const fecha = cambio.date ?? hoy;
       if (fecha > hoy) throw new FieldRuleError('DATE_IN_FUTURE', 'date', 'La fecha no puede ser futura.');
+      if (!puedeEstarEnMemoria(cambio.status, cambio.showInMemorial ?? false)) throw new MemorialOnlyDeceasedError();
       const { animal, afectados, motivo } = await withTransaction(db, async (client) => {
         const actual = await buscar(client, id, true);
         if (!puedeCambiarDeEstado(actual.status)) throw new AnimalArchivedError();
@@ -126,6 +133,7 @@ export function createAnimalAdminService({
           statusChangedAt: archivar ? fecha : null,
           archivar,
         });
+        if (cambio.showInMemorial) await animalModel.setShowInMemorial(client, id, true);
         const motivo = motivoDeCierre(cambio.status);
         // 2a: sin adopciones abiertas, ni mensaje ni avisos.
         const afectados =

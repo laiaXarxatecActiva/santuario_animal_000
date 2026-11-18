@@ -251,6 +251,13 @@ export class AnimalHasAdoptionsError extends ConflictError {
 }
 
 // CU-28 2b (CHECK animals_archived_not_adoptable).
+// CU-12 y RN-22.
+export class MemorialOnlyDeceasedError extends FieldRuleError {
+  constructor() {
+    super('MEMORIAL_ONLY_DECEASED', 'showInMemorial', 'Solo un animal fallecido puede aparecer en «En memoria».');
+  }
+}
+
 export class ArchivedAnimalNotAdoptableError extends FieldRuleError {
   constructor() {
     super(

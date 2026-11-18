@@ -78,6 +78,8 @@ export interface AdminAnimalDto extends AdminAnimalListItemDto {
   healthSummary: string | null;
   /** Fecha del fallecimiento o traslado. */
   statusChangedAt: string | null;
+  /** CU-12: aparece en «En memoria» (solo fallecidos, RN-22). */
+  showInMemorial: boolean;
   /** Adopciones pendientes, activas o pausadas: las que cerraría un fallecimiento o traslado. */
   openAdoptions: number;
   /** Ha tenido alguna adopción: entonces no se puede borrar (RN-17). */

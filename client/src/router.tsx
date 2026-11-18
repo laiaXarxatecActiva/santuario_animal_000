@@ -47,6 +47,8 @@ import { CookiesPage } from './pages/public/CookiesPage';
 import { DonatePage } from './pages/public/DonatePage';
 import { HomePage } from './pages/public/HomePage';
 import { HowItWorksPage } from './pages/public/HowItWorksPage';
+import { MemorialAnimalPage } from './pages/public/MemorialAnimalPage';
+import { MemorialPage } from './pages/public/MemorialPage';
 import { PrivacyPage } from './pages/public/PrivacyPage';
 
 // Rutas del navegador (TECH_SPEC §12.1). Las demás llegarán con sus casos de uso.
@@ -108,6 +110,8 @@ export const routes: RouteObject[] = [
       { path: 'how-it-works', element: <HowItWorksPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: 'donate', element: <DonatePage /> },
+      { path: 'memorial', element: <MemorialPage /> },
+      { path: 'memorial/:id', element: <MemorialAnimalPage /> },
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'cookies', element: <CookiesPage /> },
       { path: 'adopt/:animalId', element: <AdoptPage /> },

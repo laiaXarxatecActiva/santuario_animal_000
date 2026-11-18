@@ -3,6 +3,7 @@ import type {
   AnimalCardDto,
   AnimalUpdateDto,
   HomeDto,
+  MemorialAnimalDto,
   Paginated,
   PublicAnimalDto,
   SpeciesSummary,
@@ -18,5 +19,7 @@ export const publicApi = {
   animalUpdates: (id: number, pageSize: number) =>
     apiGet<Paginated<AnimalUpdateDto>>(`/api/animals/${id}/updates`, { pageSize }),
   species: () => apiGet<{ data: SpeciesSummary[] }>('/api/species').then((r) => r.data),
+  // CU-12.
+  memorial: () => apiGet<{ data: MemorialAnimalDto[] }>('/api/animals/memorial').then((r) => r.data),
   plans: () => apiGet<{ data: AdoptionPlanDto[] }>('/api/plans').then((r) => r.data),
 };

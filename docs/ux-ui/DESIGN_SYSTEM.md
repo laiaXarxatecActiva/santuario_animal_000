@@ -266,6 +266,12 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Vídeo | `video` |
 | Anterior / siguiente (visor de fotos) | `chevron-left` / `chevron-right` |
 | Ampliar una foto | `expand` |
+| En memoria (Fase 3) | `dove` |
+| Historial veterinario (menú del panel, Fase 3) | `stethoscope` |
+| Registro de actividad (Fase 3) | `clock-rotate-left` |
+| Estadísticas (Fase 3) | `chart-column` |
+| Certificado de adopción (Fase 3) | `certificate` |
+| Idioma (Fase 3) | `language` |
 
 ### 6.2 Logo provisional
 

@@ -166,3 +166,52 @@ export async function findPublicById(db: Queryable, id: number): Promise<PublicA
   const row = rows[0];
   return row ? mapRow(row) : null;
 }
+
+// --- CU-12 «En memoria» ---
+
+export interface MemorialAnimal {
+  id: number;
+  name: string;
+  species: SpeciesSummary;
+  sex: AnimalSex;
+  arrivalDate: string;
+  deathDate: string | null;
+  rescueStory: string | null;
+  coverPhoto: PhotoDto | null;
+}
+
+interface MemorialRow extends CoverRow {
+  id: number;
+  name: string;
+  species_id: number;
+  species_name: string;
+  species_scientific_name: string | null;
+  sex: AnimalSex;
+  arrival_date: string;
+  status_changed_at: string | null;
+  rescue_story: string | null;
+}
+
+/** Fallecidos marcados para «En memoria», del fallecimiento más reciente al más antiguo. */
+export async function listMemorial(db: Queryable): Promise<MemorialAnimal[]> {
+  const { rows } = await db.query<MemorialRow>(
+    `SELECT a.id, a.name, a.species_id, s.name AS species_name, s.scientific_name AS species_scientific_name,
+            a.sex, a.arrival_date, a.status_changed_at, a.rescue_story,
+            ${COLUMNAS_PORTADA}
+       FROM animals a
+       JOIN species s ON s.id = a.species_id
+       ${JOIN_PORTADA('a')}
+      WHERE a.show_in_memorial AND a.status = 'deceased'
+      ORDER BY a.status_changed_at DESC NULLS LAST, a.id`,
+  );
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    species: { id: row.species_id, name: row.species_name, scientificName: row.species_scientific_name },
+    sex: row.sex,
+    arrivalDate: row.arrival_date,
+    deathDate: row.status_changed_at,
+    rescueStory: row.rescue_story,
+    coverPhoto: mapCover(row),
+  }));
+}

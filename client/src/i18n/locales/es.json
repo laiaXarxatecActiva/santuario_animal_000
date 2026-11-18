@@ -28,7 +28,8 @@
     "profile": "Mi perfil",
     "logout": "Cerrar sesión",
     "userMenu": "Menú de {{name}}",
-    "feedUnread": "Novedades, {{count}} sin leer"
+    "feedUnread": "Novedades, {{count}} sin leer",
+    "memorial": "En memoria"
   },
   "theme": {
     "toDark": "Activar modo oscuro",
@@ -700,7 +701,9 @@
       "sexUnknown": "Desconocido",
       "tabPhotos": "Fotos",
       "tabUpdates": "Actualizaciones",
-      "tabVet": "Veterinario"
+      "tabVet": "Veterinario",
+      "showInMemorial": "Mostrar en «En memoria»",
+      "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar."
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -1041,7 +1044,8 @@
         "action": "Acción",
         "invitationResent": "Invitación reenviada",
         "recordDate": "Fecha del registro",
-        "type": "Tipo"
+        "type": "Tipo",
+        "showInMemorial": "En memoria"
       }
     },
     "vet": {
@@ -1185,5 +1189,16 @@
     "showData": "Ver los datos",
     "lineSummary": "{{title}}: {{count}} valores, desde {{first}} hasta {{last}}.",
     "barSummary": "{{title}}: {{count}} meses. {{totals}}"
+  },
+  "memorial": {
+    "title": "En memoria",
+    "intro": "Aquí recordamos a los animales que vivieron con nosotros y ya no están. Gracias a quienes los acompañaron.",
+    "empty": "Por ahora no hay ningún animal en esta sección.",
+    "loadError": "No hemos podido cargar esta sección",
+    "notFound": "No encontramos a este animal en «En memoria».",
+    "back": "Volver a «En memoria»",
+    "arrived": "Llegó al santuario el {{date}}",
+    "died": "Nos dejó el {{date}}",
+    "news": "Sus noticias"
   }
 }

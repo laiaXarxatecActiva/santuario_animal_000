@@ -306,6 +306,10 @@ El formulario («Escríbenos») va en una tarjeta a la derecha desde `lg`. Al en
 
 Introducción breve y respetuosa, y una cuadrícula de tarjetas como la del catálogo, sin contador de adoptantes y con las fechas «2022 – 2026». Tono sobrio: sin el separador decorativo caramelo ni botones de adopción.
 
+- Cada tarjeta abre `/memorial/:id`: la ficha de solo lectura (galería, especie y sexo, «Llegó al santuario el…», «Nos dejó el…», su historia y sus noticias públicas), sin tarjeta de adopción ni contador de adoptantes.
+- El enlace «En memoria» va en el pie (columna «Explorar») y solo aparece si hay algún animal marcado (CU-12 2a). Si se entra por la URL sin animales marcados: estado vacío con el icono `dove` y «Por ahora no hay ningún animal en esta sección».
+- En el panel, la casilla «Mostrar en «En memoria»» está en la ventana de fallecimiento (CU-33) y, para los fallecidos, en la pestaña «Datos».
+
 ### 3.8 Autenticación — CU-07 a CU-10
 
 Todas las pantallas de autenticación comparten el mismo esquema: **una tarjeta centrada** de 440 px de ancho máximo (todo el ancho en móvil) sobre el fondo de la página.
