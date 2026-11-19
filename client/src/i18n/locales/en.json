@@ -270,7 +270,8 @@
       "submitting": "Logging in…",
       "forgot": "Forgotten your password?",
       "noAccount": "No account yet?",
-      "register": "Sign up"
+      "register": "Sign up",
+      "locked": "Too many attempts. You can try again in {{time}}."
     },
     "register": {
       "title": "Create an account",
@@ -837,6 +838,16 @@
       "changeRole": "Change role",
       "resendInvitation": "Resend invitation",
       "invitationResent": "We have sent another invitation to {{email}}",
+      "logoutAll": "Sign out everywhere",
+      "confirmLogoutAll": "Close all of {{name}}'s sessions?",
+      "logoutAllExplain": "They will have to sign in again on all their devices. Use this only for a security reason, for example, if they report that their phone was stolen. The account will stay active.",
+      "logoutAllSelf": "Your other sessions will be closed; this one will stay open.",
+      "logoutAllReason": "Reason (kept in the activity log)",
+      "logoutAllReasonRequired": "Write the reason.",
+      "logoutAllConfirm": "Close sessions",
+      "logoutAllDone_zero": "They had no open sessions",
+      "logoutAllDone_one": "{{count}} session closed",
+      "logoutAllDone_other": "{{count}} sessions closed",
       "adoptions": "Adoptions",
       "noAdoptions": "No adoptions",
       "contributions": "Contributions",

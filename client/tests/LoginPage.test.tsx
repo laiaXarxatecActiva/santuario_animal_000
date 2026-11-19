@@ -57,7 +57,6 @@ describe('CU-09 Iniciar sesión', () => {
   it.each([
     ['3a', errorApi(401, 'INVALID_CREDENTIALS', 'x'), 'Email o contraseña incorrectos.'],
     ['3b', errorApi(403, 'ACCOUNT_INACTIVE', 'x'), 'Esta cuenta no está activa. Contacta con el santuario.'],
-    ['3c', errorApi(429, 'TOO_MANY_REQUESTS', 'x'), 'Demasiados intentos; espera unos minutos.'],
     ['error del servidor', errorApi(500, 'INTERNAL_ERROR', 'x'), 'Algo ha ido mal; inténtalo de nuevo.'],
   ])('%s: muestra el aviso de error', async (_caso, respuesta, mensaje) => {
     mockApi({ '/api/auth/login': respuesta });
@@ -65,6 +64,49 @@ describe('CU-09 Iniciar sesión', () => {
     await entrar();
     expect(await screen.findByRole('alert')).toHaveTextContent(mensaje);
     expect(router.state.location.pathname).toBe('/login');
+  });
+
+  it('tras un intento fallido conserva el email y borra la contraseña', async () => {
+    mockApi({ '/api/auth/login': errorApi(401, 'INVALID_CREDENTIALS', 'x') });
+    renderRoute('/login');
+    await entrar();
+    await screen.findByRole('alert');
+    expect(screen.getByLabelText('Email')).toHaveValue('lucia.martinez@correo.test');
+    expect(screen.getByLabelText('Contraseña')).toHaveValue('');
+  });
+
+  it('3c: con demasiados intentos avisa en azul del tiempo que falta y bloquea el formulario', async () => {
+    mockApi({ '/api/auth/login': { ...errorApi(429, 'TOO_MANY_REQUESTS', 'x'), headers: { 'Retry-After': '125' } } });
+    renderRoute('/login');
+    await entrar();
+    const aviso = await screen.findByRole('status');
+    expect(aviso).toHaveTextContent('Demasiados intentos. Podrás volver a intentarlo dentro de 2:0');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeDisabled();
+    expect(screen.getByLabelText('Email')).toHaveValue('lucia.martinez@correo.test');
+    expect(screen.getByLabelText('Contraseña')).toBeDisabled();
+    expect(screen.getByLabelText('Contraseña')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled();
+  });
+
+  it('3c: al acabar la espera quita el aviso y vuelve a dejar entrar', async () => {
+    mockApi({ '/api/auth/login': { ...errorApi(429, 'TOO_MANY_REQUESTS', 'x'), headers: { 'Retry-After': '1' } } });
+    renderRoute('/login');
+    await entrar();
+    expect(await screen.findByRole('status')).toHaveTextContent('0:01');
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Entrar' })).toBeEnabled(), { timeout: 3000 });
+    expect(screen.queryByText(/Demasiados intentos/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toBeEnabled();
+    expect(screen.getByLabelText('Contraseña')).toBeEnabled();
+  });
+
+  it('3c: si el servidor no indica la espera, bloquea 5 segundos', async () => {
+    mockApi({ '/api/auth/login': errorApi(429, 'TOO_MANY_REQUESTS', 'x') });
+    renderRoute('/login');
+    await entrar();
+    expect(await screen.findByRole('status')).toHaveTextContent('0:05');
+    expect(screen.getByRole('button', { name: 'Entrar' })).toBeDisabled();
   });
 
   it('al entrar descarta los datos que quedaban de otra cuenta', async () => {

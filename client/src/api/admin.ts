@@ -23,6 +23,8 @@ import type {
   AdminPlanDto,
   AdminUserDetailDto,
   AdminUserListItemDto,
+  AdminUserLogoutAllBody,
+  AdminUserLogoutAllDto,
   AdminUserPatchBody,
   AdminUsersQuery,
   AdminUpdateCreatedDto,
@@ -98,6 +100,9 @@ export const adminApi = {
     update: (id: number, body: AdminUserPatchBody) => apiPatch<AdminUserDetailDto>(`/api/admin/users/${id}`, body),
     createWorker: (body: WorkerCreateBody) => apiPost<AdminUserDetailDto>('/api/admin/users', body),
     resendInvitation: (id: number) => apiPost<void>(`/api/admin/users/${id}/invitation`, {}),
+    /** CU-48: cierra todas las sesiones del usuario (en la propia cuenta, todas menos la actual). */
+    logoutAll: (id: number, body: AdminUserLogoutAllBody) =>
+      apiPost<AdminUserLogoutAllDto>(`/api/admin/users/${id}/logout-all`, body),
   },
 
   // CU-40 (solo administradores).

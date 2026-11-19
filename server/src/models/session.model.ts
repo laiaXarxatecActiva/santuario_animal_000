@@ -45,12 +45,17 @@ export async function deleteExpired(db: Queryable): Promise<number> {
   return rowCount ?? 0;
 }
 
-/** Cierra todas las sesiones de un usuario (CU-10). */
-export async function deleteByUserId(db: Queryable, userId: number): Promise<void> {
-  await db.query('DELETE FROM user_sessions WHERE user_id = $1', [userId]);
+/** Cierra todas las sesiones de un usuario (CU-10, CU-48) y devuelve cuántas. */
+export async function deleteByUserId(db: Queryable, userId: number): Promise<number> {
+  const { rowCount } = await db.query('DELETE FROM user_sessions WHERE user_id = $1', [userId]);
+  return rowCount ?? 0;
 }
 
-/** CU-24 paso 3: cierra las demás sesiones del usuario y mantiene la actual. */
-export async function deleteOthersByUserId(db: Queryable, userId: number, currentSid: string): Promise<void> {
-  await db.query('DELETE FROM user_sessions WHERE user_id = $1 AND sid_hash <> $2', [userId, hashToken(currentSid)]);
+/** CU-24 paso 3 y CU-48 3a: cierra las demás sesiones del usuario, mantiene la actual y devuelve cuántas. */
+export async function deleteOthersByUserId(db: Queryable, userId: number, currentSid: string): Promise<number> {
+  const { rowCount } = await db.query('DELETE FROM user_sessions WHERE user_id = $1 AND sid_hash <> $2', [
+    userId,
+    hashToken(currentSid),
+  ]);
+  return rowCount ?? 0;
 }

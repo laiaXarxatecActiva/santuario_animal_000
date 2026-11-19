@@ -270,7 +270,8 @@
       "submitting": "Entrant…",
       "forgot": "Has oblidat la contrasenya?",
       "noAccount": "No tens compte?",
-      "register": "Registra't"
+      "register": "Registra't",
+      "locked": "Massa intents. Podràs tornar a intentar-ho d'ací a {{time}}."
     },
     "register": {
       "title": "Crea un compte",
@@ -837,6 +838,16 @@
       "changeRole": "Canvia el rol",
       "resendInvitation": "Reenvia la invitació",
       "invitationResent": "Hem enviat una altra invitació a {{email}}",
+      "logoutAll": "Tancar les seues sessions",
+      "confirmLogoutAll": "Vols tancar totes les sessions de {{name}}?",
+      "logoutAllExplain": "Haurà de tornar a iniciar la sessió en tots els seus dispositius. Fes-ho servir només per un motiu de seguretat, per exemple, si avisa que li han robat el mòbil. El compte continuarà actiu.",
+      "logoutAllSelf": "Es tancaran les teues altres sessions; aquesta continuarà oberta.",
+      "logoutAllReason": "Motiu (queda en el registre d'activitat)",
+      "logoutAllReasonRequired": "Escriu el motiu.",
+      "logoutAllConfirm": "Tancar sessions",
+      "logoutAllDone_zero": "No tenia cap sessió oberta",
+      "logoutAllDone_one": "S'ha tancat {{count}} sessió",
+      "logoutAllDone_other": "S'han tancat {{count}} sessions",
       "adoptions": "Adopcions",
       "noAdoptions": "No té adopcions",
       "contributions": "Aportacions",

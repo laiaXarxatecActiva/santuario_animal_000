@@ -1,11 +1,13 @@
 import type { UserTokenType } from '@sanctuary/shared';
 
-const HORA_MS = 60 * 60 * 1000;
+const MINUTO_MS = 60 * 1000;
+const HORA_MS = 60 * MINUTO_MS;
 
-// Duración de los tokens de un solo uso (TECH_SPEC §9.2).
+// Duración de los tokens de un solo uso (TECH_SPEC §9.2 y docs/AUTH_SPEC.md).
 export const DURACION_TOKEN_MS: Record<UserTokenType, number> = {
   email_verification: 24 * HORA_MS,
-  password_reset: HORA_MS,
+  // Corta a propósito: el enlace da acceso a la cuenta.
+  password_reset: 30 * MINUTO_MS,
   // CU-36: el trabajador recién creado tiene un día para elegir su contraseña.
   worker_invitation: 24 * HORA_MS,
 };

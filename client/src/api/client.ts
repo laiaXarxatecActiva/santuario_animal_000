@@ -7,6 +7,8 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly details: ApiErrorBody['error']['details'] = [],
+    /** Segundos de espera que indica la cabecera `Retry-After` (respuestas 429). */
+    readonly retryAfter?: number,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -34,15 +36,22 @@ export function onUnauthorized(oyente: AlNoAutorizado): () => void {
   return () => oyentes.delete(oyente);
 }
 
+/** Valor de `Retry-After` en segundos; `undefined` si falta o no es un número entero. */
+function segundosDeEspera(cabecera: string | null): number | undefined {
+  if (cabecera === null || !/^\d+$/.test(cabecera.trim())) return undefined;
+  return Number(cabecera.trim());
+}
+
 async function peticion<T>(url: string, init: RequestInit): Promise<T> {
   const res = await fetch(url, { ...init, credentials: 'same-origin' });
   const body: unknown = res.status === 204 ? undefined : await res.json().catch(() => null);
   if (res.status === 401 && !url.startsWith('/api/auth/')) oyentes.forEach((oyente) => oyente());
   if (!res.ok) {
+    const retryAfter = segundosDeEspera(res.headers.get('Retry-After'));
     if (esErrorDeApi(body)) {
-      throw new ApiError(res.status, body.error.code, body.error.message, body.error.details);
+      throw new ApiError(res.status, body.error.code, body.error.message, body.error.details, retryAfter);
     }
-    throw new ApiError(res.status, 'HTTP_ERROR', res.statusText);
+    throw new ApiError(res.status, 'HTTP_ERROR', res.statusText, [], retryAfter);
   }
   return body as T;
 }

@@ -87,6 +87,12 @@ export const adminUserPatchSchema = z
   });
 export type AdminUserPatchBody = z.infer<typeof adminUserPatchSchema>;
 
+/** CU-48 paso 2: el motivo es obligatorio y queda en el registro de actividad. */
+export const adminUserLogoutAllSchema = z.strictObject({
+  reason: textoObligatorio(500, 'Escribe el motivo.'),
+});
+export type AdminUserLogoutAllBody = z.input<typeof adminUserLogoutAllSchema>;
+
 /** CU-36 paso 2: nuevo trabajador. El teléfono es opcional. */
 export const workerCreateSchema = z.object({
   firstName: textoObligatorio(100, 'Escribe el nombre.'),

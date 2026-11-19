@@ -8,9 +8,9 @@ describe('CU-08 y CU-10 tokens de un solo uso', () => {
     expect(caducidadToken('email_verification', ahora).toISOString()).toBe('2026-11-13T10:00:00.000Z');
   });
 
-  it('la recuperación de contraseña caduca en 1 hora', () => {
-    expect(caducidadToken('password_reset', ahora).toISOString()).toBe('2026-11-12T11:00:00.000Z');
-    expect(DURACION_TOKEN_MS.password_reset).toBe(60 * 60 * 1000);
+  it('la recuperación de contraseña caduca en 30 minutos', () => {
+    expect(caducidadToken('password_reset', ahora).toISOString()).toBe('2026-11-12T10:30:00.000Z');
+    expect(DURACION_TOKEN_MS.password_reset).toBe(30 * 60 * 1000);
   });
 
   it('CU-36: la invitación de un trabajador caduca en 24 horas', () => {

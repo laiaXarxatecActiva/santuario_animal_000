@@ -330,7 +330,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - **3a.** Email o contraseña incorrectos: se muestra «Email o contraseña incorrectos», sin indicar cuál de los dos falla.
 - **3b.** Cuenta desactivada (`is_active = FALSE`) o anonimizada: se muestra «Esta cuenta no está activa. Contacta con el santuario».
-- **3c.** Más de 5 intentos fallidos en 15 minutos: se muestra «Demasiados intentos; espera unos minutos».
+- **3c.** Más de 5 intentos fallidos en 15 minutos: se muestra un aviso informativo (azul) con la cuenta atrás del tiempo que falta («Demasiados intentos. Podrás volver a intentarlo dentro de 14:32»), que el servidor indica en la cabecera `Retry-After` (si falta, se esperan 5 segundos). Mientras dura, el email, la contraseña y el botón «Entrar» están desactivados; al acabar, el aviso desaparece.
+- **3d.** Tras cualquier intento fallido, el formulario conserva el email y borra la contraseña.
 - **5a.** Email sin verificar: entra igualmente, con un aviso permanente para verificarlo (RN-21).
 
 **Postcondiciones**
@@ -353,7 +354,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El usuario pulsa «He olvidado mi contraseña» e introduce su email.
 2. El sistema responde siempre «Si existe una cuenta con ese email, recibirás un enlace».
-3. Si la cuenta existe y está activa, el sistema crea un token `password_reset` (1 hora) y envía el email.
+3. Si la cuenta existe y está activa, el sistema crea un token `password_reset` (30 minutos) y envía el email.
 4. El usuario abre el enlace (`/reset-password?token=...`) e introduce la nueva contraseña dos veces.
 5. El sistema valida el token y la contraseña, guarda el nuevo hash, marca el token como usado y cierra todas las sesiones del usuario.
 6. El sistema muestra «Contraseña cambiada. Ya puedes iniciar sesión».
@@ -1356,6 +1357,39 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - Ninguna. El registro nunca se modifica ni se borra.
 
 **Notas:** las acciones de las tareas automáticas aparecen como «Sistema» (`user_id` vacío).
+
+### CU-48 — Cerrar todas las sesiones de un usuario
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Mejora de seguridad tras la Fase 3 (`docs/AUTH_SPEC.md`) |
+
+No es una opción de uso habitual: sirve para casos concretos de seguridad, como que una persona avise de que le han robado el móvil o de que dejó la sesión abierta en un ordenador ajeno. Por eso no la tienen los adoptantes ni los cuidadores, exige un motivo y queda registrada.
+
+**Precondiciones**
+
+- El usuario es administrador.
+- La cuenta afectada está activa (una cuenta inactiva o anonimizada ya no tiene sesiones).
+
+**Flujo principal**
+
+1. En la ficha del usuario (`/admin/users/:id`), el administrador pulsa «Cerrar sus sesiones».
+2. El sistema abre una ventana que explica el efecto y pide el **motivo** (obligatorio, hasta 500 caracteres).
+3. El administrador confirma. El sistema borra todas las sesiones de ese usuario en `user_sessions` y muestra «Se han cerrado N sesiones». En su siguiente petición, cada dispositivo de esa persona responde como sin sesión y el cliente le lleva a «Iniciar sesión».
+4. El sistema anota la acción en el registro de actividad (CU-42) con el número de sesiones cerradas y el motivo.
+
+**Flujos alternativos**
+
+- **1a.** El usuario no existe: 404.
+- **1b.** El usuario no tiene ninguna sesión abierta: se responde con 0 y se muestra «No tenía ninguna sesión abierta».
+- **2a.** Sin motivo, o con más de 500 caracteres: no se cierra nada y se muestra el error junto al campo.
+- **3a.** El administrador lo hace sobre su propia cuenta: se cierran sus demás sesiones y se mantiene la actual (como en CU-24).
+
+**Postcondiciones**
+
+- El usuario tiene que volver a iniciar sesión en todos sus dispositivos. La cuenta, su contraseña, su rol y sus adopciones no cambian.
+
+**Notas:** si se sospecha que alguien conoce la contraseña, cerrar las sesiones no basta: la persona debe cambiarla (CU-24) o recuperarla (CU-10), que también cierran las sesiones.
 
 ## 9. Procesos automáticos del sistema
 

@@ -7,7 +7,7 @@ import { adminApi } from '../../api/admin';
 import { AdoptionStatusBadge } from '../../components/AdoptionStatusBadge';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { SelectField } from '../../components/FormFields';
+import { SelectField, TextAreaField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { ActivityLogTable } from '../../components/admin/ActivityLogTable';
 import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
@@ -22,7 +22,7 @@ import styles from './AdminPage.module.css';
 type Aviso = { type: 'success' | 'error'; message: string };
 type RolTrabajador = (typeof WORKER_ROLES)[number];
 
-// CU-35 paso 3 (ficha) y CU-36 4a (reenviar la invitación). SCREENS §5.6.
+// CU-35 paso 3 (ficha), CU-36 4a (reenviar la invitación) y CU-48 (cerrar sesiones). SCREENS §5.6.
 export function UserAdminPage() {
   const { t } = useTranslation();
   const id = parseId(useParams().id);
@@ -48,6 +48,7 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
   const queryClient = useQueryClient();
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const [cerrandoSesiones, setCerrandoSesiones] = useState(false);
   const [rol, setRol] = useState<RolTrabajador>(usuario.role === 'admin' ? 'admin' : 'caretaker');
   const nombre = `${usuario.firstName} ${usuario.lastName}`;
   const esAdoptante = usuario.role === 'adopter';
@@ -82,6 +83,18 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
     onError: fallo,
   });
 
+  const cerrarSesiones = useMutation({
+    mutationFn: (reason: string) => adminApi.users.logoutAll(usuario.id, { reason }),
+    onSuccess: ({ closedSessions }) => {
+      setCerrandoSesiones(false);
+      setAviso({ type: 'success', message: t('admin.users.logoutAllDone', { count: closedSessions }) });
+    },
+    onError: (error) => {
+      setCerrandoSesiones(false);
+      fallo(error);
+    },
+  });
+
   return (
     <div className={styles.page}>
       <nav aria-label={t('animalPage.breadcrumb')} className={styles.count}>
@@ -93,6 +106,12 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
           {usuario.invitationPending && (
             <Button variant="outline" disabled={reenviar.isPending} onClick={() => reenviar.mutate()}>
               {t('admin.users.resendInvitation')}
+            </Button>
+          )}
+          {/* CU-48: una cuenta inactiva o anonimizada ya no tiene sesiones. */}
+          {usuario.status === 'active' && (
+            <Button variant="outline" onClick={() => setCerrandoSesiones(true)}>
+              {t('admin.users.logoutAll')}
             </Button>
           )}
           {/* 4b: la propia cuenta no se desactiva (el servidor también lo impide). */}
@@ -182,7 +201,77 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
         <p>{t('admin.users.deactivateSessions')}</p>
         {esAdoptante && adopcionesAbiertas && <p>{t('admin.users.deactivateAdoptions')}</p>}
       </Modal>
+
+      {cerrandoSesiones && (
+        <VentanaCerrarSesiones
+          nombre={nombre}
+          propia={usuario.id === yo?.id}
+          enviando={cerrarSesiones.isPending}
+          onCerrar={() => setCerrandoSesiones(false)}
+          onConfirmar={(motivo) => cerrarSesiones.mutate(motivo)}
+        />
+      )}
     </div>
+  );
+}
+
+/** CU-48 paso 2: pide el motivo, que queda en el registro de actividad (CU-42). */
+function VentanaCerrarSesiones({
+  nombre,
+  propia,
+  enviando,
+  onCerrar,
+  onConfirmar,
+}: {
+  nombre: string;
+  /** 3a: en la propia cuenta se mantiene la sesión actual. */
+  propia: boolean;
+  enviando: boolean;
+  onCerrar: () => void;
+  onConfirmar: (motivo: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [motivo, setMotivo] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const confirmar = () => {
+    if (motivo.trim() === '') {
+      setError(t('admin.users.logoutAllReasonRequired'));
+      return;
+    }
+    onConfirmar(motivo.trim());
+  };
+
+  return (
+    <Modal
+      open
+      title={t('admin.users.confirmLogoutAll', { name: nombre })}
+      onClose={onCerrar}
+      footer={
+        <>
+          <Button variant="outline" data-autofocus onClick={onCerrar}>
+            {t('admin.common.cancel')}
+          </Button>
+          <Button disabled={enviando} onClick={confirmar}>
+            {t('admin.users.logoutAllConfirm')}
+          </Button>
+        </>
+      }
+    >
+      <p>{t('admin.users.logoutAllExplain')}</p>
+      {propia && <p>{t('admin.users.logoutAllSelf')}</p>}
+      <TextAreaField
+        label={t('admin.users.logoutAllReason')}
+        rows={3}
+        maxLength={500}
+        value={motivo}
+        error={error ?? undefined}
+        onChange={(e) => {
+          setMotivo(e.target.value);
+          setError(null);
+        }}
+      />
+    </Modal>
   );
 }
 

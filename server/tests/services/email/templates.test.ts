@@ -36,10 +36,10 @@ describe('plantillas de email', () => {
     expect(email.html).toContain('href="http://x/forgot-password"');
   });
 
-  it('CU-10 reset-password caduca en 1 hora', () => {
+  it('CU-10 reset-password caduca en 30 minutos', () => {
     const email = resetPasswordEmail({ firstName: 'Ana', url: 'http://x/reset-password?token=t' });
     expect(email.subject).toBe('Recupera tu contraseña');
-    expect(email.text).toContain('1 hora');
+    expect(email.text).toContain('30 minutos');
     expect(email.html).toContain('href="http://x/reset-password?token=t"');
   });
 
