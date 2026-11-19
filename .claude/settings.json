@@ -20,11 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && node -e \"process.exit(require('./package.json').scripts?.test ? 0 : 1)\" 2>/dev/null || exit 0; npm test --silent 1>&2 || exit 2"
-          },
-          { 
-            "type": "command", 
-            "command": "bash scripts/check-auth.sh" }
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && node -e \"process.exit(require('./package.json').scripts?.test ? 0 : 1)\" 2>/dev/null || exit 0; npm test --silent 1>&2 || exit 2; bash scripts/check-auth.sh"
+          }
         ]
       }
     ]

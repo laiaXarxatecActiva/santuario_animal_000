@@ -2,6 +2,9 @@
 # scripts/check-auth.sh
 # Comprobaciones de seguridad de la autenticación (docs/AUTH_SPEC.md). Lo
 # ejecuta el hook Stop de .claude/settings.json; un código 2 bloquea la respuesta.
+# Va encadenado detrás de `npm test` en el MISMO hook: Claude Code ejecuta en
+# paralelo los hooks de un evento, y dos Vitest a la vez reinician la misma base
+# de datos de pruebas y se pisan (fallos al azar).
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 
