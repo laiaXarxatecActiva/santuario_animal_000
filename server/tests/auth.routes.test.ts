@@ -400,7 +400,7 @@ describe('CU-09 Iniciar sesión', () => {
 describe('CU-10 Recuperar la contraseña', () => {
   const NEUTRO = { message: 'Si existe una cuenta con ese email, recibirás un enlace.' };
 
-  it('envía un enlace que caduca en 1 hora', async () => {
+  it('envía un enlace que caduca en 30 minutos', async () => {
     const res = await request(t.app).post('/api/auth/forgot-password').send({ email: 'Pablo.Garcia@correo.test' });
     expect(res.status).toBe(200);
     expect(res.body).toEqual(NEUTRO);
@@ -409,7 +409,7 @@ describe('CU-10 Recuperar la contraseña', () => {
     const token = tokenDelEmail(t.mailer, 'pablo.garcia@correo.test');
     expect(t.mailer.outbox[0]?.text).toContain(`${TEST_CLIENT_URL}/reset-password?token=${token}`);
     const { rows } = await t.pool.query('SELECT expires_at FROM user_tokens WHERE token_hash = $1', [hashToken(token)]);
-    expect(rows[0].expires_at).toEqual(new Date(t.reloj.ahora().getTime() + 3600_000));
+    expect(rows[0].expires_at).toEqual(new Date(t.reloj.ahora().getTime() + 1_800_000));
   });
 
   it('3a: con un email que no existe o una cuenta inactiva responde igual y no envía nada', async () => {
