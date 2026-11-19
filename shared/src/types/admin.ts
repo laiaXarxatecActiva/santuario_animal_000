@@ -165,6 +165,11 @@ export interface AdminUserDetailDto extends AdminUserListItemDto {
   donations: ContributionDonationDto[];
 }
 
+/** CU-48 paso 3: cuántas sesiones se han cerrado. */
+export interface AdminUserLogoutAllDto {
+  closedSessions: number;
+}
+
 /** CU-37: persona que creó una adopción o registró un pago a mano. */
 export interface AdminPersonRef {
   id: number;

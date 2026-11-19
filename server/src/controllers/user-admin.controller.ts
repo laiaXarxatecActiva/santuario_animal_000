@@ -1,4 +1,11 @@
-import { adminUserPatchSchema, adminUsersQuerySchema, idParamsSchema, workerCreateSchema } from '@sanctuary/shared';
+import {
+  adminUserLogoutAllSchema,
+  adminUserPatchSchema,
+  adminUsersQuerySchema,
+  idParamsSchema,
+  workerCreateSchema,
+  type AdminUserLogoutAllDto,
+} from '@sanctuary/shared';
 import type { RequestHandler } from 'express';
 import { UnauthorizedError } from '../errors/app-error.js';
 import { cambio } from '../dominio/actividad.js';
@@ -6,7 +13,7 @@ import { validated } from '../middlewares/validate.js';
 import { sinRegistro, type ActivityLogService } from '../services/activity-log.service.js';
 import type { UserAdminService } from '../servicios/user-admin.service.js';
 
-// CU-35 y CU-36: solo llaman al caso de uso y anotan la actividad (CU-42).
+// CU-35, CU-36 y CU-48: solo llaman al caso de uso y anotan la actividad (CU-42).
 export function createUserAdminController(service: UserAdminService, actividad: ActivityLogService = sinRegistro) {
   const id = (res: Parameters<RequestHandler>[1]) => validated(res, 'params', idParamsSchema).id;
 
@@ -36,5 +43,14 @@ export function createUserAdminController(service: UserAdminService, actividad: 
     await actividad.log(req.user!.id, 'update', 'users', id(res), { invitationResent: true });
     res.status(204).end();
   };
-  return { list, get, update, create, resendInvitation };
+  /** CU-48: el motivo se guarda en el registro de actividad, nunca en la cuenta. */
+  const logoutAll: RequestHandler = async (req, res) => {
+    if (!req.user) throw new UnauthorizedError();
+    const { reason } = validated(res, 'body', adminUserLogoutAllSchema);
+    const closedSessions = await service.logoutAll({ id: req.user.id, sid: req.sessionID }, id(res));
+    await actividad.log(req.user.id, 'update', 'users', id(res), { sessionsClosed: closedSessions, reason });
+    const respuesta: AdminUserLogoutAllDto = { closedSessions };
+    res.json(respuesta);
+  };
+  return { list, get, update, create, resendInvitation, logoutAll };
 }

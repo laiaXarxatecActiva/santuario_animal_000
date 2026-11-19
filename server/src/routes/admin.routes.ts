@@ -13,6 +13,7 @@ import {
   adminAdoptionStatusSchema,
   adminAnimalsQuerySchema,
   adminUpdatesQuerySchema,
+  adminUserLogoutAllSchema,
   adminUserPatchSchema,
   adminUsersQuerySchema,
   animalBodySchema,
@@ -175,6 +176,13 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     usuarios.update,
   );
   router.post('/users/:id/invitation', soloAdmin, conId, usuarios.resendInvitation);
+  // CU-48: cerrar todas las sesiones de un usuario, solo con motivo.
+  router.post(
+    '/users/:id/logout-all',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: adminUserLogoutAllSchema }),
+    usuarios.logoutAll,
+  );
 
   // CU-37: adopciones (TECH_SPEC §10.7), solo administradores.
   const adopciones = createAdoptionAdminController(deps.adoptions, deps.activity);

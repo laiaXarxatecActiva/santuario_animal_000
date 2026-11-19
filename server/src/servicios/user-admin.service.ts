@@ -209,6 +209,21 @@ export function createUserAdminService({
       return detalle(id);
     },
 
+    /**
+     * CU-48: cierra todas las sesiones de un usuario (por ejemplo, si avisa de
+     * que le han robado el móvil). Sobre la propia cuenta mantiene la sesión
+     * actual (3a), como el cambio de contraseña (CU-24). No cambia nada más:
+     * la cuenta sigue activa y puede volver a entrar con su contraseña.
+     */
+    async logoutAll(actor: { id: number; sid: string }, id: number): Promise<number> {
+      return withTransaction(db, async (client) => {
+        await buscar(client, id, true);
+        return id === actor.id
+          ? sessionModel.deleteOthersByUserId(client, id, actor.sid)
+          : sessionModel.deleteByUserId(client, id);
+      });
+    },
+
     /** CU-36 pasos 3-4: cuenta verificada, contraseña aleatoria e invitación de 24 horas. */
     async createWorker(datos: WorkerCreateInput): Promise<AdminUserDetailDto> {
       const passwordHash = await hashPassword(randomBytes(32).toString('base64url'));

@@ -123,3 +123,43 @@ describe('CU-35 Gestionar usuarios: ficha', () => {
     expect(await screen.findByText('Este usuario no existe')).toBeInTheDocument();
   });
 });
+
+describe('CU-48 Cerrar todas las sesiones de un usuario', () => {
+  it('1-3: pide el motivo, lo envía y dice cuántas sesiones se han cerrado', async () => {
+    const { enviados } = api(adminUserDetail(), {
+      '/api/admin/users/6/logout-all': () => ({ body: { closedSessions: 2 } }),
+    });
+    renderRoute('/admin/users/6');
+    await userEvent.click(await screen.findByRole('button', { name: 'Cerrar sus sesiones' }));
+    const ventana = await screen.findByRole('dialog', {
+      name: '¿Cerrar todas las sesiones de Lucía Martínez Navarro?',
+    });
+    expect(ventana).toHaveTextContent('La cuenta seguirá activa');
+
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Cerrar sesiones' }));
+    expect(within(ventana).getByText('Escribe el motivo.')).toBeInTheDocument();
+    expect(enviados('/api/admin/users/6/logout-all')).toHaveLength(0);
+
+    await userEvent.type(within(ventana).getByLabelText(/Motivo/), ' Le han robado el móvil ');
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Cerrar sesiones' }));
+    expect(await screen.findByText('Se han cerrado 2 sesiones')).toBeInTheDocument();
+    expect(enviados('/api/admin/users/6/logout-all')).toEqual([{ reason: 'Le han robado el móvil' }]);
+  });
+
+  it('3a: en su propia ficha avisa de que esta sesión seguirá abierta', async () => {
+    api(adminUserDetail({ id: 1, firstName: 'Marta', lastName: 'Soler Vidal', role: 'admin', adoptions: [] }));
+    renderRoute('/admin/users/1');
+    await userEvent.click(await screen.findByRole('button', { name: 'Cerrar sus sesiones' }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent('esta seguirá abierta');
+  });
+
+  it('una cuenta inactiva o anonimizada no tiene la opción (no puede tener sesiones)', async () => {
+    for (const status of ['inactive', 'anonymized'] as const) {
+      api(adminUserDetail({ status }));
+      const vista = renderRoute('/admin/users/6');
+      await screen.findByRole('heading', { level: 1 });
+      expect(screen.queryByRole('button', { name: 'Cerrar sus sesiones' })).not.toBeInTheDocument();
+      vista.unmount();
+    }
+  });
+});
