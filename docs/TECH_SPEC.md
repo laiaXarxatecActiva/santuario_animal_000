@@ -404,7 +404,7 @@ Se usan **sesiones en servidor guardadas en PostgreSQL** (`express-session` con 
 | Duración | 7 días, renovada con cada petición (`rolling: true`) |
 | Secreto | `SESSION_SECRET` (variable de entorno, mínimo 32 caracteres aleatorios) |
 
-El store propio (`PgSessionStore`, en `server/src/middlewares/session.ts`; SQL en `models/session.model.ts`) guarda en `user_sessions` **solo el SHA-256 del identificador** (`sid_hash`), nunca el identificador: quien lea la tabla o una copia de seguridad no puede suplantar a nadie. Además, la cookie va firmada con `SESSION_SECRET`. La caducidad se comprueba en el servidor (`expire > NOW()`), no solo en la cookie, y las sesiones caducadas se borran cada 15 minutos. La columna `user_id` permite cerrar todas las sesiones de un usuario.
+El store propio (`PgSessionStore`, en `server/src/middlewares/session.ts`; SQL en `models/session.model.ts`) guarda en `user_sessions` **solo el SHA-256 del identificador** (`sid_hash`), nunca el identificador: quien lea la tabla o una copia de seguridad no puede suplantar a nadie. Además, la cookie va firmada con `SESSION_SECRET`. La caducidad se comprueba en el servidor (`expire > NOW()`), no solo en la cookie, y las sesiones caducadas se borran cada 15 minutos. La columna `user_id` permite cerrar todas las sesiones de un usuario (CU-10, CU-24, CU-35 y, a petición de un administrador, CU-48). La política completa de seguridad está en `docs/AUTH_SPEC.md`.
 
 Al iniciar sesión se regenera el identificador de sesión (`req.session.regenerate`) para evitar la fijación de sesión. La sesión guarda solo `userId`; el usuario y su rol se leen de la base de datos en cada petición, para que los cambios de rol o la desactivación se apliquen al momento.
 
@@ -414,7 +414,7 @@ Al iniciar sesión se regenera el identificador de sesión (`req.session.regener
 - Contraseñas de **10 a 128 caracteres**, sin reglas de composición (se permiten espacios, símbolos y pegar desde un gestor de contraseñas). El máximo evita que un texto enorme se use para cargar el servidor. Las contraseñas de `TEST_DATA.sql` no se validan con esta regla; sus hashes Argon2id ya vienen calculados en el archivo.
 - **Tokens de un solo uso** (`user_tokens`): 32 bytes aleatorios (`crypto.randomBytes`) enviados por email. En la base de datos se guarda su hash SHA-256.
   - Verificación de email: caduca en 24 horas.
-  - Recuperación de contraseña: caduca en 1 hora. Al usarse, se cierran todas las sesiones del usuario.
+  - Recuperación de contraseña: caduca en 30 minutos. Al usarse, se cierran todas las sesiones del usuario.
   - Invitación de un trabajador (`worker_invitation`, CU-36): caduca en 24 horas. Se usa en el mismo `POST /api/auth/reset-password` que la recuperación, con los mismos efectos. Cada tipo anula solo los suyos al pedir otro.
 - **Sin enumeración de cuentas**: el registro y la recuperación de contraseña responden siempre igual, exista o no el email. En el registro, si el email ya tiene cuenta no se crea nada y se avisa por email a su dueño (CU-07 3a); el registro nunca abre sesión. El login responde con el mismo error para email inexistente y contraseña incorrecta, y compara con un hash ficticio cuando el email no existe, para que tarde lo mismo.
 - Límites de intentos (`express-rate-limit`, en memoria; con varias instancias habría que compartir los contadores): 5 intentos fallidos de login por IP y email y 50 por IP cada 15 minutos; registro, 20 por hora por IP y 3 por hora por email; reenvío de la verificación, 3 por hora por usuario; cambio de contraseña, 5 intentos fallidos por usuario cada 15 minutos.
@@ -585,6 +585,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/admin/users/:id` | `{ isActive }`, o `{ role }` solo entre `caretaker` y `admin` (uno de los dos). Desactivar cierra todas las sesiones y, si es un adoptante, da de baja sus adopciones. 422 si el administrador se desactiva a sí mismo, si se reactiva una cuenta anonimizada o si el último administrador activo dejaría de serlo | CU-35 |
 | POST | `/api/admin/users/:id/invitation` | Reenvía la invitación (anula la anterior). Solo a un trabajador activo que nunca ha entrado; si no, 409 `INVITATION_NOT_PENDING` | CU-36 |
 | POST | `/api/admin/users` | Crear cuenta de trabajador | CU-36 |
+| POST | `/api/admin/users/:id/logout-all` | `{ reason }` obligatorio (1-500 caracteres). Cierra todas las sesiones del usuario y responde `{ closedSessions }`; sobre la propia cuenta mantiene la sesión actual. No cambia nada más de la cuenta. Queda en el registro de actividad con el motivo | CU-48 |
 | GET | `/api/admin/adoptions` | Listado con `?q` (adoptante por nombre o email, o animal), `status`, `planId`, `animalId`, `userId` y `sort` (lista blanca; por defecto `-createdAt`) | CU-37 |
 | GET | `/api/admin/adoptions/:id` | Detalle con sus pagos (con quién registró los manuales), las notas internas y quién la creó | CU-37 |
 | POST | `/api/admin/adoptions` | Alta manual `{ userId, animalId, planId, method, notes? }`: nace `active` con su primer pago `completed` (`cash` o `bank_transfer`, referencia `CASH-…` o `TRF-…`, `recorded_by`) y se avisa como en CU-13. El adoptante debe tener la cuenta activa (422 `ADOPTER_NOT_AVAILABLE`); no hace falta que haya verificado el email | CU-37 |
@@ -908,6 +909,15 @@ Cada fase termina con una versión que funciona y se puede demostrar. La Fase 3 
 
 - [x] Ninguna funcionalidad de la Fase 3 requiere cambios en la estructura de la base de datos (`database/` no cambia en toda la fase).
 - [x] Las pruebas de las fases 1 y 2 siguen pasando (`npm test` y `npm run test:e2e`).
+
+### Mejoras de seguridad tras la Fase 3
+
+Recogidas en `docs/AUTH_SPEC.md` (§1). No cambian el esquema de la base de datos.
+
+| Funcionalidad | Casos de uso |
+| --- | --- |
+| El enlace de recuperación de contraseña caduca en 30 minutos (antes, 1 hora) | CU-10 |
+| Un administrador puede cerrar todas las sesiones de un usuario, con motivo obligatorio | CU-48 |
 
 ### Fase 4 — Despliegue (fase final)
 
