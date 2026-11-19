@@ -15,7 +15,6 @@ import type { Reloj } from '../dominio/reloj.js';
 import { caducidadToken, estadoToken } from '../dominio/token.js';
 import { cuentaActiva } from '../dominio/usuario.js';
 import {
-  AccountInactiveError,
   EmailAlreadyRegisteredError,
   EmailAlreadyVerifiedError,
   InvalidCredentialsError,
@@ -180,8 +179,9 @@ export function createAuthService({ db, reloj, email, clientUrl, logEmailError =
     if (password.length > PASSWORD_MAX_LENGTH) throw new InvalidCredentialsError();
     const user = await userModel.findByEmail(db, correo);
     const correcta = await verifyPassword(password, user?.passwordHash ?? (await hashFalso));
-    if (!user || !correcta) throw new InvalidCredentialsError();
-    if (!cuentaActiva(user)) throw new AccountInactiveError();
+    // Una cuenta desactivada o anonimizada recibe el mismo error que unas credenciales
+    // incorrectas: un mensaje distinto revelaría que la cuenta existe y que la contraseña es buena.
+    if (!user || !correcta || !cuentaActiva(user)) throw new InvalidCredentialsError();
     await userModel.updateLastLogin(db, user.id, reloj.ahora());
     return toSessionUser(user);
   }
