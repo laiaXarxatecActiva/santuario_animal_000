@@ -56,7 +56,6 @@ describe('CU-09 Iniciar sesión', () => {
 
   it.each([
     ['3a', errorApi(401, 'INVALID_CREDENTIALS', 'x'), 'Email o contraseña incorrectos.'],
-    ['3b', errorApi(403, 'ACCOUNT_INACTIVE', 'x'), 'Esta cuenta no está activa. Contacta con el santuario.'],
     ['error del servidor', errorApi(500, 'INTERNAL_ERROR', 'x'), 'Algo ha ido mal; inténtalo de nuevo.'],
   ])('%s: muestra el aviso de error', async (_caso, respuesta, mensaje) => {
     mockApi({ '/api/auth/login': respuesta });

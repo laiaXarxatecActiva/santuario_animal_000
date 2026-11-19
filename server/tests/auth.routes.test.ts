@@ -339,19 +339,23 @@ describe('CU-09 Iniciar sesión', () => {
     }
   });
 
-  it('3b: una cuenta desactivada no puede entrar', async () => {
+  it('3b: una cuenta desactivada no puede entrar y recibe el mismo error que unas credenciales incorrectas', async () => {
     const res = await login(request(t.app), 'teresa.vicent@correo.test', 'Teresa*55');
-    expect(res.status).toBe(403);
-    expect(res.body.error).toMatchObject({
-      code: 'ACCOUNT_INACTIVE',
-      message: 'Esta cuenta no está activa. Contacta con el santuario.',
+    expect(res.status).toBe(401);
+    expect(res.body.error).toEqual({
+      code: 'INVALID_CREDENTIALS',
+      message: 'Email o contraseña incorrectos.',
+      details: [],
     });
+    expect(cookieSid(res)).toBeUndefined();
   });
 
-  it('3b: una cuenta anonimizada no puede entrar', async () => {
+  it('3b: una cuenta anonimizada no puede entrar y recibe el mismo error que unas credenciales incorrectas', async () => {
     await t.pool.query('UPDATE users SET password_hash = $1 WHERE id = 15', [await hashPassword('Clave-conocida1')]);
     const res = await login(request(t.app), 'deleted-15@anonymized.invalid', 'Clave-conocida1');
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('INVALID_CREDENTIALS');
+    expect(cookieSid(res)).toBeUndefined();
   });
 
   it('5a: con el email sin verificar entra igualmente', async () => {

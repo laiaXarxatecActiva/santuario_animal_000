@@ -180,10 +180,9 @@ Sirven para verificar el email, recuperar la contraseña e invitar a un trabajad
 
 **Login** (CU-09):
 
-- Da el mismo error (`INVALID_CREDENTIALS`) si el email no existe y si la contraseña es incorrecta.
+- Da el mismo error (`INVALID_CREDENTIALS`, 401) si el email no existe, si la contraseña es incorrecta y si la cuenta está desactivada o anonimizada, para no revelar si la cuenta existe ni si la contraseña es buena.
 - Cuando el email no existe, compara con un hash ficticio para que tarde lo mismo. Ese hash se calcula al crear el servicio, para que tampoco tarde más el primer intento.
 - Una contraseña de más de 128 caracteres recibe el mismo `INVALID_CREDENTIALS` (ninguna contraseña válida es tan larga), sin buscar el usuario ni calcular el hash. En el registro, en la recuperación y en el cambio de contraseña, en cambio, es un error de validación (400) con su mensaje.
-- Una cuenta desactivada recibe 403, pero solo tras dar la contraseña correcta.
 - Se puede entrar con el email sin verificar. Lo que exige verificarlo es adoptar (`requireVerifiedEmail`).
 - Se crea **siempre una sesión nueva** y solo se devuelven los datos públicos del usuario (§10).
 - En el cliente, al entrar se vacía la caché de React Query, para que no queden datos de otra cuenta abierta antes en el mismo navegador.
@@ -272,7 +271,7 @@ Los formularios públicos de donación y contacto envían emails a direcciones q
 | 401 (login) | `INVALID_CREDENTIALS` | «Email o contraseña incorrectos.» |
 | 401 (resto) | `UNAUTHORIZED` | «Tienes que iniciar sesión.» |
 | 403 | `FORBIDDEN` | «No tienes permiso para esta acción.» |
-| 403 | `ACCOUNT_INACTIVE` | «Esta cuenta no está activa. Contacta con el santuario.» |
+| 403 | `ACCOUNT_INACTIVE` | «Esta cuenta no está activa. Contacta con el santuario.» (definido, pero ninguna ruta lo devuelve: el login responde `INVALID_CREDENTIALS`, §6.4) |
 | 403 | `EMAIL_NOT_VERIFIED` | «Verifica tu email para poder adoptar.» |
 | 403 | `ORIGIN_NOT_ALLOWED` | «La petición no procede de la web del santuario.» |
 | 404 | `NOT_FOUND` | «No encontrado.» (o uno más concreto, como «Este usuario no existe.») |
