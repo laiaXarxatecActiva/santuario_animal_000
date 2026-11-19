@@ -37,6 +37,16 @@ describe('CU-09 Límite de intentos de login', () => {
     expect(bloqueado.body.error.code).toBe('TOO_MANY_REQUESTS');
   });
 
+  it('3c: el 429 indica en Retry-After los segundos que faltan', async () => {
+    const app = appDeLogin();
+    for (let i = 0; i < 5; i++) await intento(app, 'ana@correo.test', 'mala');
+    const bloqueado = await intento(app, 'ana@correo.test', 'buena');
+    expect(bloqueado.status).toBe(429);
+    const segundos = Number(bloqueado.headers['retry-after']);
+    expect(segundos).toBeGreaterThan(0);
+    expect(segundos).toBeLessThanOrEqual(15 * 60);
+  });
+
   it('los intentos correctos no cuentan para el límite por IP', async () => {
     const app = appDeLogin();
     for (let i = 0; i < 60; i++) {

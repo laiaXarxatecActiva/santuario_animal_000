@@ -330,7 +330,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - **3a.** Email o contraseña incorrectos: se muestra «Email o contraseña incorrectos», sin indicar cuál de los dos falla.
 - **3b.** Cuenta desactivada (`is_active = FALSE`) o anonimizada: se muestra «Esta cuenta no está activa. Contacta con el santuario».
-- **3c.** Más de 5 intentos fallidos en 15 minutos: se muestra «Demasiados intentos; espera unos minutos».
+- **3c.** Más de 5 intentos fallidos en 15 minutos: se muestra un aviso informativo (azul) con la cuenta atrás del tiempo que falta («Demasiados intentos. Podrás volver a intentarlo dentro de 14:32»), que el servidor indica en la cabecera `Retry-After` (si falta, se esperan 5 segundos). Mientras dura, el email, la contraseña y el botón «Entrar» están desactivados; al acabar, el aviso desaparece.
+- **3d.** Tras cualquier intento fallido, el formulario conserva el email y borra la contraseña.
 - **5a.** Email sin verificar: entra igualmente, con un aviso permanente para verificarlo (RN-21).
 
 **Postcondiciones**

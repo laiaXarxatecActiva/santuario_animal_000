@@ -202,7 +202,8 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | En la base de datos solo está el hash del identificador de sesión y del token | `server/tests/session.test.ts`, `server/tests/models/session.model.test.ts`, `server/tests/auth.routes.test.ts` |
 | Las sesiones caducadas o borradas no valen | `server/tests/session.test.ts` |
 | Login sin enumeración, sesión nueva al entrar, límite de intentos | `server/tests/auth.routes.test.ts` (CU-09) |
-| Límites del login por IP y email y solo por IP | `server/tests/rate-limit.test.ts` |
+| Límites del login por IP y email y solo por IP; el 429 indica la espera en `Retry-After` | `server/tests/rate-limit.test.ts` |
+| Con demasiados intentos, el login muestra la espera y bloquea el formulario hasta que acaba | `client/tests/LoginPage.test.tsx` |
 | Contraseña de más de 128 caracteres en el login: sin calcular el hash | `server/tests/auth.service.test.ts` |
 | Al entrar, el cliente descarta los datos de otra cuenta | `client/tests/LoginPage.test.tsx` |
 | Registro sin enumeración, sin sesión, con límite por email | `server/tests/auth.routes.test.ts` (CU-07) |

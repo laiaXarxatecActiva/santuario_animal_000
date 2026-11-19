@@ -21,6 +21,17 @@ describe('apiGet', () => {
     expect(error).toMatchObject({ status: 404, code: 'ANIMAL_NOT_AVAILABLE' });
   });
 
+  it('guarda en retryAfter los segundos de la cabecera Retry-After', async () => {
+    mockApi({
+      '/api/auth/login': { ...errorApi(429, 'TOO_MANY_REQUESTS', 'x'), headers: { 'Retry-After': '42' } },
+    });
+    await expect(apiPost('/api/auth/login', {})).rejects.toMatchObject({ status: 429, retryAfter: 42 });
+    mockApi({ '/api/auth/login': errorApi(429, 'TOO_MANY_REQUESTS', 'x') });
+    const sinCabecera = await apiPost('/api/auth/login', {}).catch((e: unknown) => e);
+    expect(sinCabecera).toBeInstanceOf(ApiError);
+    expect((sinCabecera as ApiError).retryAfter).toBeUndefined();
+  });
+
   it('un error sin el formato estándar sigue siendo un ApiError', async () => {
     mockApi({ '/api/home': { status: 502, body: 'Bad gateway' } });
     await expect(apiGet('/api/home')).rejects.toMatchObject({ status: 502, code: 'HTTP_ERROR' });

@@ -270,7 +270,8 @@
       "submitting": "Logging in…",
       "forgot": "Forgotten your password?",
       "noAccount": "No account yet?",
-      "register": "Sign up"
+      "register": "Sign up",
+      "locked": "Too many attempts. You can try again in {{time}}."
     },
     "register": {
       "title": "Create an account",

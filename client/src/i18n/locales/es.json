@@ -270,7 +270,8 @@
       "submitting": "Entrando…",
       "forgot": "¿Has olvidado tu contraseña?",
       "noAccount": "¿No tienes cuenta?",
-      "register": "Regístrate"
+      "register": "Regístrate",
+      "locked": "Demasiados intentos. Podrás volver a intentarlo dentro de {{time}}."
     },
     "register": {
       "title": "Crear una cuenta",

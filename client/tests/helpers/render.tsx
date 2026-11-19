@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { vi } from 'vitest';
 import { routes } from '../../src/router';
 
-type Respuesta = { status?: number; body?: unknown };
+type Respuesta = { status?: number; body?: unknown; headers?: Record<string, string> };
 /** Petición recibida: método y cuerpo JSON ya convertido. */
 export type Peticion = { method: string; body: unknown };
 type Handler = (url: URL, peticion: Peticion) => Respuesta | Promise<Respuesta>;
@@ -34,7 +34,7 @@ export function mockApi(handlers: Record<string, Handler | Respuesta>) {
       method: init?.method ?? 'GET',
       body: typeof init?.body === 'string' ? JSON.parse(init.body) : undefined,
     };
-    const respuesta =
+    const respuesta: Respuesta =
       handler === undefined
         ? errorApi(404, 'NOT_FOUND', 'No encontrado.')
         : typeof handler === 'function'
@@ -43,7 +43,7 @@ export function mockApi(handlers: Record<string, Handler | Respuesta>) {
     const status = respuesta.status ?? 200;
     return new Response(status === 204 ? null : JSON.stringify(respuesta.body), {
       status,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...respuesta.headers },
     });
   });
   vi.stubGlobal('fetch', fetchMock);

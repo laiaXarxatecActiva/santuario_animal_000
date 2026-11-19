@@ -270,7 +270,8 @@
       "submitting": "Entrant…",
       "forgot": "Has oblidat la contrasenya?",
       "noAccount": "No tens compte?",
-      "register": "Registra't"
+      "register": "Registra't",
+      "locked": "Massa intents. Podràs tornar a intentar-ho d'ací a {{time}}."
     },
     "register": {
       "title": "Crea un compte",
