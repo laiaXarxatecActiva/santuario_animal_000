@@ -20,12 +20,15 @@ import {
   FieldRuleError,
   MemorialOnlyDeceasedError,
   NotFoundError,
+  ValidationError,
 } from '../errors/app-error.js';
 import * as animalModel from '../models/animal-admin.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as updateModel from '../models/animal-update.model.js';
 import * as notificationModel from '../models/notification.model.js';
 import * as speciesModel from '../models/species.model.js';
+import * as taskModel from '../models/task.model.js';
+import * as zoneModel from '../models/zone.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
 import { adoptionClosedEmail } from '../services/email/templates/adoption-closed.js';
@@ -65,6 +68,10 @@ export function createAnimalAdminService({
     if (!(await speciesModel.exists(q, datos.speciesId))) {
       throw new FieldRuleError('SPECIES_NOT_FOUND', 'speciesId', 'Esta especie no existe.');
     }
+    // CU-52: la zona existe (desactivada no se puede elegir).
+    if (datos.zoneId !== undefined && datos.zoneId !== null && !(await zoneModel.isActive(q, datos.zoneId))) {
+      throw new ValidationError([{ field: 'zoneId', message: 'Esta zona no existe o está desactivada.' }]);
+    }
   }
 
   return {
@@ -93,7 +100,9 @@ export function createAnimalAdminService({
     /** Alta (pasos 1-3): empieza en el santuario. */
     async create(datos: AnimalData): Promise<AdminAnimalDto> {
       await validar(db, datos);
-      return buscar(db, await animalModel.create(db, datos));
+      const id = await animalModel.create(db, datos);
+      if (datos.zoneId) await animalModel.setZone(db, id, datos.zoneId);
+      return buscar(db, id);
     },
 
     /** Edición (pasos 2-3), A1 publicar u ocultar y 2b. */
@@ -106,6 +115,7 @@ export function createAnimalAdminService({
           throw new MemorialOnlyDeceasedError();
         }
         await animalModel.update(client, id, datos);
+        if (datos.zoneId !== undefined) await animalModel.setZone(client, id, datos.zoneId);
         if (datos.showInMemorial !== undefined) await animalModel.setShowInMemorial(client, id, datos.showInMemorial);
         return buscar(client, id);
       });
@@ -135,6 +145,8 @@ export function createAnimalAdminService({
           archivar,
         });
         if (cambio.showInMemorial) await animalModel.setShowInMemorial(client, id, true);
+        // CU-58 4: deja de tener tareas desde ahora.
+        if (archivar) await taskModel.withdrawAnimal(client, id, reloj.ahora());
         const motivo = motivoDeCierre(cambio.status);
         // 2a: sin adopciones abiertas, ni mensaje ni avisos.
         const afectados =

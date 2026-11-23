@@ -61,6 +61,10 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-21 | Para adoptar hay que tener el email verificado (provisional; ver `TECH_SPEC.md` §18). |
 | RN-22 | Los fallecidos y trasladados no aparecen en el catálogo; los fallecidos pueden aparecer en «En memoria» (Fase 3). |
 | RN-23 | El cuidador no gestiona dinero ni usuarios y no ve datos económicos (ingresos, pagos, donaciones). |
+| RN-24 | Trabajo diario: las tareas recurrentes salen de **plantillas** y se generan cada día con 7 días de antelación, en la hora de Madrid, una sola vez por plantilla y hora (la generación es idempotente). Nunca se generan para animales fallecidos o trasladados, y al archivar un animal se retira de sus tareas pendientes. |
+| RN-25 | Una tarea que exige una **cualificación** solo la puede completar, marcar como no realizada o tener asignada un trabajador que la tenga (también un administrador). Se comprueba en el servidor y en la base de datos. |
+| RN-26 | Una tarea solo se resuelve el mismo día (no antes). Está **atrasada** si sigue pendiente pasada su hora más el margen configurado (30 minutos por defecto); no se guarda, se calcula. Al acabar el día, las pendientes pasan a «no realizada» por el sistema. |
+| RN-27 | Las tareas puntuales solo las crea el administrador; el personal comunica los problemas con incidencias (Bloque D). Las plantillas, zonas y cualificaciones con historial no se borran: se desactivan. |
 
 ## 4. Web pública y cuenta
 
@@ -1613,3 +1617,176 @@ Cada día, para cada una de ellas y en su propia transacción:
 - Cada cuota manual se avisa una sola vez; la tarea es idempotente.
 
 **Reglas de negocio:** RN-08, RN-13, RN-19.
+
+
+## 10. Trabajo diario del personal
+
+Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A). Los turnos (Bloque B), la alimentación y la medicación (Bloque C) y las incidencias y avisos (Bloque D) se añadirán como CU-60 en adelante.
+
+### CU-52 — Gestionar zonas
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. El administrador abre «Zonas y cualificaciones».
+2. Ve las zonas por nombre, con cuántos animales viven en cada una (sin fallecidos ni trasladados) y si están desactivadas.
+3. Crea o edita una zona: nombre (único, sin distinguir mayúsculas), descripción opcional y si está activa.
+4. En la ficha de un animal (CU-28) elige su zona entre las activas; el campo es opcional.
+
+**Flujos alternativos**
+
+- **3a.** Nombre repetido: error en el campo (`ZONE_NAME_TAKEN`).
+- **A1.** Borrar una zona con animales, tareas o plantillas: no se borra (`ZONE_IN_USE`); se puede desactivar. Una zona vacía sí se borra.
+- **4a.** Zona inexistente o desactivada en el formulario del animal: error en el campo `zoneId`.
+
+**Postcondiciones:** queda en el registro de actividad. El cuidador puede consultar la lista de zonas (la usa en los formularios), pero no cambiarla.
+
+**Reglas de negocio:** RN-18, RN-27.
+
+### CU-53 — Gestionar cualificaciones
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. En «Zonas y cualificaciones», el administrador ve las cualificaciones (por ejemplo, «Administrar medicación», «Manejo de grandes rapaces», «Mantenimiento de instalaciones») con cuántos trabajadores la tienen.
+2. Crea, edita o borra las que nadie usa.
+3. En la ficha de un trabajador (CU-35), marca sus cualificaciones y las guarda.
+
+**Flujos alternativos**
+
+- **2a.** Nombre repetido (`QUALIFICATION_NAME_TAKEN`) o cualificación en uso por trabajadores o tareas (`QUALIFICATION_IN_USE`).
+- **3a.** Un adoptante no tiene cualificaciones (404). Una cualificación inexistente da error en `qualificationIds`.
+
+**Postcondiciones:** el cambio queda en el registro de actividad del usuario. No hay un rol de mantenimiento: es una cualificación.
+
+**Reglas de negocio:** RN-25.
+
+### CU-54 — Gestionar plantillas de tareas
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. El administrador abre «Plantillas de tareas» y ve cada una con su tipo, su zona y cuándo se repite («Cada día · 09:00, 17:00», «Lun, Mié, Vie · 09:00», «Cada 3 días · 13:00»).
+2. Crea una plantilla: tipo (alimentación, limpieza, medicación, enriquecimiento, revisión de salud, mantenimiento), título, descripción, zona y/o animales, cualificación necesaria, horas (1 a 12), repetición (cada día, algunos días de la semana o cada N días, de 2 a 365, contando desde la fecha de inicio), fechas de inicio y fin y si está activa.
+3. El sistema valida los datos y, si está activa, genera sus tareas de hoy (desde la hora actual) a 7 días vista (CU-58).
+4. Sin zona, la tarea toma la zona común de sus animales.
+5. Al editarla, se borran sus tareas pendientes desde ahora y se vuelven a generar; las reasignaciones manuales de esas tareas se pierden (se avisa en el formulario). Al desactivarla, se borran sus tareas pendientes futuras.
+6. Una plantilla sin tareas resueltas se puede borrar (con sus pendientes).
+
+**Flujos alternativos**
+
+- **2a.** Ni zona ni animales; días de la semana o intervalo que faltan; fecha de fin anterior a la de inicio; hora con otro formato: error en el campo.
+- **4a.** Animales de zonas distintas sin zona elegida, animal inexistente o que ya no está en el santuario: error en `animalIds`.
+- **6a.** Con tareas resueltas: no se borra (`TEMPLATE_HAS_HISTORY`); se puede desactivar.
+
+**Reglas de negocio:** RN-24, RN-27.
+
+### CU-55 — Tareas del día y tareas puntuales
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado, y para cada una su hora, zona, insignias (tipo, atrasada, puntual, estado), a quién está asignada y, si está resuelta, quién y cuándo, las observaciones y la foto.
+2. Crea una tarea puntual (sin plantilla): tipo, título, descripción, zona, animales, cualificación, día (hoy o después), hora y, opcionalmente, una persona.
+3. Reasigna una tarea pendiente a un trabajador en activo, o le quita la asignación (vuelve a ser de la zona).
+4. Borra una tarea pendiente.
+
+**Flujos alternativos**
+
+- **2a.** Sin zona, animales ni persona, o en un día pasado: error en el campo.
+- **3a.** Persona que no es un trabajador activo o que no tiene la cualificación que exige la tarea: error en el campo.
+- **3b, 4a.** La tarea ya está resuelta (`TASK_NOT_PENDING`).
+
+**Postcondiciones:** crear, reasignar y borrar quedan en el registro de actividad; completar tareas no (ya guarda quién y cuándo).
+
+**Reglas de negocio:** RN-25, RN-27.
+
+### CU-56 — Consultar «Mi día»
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. El cuidador entra en la aplicación y llega a «Mi día» (el administrador, al escritorio; también la tiene en el menú).
+2. Ve las tareas de hoy en tarjetas, ordenadas por hora: primero «Asignadas a ti» y después las demás del día. En el Bloque B, «tuyas» incluirá las de su turno y zona.
+3. Cada tarjeta muestra la hora, el título, el tipo, si está atrasada o es puntual, la zona, los animales, la cualificación que exige y, si está resuelta, quién y a qué hora.
+4. Puede pasar al día anterior o al siguiente y volver a hoy.
+
+**Flujos alternativos**
+
+- **3a.** Si le falta la cualificación, la tarjeta lo explica y no ofrece botones. Las de otro día se ven, pero no se pueden marcar.
+
+**Reglas de negocio:** RN-25, RN-26.
+
+### CU-57 — Completar una tarea
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. En «Mi día», el trabajador pulsa «Hecha» en una tarea pendiente de hoy.
+2. El sistema comprueba que es de hoy, que sigue pendiente y que tiene la cualificación, y guarda quién y cuándo.
+3. Con «Con nota o foto» puede añadir observaciones (hasta 1000 caracteres) y una foto (JPEG, PNG o WebP; se guarda en WebP).
+
+**Flujos alternativos**
+
+- **A1.** «No se ha podido hacer»: el motivo es obligatorio y queda en las observaciones; la tarea pasa a `not_done`.
+- **A2.** «Deshacer»: quien la resolvió, el mismo día, o un administrador en cualquier momento, la devuelve a pendiente; se borran las observaciones y la foto.
+- **2a.** Ya resuelta (`TASK_NOT_PENDING`), de otro día (`TASK_FUTURE_DAY`) o sin la cualificación (`MISSING_QUALIFICATION`, 403).
+- Una tarea de otra zona también se puede completar (para ayudar a un compañero).
+
+**Reglas de negocio:** RN-25, RN-26.
+
+### CU-58 — Generar las tareas
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (tarea `generate-tasks`, 00:10) | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+Cada día, para cada plantilla activa y en su propia transacción:
+
+1. Calcula sus ocurrencias de hoy a 7 días vista según la repetición, las fechas de inicio y fin y sus horas (Europe/Madrid). Solo las que aún no han pasado.
+2. Crea las que faltan; las que ya existen no se repiten.
+3. Cada tarea copia el tipo, el título, la descripción, la zona, la cualificación y los animales que siguen en el santuario.
+
+**Flujos alternativos**
+
+- **1a.** Cambio de hora: una hora que no existe (en marzo) pasa a la hora siguiente; una que existe dos veces (en octubre) usa la segunda.
+- **3a.** Si todos sus animales ya no están, no se crea la tarea.
+- **4.** Al registrar el fallecimiento o traslado de un animal (CU-33), se retira de sus tareas pendientes desde ese momento; las que eran solo de animales y se quedan sin ninguno se borran.
+- **Error inesperado** con una plantilla: se deshace su transacción, se registra y se continúa.
+
+**Reglas de negocio:** RN-24.
+
+### CU-59 — Cerrar las tareas del día
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (tarea `task-alerts`, cada 15 minutos) | Trabajo diario, Bloque A |
+
+**Flujo principal**
+
+1. Las tareas pendientes de días anteriores pasan a `not_done`, sin persona (`resolved_by` vacío): en la interfaz, «Cerrada por el sistema al acabar el día».
+2. En el Bloque C, esta tarea también avisará de la medicación no dada.
+
+**Postcondiciones:** la tarea es idempotente.
+
+**Reglas de negocio:** RN-26.

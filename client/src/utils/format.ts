@@ -50,6 +50,12 @@ const diaIso = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
   timeZone: ZONA_SANTUARIO,
 });
+const hora = porIdioma(
+  (l) => new Intl.DateTimeFormat(l, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: ZONA_SANTUARIO }),
+);
+const diaSemana = porIdioma(
+  (l) => new Intl.DateTimeFormat(l, { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }),
+);
 const lista = porIdioma((l) => new Intl.ListFormat(l, { style: 'long', type: 'conjunction' }));
 
 /** `'5.00'` → `'5,00 €'`. */
@@ -95,6 +101,23 @@ export function previousDay(date: string): string {
   const dia = new Date(`${date}T00:00:00Z`);
   dia.setUTCDate(dia.getUTCDate() - 1);
   return dia.toISOString().slice(0, 10);
+}
+
+/** Fecha `YYYY-MM-DD` desplazada unos días (CU-56: día anterior y siguiente en «Mi día»). */
+export function addDays(date: string, dias: number): string {
+  const dia = new Date(`${date}T00:00:00Z`);
+  dia.setUTCDate(dia.getUTCDate() + dias);
+  return dia.toISOString().slice(0, 10);
+}
+
+/** `'2026-11-23'` → «lunes, 23 de noviembre» (CU-56). */
+export function formatWeekdayDate(date: string): string {
+  return diaSemana().format(new Date(`${date}T00:00:00Z`));
+}
+
+/** Instante ISO → «09:12» en la zona del santuario (CU-57: hora a la que se resolvió). */
+export function formatTime(isoInstant: string): string {
+  return hora().format(new Date(isoInstant));
 }
 
 /** `'2026-11'` → «noviembre de 2026» (CU-39, total por mes). */

@@ -2,6 +2,8 @@
 export const PG_UNIQUE_VIOLATION = '23505';
 export const PG_FOREIGN_KEY_VIOLATION = '23503';
 export const PG_CHECK_VIOLATION = '23514';
+// Borrar una fila que otra tabla usa con ON DELETE RESTRICT.
+export const PG_RESTRICT_VIOLATION = '23001';
 
 /** ¿Es un error de PostgreSQL con este código (y, si se indica, sobre esta restricción)? */
 export function esErrorPg(error: unknown, codigo: string, restriccion?: string): boolean {

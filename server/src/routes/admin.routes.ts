@@ -31,6 +31,17 @@ import {
   vetRecordBodySchema,
   WORKER_ROLES,
   workerCreateSchema,
+  adminTasksQuerySchema,
+  myDayQuerySchema,
+  oneOffTaskBodySchema,
+  qualificationBodySchema,
+  taskAssigneeBodySchema,
+  taskCompleteBodySchema,
+  taskNotDoneBodySchema,
+  taskTemplateBodySchema,
+  userQualificationsBodySchema,
+  workSettingsBodySchema,
+  zoneBodySchema,
 } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createActivityAdminController } from '../controllers/activity-admin.controller.js';
@@ -47,6 +58,11 @@ import { createSpeciesAdminController } from '../controllers/species-admin.contr
 import { createUpdateAdminController } from '../controllers/update-admin.controller.js';
 import { createVetRecordAdminController } from '../controllers/vet-record-admin.controller.js';
 import { createUserAdminController } from '../controllers/user-admin.controller.js';
+import {
+  createTaskController,
+  createTaskTemplateAdminController,
+  createZoneAdminController,
+} from '../controllers/work-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
@@ -65,6 +81,9 @@ import type { SpeciesAdminService } from '../servicios/species-admin.service.js'
 import type { UpdateAdminService } from '../servicios/update-admin.service.js';
 import type { UserAdminService } from '../servicios/user-admin.service.js';
 import type { VetRecordAdminService } from '../servicios/vet-record-admin.service.js';
+import type { TaskTemplateAdminService } from '../servicios/task-template-admin.service.js';
+import type { TaskService } from '../servicios/task.service.js';
+import type { ZoneAdminService } from '../servicios/zone-admin.service.js';
 
 export interface AdminRoutesDeps {
   dashboard: DashboardService;
@@ -83,6 +102,10 @@ export interface AdminRoutesDeps {
   activity: ActivityLogService;
   activityLogs: ActivityAdminService;
   stats: StatsAdminService;
+  /** Trabajo diario del personal (CU-52 en adelante). */
+  zones: ZoneAdminService;
+  taskTemplates: TaskTemplateAdminService;
+  tasks: TaskService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -234,6 +257,68 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     validate({ query: adminStatsQuerySchema }),
     createStatsAdminController(deps.stats).get,
   );
+
+  // CU-52 y CU-53: zonas y cualificaciones. Las ve todo el personal; las cambia el administrador.
+  const zonas = createZoneAdminController(deps.zones, deps.activity);
+  router.get('/zones', zonas.listZones);
+  router.post('/zones', soloAdmin, validate({ body: zoneBodySchema }), zonas.createZone);
+  router.put('/zones/:id', soloAdmin, validate({ params: idParamsSchema, body: zoneBodySchema }), zonas.updateZone);
+  router.delete('/zones/:id', soloAdmin, conId, zonas.removeZone);
+  router.get('/qualifications', zonas.listQualifications);
+  router.post('/qualifications', soloAdmin, validate({ body: qualificationBodySchema }), zonas.createQualification);
+  router.put(
+    '/qualifications/:id',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: qualificationBodySchema }),
+    zonas.updateQualification,
+  );
+  router.delete('/qualifications/:id', soloAdmin, conId, zonas.removeQualification);
+  router.get('/users/:id/qualifications', soloAdmin, conId, zonas.getUserQualifications);
+  router.put(
+    '/users/:id/qualifications',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: userQualificationsBodySchema }),
+    zonas.setUserQualifications,
+  );
+
+  // CU-54: plantillas de tareas, solo administradores.
+  const plantillas = createTaskTemplateAdminController(deps.taskTemplates, deps.activity);
+  router.get('/task-templates', soloAdmin, plantillas.list);
+  router.post('/task-templates', soloAdmin, validate({ body: taskTemplateBodySchema }), plantillas.create);
+  router.get('/task-templates/:id', soloAdmin, conId, plantillas.get);
+  router.put(
+    '/task-templates/:id',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: taskTemplateBodySchema }),
+    plantillas.update,
+  );
+  router.delete('/task-templates/:id', soloAdmin, conId, plantillas.remove);
+
+  // CU-55 a CU-57: «Mi día» y las tareas. Completar admite una foto (multipart).
+  const tareas = createTaskController(deps.tasks, deps.activity);
+  router.get('/my-day', validate({ query: myDayQuerySchema }), tareas.myDay);
+  router.get('/tasks', soloAdmin, validate({ query: adminTasksQuerySchema }), tareas.list);
+  router.post('/tasks', soloAdmin, validate({ body: oneOffTaskBodySchema }), tareas.create);
+  router.patch(
+    '/tasks/:id/assignee',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: taskAssigneeBodySchema }),
+    tareas.setAssignee,
+  );
+  router.delete('/tasks/:id', soloAdmin, conId, tareas.remove);
+  router.post(
+    '/tasks/:id/complete',
+    conId,
+    uploadFiles(),
+    validate({ params: idParamsSchema, body: taskCompleteBodySchema }),
+    tareas.complete,
+  );
+  router.post('/tasks/:id/not-done', validate({ params: idParamsSchema, body: taskNotDoneBodySchema }), tareas.notDone);
+  router.post('/tasks/:id/reopen', conId, tareas.reopen);
+
+  // CU-73: ajustes del trabajo diario, solo administradores.
+  router.get('/work-settings', soloAdmin, tareas.settings);
+  router.put('/work-settings', soloAdmin, validate({ body: workSettingsBodySchema }), tareas.updateSettings);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

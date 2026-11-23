@@ -50,6 +50,9 @@ import { createPublicCatalogService } from './servicios/public-catalog.service.j
 import { createSpeciesAdminService } from './servicios/species-admin.service.js';
 import { createUpdateAdminService } from './servicios/update-admin.service.js';
 import { createVetRecordAdminService } from './servicios/vet-record-admin.service.js';
+import { createTaskTemplateAdminService } from './servicios/task-template-admin.service.js';
+import { createTaskService } from './servicios/task.service.js';
+import { createZoneAdminService } from './servicios/zone-admin.service.js';
 
 export interface AppOptions {
   db: Pool;
@@ -248,6 +251,9 @@ export function createApp(options: AppOptions): Express {
       }),
       activityLogs: createActivityAdminService({ db }),
       stats: createStatsAdminService({ db, reloj }),
+      zones: createZoneAdminService({ db }),
+      taskTemplates: createTaskTemplateAdminService({ db, reloj }),
+      tasks: createTaskService({ db, reloj, media }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

@@ -267,6 +267,7 @@ Los formularios públicos de donación y contacto envían emails a direcciones q
   - El filtro por propietario va en la propia consulta SQL (`WHERE user_id = $1 AND id = $2`); no se comprueba después de leer el recurso.
   - Un recurso ajeno responde **404** (no 403), para no revelar que existe.
   - Vale igual para leer, modificar y borrar.
+- **Trabajo diario del personal (CU-52 a CU-59):** las rutas del panel siguen la misma regla. Las de consulta y «Mi día» (`GET /zones`, `GET /qualifications`, `GET /my-day`, `POST /tasks/:id/{complete,not-done,reopen}`) son de todo el personal; las de configuración (zonas, cualificaciones, plantillas, tareas puntuales, reasignar, borrar, ajustes) llevan `requireRole('admin')`. Además, completar o marcar como no realizada una tarea que exige una cualificación pide tenerla: el servicio responde 403 `MISSING_QUALIFICATION` y el trigger `check_task_people` lo impide también en la base de datos. «Deshacer» solo lo puede quien la resolvió, el mismo día, o un administrador (403 si no). Subir la foto de una tarea exige `X-Requested-With`, como las demás subidas.
 - El cliente nunca decide permisos: solo oculta la interfaz (`RequireRole` en las rutas de React). El servidor decide siempre.
 
 ## 9. Respuestas y mensajes de error
@@ -397,6 +398,7 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
 | Los datos de la tarjeta del pago simulado no se pasan a la API | `client/tests/PaymentModal.test.tsx` |
 | El idioma solo admite `es`, `ca` o `en`; emails, avisos y PDF en el idioma de cada persona | `server/tests/idioma.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
+| Trabajo diario: configuración solo del administrador; completar exige la cualificación (servicio y trigger); deshacer, quien la resolvió o un administrador | `server/tests/admin.routes.test.ts`, `server/tests/admin-zones.routes.test.ts`, `server/tests/admin-task-templates.routes.test.ts`, `server/tests/my-day.routes.test.ts` (CU-52 a CU-57) |
 
 ## 15. Fuera de alcance
 

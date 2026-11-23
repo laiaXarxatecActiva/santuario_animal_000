@@ -32,6 +32,13 @@ BEGIN;
 -- 0. Limpieza: se borra todo lo que crea este script
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS
+    work_settings,
+    task_instance_animals,
+    task_instances,
+    task_template_animals,
+    task_templates,
+    user_qualifications,
+    qualifications,
     activity_logs,
     vet_records,
     notifications,
@@ -44,6 +51,7 @@ DROP TABLE IF EXISTS
     animal_updates,
     animals,
     species,
+    zones,
     user_sessions,
     user_tokens,
     users
@@ -53,6 +61,8 @@ DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
 DROP FUNCTION IF EXISTS check_adoption_user_role() CASCADE;
 DROP FUNCTION IF EXISTS check_update_author_role() CASCADE;
 DROP FUNCTION IF EXISTS check_animal_cover_photo() CASCADE;
+DROP FUNCTION IF EXISTS check_worker_user() CASCADE;
+DROP FUNCTION IF EXISTS check_task_people() CASCADE;
 
 -- -----------------------------------------------------------------------------
 -- 1. Funciones auxiliares
@@ -160,12 +170,31 @@ CREATE TRIGGER species_set_updated_at
     BEFORE UPDATE ON species
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
+-- Zonas o recintos del santuario (CU-52). Cada animal vive en una; la mayoría
+-- de las tareas del personal se organizan por zona. No se borran si se usan:
+-- se desactivan.
+CREATE TABLE zones (
+    id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    is_active    BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX zones_name_lower_key ON zones (LOWER(name));
+
+CREATE TRIGGER zones_set_updated_at
+    BEFORE UPDATE ON zones
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- Animales del santuario.
 -- Un animal fallecido o trasladado se archiva cambiando su estado; no se borra.
 CREATE TABLE animals (
     id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name                VARCHAR(100) NOT NULL,
     species_id          INTEGER      NOT NULL REFERENCES species (id) ON DELETE RESTRICT,
+    zone_id             INTEGER      REFERENCES zones (id) ON DELETE RESTRICT, -- CU-52: recinto donde vive
     sex                 VARCHAR(10)  NOT NULL DEFAULT 'unknown'
                         CHECK (sex IN ('male', 'female', 'unknown')),
     approx_birth_date   DATE,
@@ -194,6 +223,7 @@ CREATE TABLE animals (
 );
 
 CREATE INDEX animals_species_idx ON animals (species_id);
+CREATE INDEX animals_zone_idx ON animals (zone_id);
 CREATE INDEX animals_catalog_idx ON animals (is_published, status, is_adoptable);
 CREATE INDEX animals_name_lower_idx ON animals (LOWER(name));
 
@@ -575,5 +605,199 @@ CREATE TABLE activity_logs (
 
 CREATE INDEX activity_logs_record_idx ON activity_logs (table_name, record_id);
 CREATE INDEX activity_logs_user_idx ON activity_logs (user_id, created_at DESC);
+
+-- -----------------------------------------------------------------------------
+-- 7. Trabajo diario del personal (CU-52 en adelante)
+-- -----------------------------------------------------------------------------
+-- Las zonas están en la sección 3, junto a los animales que viven en ellas.
+
+-- Comprueba que un usuario es trabajador (cuidador o administrador).
+CREATE FUNCTION check_worker_user() RETURNS trigger AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id AND role IN ('caretaker', 'admin')) THEN
+        RAISE EXCEPTION 'Solo un trabajador puede tener cualificaciones, turnos o ausencias (user_id = %)', NEW.user_id
+            USING ERRCODE = 'check_violation';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Cualificaciones (CU-53): lo que un trabajador está autorizado a hacer,
+-- como «Administrar medicación». Una tarea puede exigir una.
+CREATE TABLE qualifications (
+    id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name         VARCHAR(100) NOT NULL,
+    description  TEXT,
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX qualifications_name_lower_key ON qualifications (LOWER(name));
+
+CREATE TRIGGER qualifications_set_updated_at
+    BEFORE UPDATE ON qualifications
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Cualificaciones de cada trabajador.
+CREATE TABLE user_qualifications (
+    user_id           INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    qualification_id  INTEGER     NOT NULL REFERENCES qualifications (id) ON DELETE RESTRICT,
+    granted_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, qualification_id)
+);
+
+CREATE TRIGGER user_qualifications_check_worker
+    BEFORE INSERT OR UPDATE OF user_id ON user_qualifications
+    FOR EACH ROW EXECUTE FUNCTION check_worker_user();
+
+-- Plantillas de tareas recurrentes (CU-54). De cada una salen las tareas
+-- concretas de cada día (task_instances) con la tarea generate-tasks.
+--   recurrence = 'daily'        -> todos los días
+--   recurrence = 'weekdays'     -> los días de `weekdays` (1 = lunes ... 7 = domingo)
+--   recurrence = 'every_n_days' -> cada `interval_days` días contando desde start_date
+-- Las horas (`times`) son de Europe/Madrid. No se borran si ya tienen
+-- historial: se desactivan.
+CREATE TABLE task_templates (
+    id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    type              VARCHAR(20)  NOT NULL
+                      CHECK (type IN ('feeding', 'cleaning', 'medication', 'enrichment', 'health_check', 'maintenance')),
+    title             VARCHAR(150) NOT NULL,
+    description       TEXT,
+    zone_id           INTEGER      REFERENCES zones (id) ON DELETE RESTRICT, -- si falta, la de sus animales
+    qualification_id  INTEGER      REFERENCES qualifications (id) ON DELETE RESTRICT,
+    times             TIME[]       NOT NULL,
+    recurrence        VARCHAR(20)  NOT NULL
+                      CHECK (recurrence IN ('daily', 'weekdays', 'every_n_days')),
+    weekdays          SMALLINT[],
+    interval_days     SMALLINT,
+    start_date        DATE         NOT NULL,
+    end_date          DATE,
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT task_templates_times_count CHECK (cardinality(times) BETWEEN 1 AND 12),
+    CONSTRAINT task_templates_dates_order CHECK (end_date IS NULL OR end_date >= start_date),
+    CONSTRAINT task_templates_weekdays_consistent
+        CHECK ((recurrence = 'weekdays') = (weekdays IS NOT NULL)),
+    CONSTRAINT task_templates_weekdays_valid
+        CHECK (weekdays IS NULL OR (cardinality(weekdays) BETWEEN 1 AND 7
+               AND weekdays <@ ARRAY[1, 2, 3, 4, 5, 6, 7]::SMALLINT[])),
+    CONSTRAINT task_templates_interval_consistent
+        CHECK ((recurrence = 'every_n_days') = (interval_days IS NOT NULL)),
+    CONSTRAINT task_templates_interval_valid
+        CHECK (interval_days IS NULL OR interval_days BETWEEN 2 AND 365)
+);
+
+CREATE INDEX task_templates_active_idx ON task_templates (is_active, start_date);
+
+CREATE TRIGGER task_templates_set_updated_at
+    BEFORE UPDATE ON task_templates
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Animales a los que se refiere una plantilla (opcional).
+CREATE TABLE task_template_animals (
+    template_id  INTEGER NOT NULL REFERENCES task_templates (id) ON DELETE CASCADE,
+    animal_id    INTEGER NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    PRIMARY KEY (template_id, animal_id)
+);
+
+CREATE INDEX task_template_animals_animal_idx ON task_template_animals (animal_id);
+
+-- Tareas concretas de un día (CU-56, CU-57). Las genera generate-tasks a partir
+-- de las plantillas; las puntuales (sin plantilla) las crea un administrador.
+--   pending   -> por hacer («atrasada» se calcula: pasada la hora y el margen)
+--   completed -> hecha: quién (resolved_by) y cuándo (resolved_at)
+--   not_done  -> no realizada: la marca un trabajador con el motivo, o el
+--                sistema (resolved_by NULL) si acaba el día sin hacerse
+CREATE TABLE task_instances (
+    id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    template_id       INTEGER      REFERENCES task_templates (id) ON DELETE CASCADE,
+    type              VARCHAR(20)  NOT NULL
+                      CHECK (type IN ('feeding', 'cleaning', 'medication', 'enrichment', 'health_check', 'maintenance')),
+    title             VARCHAR(150) NOT NULL,
+    description       TEXT,
+    zone_id           INTEGER      REFERENCES zones (id) ON DELETE RESTRICT,
+    qualification_id  INTEGER      REFERENCES qualifications (id) ON DELETE RESTRICT,
+    due_date          DATE         NOT NULL,                -- día en Europe/Madrid
+    due_time          TIME         NOT NULL,                -- hora en Europe/Madrid
+    due_at            TIMESTAMPTZ  NOT NULL,                -- el mismo instante, para comparar con «ahora»
+    status            VARCHAR(20)  NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending', 'completed', 'not_done')),
+    assigned_to       INTEGER      REFERENCES users (id) ON DELETE RESTRICT, -- reasignación explícita del admin
+    resolved_by       INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    resolved_at       TIMESTAMPTZ,
+    observations      VARCHAR(1000),
+    photo_url         VARCHAR(500),
+    created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT, -- admin, si es puntual
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT task_instances_resolved_consistent CHECK ((status = 'pending') = (resolved_at IS NULL)),
+    CONSTRAINT task_instances_completed_by CHECK (status <> 'completed' OR resolved_by IS NOT NULL),
+    -- Siempre hay alguien responsable: la gente de la zona o una persona concreta.
+    CONSTRAINT task_instances_has_owner CHECK (zone_id IS NOT NULL OR assigned_to IS NOT NULL)
+);
+
+-- Generación idempotente: una sola tarea por plantilla e instante.
+CREATE UNIQUE INDEX task_instances_template_due_key
+    ON task_instances (template_id, due_at) WHERE template_id IS NOT NULL;
+CREATE INDEX task_instances_day_idx ON task_instances (due_date, zone_id);
+CREATE INDEX task_instances_pending_idx ON task_instances (due_at) WHERE status = 'pending';
+
+CREATE TRIGGER task_instances_set_updated_at
+    BEFORE UPDATE ON task_instances
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Quien tiene asignada o completa una tarea es un trabajador y, si la tarea
+-- exige una cualificación, la tiene (CU-57, regla aplicada también en el dominio).
+CREATE FUNCTION check_task_people() RETURNS trigger AS $$
+DECLARE
+    persona INTEGER;
+BEGIN
+    FOREACH persona IN ARRAY ARRAY[NEW.assigned_to, CASE WHEN NEW.status = 'completed' THEN NEW.resolved_by END] LOOP
+        CONTINUE WHEN persona IS NULL;
+        IF NOT EXISTS (SELECT 1 FROM users WHERE id = persona AND role IN ('caretaker', 'admin')) THEN
+            RAISE EXCEPTION 'La tarea % solo la puede tener o completar un trabajador (user_id = %)', NEW.id, persona
+                USING ERRCODE = 'check_violation';
+        END IF;
+        IF NEW.qualification_id IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM user_qualifications
+             WHERE user_id = persona AND qualification_id = NEW.qualification_id
+        ) THEN
+            RAISE EXCEPTION 'La tarea % exige la cualificación % (user_id = %)', NEW.id, NEW.qualification_id, persona
+                USING ERRCODE = 'check_violation';
+        END IF;
+    END LOOP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER task_instances_check_people
+    BEFORE INSERT OR UPDATE OF assigned_to, resolved_by, status, qualification_id ON task_instances
+    FOR EACH ROW EXECUTE FUNCTION check_task_people();
+
+-- Animales de cada tarea concreta (copiados de la plantilla al generarla).
+CREATE TABLE task_instance_animals (
+    task_id    INTEGER NOT NULL REFERENCES task_instances (id) ON DELETE CASCADE,
+    animal_id  INTEGER NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, animal_id)
+);
+
+CREATE INDEX task_instance_animals_animal_idx ON task_instance_animals (animal_id);
+
+-- Ajustes del trabajo diario (CU-73). Una sola fila, que crea este script.
+CREATE TABLE work_settings (
+    id                   SMALLINT    PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    late_margin_minutes  SMALLINT    NOT NULL DEFAULT 30
+                         CHECK (late_margin_minutes BETWEEN 0 AND 240), -- «atrasada» tras la hora + este margen
+    updated_by           INTEGER     REFERENCES users (id) ON DELETE RESTRICT,
+    updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO work_settings (id) VALUES (1);
+
+CREATE TRIGGER work_settings_set_updated_at
+    BEFORE UPDATE ON work_settings
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 COMMIT;

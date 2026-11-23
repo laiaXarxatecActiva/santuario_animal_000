@@ -2,9 +2,11 @@ import { NotFoundError } from '../errors/app-error.js';
 import { runBilling } from './billing.job.js';
 import { runExpirePending } from './expire-pending.job.js';
 import { runFinishCancelled } from './finish-cancelled.job.js';
+import { runGenerateTasks } from './generate-tasks.job.js';
 import type { JobDeps, JobResult } from './job.types.js';
 import { runManualPayments } from './manual-payments.job.js';
 import { runMonthlyDigest } from './monthly-digest.job.js';
+import { runTaskAlerts } from './task-alerts.job.js';
 import { runUpdateReminder } from './update-reminder.job.js';
 
 // Tareas programadas (TECH_SPEC §11.4). Horario en Europe/Madrid.
@@ -16,6 +18,9 @@ export const JOBS = {
   'finish-cancelled': { schedule: '45 3 * * *', run: runFinishCancelled },
   'monthly-digest': { schedule: '0 9 1 * *', run: runMonthlyDigest },
   'update-reminder': { schedule: '0 7 * * *', run: runUpdateReminder },
+  // CU-58 y CU-59: trabajo diario del personal.
+  'generate-tasks': { schedule: '10 0 * * *', run: runGenerateTasks },
+  'task-alerts': { schedule: '*/15 * * * *', run: runTaskAlerts },
 } as const;
 
 export type JobName = keyof typeof JOBS;

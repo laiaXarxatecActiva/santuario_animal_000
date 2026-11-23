@@ -250,7 +250,16 @@
     "PAYMENT_NOT_REFUNDABLE": "Solo se puede devolver un pago cobrado.",
     "REFUND_FAILED": "La pasarela no ha podido hacer la devolución. Inténtalo más tarde.",
     "MANUAL_PAYMENT_NOT_ALLOWED": "Esta adopción no tiene ninguna cuota pendiente de pago.",
-    "DONATION_NOT_REFUNDABLE": "Solo se puede devolver una donación cobrada."
+    "DONATION_NOT_REFUNDABLE": "Solo se puede devolver una donación cobrada.",
+    "ZONE_NAME_TAKEN": "Ya existe una zona con este nombre.",
+    "ZONE_IN_USE": "Esta zona tiene animales, tareas o turnos: desactívala en lugar de borrarla.",
+    "QUALIFICATION_NAME_TAKEN": "Ya existe una cualificación con este nombre.",
+    "QUALIFICATION_IN_USE": "Esta cualificación la tienen trabajadores o la exigen tareas: no se puede borrar.",
+    "TEMPLATE_HAS_HISTORY": "Esta plantilla ya tiene tareas resueltas: desactívala en lugar de borrarla.",
+    "TASK_NOT_PENDING": "Esta tarea ya está resuelta.",
+    "TASK_IS_PENDING": "Esta tarea sigue pendiente.",
+    "TASK_FUTURE_DAY": "Todavía no se puede hacer: es de otro día.",
+    "MISSING_QUALIFICATION": "Esta tarea exige una cualificación que no tienes."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -580,7 +589,12 @@
       "donations": "Donaciones",
       "activity": "Actividad",
       "vet": "Veterinario",
-      "stats": "Estadísticas"
+      "stats": "Estadísticas",
+      "groupWork": "Trabajo diario",
+      "myDay": "Mi día",
+      "tasks": "Tareas del día",
+      "taskTemplates": "Plantillas de tareas",
+      "zones": "Zonas y cualificaciones"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -718,7 +732,8 @@
       "tabUpdates": "Actualizaciones",
       "tabVet": "Veterinario",
       "showInMemorial": "Mostrar en «En memoria»",
-      "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar."
+      "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar.",
+      "zone": "Zona"
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -1288,5 +1303,167 @@
     "saved": "Forma de pago guardada.",
     "due": "La cuota de {{name}} vence el {{date}}. Puedes pagarla hasta el {{deadline}} sin que la adopción se pause.",
     "payFee": "Pagar la cuota"
+  },
+  "work": {
+    "types": {
+      "feeding": "Alimentación",
+      "cleaning": "Limpieza",
+      "medication": "Medicación",
+      "enrichment": "Enriquecimiento",
+      "health_check": "Revisión de salud",
+      "maintenance": "Mantenimiento"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "completed": "Hecha",
+      "not_done": "No realizada"
+    },
+    "late": "Atrasada",
+    "oneOff": "Puntual",
+    "resolvedBy": "{{name}}, a las {{time}}",
+    "resolvedBySystem": "Cerrada por el sistema al acabar el día",
+    "assignedTo": "Asignada a {{name}}",
+    "requires": "Exige: {{name}}",
+    "photo": "Foto",
+    "viewPhoto": "Ver la foto",
+    "blocked": {
+      "MISSING_QUALIFICATION": "Necesitas la cualificación «{{name}}».",
+      "FUTURE_DAY": "Se podrá marcar ese mismo día."
+    },
+    "weekdayShort": {
+      "1": "Lun",
+      "2": "Mar",
+      "3": "Mié",
+      "4": "Jue",
+      "5": "Vie",
+      "6": "Sáb",
+      "7": "Dom"
+    },
+    "weekdayLong": {
+      "1": "Lunes",
+      "2": "Martes",
+      "3": "Miércoles",
+      "4": "Jueves",
+      "5": "Viernes",
+      "6": "Sábado",
+      "7": "Domingo"
+    },
+    "myDay": {
+      "title": "Mi día",
+      "mine": "Asignadas a ti",
+      "rest": "Tareas del día",
+      "empty": "No hay tareas para este día.",
+      "prevDay": "Día anterior",
+      "nextDay": "Día siguiente",
+      "today": "Hoy",
+      "done": "Hecha",
+      "withNote": "Con nota o foto",
+      "notDone": "No se ha podido hacer",
+      "undo": "Deshacer",
+      "markedDone": "Tarea marcada como hecha",
+      "markedNotDone": "Tarea marcada como no realizada",
+      "reopened": "La tarea vuelve a estar pendiente",
+      "observations": "Observaciones",
+      "completeSubmit": "Marcar como hecha",
+      "reason": "Motivo",
+      "loadError": "No se han podido cargar las tareas."
+    },
+    "tasks": {
+      "title": "Tareas del día",
+      "new": "Nueva tarea puntual",
+      "created": "Tarea creada",
+      "day": "Día",
+      "time": "Hora",
+      "zone": "Zona",
+      "status": "Estado",
+      "all": "Todas",
+      "allStatuses": "Todos",
+      "task": "Tarea",
+      "assignee": "Asignada a",
+      "result": "Resultado",
+      "reassign": "Reasignar {{title}}",
+      "reassignTitle": "Reasignar: {{title}}",
+      "person": "Persona",
+      "noPerson": "Sin asignar (según la zona)",
+      "reassigned": "Tarea reasignada",
+      "deleted": "Tarea borrada",
+      "confirmDelete": "¿Borrar «{{title}}»?",
+      "confirmDeleteText": "La tarea desaparecerá de «Mi día».",
+      "empty": "No hay tareas con estos filtros.",
+      "settings": "Ajustes",
+      "type": "Tipo",
+      "titleField": "Título",
+      "description": "Descripción",
+      "animals": "Animales",
+      "qualification": "Cualificación necesaria",
+      "none": "Ninguna",
+      "loadError": "No se han podido cargar las tareas."
+    },
+    "templates": {
+      "title": "Plantillas de tareas",
+      "new": "Nueva plantilla",
+      "editTitle": "Editar plantilla",
+      "saved": "Plantilla guardada",
+      "deleted": "Plantilla borrada",
+      "zoneFromAnimals": "Según sus animales",
+      "times": "Horas (HH:MM, separadas por comas)",
+      "recurrence": "Se repite",
+      "recurrences": {
+        "daily": "Cada día",
+        "weekdays": "Algunos días de la semana",
+        "every_n_days": "Cada varios días"
+      },
+      "weekdays": "Días",
+      "intervalDays": "Cada cuántos días",
+      "startDate": "Desde",
+      "endDate": "Hasta",
+      "active": "Activa",
+      "inactive": "Desactivada",
+      "when": "Cuándo",
+      "scheduleDaily": "Cada día · {{times}}",
+      "scheduleEvery": "Cada {{count}} días · {{times}}",
+      "scheduleWeekdays": "{{days}} · {{times}}",
+      "regenerateNotice": "Al guardar, las tareas pendientes de hoy en adelante se vuelven a generar.",
+      "confirmDelete": "¿Borrar la plantilla «{{title}}»?",
+      "confirmDeleteText": "Se borrarán también sus tareas pendientes.",
+      "empty": "Todavía no hay plantillas.",
+      "loadError": "No se han podido cargar las plantillas."
+    },
+    "zones": {
+      "title": "Zonas y cualificaciones",
+      "zonesTitle": "Zonas",
+      "new": "Nueva zona",
+      "editTitle": "Editar zona",
+      "saved": "Zona guardada",
+      "deleted": "Zona borrada",
+      "name": "Nombre",
+      "description": "Descripción",
+      "animalCount": "Animales",
+      "active": "Activa",
+      "inactive": "Desactivada",
+      "confirmDelete": "¿Borrar la zona «{{name}}»?",
+      "confirmDeleteText": "No se puede deshacer.",
+      "empty": "Todavía no hay zonas.",
+      "loadError": "No se han podido cargar las zonas."
+    },
+    "qualifications": {
+      "title": "Cualificaciones",
+      "new": "Nueva cualificación",
+      "editTitle": "Editar cualificación",
+      "saved": "Cualificación guardada",
+      "deleted": "Cualificación borrada",
+      "workerCount": "Trabajadores",
+      "confirmDelete": "¿Borrar la cualificación «{{name}}»?",
+      "empty": "Todavía no hay cualificaciones.",
+      "loadError": "No se han podido cargar las cualificaciones.",
+      "userSave": "Guardar cualificaciones",
+      "userSaved": "Cualificaciones guardadas",
+      "userHelp": "Las tareas que exigen una cualificación solo las puede marcar quien la tiene."
+    },
+    "settings": {
+      "title": "Ajustes del trabajo diario",
+      "lateMargin": "Margen para considerar atrasada una tarea (minutos)",
+      "saved": "Ajustes guardados"
+    }
   }
 }

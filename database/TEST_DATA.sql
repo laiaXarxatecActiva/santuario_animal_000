@@ -52,6 +52,12 @@ BEGIN;
 -- 0. Vaciar todas las tablas y reiniciar los contadores de id
 -- -----------------------------------------------------------------------------
 TRUNCATE TABLE
+    task_instance_animals,
+    task_instances,
+    task_template_animals,
+    task_templates,
+    user_qualifications,
+    qualifications,
     activity_logs,
     vet_records,
     notifications,
@@ -64,6 +70,7 @@ TRUNCATE TABLE
     animal_updates,
     animals,
     species,
+    zones,
     user_sessions,
     user_tokens,
     users
@@ -576,6 +583,105 @@ INSERT INTO activity_logs (user_id, action, table_name, record_id, details, crea
 (1,    'update',  'users',          14, '{"is_active": [true, false]}',                                 pg_temp.ago_ts('2 months', '10:00'));
 
 -- -----------------------------------------------------------------------------
+-- 15. Trabajo diario del personal: zonas, cualificaciones y tareas
+-- -----------------------------------------------------------------------------
+-- Zonas (CU-52). Barbas (13, trasladado) ya no tiene zona.
+INSERT INTO zones (id, name, description) OVERRIDING SYSTEM VALUE VALUES
+(1, 'Gran voladero',               'Voladero grande de la colonia de buitres leonados.'),
+(2, 'Voladero de buitres negros',  'Voladero con plataformas de nido en altura.'),
+(3, 'Voladero de alimoches',       'Voladero pequeño con roquedo y bañera.'),
+(4, 'Clínica y recuperación',      'Jaulas de hospital y cuarentena para los animales en tratamiento.'),
+(5, 'Cocina y almacén',            'Preparación de la comida, cámara frigorífica y almacén.');
+
+UPDATE animals SET zone_id = 1 WHERE id IN (1, 2, 3, 5, 6, 7, 15);
+UPDATE animals SET zone_id = 2 WHERE id IN (8, 9);
+UPDATE animals SET zone_id = 3 WHERE id IN (11, 12);
+UPDATE animals SET zone_id = 4 WHERE id IN (4, 10, 14);
+
+-- Cualificaciones (CU-53).
+--   Nuria (3): medicación y grandes rapaces. Andrés (4): grandes rapaces y
+--   mantenimiento. Carmen (5): ninguna. Marta (1): medicación. Javier (2): mantenimiento.
+INSERT INTO qualifications (id, name, description) OVERRIDING SYSTEM VALUE VALUES
+(1, 'Administrar medicación',         'Puede dar la medicación pautada por el veterinario.'),
+(2, 'Manejo de grandes rapaces',      'Puede sujetar y manipular buitres para revisiones y curas.'),
+(3, 'Mantenimiento de instalaciones', 'Puede reparar mallas, vallas, puertas e instalaciones.');
+
+INSERT INTO user_qualifications (user_id, qualification_id) VALUES
+(1, 1), (2, 3), (3, 1), (3, 2), (4, 2), (4, 3);
+
+-- Plantillas de tareas (CU-54). Los buitres adultos no comen a diario: el
+-- gran voladero y los buitres negros comen lunes, miércoles y viernes.
+INSERT INTO task_templates (
+    id, type, title, description, zone_id, qualification_id, times, recurrence, weekdays, interval_days,
+    start_date, end_date, created_by
+) OVERRIDING SYSTEM VALUE VALUES
+(1,  'feeding',      'Comida del gran voladero',       'Repartir la carne en el comedero central.',
+     1, NULL, ARRAY['09:00']::TIME[], 'weekdays', ARRAY[1, 3, 5]::SMALLINT[], NULL, pg_temp.ago('1 year'), NULL, 1),
+(2,  'feeding',      'Comida de los buitres negros',   NULL,
+     2, NULL, ARRAY['09:30']::TIME[], 'weekdays', ARRAY[1, 3, 5]::SMALLINT[], NULL, pg_temp.ago('1 year'), NULL, 1),
+(3,  'feeding',      'Comida de los alimoches',        'Raciones pequeñas troceadas.',
+     3, NULL, ARRAY['10:00']::TIME[], 'daily', NULL, NULL, pg_temp.ago('1 year'), NULL, 1),
+(4,  'feeding',      'Comida de la clínica',           'Raciones individuales según la ficha de cada jaula.',
+     4, NULL, ARRAY['09:00', '17:00']::TIME[], 'daily', NULL, NULL, pg_temp.ago('1 year'), NULL, 1),
+(5,  'cleaning',     'Limpieza del gran voladero',     'Retirar restos de comida y limpiar los bebederos.',
+     1, NULL, ARRAY['11:00']::TIME[], 'weekdays', ARRAY[2, 5]::SMALLINT[], NULL, pg_temp.ago('1 year'), NULL, 1),
+(6,  'cleaning',     'Limpieza de la clínica',         'Cambiar el sustrato de las jaulas ocupadas.',
+     4, NULL, ARRAY['12:00']::TIME[], 'daily', NULL, NULL, pg_temp.ago('1 year'), NULL, 1),
+(7,  'cleaning',     'Limpieza de la cocina',          'Desinfectar mesas, cuchillos y suelo.',
+     5, NULL, ARRAY['16:00']::TIME[], 'daily', NULL, NULL, pg_temp.ago('1 year'), NULL, 1),
+(8,  'health_check', 'Revisión de los animales en tratamiento', 'Mirar postura, plumaje y heces; anotar cualquier cambio.',
+     4, 2,    ARRAY['08:30']::TIME[], 'daily', NULL, NULL, pg_temp.ago('6 months'), NULL, 1),
+(9,  'enrichment',   'Enriquecimiento: carroña colgada', 'Colgar una pieza para que tengan que trabajar para comer.',
+     1, NULL, ARRAY['13:00']::TIME[], 'every_n_days', NULL, 3, pg_temp.ago('2 months'), NULL, 1),
+(10, 'maintenance',  'Revisión de mallas y vallas',    'Buscar roturas en la malla del voladero.',
+     1, 3,    ARRAY['15:00']::TIME[], 'weekdays', ARRAY[1]::SMALLINT[], NULL, pg_temp.ago('1 year'), NULL, 1),
+(11, 'medication',   'Antiinflamatorio de Olmo',       'Meloxicam en la comida.',
+     4, 1,    ARRAY['09:00']::TIME[], 'daily', NULL, NULL, pg_temp.ago('5 days'), CURRENT_DATE + 5, 1);
+
+INSERT INTO task_template_animals (template_id, animal_id) VALUES (11, 4);
+
+-- Tareas de los últimos 7 días y de los próximos 6, como las generaría
+-- generate-tasks (la hora es de Europe/Madrid).
+INSERT INTO task_instances (template_id, type, title, description, zone_id, qualification_id, due_date, due_time, due_at)
+SELECT t.id, t.type, t.title, t.description, t.zone_id, t.qualification_id, d::date, h,
+       (d::date + h) AT TIME ZONE 'Europe/Madrid'
+  FROM task_templates t
+ CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE + 6, INTERVAL '1 day') AS d
+ CROSS JOIN unnest(t.times) AS h
+ WHERE d::date >= t.start_date AND (t.end_date IS NULL OR d::date <= t.end_date)
+   AND (t.recurrence = 'daily'
+        OR (t.recurrence = 'weekdays' AND EXTRACT(ISODOW FROM d)::SMALLINT = ANY (t.weekdays))
+        OR (t.recurrence = 'every_n_days' AND (d::date - t.start_date) % t.interval_days = 0))
+ ORDER BY d, h, t.id;
+
+INSERT INTO task_instance_animals (task_id, animal_id)
+SELECT i.id, ta.animal_id FROM task_instances i JOIN task_template_animals ta ON ta.template_id = i.template_id;
+
+-- Lo pasado está hecho, salvo dos casos. De hoy, lo de antes de las 11:00,
+-- menos la revisión (8) y la medicación de Olmo (11): siguen pendientes y atrasadas.
+UPDATE task_instances
+   SET status = 'completed',
+       resolved_by = CASE qualification_id WHEN 1 THEN 3 WHEN 2 THEN 4 WHEN 3 THEN 4
+                     ELSE (ARRAY[3, 4, 5])[1 + id % 3] END,
+       resolved_at = due_at + INTERVAL '25 minutes'
+ WHERE due_date < CURRENT_DATE
+    OR (due_date = CURRENT_DATE AND due_time < '11:00' AND template_id NOT IN (8, 11));
+
+-- Hace 2 días, Carmen no pudo limpiar la clínica; ayer nadie limpió la cocina.
+UPDATE task_instances
+   SET status = 'not_done', resolved_by = 5, resolved_at = due_at + INTERVAL '10 minutes',
+       observations = 'No se pudo entrar: Pipa estaba en cuarentena estricta.'
+ WHERE template_id = 6 AND due_date = CURRENT_DATE - 2;
+UPDATE task_instances
+   SET status = 'not_done', resolved_by = NULL, resolved_at = (due_date + 1)::timestamp AT TIME ZONE 'Europe/Madrid'
+ WHERE template_id = 7 AND due_date = CURRENT_DATE - 1;
+
+-- Una tarea puntual de hoy, asignada a Andrés (4).
+INSERT INTO task_instances (type, title, description, zone_id, due_date, due_time, due_at, assigned_to, created_by)
+VALUES ('maintenance', 'Reparar la puerta del almacén', 'La bisagra de arriba está suelta.', 5,
+        CURRENT_DATE, '15:00', (CURRENT_DATE + TIME '15:00') AT TIME ZONE 'Europe/Madrid', 4, 1);
+
+-- -----------------------------------------------------------------------------
 -- 14. Ajustar los contadores de id tras insertar ids explícitos
 -- -----------------------------------------------------------------------------
 SELECT setval(pg_get_serial_sequence('users', 'id'),          (SELECT MAX(id) FROM users));
@@ -586,5 +692,8 @@ SELECT setval(pg_get_serial_sequence('photos', 'id'),         (SELECT MAX(id) FR
 SELECT setval(pg_get_serial_sequence('adoption_plans', 'id'), (SELECT MAX(id) FROM adoption_plans));
 SELECT setval(pg_get_serial_sequence('adoptions', 'id'),      (SELECT MAX(id) FROM adoptions));
 SELECT setval(pg_get_serial_sequence('donations', 'id'),      (SELECT MAX(id) FROM donations));
+SELECT setval(pg_get_serial_sequence('zones', 'id'),          (SELECT MAX(id) FROM zones));
+SELECT setval(pg_get_serial_sequence('qualifications', 'id'), (SELECT MAX(id) FROM qualifications));
+SELECT setval(pg_get_serial_sequence('task_templates', 'id'), (SELECT MAX(id) FROM task_templates));
 
 COMMIT;

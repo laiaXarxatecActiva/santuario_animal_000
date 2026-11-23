@@ -256,6 +256,8 @@ export const animalBodySchema = z
     isPublished: z.boolean(),
     /** CU-12: solo para fallecidos (RN-22). Sin el campo, no cambia. */
     showInMemorial: z.boolean().optional(),
+    /** CU-52: zona donde vive; `null` la quita. Sin el campo, no cambia. */
+    zoneId: z.union([z.literal('').transform(() => null), z.coerce.number().int().positive(), z.null()]).optional(),
   })
   .refine((a) => a.approxBirthDate === null || a.approxBirthDate <= a.arrivalDate, {
     path: ['approxBirthDate'],

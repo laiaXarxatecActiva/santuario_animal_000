@@ -250,7 +250,16 @@
     "PAYMENT_NOT_REFUNDABLE": "Only a collected payment can be refunded.",
     "REFUND_FAILED": "The payment gateway could not make the refund. Please try later.",
     "MANUAL_PAYMENT_NOT_ALLOWED": "This adoption has no fee pending payment.",
-    "DONATION_NOT_REFUNDABLE": "Only a collected donation can be refunded."
+    "DONATION_NOT_REFUNDABLE": "Only a collected donation can be refunded.",
+    "ZONE_NAME_TAKEN": "An area with this name already exists.",
+    "ZONE_IN_USE": "This area has animals, tasks or shifts: deactivate it instead of deleting it.",
+    "QUALIFICATION_NAME_TAKEN": "A qualification with this name already exists.",
+    "QUALIFICATION_IN_USE": "Workers hold this qualification or tasks require it: it cannot be deleted.",
+    "TEMPLATE_HAS_HISTORY": "This template already has resolved tasks: deactivate it instead of deleting it.",
+    "TASK_NOT_PENDING": "This task has already been resolved.",
+    "TASK_IS_PENDING": "This task is still pending.",
+    "TASK_FUTURE_DAY": "It cannot be done yet: it is for another day.",
+    "MISSING_QUALIFICATION": "This task requires a qualification you do not have."
   },
   "form": {
     "showPassword": "Show password",
@@ -580,7 +589,12 @@
       "donations": "Donations",
       "activity": "Activity",
       "vet": "Veterinary",
-      "stats": "Statistics"
+      "stats": "Statistics",
+      "groupWork": "Daily work",
+      "myDay": "My day",
+      "tasks": "Today's tasks",
+      "taskTemplates": "Task templates",
+      "zones": "Areas and qualifications"
     },
     "dashboard": {
       "title": "Hello, {{name}}",
@@ -718,7 +732,8 @@
       "tabUpdates": "Updates",
       "tabVet": "Veterinary",
       "showInMemorial": "Show in \"In memory\"",
-      "showInMemorialHelp": "Their profile will appear in the public \"In memory\" section, with no option to adopt."
+      "showInMemorialHelp": "Their profile will appear in the public \"In memory\" section, with no option to adopt.",
+      "zone": "Area"
     },
     "media": {
       "dropHere": "Drag photos or videos here",
@@ -1288,5 +1303,167 @@
     "saved": "Payment method saved.",
     "due": "{{name}}'s fee is due on {{date}}. You can pay it until {{deadline}} without the adoption being paused.",
     "payFee": "Pay the fee"
+  },
+  "work": {
+    "types": {
+      "feeding": "Feeding",
+      "cleaning": "Cleaning",
+      "medication": "Medication",
+      "enrichment": "Enrichment",
+      "health_check": "Health check",
+      "maintenance": "Maintenance"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Done",
+      "not_done": "Not done"
+    },
+    "late": "Late",
+    "oneOff": "One-off",
+    "resolvedBy": "{{name}}, at {{time}}",
+    "resolvedBySystem": "Closed by the system at the end of the day",
+    "assignedTo": "Assigned to {{name}}",
+    "requires": "Requires: {{name}}",
+    "photo": "Photo",
+    "viewPhoto": "View the photo",
+    "blocked": {
+      "MISSING_QUALIFICATION": "You need the “{{name}}” qualification.",
+      "FUTURE_DAY": "It can be marked on that day."
+    },
+    "weekdayShort": {
+      "1": "Mon",
+      "2": "Tue",
+      "3": "Wed",
+      "4": "Thu",
+      "5": "Fri",
+      "6": "Sat",
+      "7": "Sun"
+    },
+    "weekdayLong": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
+    "myDay": {
+      "title": "My day",
+      "mine": "Assigned to you",
+      "rest": "The day's tasks",
+      "empty": "There are no tasks for this day.",
+      "prevDay": "Previous day",
+      "nextDay": "Next day",
+      "today": "Today",
+      "done": "Done",
+      "withNote": "With a note or photo",
+      "notDone": "Could not be done",
+      "undo": "Undo",
+      "markedDone": "Task marked as done",
+      "markedNotDone": "Task marked as not done",
+      "reopened": "The task is pending again",
+      "observations": "Notes",
+      "completeSubmit": "Mark as done",
+      "reason": "Reason",
+      "loadError": "The tasks could not be loaded."
+    },
+    "tasks": {
+      "title": "Today's tasks",
+      "new": "New one-off task",
+      "created": "Task created",
+      "day": "Day",
+      "time": "Time",
+      "zone": "Area",
+      "status": "Status",
+      "all": "All",
+      "allStatuses": "All",
+      "task": "Task",
+      "assignee": "Assigned to",
+      "result": "Result",
+      "reassign": "Reassign {{title}}",
+      "reassignTitle": "Reassign: {{title}}",
+      "person": "Person",
+      "noPerson": "Unassigned (by area)",
+      "reassigned": "Task reassigned",
+      "deleted": "Task deleted",
+      "confirmDelete": "Delete “{{title}}”?",
+      "confirmDeleteText": "The task will disappear from “My day”.",
+      "empty": "There are no tasks with these filters.",
+      "settings": "Settings",
+      "type": "Type",
+      "titleField": "Title",
+      "description": "Description",
+      "animals": "Animals",
+      "qualification": "Required qualification",
+      "none": "None",
+      "loadError": "The tasks could not be loaded."
+    },
+    "templates": {
+      "title": "Task templates",
+      "new": "New template",
+      "editTitle": "Edit template",
+      "saved": "Template saved",
+      "deleted": "Template deleted",
+      "zoneFromAnimals": "From its animals",
+      "times": "Times (HH:MM, comma-separated)",
+      "recurrence": "Repeats",
+      "recurrences": {
+        "daily": "Every day",
+        "weekdays": "Some days of the week",
+        "every_n_days": "Every few days"
+      },
+      "weekdays": "Days",
+      "intervalDays": "Every how many days",
+      "startDate": "From",
+      "endDate": "Until",
+      "active": "Active",
+      "inactive": "Deactivated",
+      "when": "When",
+      "scheduleDaily": "Every day · {{times}}",
+      "scheduleEvery": "Every {{count}} days · {{times}}",
+      "scheduleWeekdays": "{{days}} · {{times}}",
+      "regenerateNotice": "When you save, pending tasks from today onwards are generated again.",
+      "confirmDelete": "Delete the “{{title}}” template?",
+      "confirmDeleteText": "Its pending tasks will also be deleted.",
+      "empty": "There are no templates yet.",
+      "loadError": "The templates could not be loaded."
+    },
+    "zones": {
+      "title": "Areas and qualifications",
+      "zonesTitle": "Areas",
+      "new": "New area",
+      "editTitle": "Edit area",
+      "saved": "Area saved",
+      "deleted": "Area deleted",
+      "name": "Name",
+      "description": "Description",
+      "animalCount": "Animals",
+      "active": "Active",
+      "inactive": "Deactivated",
+      "confirmDelete": "Delete the “{{name}}” area?",
+      "confirmDeleteText": "This cannot be undone.",
+      "empty": "There are no areas yet.",
+      "loadError": "The areas could not be loaded."
+    },
+    "qualifications": {
+      "title": "Qualifications",
+      "new": "New qualification",
+      "editTitle": "Edit qualification",
+      "saved": "Qualification saved",
+      "deleted": "Qualification deleted",
+      "workerCount": "Workers",
+      "confirmDelete": "Delete the “{{name}}” qualification?",
+      "empty": "There are no qualifications yet.",
+      "loadError": "The qualifications could not be loaded.",
+      "userSave": "Save qualifications",
+      "userSaved": "Qualifications saved",
+      "userHelp": "Tasks that require a qualification can only be marked by someone who holds it."
+    },
+    "settings": {
+      "title": "Daily work settings",
+      "lateMargin": "Margin before a task counts as late (minutes)",
+      "saved": "Settings saved"
+    }
   }
 }

@@ -295,6 +295,11 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | *(nuevo)* | `user_tokens` | Tokens de verificación de email, recuperación de contraseña e invitación de trabajadores |
 | *(nuevo)* | `user_sessions` | Sesiones (las gestiona el store propio de `middlewares/session.ts`) |
 | *(nuevo)* | `update_reads` | Marca de «leído» del muro de actualizaciones |
+| *(nuevo, trabajo diario)* | `zones` | Zonas o recintos; `animals.zone_id` dice dónde vive cada animal (CU-52) |
+| *(nuevo, trabajo diario)* | `qualifications`, `user_qualifications` | Cualificaciones y las de cada trabajador (un trigger exige que sea trabajador, CU-53) |
+| *(nuevo, trabajo diario)* | `task_templates`, `task_template_animals` | Plantillas de tareas recurrentes: tipo, horas (`TIME[]`), repetición (`daily`, `weekdays` con `weekdays SMALLINT[]` ISO 1-7, o `every_n_days` con `interval_days`), fechas, zona, animales y cualificación (CU-54) |
+| *(nuevo, trabajo diario)* | `task_instances`, `task_instance_animals` | Tareas concretas: copia de la plantilla, `due_date`/`due_time` en Madrid y `due_at` (`TIMESTAMPTZ`), estado `pending`/`completed`/`not_done`, asignación, quién y cuándo la resolvió, observaciones y foto. Sin plantilla, es puntual. Índice único parcial `(template_id, due_at)` para generar sin duplicados; el trigger `check_task_people` exige que la persona asignada y quien la completa sean trabajadores con la cualificación (CU-55 a CU-59) |
+| *(nuevo, trabajo diario)* | `work_settings` | Una sola fila (`id = 1`) con `late_margin_minutes` (CU-73) |
 
 ### 8.2 Columnas añadidas y por qué
 
@@ -371,6 +376,7 @@ stateDiagram-v2
 | Días sin actualización (escritorio) | Hoy − fecha de la última actualización, solo para animales con adopciones `active` |
 | Edad aproximada | Hoy − `animals.approx_birth_date` |
 | Ingresos del mes | `SUM` de `payments` y de `donations` `completed` por `paid_at`, por separado |
+| Tarea atrasada (trabajo diario) | `status = 'pending'` y ahora > `due_at` + `work_settings.late_margin_minutes` |
 
 ### 8.6 Reinicio de la base de datos
 
@@ -580,6 +586,12 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET / POST | `/api/admin/animals/:id/vet-records` | Cuidador, admin | Historial veterinario (Fase 3) | CU-34 |
 | PUT | `/api/admin/vet-records/:id` | Cuidador, admin | Edición (Fase 3) | CU-34 |
 | DELETE | `/api/admin/vet-records/:id` | Admin | Borrado (Fase 3) | CU-34 |
+| GET | `/api/admin/zones` | Cuidador, admin | Zonas por nombre con `animalCount` (sin archivados). Trabajo diario | CU-52 |
+| GET | `/api/admin/qualifications` | Cuidador, admin | Cualificaciones con `workerCount` | CU-53 |
+| GET | `/api/admin/my-day` | Cuidador, admin | `?date` (hoy por defecto). `{ date, tasks }`: cada tarea con `late` (calculado), `mine` (asignada a quien consulta) y `blockedReason` (`FUTURE_DAY`, `MISSING_QUALIFICATION` o `NOT_PENDING`) | CU-56 |
+| POST | `/api/admin/tasks/:id/complete` | Cuidador, admin | JSON `{ observations? }` o `multipart/form-data` con `observations` y una foto en `files` (se guarda en WebP en `uploads/tasks/:id/`). 409 `TASK_NOT_PENDING`, 422 `TASK_FUTURE_DAY`, 403 `MISSING_QUALIFICATION` | CU-57 |
+| POST | `/api/admin/tasks/:id/not-done` | Cuidador, admin | `{ reason }` obligatorio; mismas comprobaciones | CU-57 |
+| POST | `/api/admin/tasks/:id/reopen` | Quien la resolvió (el mismo día), admin | Vuelve a pendiente y borra observaciones y foto; 409 `TASK_IS_PENDING` | CU-57 |
 
 ### 10.7 Panel: solo administrador
 
@@ -609,6 +621,15 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PUT | `/api/admin/plans/:id` | Nombre, importe, descripción, plan por defecto, activo | CU-40 |
 | GET | `/api/admin/stats` | Estadísticas (Fase 3), solo admin. `?from&to` (días; se toman sus meses; por defecto los últimos 12 meses, como mucho 60: si no, 400 en `from`). Devuelve `range`, `revenueByMonth` (lo `completed` por mes, cuotas y donaciones por separado, igual que los ingresos del escritorio), `adoptionsByMonth` (`started` por `start_date`; `ended` por `end_date` de las `cancelled`/`finished` que llegaron a empezar), y la situación actual: `mostAdopted` (5 con más adopciones activas), `withoutAdopters` (en el santuario o en tratamiento sin adopciones activas) y `activeByPlan`. Todos los meses del rango, también los que están a 0 | CU-41 |
 | GET | `/api/admin/activity-logs` | Registro de actividad (Fase 3) | CU-42 |
+| POST / PUT / DELETE | `/api/admin/zones`, `/api/admin/zones/:id` | Alta, edición y borrado (409 `ZONE_NAME_TAKEN`, `ZONE_IN_USE`). Trabajo diario | CU-52 |
+| POST / PUT / DELETE | `/api/admin/qualifications`, `/api/admin/qualifications/:id` | Alta, edición y borrado (409 `QUALIFICATION_NAME_TAKEN`, `QUALIFICATION_IN_USE`) | CU-53 |
+| GET / PUT | `/api/admin/users/:id/qualifications` | Cualificaciones de un trabajador; `PUT { qualificationIds }` las sustituye. 404 si no es un trabajador | CU-53 |
+| GET / POST | `/api/admin/task-templates` | Plantillas; al crear una activa se generan sus tareas | CU-54 |
+| GET / PUT / DELETE | `/api/admin/task-templates/:id` | Detalle (`hasHistory`), edición (regenera las pendientes desde ahora) y borrado (409 `TEMPLATE_HAS_HISTORY` si tiene tareas resueltas) | CU-54 |
+| GET / POST | `/api/admin/tasks` | Tareas de un día (`?date&zoneId&status`) y alta de una tarea puntual | CU-55 |
+| PATCH | `/api/admin/tasks/:id/assignee` | `{ userId \| null }`: trabajador activo con la cualificación que exige la tarea | CU-55 |
+| DELETE | `/api/admin/tasks/:id` | Solo pendientes (409 `TASK_NOT_PENDING`) | CU-55 |
+| GET / PUT | `/api/admin/work-settings` | `{ lateMarginMinutes }` (0-240, 30 por defecto) | CU-73 |
 | POST | `/api/admin/jobs/:jobName/run` | Ejecuta una tarea programada a mano (pruebas y demostraciones) | CU-43 a CU-47 |
 
 ## 11. Servicios y tareas programadas
@@ -696,6 +717,8 @@ export interface StorageService {
 | `finish-cancelled` | Diaria, 03:45 | Adopciones `active` con `cancel_requested_at` y `end_date < hoy` → `finished` (`user_cancelled`) | CU-45 |
 | `monthly-digest` | Día 1, 09:00 | Email resumen para adoptantes con `monthly_digest` y novedades en el mes anterior | CU-46 |
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
+| `generate-tasks` | Diaria, 00:10 | Trabajo diario: crea las tareas de cada plantilla activa de hoy a 7 días vista (Europe/Madrid, solo las que no han pasado), sin los animales archivados. El índice único `(template_id, due_at)` evita duplicados. Una transacción por plantilla | CU-58 |
+| `task-alerts` | Cada 15 minutos | Pasa a `not_done` (sin persona) las tareas pendientes de días anteriores. En el Bloque C avisará también de la medicación no dada | CU-59 |
 
 Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
 
@@ -731,6 +754,8 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/admin/animals`, `/admin/animals/new`, `/admin/animals/:id` | Animales | Cuidador, admin |
 | `/admin/species`, `/admin/updates`, `/admin/vet-records` | Especies, actualizaciones, historial veterinario | Cuidador, admin |
 | `/admin/users`, `/admin/adoptions`, `/admin/payments`, `/admin/donations`, `/admin/plans`, `/admin/stats`, `/admin/activity` | Administración | Admin |
+| `/admin/my-day` | «Mi día»: tareas del día en tarjetas (inicio del cuidador al entrar) | Cuidador, admin |
+| `/admin/tasks`, `/admin/task-templates`, `/admin/zones` | Tareas del día y puntuales (con los ajustes), plantillas, zonas y cualificaciones | Admin |
 
 Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que redirige a `/login`. Es solo una mejora de la experiencia de uso; la seguridad la garantiza el servidor.
 
@@ -925,6 +950,24 @@ Recogidas en `docs/AUTH_SPEC.md` (§1). No cambian el esquema de la base de dato
 | --- | --- |
 | El enlace de recuperación de contraseña caduca en 30 minutos (antes, 1 hora) | CU-10 |
 | Un administrador puede cerrar todas las sesiones de un usuario, con motivo obligatorio | CU-48 |
+
+### Trabajo diario del personal (tras la Fase 3)
+
+Turnos, tareas, alimentación, limpieza y medicación, en cuatro bloques que se cierran por orden, cada uno con sus datos de prueba en `TEST_DATA.sql` y sus pruebas:
+
+- **Bloque A (terminado):** zonas (CU-52), cualificaciones (CU-53), plantillas (CU-54), tareas del día y puntuales (CU-55), «Mi día» (CU-56), completar (CU-57), generación (CU-58), cierre del día (CU-59) y el margen de «atrasada» (CU-73, parte).
+- **Bloque B:** turnos, calendario, copiar la semana anterior, ausencias, fichar la entrada y la salida, y aviso de zonas sin cubrir (CU-60 a CU-64). «Mi día» pasará a marcar como tuyas también las tareas de tu turno y zona.
+- **Bloque C:** planes de dieta con registro de lo que come cada animal y aviso si deja de comer; visitas veterinarias programables; pautas de medicación y aviso de medicación no dada (CU-65 a CU-69).
+- **Bloque D:** incidencias, notas de relevo, panel «Hoy» del administrador, ajustes de los avisos por email y resumen diario (desactivado por defecto) (CU-70 a CU-74).
+
+Decisiones del Bloque A:
+
+- «Atrasada» no es un estado guardado: se calcula (§8.5). Los estados guardados son `pending`, `completed` y `not_done`.
+- «Puntual» no es un tipo: es una tarea sin plantilla, de cualquier tipo. No hay rol de mantenimiento: es una cualificación.
+- Solo se generan las ocurrencias que aún no han pasado. Cambio de hora: una hora inexistente pasa a la siguiente; una repetida usa la segunda (horario de invierno).
+- Editar una plantilla borra sus tareas pendientes desde ahora y las regenera (se pierden las reasignaciones de esas tareas); desactivarla las borra.
+- Completar una tarea no se escribe en `activity_logs` (ya guarda quién y cuándo); los cambios de configuración sí.
+- Deshacer: quien la resolvió, el mismo día; un administrador, siempre.
 
 ### Fase 4 — Despliegue (fase final)
 

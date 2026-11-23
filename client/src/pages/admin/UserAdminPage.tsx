@@ -11,6 +11,7 @@ import { SelectField, TextAreaField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { ActivityLogTable } from '../../components/admin/ActivityLogTable';
 import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
+import { UserQualifications } from '../../components/work/UserQualifications';
 import { ADMIN_USERS_KEY, useAdminActivityLogs, useAdminUser } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { errorMessage } from '../../utils/apiErrors';
@@ -201,6 +202,7 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
 
       {esAdoptante && <Adopciones usuario={usuario} />}
       {esAdoptante && <Aportaciones usuario={usuario} />}
+      {isWorkerRole(usuario.role) && <UserQualifications userId={usuario.id} />}
       {isWorkerRole(usuario.role) && <Actividad userId={usuario.id} />}
 
       <Modal
