@@ -28,6 +28,7 @@ import { useAdminAnimals } from '../../hooks/useAdmin';
 import { TEMPLATES_KEY, useQualifications, useTaskTemplates, useZones, WORK_KEY } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { todayInSanctuary } from '../../utils/format';
+import { erroresPorCampo } from '../../utils/erroresPorCampo';
 import styles from './AdminPage.module.css';
 
 type Aviso = { type: 'success' | 'error'; message: string };
@@ -240,16 +241,6 @@ const cuerpo = (c: Campos, animalesValidos: Set<number> | null): TaskTemplateBod
   endDate: c.endDate || null,
   isActive: c.isActive,
 });
-
-/** El primer error de cada campo (las horas sueltas, `times.0`, cuentan como `times`). */
-function erroresPorCampo(issues: readonly { path: readonly PropertyKey[]; message: string }[]) {
-  const errores: Record<string, string> = {};
-  for (const issue of issues) {
-    const campo = String(issue.path[0] ?? '');
-    errores[campo] ??= issue.message;
-  }
-  return errores;
-}
 
 function FormularioPlantilla({
   plantilla,

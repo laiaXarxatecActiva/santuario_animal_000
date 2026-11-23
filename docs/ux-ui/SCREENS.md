@@ -710,6 +710,13 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 ┌──────────────────────────────────────────────┐
 │ Mi día              ‹  lunes, 23 de noviembre  ›  [Hoy] │
 │                                              │
+│ Tu turno                                     │
+│ ┌──────────────────────────────────────────┐ │
+│ │ Mañana                      07:00–15:00  │ │
+│ │ Clínica y recuperación, Voladero de alim.│ │
+│ │ Entrada: 06:58                           │ │
+│ │ [Fichar salida]                          │ │
+│ └──────────────────────────────────────────┘ │
 │ Asignadas a ti                               │
 │ ┌──────────────────────────────────────────┐ │
 │ │ 15:00  Reparar la puerta del almacén     │ │
@@ -725,7 +732,8 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 └──────────────────────────────────────────────┘
 ```
 
-- Cada tarjeta es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» y «Tareas del día» (h2), ordenadas por hora.
+- **Tu turno** (CU-63, h2, solo si tiene turno ese día): una tarjeta de turno (DESIGN_SYSTEM §8.9) por turno, con el horario, las zonas y, si ya ha fichado, «Entrada: 06:58» y «Salida: 15:05». Hoy ofrece «Fichar entrada» (`primary`) y, después, «Fichar salida» (`outline`); con la salida fichada, ninguno. En otros días no hay botones. Avisos `success` «Entrada fichada» y «Salida fichada»; los errores del servidor, en un aviso `error`.
+- Cada tarjeta de tarea es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» (las asignadas a la persona y las sin asignar de una zona de su turno a una hora del turno) y «Tareas del día» (h2), ordenadas por hora.
 - **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota o foto» (`outline`: ventana con «Observaciones (opcional)», «Foto (opcional)» y [Cancelar] [■ Marcar como hecha]) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
 - **Sin la cualificación:** texto en cursiva «Necesitas la cualificación «…».» y sin botones. **Otro día:** «Se podrá marcar ese mismo día.»
 - **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
@@ -751,6 +759,44 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - Dos secciones con el patrón de «Especies»: «Zonas» (nombre, animales, insignia «Desactivada») y «Cualificaciones» (nombre, trabajadores, descripción), cada una con su botón «Nueva…» y ventanas de alta, edición y borrado.
 - En la ficha de un trabajador (§5.6), sección «Cualificaciones» antes de «Actividad»: casillas con todas las cualificaciones y «Guardar cualificaciones» (`outline`).
 - En la ficha del animal (§5.4, pestaña «Datos»), el desplegable «Zona (opcional)» con las zonas activas.
+
+#### Turnos (`/admin/shifts`) — CU-61, CU-62
+
+Para todo el personal; las acciones de cambio, solo para el administrador.
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│ Turnos                              [⧉ Copiar la semana anterior] │
+│ ‹  Semana del 23 nov 2026 al 29 nov 2026  ›  [Esta semana]      │
+│ ⚠ Hay 6 huecos sin cubrir esta semana.                          │
+│                                                            │
+│ lunes, 23 de noviembre        jueves, 26 de noviembre      │
+│ ┌──────────────────────────┐  ┌──────────────────────────┐ │
+│ │ Mañana        07:00–15:00│  │ Tarde         14:00–22:00│ │
+│ │ Nuria Peris Gil [Ha fichado] ✕│ Nadie asignado          │ │
+│ │ Clínica y recuperación, … │  │ ▒Falta personal en Clínica…│ │
+│ │ Andrés Climent Mas      ✕│  │ [+ Asignar]              │ │
+│ │ [+ Asignar]              │  └──────────────────────────┘ │
+│ └──────────────────────────┘  Ausente: Carmen Boix Vidal (Vacaciones) │
+└────────────────────────────────────────────────────────────┘
+```
+
+- Navegación de semanas como la de días de «Mi día»: «Semana anterior», «Semana siguiente» y, fuera de la actual, «Esta semana» (`outline`). La semana va en la dirección (`?week=` con el lunes), y los avisos de la campana (CU-64) abren la del hueco.
+- Si hay huecos, aviso `warning` arriba con el número. Un bloque por día (h2 con el día de la semana y la fecha) en una rejilla de 280 px mínimo; dentro, una tarjeta de turno por cada turno activo que se hace ese día o que tiene a alguien (DESIGN_SYSTEM §8.9).
+- Cada persona con sus zonas e insignia «Ha fichado» (`success`). Debajo, cada zona sin cubrir: «Falta personal en Gran voladero: 0 de 1» sobre fondo de aviso. Al final del día, «Ausente: …»; el administrador ve también el motivo entre paréntesis.
+- **Administrador:** «Asignar» (`ghost`, `user-plus`) en cada turno activo abre la ventana «Asignar al turno de Tarde» con el día, «Persona» (trabajadores activos) y «Zonas» (casillas; vienen marcadas las del turno); los errores del servidor van a su campo y los del día o el turno, en un aviso `error`. «✕» (`xmark`, «Quitar a … del turno de …») pide confirmación. «Copiar la semana anterior» (`outline`, `copy`) pide confirmación y muestra «Se han copiado 12 turnos.» y, si se ha saltado alguno, «No se han copiado:» con «Nuria Peris Gil · Mañana · martes, 24 de noviembre: está ausente».
+
+#### Plantillas de turno (`/admin/shift-templates`) — CU-60
+
+- Tabla: Nombre (con «Desactivado» si lo está) · Horario («07:00–15:00») · Días («Todos los días» o «Lun, Mar, Mié, Jue, Vie») · Mínimo por zona («Clínica y recuperación (1), Gran voladero (1)» o «Sin mínimos») · editar y borrar.
+- Ventana de alta y edición: «Nombre», «Hora de inicio» y «Hora de fin» (`type="time"`, en dos columnas), «Días» (siete casillas), «Mínimo por zona» (un número de 1 a 20 por cada zona activa, con la ayuda «Deja en blanco las zonas que este turno no tiene que cubrir.») y el interruptor «Activo». Se comprueba en el navegador con el mismo esquema que en el servidor.
+- Borrar pide confirmación; si tiene personas asignadas, aviso `error` «Este turno tiene personas asignadas: desactívalo en lugar de borrarlo.»
+
+#### Ausencias (`/admin/absences`) — CU-62
+
+- Tabla de las ausencias de hoy en adelante: Persona · Fechas («Del 26 nov 2026 al 27 nov 2026») · Motivo · Notas · borrar.
+- «Registrar ausencia» (`primary`, `plus`): ventana con «Persona», «Primer día», «Último día», «Motivo» (vacaciones, baja médica, asuntos propios, otro) y «Notas (opcional)». Al guardar, aviso `success` «Ausencia registrada.» con, si los hay, «Se han quitado estos turnos, que hay que volver a cubrir:» y «Ya había fichado estos turnos, que se mantienen:» (listas «miércoles, 25 de noviembre · Mañana»).
+- Borrar pide confirmación y recuerda que los turnos quitados no vuelven.
 
 ## 6. Estados generales
 

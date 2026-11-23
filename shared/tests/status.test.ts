@@ -26,6 +26,7 @@ describe('constantes de pagos y notificaciones', () => {
       'adoption_closed',
       'donation_thanks',
       'update_reminder',
+      'coverage_gap',
       'system',
     ]);
     expect(SIMULATED_OUTCOMES).toEqual(['success', 'failure']);

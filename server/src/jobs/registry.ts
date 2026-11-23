@@ -1,5 +1,6 @@
 import { NotFoundError } from '../errors/app-error.js';
 import { runBilling } from './billing.job.js';
+import { runCoverageCheck } from './coverage-check.job.js';
 import { runExpirePending } from './expire-pending.job.js';
 import { runFinishCancelled } from './finish-cancelled.job.js';
 import { runGenerateTasks } from './generate-tasks.job.js';
@@ -21,6 +22,8 @@ export const JOBS = {
   // CU-58 y CU-59: trabajo diario del personal.
   'generate-tasks': { schedule: '10 0 * * *', run: runGenerateTasks },
   'task-alerts': { schedule: '*/15 * * * *', run: runTaskAlerts },
+  // CU-64: cada hora, a los 5 minutos.
+  'coverage-check': { schedule: '5 * * * *', run: runCoverageCheck },
 } as const;
 
 export type JobName = keyof typeof JOBS;

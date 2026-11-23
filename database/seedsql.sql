@@ -32,6 +32,12 @@ BEGIN;
 -- 0. Limpieza: se borra todo lo que crea este script
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS
+    staff_alerts,
+    absences,
+    shift_assignment_zones,
+    shift_assignments,
+    shift_zone_requirements,
+    shift_templates,
     work_settings,
     task_instance_animals,
     task_instances,
@@ -554,6 +560,7 @@ CREATE TABLE notifications (
                     'adoption_closed',     -- cierre por fallecimiento o traslado del animal
                     'donation_thanks',     -- agradecimiento por donación
                     'update_reminder',     -- aviso interno: animal sin actualización
+                    'coverage_gap',        -- aviso interno: turno con una zona sin cubrir (CU-64)
                     'system'
                 )),
     message     VARCHAR(500) NOT NULL,
@@ -799,5 +806,93 @@ INSERT INTO work_settings (id) VALUES (1);
 CREATE TRIGGER work_settings_set_updated_at
     BEFORE UPDATE ON work_settings
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Turnos (CU-60): franja horaria del mismo día que se repite unos días de la
+-- semana (ISO: 1 = lunes … 7 = domingo).
+CREATE TABLE shift_templates (
+    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL,
+    start_time  TIME         NOT NULL,
+    end_time    TIME         NOT NULL,
+    weekdays    SMALLINT[]   NOT NULL,
+    is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT shift_templates_times CHECK (end_time > start_time),
+    CONSTRAINT shift_templates_weekdays CHECK (
+        cardinality(weekdays) BETWEEN 1 AND 7 AND weekdays <@ ARRAY[1, 2, 3, 4, 5, 6, 7]::SMALLINT[])
+);
+
+CREATE UNIQUE INDEX shift_templates_name_lower_key ON shift_templates (LOWER(name));
+
+CREATE TRIGGER shift_templates_set_updated_at
+    BEFORE UPDATE ON shift_templates
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Cuántas personas necesita cada zona en un turno (CU-60, CU-64).
+CREATE TABLE shift_zone_requirements (
+    shift_template_id  INTEGER  NOT NULL REFERENCES shift_templates (id) ON DELETE CASCADE,
+    zone_id            INTEGER  NOT NULL REFERENCES zones (id) ON DELETE RESTRICT,
+    min_workers        SMALLINT NOT NULL CHECK (min_workers BETWEEN 1 AND 20),
+    PRIMARY KEY (shift_template_id, zone_id)
+);
+
+-- Una persona en un turno un día concreto, con su fichaje (CU-61, CU-63).
+CREATE TABLE shift_assignments (
+    id                 INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    shift_template_id  INTEGER     NOT NULL REFERENCES shift_templates (id) ON DELETE RESTRICT,
+    shift_date         DATE        NOT NULL,
+    user_id            INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    checked_in_at      TIMESTAMPTZ,
+    checked_out_at     TIMESTAMPTZ,
+    created_by         INTEGER     REFERENCES users (id) ON DELETE SET NULL,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT shift_assignments_unique UNIQUE (shift_template_id, shift_date, user_id),
+    CONSTRAINT shift_assignments_check_out CHECK (
+        checked_out_at IS NULL OR (checked_in_at IS NOT NULL AND checked_out_at >= checked_in_at))
+);
+
+CREATE INDEX shift_assignments_date_idx ON shift_assignments (shift_date);
+CREATE INDEX shift_assignments_user_idx ON shift_assignments (user_id, shift_date);
+
+CREATE TRIGGER shift_assignments_check_worker
+    BEFORE INSERT OR UPDATE OF user_id ON shift_assignments
+    FOR EACH ROW EXECUTE FUNCTION check_worker_user();
+
+-- Zonas que cubre esa persona en ese turno.
+CREATE TABLE shift_assignment_zones (
+    assignment_id  INTEGER NOT NULL REFERENCES shift_assignments (id) ON DELETE CASCADE,
+    zone_id        INTEGER NOT NULL REFERENCES zones (id) ON DELETE RESTRICT,
+    PRIMARY KEY (assignment_id, zone_id)
+);
+
+-- Ausencias (CU-62): vacaciones, bajas… de un día a otro, ambos incluidos.
+CREATE TABLE absences (
+    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     INTEGER      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    start_date  DATE         NOT NULL,
+    end_date    DATE         NOT NULL,
+    type        VARCHAR(20)  NOT NULL CHECK (type IN ('vacation', 'sick_leave', 'personal', 'other')),
+    notes       VARCHAR(500),
+    created_by  INTEGER      REFERENCES users (id) ON DELETE SET NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT absences_dates CHECK (end_date >= start_date)
+);
+
+CREATE INDEX absences_user_dates_idx ON absences (user_id, start_date, end_date);
+
+CREATE TRIGGER absences_check_worker
+    BEFORE INSERT OR UPDATE OF user_id ON absences
+    FOR EACH ROW EXECUTE FUNCTION check_worker_user();
+
+-- Avisos internos ya enviados (CU-64 en adelante): cada aviso, una sola vez.
+-- `ref_key` identifica lo avisado (p. ej. «2026-11-25:1:4» = día, turno y zona).
+CREATE TABLE staff_alerts (
+    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    kind        VARCHAR(30)  NOT NULL,
+    ref_key     VARCHAR(100) NOT NULL,
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT staff_alerts_unique UNIQUE (kind, ref_key)
+);
 
 COMMIT;

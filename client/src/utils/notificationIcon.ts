@@ -8,6 +8,7 @@ import {
   faHeart,
   faNewspaper,
   faReceipt,
+  faUserClock,
 } from '@fortawesome/free-solid-svg-icons';
 import type { NotificationType } from '@sanctuary/shared';
 
@@ -22,6 +23,7 @@ const ICONOS: Record<NotificationType, IconDefinition> = {
   adoption_closed: faFeather,
   donation_thanks: faHeart,
   update_reminder: faNewspaper,
+  coverage_gap: faUserClock,
   system: faBell,
 };
 

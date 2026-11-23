@@ -600,3 +600,47 @@ export class MissingQualificationError extends AppError {
     super(403, 'MISSING_QUALIFICATION', 'Esta tarea exige una cualificación que no tienes.');
   }
 }
+
+// Turnos y ausencias (CU-60 a CU-63).
+
+export class ShiftTemplateNameTakenError extends ConflictError {
+  constructor() {
+    super('SHIFT_TEMPLATE_NAME_TAKEN', 'Ya existe un turno con este nombre.');
+  }
+}
+
+export class ShiftTemplateInUseError extends ConflictError {
+  constructor() {
+    super('SHIFT_TEMPLATE_IN_USE', 'Este turno tiene personas asignadas: desactívalo en lugar de borrarlo.');
+  }
+}
+
+export class ShiftAlreadyStartedError extends ConflictError {
+  constructor() {
+    super('SHIFT_ALREADY_STARTED', 'Este turno ya se ha fichado o es de un día pasado: no se puede quitar.');
+  }
+}
+
+export class ShiftNotTodayError extends BusinessRuleError {
+  constructor() {
+    super('SHIFT_NOT_TODAY', 'Solo se puede fichar el día del turno.');
+  }
+}
+
+export class AlreadyCheckedInError extends ConflictError {
+  constructor() {
+    super('ALREADY_CHECKED_IN', 'Ya has fichado la entrada de este turno.');
+  }
+}
+
+export class NotCheckedInError extends ConflictError {
+  constructor() {
+    super('NOT_CHECKED_IN', 'Primero tienes que fichar la entrada.');
+  }
+}
+
+export class AlreadyCheckedOutError extends ConflictError {
+  constructor() {
+    super('ALREADY_CHECKED_OUT', 'Ya has fichado la salida de este turno.');
+  }
+}

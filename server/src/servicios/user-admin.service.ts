@@ -34,6 +34,7 @@ import {
 import * as adoptionModel from '../models/adoption.model.js';
 import * as contributionModel from '../models/contribution.model.js';
 import * as sessionModel from '../models/session.model.js';
+import * as shiftAssignmentModel from '../models/shift-assignment.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
@@ -207,6 +208,8 @@ export function createUserAdminService({
         if (!activar) {
           await sessionModel.deleteByUserId(client, id);
           if (user.role === 'adopter') await darDeBajaAdopciones(client, id);
+          // CU-61: un trabajador desactivado deja sus turnos futuros sin fichar.
+          else await shiftAssignmentModel.removeFutureOfUser(client, id, reloj.hoy());
         }
       });
       return detalle(id);

@@ -390,3 +390,19 @@ export async function createWorker(db: Queryable, datos: NewWorker): Promise<num
     throw error;
   }
 }
+
+/** CU-61: ids de los trabajadores en activo. */
+export async function listActiveWorkerIds(db: Queryable): Promise<number[]> {
+  const { rows } = await db.query<{ id: number }>(
+    "SELECT id FROM users WHERE is_active AND role IN ('caretaker', 'admin') ORDER BY id",
+  );
+  return rows.map((r) => r.id);
+}
+
+/** CU-64: ids de los administradores en activo (reciben los avisos internos). */
+export async function listActiveAdminIds(db: Queryable): Promise<number[]> {
+  const { rows } = await db.query<{ id: number }>(
+    "SELECT id FROM users WHERE is_active AND role = 'admin' ORDER BY id",
+  );
+  return rows.map((r) => r.id);
+}

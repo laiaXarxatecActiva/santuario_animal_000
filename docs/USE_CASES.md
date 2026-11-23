@@ -65,6 +65,10 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-25 | Una tarea que exige una **cualificación** solo la puede completar, marcar como no realizada o tener asignada un trabajador que la tenga (también un administrador). Se comprueba en el servidor y en la base de datos. |
 | RN-26 | Una tarea solo se resuelve el mismo día (no antes). Está **atrasada** si sigue pendiente pasada su hora más el margen configurado (30 minutos por defecto); no se guarda, se calcula. Al acabar el día, las pendientes pasan a «no realizada» por el sistema. |
 | RN-27 | Las tareas puntuales solo las crea el administrador; el personal comunica los problemas con incidencias (Bloque D). Las plantillas, zonas y cualificaciones con historial no se borran: se desactivan. |
+| RN-28 | Turnos: una persona no puede estar en dos turnos que se solapen el mismo día ni en un turno un día en que está ausente. Los turnos de días pasados o ya fichados no se quitan. Al desactivar a un trabajador se quitan sus turnos de hoy en adelante sin fichar. |
+| RN-29 | Al registrar una ausencia se quitan los turnos de esos días que la persona no ha fichado, y se dice cuáles; borrar la ausencia no los devuelve. El motivo de una ausencia solo lo ven el administrador y la propia persona; el resto del personal solo ve que está ausente. |
+| RN-30 | Cada persona ficha solo sus turnos y solo el día del turno: primero la entrada y después la salida, una vez cada una. |
+| RN-31 | Una zona de un turno está **sin cubrir** si tiene menos personas de las que pide la plantilla del turno; se calcula al consultar, no se guarda. Cada hueco se avisa a los administradores una sola vez. |
 
 ## 4. Web pública y cuenta
 
@@ -1621,7 +1625,7 @@ Cada día, para cada una de ellas y en su propia transacción:
 
 ## 10. Trabajo diario del personal
 
-Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A). Los turnos (Bloque B), la alimentación y la medicación (Bloque C) y las incidencias y avisos (Bloque D) se añadirán como CU-60 en adelante.
+Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU-59) y turnos y ausencias (Bloque B, CU-60 a CU-64). La alimentación y la medicación (Bloque C) y las incidencias y avisos (Bloque D) se añadirán como CU-65 en adelante.
 
 ### CU-52 — Gestionar zonas
 
@@ -1722,7 +1726,7 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A). Los turno
 **Flujo principal**
 
 1. El cuidador entra en la aplicación y llega a «Mi día» (el administrador, al escritorio; también la tiene en el menú).
-2. Ve las tareas de hoy en tarjetas, ordenadas por hora: primero «Asignadas a ti» y después las demás del día. En el Bloque B, «tuyas» incluirá las de su turno y zona.
+2. Si tiene turno ese día, lo ve arriba («Tu turno»: horario y zonas) con los botones para fichar (CU-63). Después, las tareas en tarjetas, ordenadas por hora: primero «Asignadas a ti» y después las demás del día. Son suyas las asignadas a él y, si la tarea no está asignada a nadie, las de una zona de su turno cuya hora cae dentro del turno (de la hora de inicio, incluida, a la de fin, sin incluir).
 3. Cada tarjeta muestra la hora, el título, el tipo, si está atrasada o es puntual, la zona, los animales, la cualificación que exige y, si está resuelta, quién y a qué hora.
 4. Puede pasar al día anterior o al siguiente y volver a hoy.
 
@@ -1790,3 +1794,109 @@ Cada día, para cada plantilla activa y en su propia transacción:
 **Postcondiciones:** la tarea es idempotente.
 
 **Reglas de negocio:** RN-26.
+
+### CU-60 — Gestionar plantillas de turno
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque B |
+
+**Flujo principal**
+
+1. El administrador abre «Plantillas de turno».
+2. Ve los turnos ordenados por la hora de inicio, con su horario, los días de la semana en que se hacen y cuántas personas necesita cada zona.
+3. Crea o edita un turno: nombre (único, sin distinguir mayúsculas), hora de inicio y de fin (el turno empieza y acaba el mismo día), días de la semana, cuántas personas necesita cada zona (de 1 a 20; las zonas en blanco no se exigen) y si está activo.
+
+**Flujos alternativos**
+
+- **3a.** Nombre repetido (`SHIFT_TEMPLATE_NAME_TAKEN`), fin no posterior al inicio, ningún día o zona inexistente o desactivada: error en el campo.
+- **A1.** Borrar un turno que ya tiene personas asignadas: no se borra (`SHIFT_TEMPLATE_IN_USE`); se desactiva. Desactivado, deja de aparecer en los días en que no tiene a nadie y no admite asignaciones nuevas.
+
+**Postcondiciones:** queda en el registro de actividad. Todo el personal puede consultar la lista de turnos.
+
+**Reglas de negocio:** RN-27, RN-31.
+
+### CU-61 — Organizar el calendario de turnos
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador (consulta: todo el personal) | Trabajo diario, Bloque B |
+
+**Flujo principal**
+
+1. El trabajador abre «Turnos» y ve la semana actual, de lunes a domingo. Puede pasar a la anterior o a la siguiente.
+2. Cada día muestra sus turnos (los activos que se hacen ese día y los que tienen a alguien), quién está en cada uno con sus zonas y si ha fichado, las zonas sin cubrir («Falta personal en Gran voladero: 0 de 1») y quién está ausente. Arriba, cuántos huecos hay en la semana.
+3. El administrador asigna a una persona a un turno de un día y elige sus zonas; vienen marcadas las que pide el turno.
+4. El administrador quita a una persona de un turno.
+5. El administrador copia en la semana que ve los turnos de la semana anterior: cada turno pasa al mismo día de la semana siguiente con las mismas zonas. No se borra nada y se dice qué no se ha copiado y por qué.
+
+**Flujos alternativos**
+
+- **3a.** La persona no es un trabajador en activo, está ausente ese día o ya tiene un turno que se solapa; el turno no existe, está desactivado o no se hace ese día de la semana; el día ya ha pasado, o una zona no existe o está desactivada: error en su campo.
+- **4a.** El turno ya se ha fichado o es de un día pasado: no se quita (`SHIFT_ALREADY_STARTED`).
+- **5a.** No se copia un turno si el día ya ha pasado, el turno está desactivado o ya no se hace ese día, la persona ya no está en activo o está ausente, o ya tiene ese turno u otro que se solapa. Repetir la copia no duplica nada.
+- **A1.** Al desactivar a un trabajador (CU-35) se quitan sus turnos de hoy en adelante que no ha fichado.
+
+**Postcondiciones:** cada asignación creada o quitada queda en el registro de actividad. Los avisos del enlace de CU-64 abren la semana del hueco (`/admin/shifts?week=`).
+
+**Reglas de negocio:** RN-28, RN-31.
+
+### CU-62 — Registrar ausencias
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque B |
+
+**Flujo principal**
+
+1. El administrador abre «Ausencias» y ve las de hoy en adelante, con la persona, las fechas, el motivo (vacaciones, baja médica, asuntos propios u otro) y las notas.
+2. Registra una ausencia: persona, primer y último día, motivo y notas opcionales.
+3. El sistema quita los turnos de esos días que la persona no ha fichado y lo dice: los quitados («hay que volver a cubrirlos») y los que se mantienen porque ya los había fichado.
+
+**Flujos alternativos**
+
+- **2a.** La persona ya tiene una ausencia que toca esos días, no es un trabajador o el último día es anterior al primero: error en el campo.
+- **A1.** Borrar una ausencia: los turnos quitados no vuelven; hay que asignarlos de nuevo.
+
+**Postcondiciones:** queda en el registro de actividad. En el calendario (CU-61), el cuidador ve que un compañero está ausente, pero no el motivo ni las notas.
+
+**Reglas de negocio:** RN-28, RN-29.
+
+### CU-63 — Fichar la entrada y la salida
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque B |
+
+**Flujo principal**
+
+1. En «Mi día», el trabajador ve su turno de hoy y pulsa «Fichar entrada». Se guarda la hora.
+2. Al acabar, pulsa «Fichar salida».
+
+**Flujos alternativos**
+
+- **1a.** Un turno de otra persona no existe para él (404). Un turno de otro día: `SHIFT_NOT_TODAY`. Entrada repetida: `ALREADY_CHECKED_IN`.
+- **2a.** Salida sin entrada: `NOT_CHECKED_IN`. Salida repetida: `ALREADY_CHECKED_OUT`.
+
+**Postcondiciones:** el administrador ve en el calendario quién ha fichado. Un turno fichado ya no se quita (ni a mano ni al registrar una ausencia).
+
+**Reglas de negocio:** RN-30.
+
+### CU-64 — Avisar de turnos sin cubrir
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (tarea `coverage-check`, cada hora a los 5 minutos) | Trabajo diario, Bloque B |
+
+**Flujo principal**
+
+1. Calcula las zonas sin cubrir de hoy y los 6 días siguientes, sin los turnos que ya han acabado.
+2. Por cada hueco que no se había avisado, envía un aviso a la campana de cada administrador en activo, en su idioma: «Falta personal en «Clínica y recuperación» en el turno de Tarde del 26/11/2026: 0 de 1.», con un enlace a la semana del calendario.
+
+**Flujos alternativos**
+
+- **2a.** Si el hueco ya se avisó, no se repite aunque siga sin cubrir. El aviso por email llegará con el Bloque D.
+
+**Postcondiciones:** la tarea es idempotente (`staff_alerts` guarda cada aviso por día, turno y zona).
+
+**Reglas de negocio:** RN-31.

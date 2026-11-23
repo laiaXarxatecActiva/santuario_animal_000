@@ -16,6 +16,7 @@ import { withTransaction } from '../db/transaction.js';
 import type { ArchivoSubido } from '../dominio/fotos.js';
 import { fechaEnZonaSantuario, instanteEnZonaSantuario, type Reloj } from '../dominio/reloj.js';
 import { comprobarResolucion } from '../dominio/tareas.js';
+import { esDeMiTurno } from '../dominio/turnos.js';
 import {
   ForbiddenError,
   MissingQualificationError,
@@ -26,6 +27,7 @@ import {
   ValidationError,
 } from '../errors/app-error.js';
 import * as qualificationModel from '../models/qualification.model.js';
+import * as assignmentModel from '../models/shift-assignment.model.js';
 import * as taskModel from '../models/task.model.js';
 import * as userModel from '../models/user.model.js';
 import * as settingsModel from '../models/work-settings.model.js';
@@ -118,16 +120,25 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
     /** CU-56: las tareas del día con lo que puede hacer quien las mira. */
     async myDay(user: SessionUser, fecha?: string): Promise<MyDayDto> {
       const date = fecha ?? reloj.hoy();
-      const [tareas, cualificaciones] = await Promise.all([
+      const [tareas, cualificaciones, turnos] = await Promise.all([
         taskModel.listByDay(db, { date }, await contexto()),
         qualificationModel.idsOfUser(db, user.id),
+        assignmentModel.listByRange(db, { from: date, to: date, userId: user.id }),
       ]);
+      const franjas = turnos.map((a) => ({
+        inicio: a.shift.startTime,
+        fin: a.shift.endTime,
+        zoneIds: a.zones.map((z) => z.id),
+      }));
+      // Asignada a alguien, solo es suya; si no, de quien tiene turno en su zona a esa hora (CU-56).
       const tasks: MyDayTaskDto[] = tareas.map((tarea) => ({
         ...tarea,
-        mine: tarea.assignedTo?.id === user.id,
+        mine: tarea.assignedTo
+          ? tarea.assignedTo.id === user.id
+          : esDeMiTurno({ zoneId: tarea.zone?.id ?? null, dueTime: tarea.dueTime }, franjas),
         blockedReason: tarea.status === 'pending' ? bloqueo(tarea, cualificaciones) : null,
       }));
-      return { date, tasks };
+      return { date, tasks, shifts: turnos };
     },
 
     /** CU-55: listado del día para el administrador. */

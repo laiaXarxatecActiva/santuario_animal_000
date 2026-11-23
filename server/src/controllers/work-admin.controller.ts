@@ -1,5 +1,11 @@
 import {
+  absenceBodySchema,
+  absencesQuerySchema,
   adminTasksQuerySchema,
+  copyWeekBodySchema,
+  shiftAssignmentBodySchema,
+  shiftsQuerySchema,
+  shiftTemplateBodySchema,
   idParamsSchema,
   myDayQuerySchema,
   oneOffTaskBodySchema,
@@ -18,6 +24,7 @@ import { ValidationError } from '../errors/app-error.js';
 import { archivosSubidos } from '../middlewares/upload.js';
 import { validated } from '../middlewares/validate.js';
 import { sinRegistro, type ActivityLogService } from '../services/activity-log.service.js';
+import type { ShiftService } from '../servicios/shift.service.js';
 import type { TaskTemplateAdminService } from '../servicios/task-template-admin.service.js';
 import type { TaskService } from '../servicios/task.service.js';
 import type { ZoneAdminService } from '../servicios/zone-admin.service.js';
@@ -172,6 +179,90 @@ export function createTaskController(service: TaskService, actividad: ActivityLo
       const ajustes = await service.updateSettings(validated(res, 'body', workSettingsBodySchema), req.user!.id);
       await actividad.log(req.user!.id, 'update', 'work_settings', 1, diferencias(antes, ajustes));
       res.json(ajustes);
+    }) satisfies RequestHandler,
+  };
+}
+
+// CU-60 a CU-63: turnos, calendario, ausencias y fichajes.
+export function createShiftController(service: ShiftService, actividad: ActivityLogService = sinRegistro) {
+  return {
+    listTemplates: (async (_req, res) => {
+      res.json(await service.listTemplates());
+    }) satisfies RequestHandler,
+    createTemplate: (async (req, res) => {
+      const turno = await service.createTemplate(validated(res, 'body', shiftTemplateBodySchema));
+      await actividad.log(req.user!.id, 'create', 'shift_templates', turno.id, { name: turno.name });
+      res.status(201).json(turno);
+    }) satisfies RequestHandler,
+    updateTemplate: (async (req, res) => {
+      const antes = await service.getTemplate(id(res));
+      const turno = await service.updateTemplate(id(res), validated(res, 'body', shiftTemplateBodySchema));
+      await actividad.log(req.user!.id, 'update', 'shift_templates', turno.id, diferencias(antes, turno));
+      res.json(turno);
+    }) satisfies RequestHandler,
+    removeTemplate: (async (req, res) => {
+      const turno = await service.removeTemplate(id(res));
+      await actividad.log(req.user!.id, 'delete', 'shift_templates', turno.id, { name: turno.name });
+      res.status(204).end();
+    }) satisfies RequestHandler,
+
+    calendar: (async (req, res) => {
+      res.json(await service.calendar(req.user!, validated(res, 'query', shiftsQuerySchema)));
+    }) satisfies RequestHandler,
+    createAssignment: (async (req, res) => {
+      const a = await service.createAssignment(validated(res, 'body', shiftAssignmentBodySchema), req.user!.id);
+      await actividad.log(req.user!.id, 'create', 'shift_assignments', a.id, {
+        shift: a.shift.name,
+        date: a.date,
+        user: a.user.name,
+      });
+      res.status(201).json(a);
+    }) satisfies RequestHandler,
+    removeAssignment: (async (req, res) => {
+      const a = await service.removeAssignment(id(res));
+      await actividad.log(req.user!.id, 'delete', 'shift_assignments', a.id, {
+        shift: a.shift.name,
+        date: a.date,
+        user: a.user.name,
+      });
+      res.status(204).end();
+    }) satisfies RequestHandler,
+    copyWeek: (async (req, res) => {
+      const { weekStart } = validated(res, 'body', copyWeekBodySchema);
+      const { createdIds, ...resultado } = await service.copyWeek(weekStart, req.user!.id);
+      for (const nueva of createdIds) {
+        await actividad.log(req.user!.id, 'create', 'shift_assignments', nueva, { copyWeek: weekStart });
+      }
+      res.json(resultado);
+    }) satisfies RequestHandler,
+    checkIn: (async (req, res) => {
+      res.json(await service.checkIn(req.user!, id(res)));
+    }) satisfies RequestHandler,
+    checkOut: (async (req, res) => {
+      res.json(await service.checkOut(req.user!, id(res)));
+    }) satisfies RequestHandler,
+
+    listAbsences: (async (_req, res) => {
+      res.json(await service.listAbsences(validated(res, 'query', absencesQuerySchema)));
+    }) satisfies RequestHandler,
+    createAbsence: (async (req, res) => {
+      const creada = await service.createAbsence(validated(res, 'body', absenceBodySchema), req.user!.id);
+      await actividad.log(req.user!.id, 'create', 'absences', creada.absence.id, {
+        user: creada.absence.user.name,
+        startDate: creada.absence.startDate,
+        endDate: creada.absence.endDate,
+        removedAssignments: creada.removedAssignments.length,
+      });
+      res.status(201).json(creada);
+    }) satisfies RequestHandler,
+    removeAbsence: (async (req, res) => {
+      const a = await service.removeAbsence(id(res));
+      await actividad.log(req.user!.id, 'delete', 'absences', a.id, {
+        user: a.user.name,
+        startDate: a.startDate,
+        endDate: a.endDate,
+      });
+      res.status(204).end();
     }) satisfies RequestHandler,
   };
 }

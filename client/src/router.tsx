@@ -31,6 +31,9 @@ import { UserAdminPage } from './pages/admin/UserAdminPage';
 import { UsersAdminPage } from './pages/admin/UsersAdminPage';
 import { SpeciesAdminPage } from './pages/admin/SpeciesAdminPage';
 import { MyDayPage } from './pages/admin/MyDayPage';
+import { ShiftsPage } from './pages/admin/ShiftsPage';
+import { ShiftTemplatesAdminPage } from './pages/admin/ShiftTemplatesAdminPage';
+import { AbsencesAdminPage } from './pages/admin/AbsencesAdminPage';
 import { TasksAdminPage } from './pages/admin/TasksAdminPage';
 import { TaskTemplatesAdminPage } from './pages/admin/TaskTemplatesAdminPage';
 import { ZonesAdminPage } from './pages/admin/ZonesAdminPage';
@@ -84,6 +87,7 @@ export const routes: RouteObject[] = [
           { path: 'updates/new', element: <UpdateFormPage /> },
           { path: 'updates/:id', element: <UpdateFormPage /> },
           { path: 'my-day', element: <MyDayPage /> },
+          { path: 'shifts', element: <ShiftsPage /> },
           {
             // Administración (TECH_SPEC §10.7): solo administradores.
             element: <RequireRole roles={['admin']} />,
@@ -103,6 +107,8 @@ export const routes: RouteObject[] = [
               { path: 'tasks', element: <TasksAdminPage /> },
               { path: 'task-templates', element: <TaskTemplatesAdminPage /> },
               { path: 'zones', element: <ZonesAdminPage /> },
+              { path: 'shift-templates', element: <ShiftTemplatesAdminPage /> },
+              { path: 'absences', element: <AbsencesAdminPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },
