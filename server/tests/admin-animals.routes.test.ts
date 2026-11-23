@@ -19,7 +19,6 @@ const nombres = (body: { data: { name: string }[] }) => body.data.map((a) => a.n
 const nuevo = (extra: Record<string, unknown> = {}) => ({
   name: 'Lucero',
   speciesId: 2,
-  breed: '',
   sex: 'female',
   approxBirthDate: '2020-05-01',
   arrivalDate: '2026-11-01',
@@ -110,7 +109,6 @@ describe('CU-28 Gestionar animales: ficha, alta y edición', () => {
       name: 'Lucero',
       species: { id: 2, name: 'Buitre negro' },
       status: 'in_sanctuary',
-      breed: null,
       temperament: null,
       healthSummary: 'Recuperándose.',
       isPublished: false,
@@ -249,5 +247,17 @@ describe('CU-28 A4 Borrar un animal', () => {
     );
     expect(rows[0]).toEqual({ updates: 0, photos: 0 });
     expect((await marta.delete('/api/admin/animals/15').send({})).status).toBe(404);
+  });
+});
+
+describe('CU-28 Los animales ya no tienen raza', () => {
+  it('la ficha del panel no la devuelve y la columna ya no existe', async () => {
+    const res = await nuria.get('/api/admin/animals/1');
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('breed');
+    const { rowCount } = await t.pool.query(
+      "SELECT 1 FROM information_schema.columns WHERE table_name = 'animals' AND column_name = 'breed'",
+    );
+    expect(rowCount).toBe(0);
   });
 });

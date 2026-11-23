@@ -143,6 +143,9 @@ function Ficha({ adopcion }: { adopcion: AdminAdoptionDetailDto }) {
         <dd>{fecha(adopcion.startDate)}</dd>
         <dt>{t('admin.adoptions.nextBilling')}</dt>
         <dd>{fecha(adopcion.nextBillingDate)}</dd>
+        {/* CU-49: si la tarea de cobro la cobra sola o la paga el adoptante. */}
+        <dt>{t('admin.adoptions.paymentMode')}</dt>
+        <dd>{t(`paymentMode.${adopcion.paymentMode}`)}</dd>
         <dt>{t('admin.adoptions.endDate')}</dt>
         <dd>{fecha(adopcion.endDate)}</dd>
         <dt>{t('admin.adoptions.origin')}</dt>

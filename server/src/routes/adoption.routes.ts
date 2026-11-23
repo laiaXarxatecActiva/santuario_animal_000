@@ -1,4 +1,5 @@
 import {
+  changePaymentModeSchema,
   changePlanSchema,
   createAdoptionSchema,
   idParamsSchema,
@@ -31,6 +32,12 @@ export function createAdoptionRoutes(service: AdoptionService): Router {
     requireRole('adopter'),
     validate({ params: idParamsSchema, body: changePlanSchema }),
     c.changePlan,
+  );
+  router.patch(
+    '/me/adoptions/:id/payment-mode',
+    requireRole('adopter'),
+    validate({ params: idParamsSchema, body: changePaymentModeSchema }),
+    c.changePaymentMode,
   );
   router.post('/me/adoptions/:id/cancel', requireRole('adopter'), validate({ params: idParamsSchema }), c.cancel);
 

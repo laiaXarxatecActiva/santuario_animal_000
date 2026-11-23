@@ -1,7 +1,12 @@
 /* Ventana emergente (DESIGN_SYSTEM §8.4). */
 .modal {
+  /* Centrada: reset.css quita a todo el margen, y el navegador centra el <dialog> con «margin: auto». */
+  margin: auto;
   width: calc(100% - 2 * var(--space-4));
   max-width: 560px;
+  /* En pantallas bajas no se sale: se desplaza por dentro. */
+  max-height: calc(100% - 2 * var(--space-4));
+  overflow-y: auto;
   padding: var(--space-5);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);

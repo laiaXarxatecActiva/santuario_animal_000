@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createAdoptionSchema, myAdoptionsQuerySchema, payAdoptionSchema } from '../src/schemas/adoption.schema.js';
+import { PAYMENT_MODES } from '../src/constants/status.js';
+import {
+  changePaymentModeSchema,
+  createAdoptionSchema,
+  myAdoptionsQuerySchema,
+  payAdoptionSchema,
+} from '../src/schemas/adoption.schema.js';
 
 describe('CU-13 createAdoptionSchema', () => {
   it('exige el animal y el plan como enteros positivos', () => {
@@ -31,5 +37,23 @@ describe('myAdoptionsQuerySchema', () => {
     expect(myAdoptionsQuerySchema.parse({})).toEqual({});
     expect(myAdoptionsQuerySchema.parse({ animalId: '5' })).toEqual({ animalId: 5 });
     expect(myAdoptionsQuerySchema.safeParse({ animalId: 'x' }).success).toBe(false);
+  });
+});
+
+describe('CU-49 Forma de pago', () => {
+  it('al adoptar, la forma de pago es opcional (sin ella, el servidor usa la automática)', () => {
+    expect(createAdoptionSchema.parse({ animalId: 1, planId: 2 }).paymentMode).toBeUndefined();
+    expect(createAdoptionSchema.parse({ animalId: 1, planId: 2, paymentMode: 'manual' }).paymentMode).toBe('manual');
+    expect(createAdoptionSchema.safeParse({ animalId: 1, planId: 2, paymentMode: 'mensual' }).success).toBe(false);
+  });
+
+  it('el cambio exige una de las dos formas', () => {
+    expect(changePaymentModeSchema.parse({ paymentMode: 'manual' })).toEqual({ paymentMode: 'manual' });
+    expect(changePaymentModeSchema.safeParse({}).success).toBe(false);
+    expect(changePaymentModeSchema.safeParse({ paymentMode: 'otra' }).success).toBe(false);
+  });
+
+  it('PAYMENT_MODES replica el CHECK de adoptions.payment_mode', () => {
+    expect(PAYMENT_MODES).toEqual(['automatic', 'manual']);
   });
 });

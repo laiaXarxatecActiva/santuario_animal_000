@@ -52,5 +52,13 @@ export function createUserAdminController(service: UserAdminService, actividad: 
     const respuesta: AdminUserLogoutAllDto = { closedSessions };
     res.json(respuesta);
   };
-  return { list, get, update, create, resendInvitation, logoutAll };
+  // CU-51: el registro de actividad anota el envío, nunca el enlace. La clave no
+  // lleva «password» porque `limpiarDetalles` descarta esas claves (CU-42).
+  const sendPasswordReset: RequestHandler = async (req, res) => {
+    await service.sendPasswordReset(req.user!.id, id(res));
+    await actividad.log(req.user!.id, 'update', 'users', id(res), { resetLinkSent: true });
+    res.status(204).end();
+  };
+
+  return { list, get, update, create, resendInvitation, logoutAll, sendPasswordReset };
 }

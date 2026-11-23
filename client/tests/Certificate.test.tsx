@@ -19,7 +19,7 @@ describe('CU-22 Descargar el certificado de adopción', () => {
     const descargar = rufo.getByRole('link', { name: 'Descargar el certificado de Rufo (PDF)' });
     expect(descargar).toHaveAttribute('href', '/api/me/adoptions/1/certificate?download=1');
     expect(descargar).toHaveAttribute('download');
-    expect(descargar).toHaveTextContent('Certificado');
+    expect(descargar).toHaveTextContent('Descargar certificado');
     const ver = rufo.getByRole('link', { name: 'Ver el certificado de Rufo (PDF)' });
     expect(ver).toHaveAttribute('href', '/api/me/adoptions/1/certificate');
     expect(ver).toHaveAttribute('target', '_blank');
@@ -37,5 +37,18 @@ describe('CU-22 Descargar el certificado de adopción', () => {
     renderRoute('/my-animals');
     const rufo = within(await tarjeta('Rufo'));
     expect(rufo.queryByRole('link', { name: /certificado/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('CU-22 Orden de los botones del certificado', () => {
+  it('primero «Certificado» (lo abre) y al lado «Descargar certificado»', async () => {
+    mockApi(conAdopciones([activeAdoption()]));
+    renderRoute('/my-animals');
+    const rufo = within(await tarjeta('Rufo'));
+    const ver = rufo.getByRole('link', { name: 'Ver el certificado de Rufo (PDF)' });
+    const descargar = rufo.getByRole('link', { name: 'Descargar el certificado de Rufo (PDF)' });
+    expect(ver).toHaveTextContent(/^Certificado$/);
+    expect(descargar).toHaveTextContent(/^Descargar certificado$/);
+    expect(ver.compareDocumentPosition(descargar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

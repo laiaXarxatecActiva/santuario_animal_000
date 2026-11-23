@@ -7,6 +7,22 @@ import type { Language } from '@sanctuary/shared';
 type Traduccion = { ca: string; en: string };
 
 const FIJOS: Record<string, Traduccion> = {
+  'Escribe el nombre del titular.': { ca: 'Escriu el nom del titular.', en: "Enter the cardholder's name." },
+  'El número de tarjeta no es válido.': {
+    ca: 'El número de targeta no és vàlid.',
+    en: 'The card number is not valid.',
+  },
+  'Escribe la caducidad como MM/AA.': { ca: 'Escriu la caducitat com a MM/AA.', en: 'Enter the expiry date as MM/YY.' },
+  'La tarjeta está caducada.': { ca: 'La targeta està caducada.', en: 'The card has expired.' },
+  'El CVC tiene 3 o 4 dígitos.': { ca: 'El CVC té 3 o 4 dígits.', en: 'The CVC has 3 or 4 digits.' },
+  'Escribe tus apellidos.': { ca: 'Escriu els teus cognoms.', en: 'Enter your last name.' },
+  'Escribe tu NIF.': { ca: 'Escriu el teu NIF.', en: 'Enter your NIF.' },
+  'Escribe tu dirección.': { ca: 'Escriu la teua adreça.', en: 'Enter your address.' },
+  'Escribe el código postal.': { ca: 'Escriu el codi postal.', en: 'Enter the postcode.' },
+  'Escribe la provincia.': { ca: 'Escriu la província.', en: 'Enter the province.' },
+  'Escribe el país.': { ca: 'Escriu el país.', en: 'Enter the country.' },
+  'El NIF no es válido.': { ca: 'El NIF no és vàlid.', en: 'The NIF is not valid.' },
+  'El código postal no es válido.': { ca: 'El codi postal no és vàlid.', en: 'The postcode is not valid.' },
   'Debes aceptar la política de privacidad.': {
     ca: 'Has d’acceptar la política de privadesa.',
     en: 'You must accept the privacy policy.',
@@ -30,6 +46,7 @@ const FIJOS: Record<string, Traduccion> = {
   'Elige el animal.': { ca: 'Tria l’animal.', en: 'Choose the animal.' },
   'Elige el plan.': { ca: 'Tria el pla.', en: 'Choose the plan.' },
   'Elige el rol.': { ca: 'Tria el rol.', en: 'Choose the role.' },
+  'Elige la forma de pago.': { ca: 'Tria la forma de pagament.', en: 'Choose the payment method.' },
   'Elige el sexo.': { ca: 'Tria el sexe.', en: 'Choose the sex.' },
   'Elige el tipo.': { ca: 'Tria el tipus.', en: 'Choose the type.' },
   'Elige la adopción.': { ca: 'Tria l’adopció.', en: 'Choose the adoption.' },

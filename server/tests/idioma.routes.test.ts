@@ -73,7 +73,11 @@ describe('Fase 3 Emails y avisos en el idioma de cada persona', () => {
   it('CU-05: el agradecimiento de una donación y el aviso de la campana, en su idioma', async () => {
     const lucia = await entrarComo(t.app, 'lucia');
     await lucia.patch('/api/me/profile').send({ preferredLanguage: 'en' });
-    expect((await lucia.post('/api/donations').send({ amount: '10' })).status).toBe(201);
+    const donante = { donorName: 'Lucía', donorSurname: 'Martínez', acceptPrivacy: true };
+    expect(
+      (await lucia.post('/api/donations').send({ ...donante, donorEmail: 'lucia.martinez@correo.test', amount: '10' }))
+        .status,
+    ).toBe(201);
     const email = ultimo('lucia.martinez@correo.test');
     expect(email?.subject).toBe('Thank you for your donation!');
     expect(email?.text).toContain('Amount: €10.00');
@@ -82,9 +86,14 @@ describe('Fase 3 Emails y avisos en el idioma de cada persona', () => {
   });
 
   it('CU-05: sin cuenta, el agradecimiento sale en el idioma de la web al donar', async () => {
-    const res = await request(t.app)
-      .post('/api/donations')
-      .send({ amount: '5', donorEmail: 'anonim@correo.test', language: 'ca' });
+    const res = await request(t.app).post('/api/donations').send({
+      donorName: 'Jordi',
+      donorSurname: 'Puig',
+      acceptPrivacy: true,
+      amount: '5',
+      donorEmail: 'anonim@correo.test',
+      language: 'ca',
+    });
     expect(res.status).toBe(201);
     expect(ultimo('anonim@correo.test')?.subject).toBe('Gràcies per la teua donació!');
   });

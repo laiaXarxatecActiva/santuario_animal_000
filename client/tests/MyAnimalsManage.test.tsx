@@ -182,3 +182,60 @@ describe('CU-21 Darse de baja (Mis animales)', () => {
     expect(await screen.findByText('Ya habías solicitado la baja de esta adopción.')).toBeInTheDocument();
   });
 });
+
+describe('CU-49 Cambiar la forma de pago (Mis animales)', () => {
+  it('la tarjeta dice la forma de pago y se cambia desde el menú «⋯»', async () => {
+    let actual = activeAdoption();
+    const { enviados } = mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/me/adoptions': () => ({ body: { data: [actual] } }),
+      '/api/me/adoptions/1/payment-mode': () => {
+        actual = activeAdoption({ paymentMode: 'manual' });
+        return { body: actual };
+      },
+    });
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    expect(within(rufo).getByText('Pago automático cada mes')).toBeInTheDocument();
+    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Forma de pago' }));
+
+    const formulario = within(rufo).getByRole('group', { name: 'Forma de pago' });
+    expect(within(formulario).getByRole('radio', { name: /Automático/ })).toBeChecked();
+    await userEvent.click(within(formulario).getByRole('radio', { name: /Manual/ }));
+    await userEvent.click(within(formulario).getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Forma de pago guardada.')).toBeInTheDocument();
+    expect(enviados('/api/me/adoptions/1/payment-mode')).toEqual([{ paymentMode: 'manual' }]);
+    expect(await within(rufo).findByText('Pago manual: te avisaremos de cada cuota')).toBeInTheDocument();
+  });
+
+  it('con la baja solicitada no se ofrece', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/me/adoptions': { body: { data: [activeAdoption({ cancelRequested: true, endDate: '2026-12-04' })] } },
+    });
+    renderRoute('/my-animals');
+    // Sin acciones que ofrecer, la tarjeta no muestra el menú «⋯».
+    const rufo = await tarjeta('Rufo');
+    expect(within(rufo).queryByRole('button', { name: 'Más acciones de Rufo' })).not.toBeInTheDocument();
+    expect(within(rufo).queryByText('Pago automático cada mes')).not.toBeInTheDocument();
+  });
+
+  it('con pago manual y la cuota cerca, avisa del plazo y deja pagarla', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/me/adoptions': {
+        body: { data: [activeAdoption({ paymentMode: 'manual', canPay: true, paymentDeadline: '2026-12-11' })] },
+      },
+    });
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    expect(
+      within(rufo).getByText(
+        'La cuota de Rufo vence el 5 de diciembre de 2026. Puedes pagarla hasta el 11 de diciembre de 2026 sin que la adopción se pause.',
+      ),
+    ).toBeInTheDocument();
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Pagar la cuota' }));
+    expect(await screen.findByRole('dialog', { name: 'Pago simulado' })).toBeInTheDocument();
+  });
+});

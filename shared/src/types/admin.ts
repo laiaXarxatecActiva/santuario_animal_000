@@ -1,6 +1,12 @@
 import type { AnimalSex } from '../constants/animals.js';
 import type { Role } from '../constants/roles.js';
-import type { AdoptionEndReason, AdoptionStatus, PaymentMethod, PaymentStatus } from '../constants/status.js';
+import type {
+  AdoptionEndReason,
+  AdoptionStatus,
+  PaymentMethod,
+  PaymentMode,
+  PaymentStatus,
+} from '../constants/status.js';
 import type { UserAccountStatus } from '../constants/users.js';
 import type { ContributionDonationDto, ContributionPaymentDto } from './contribution.js';
 import type { AnimalStatus, Visibility } from '../constants/status.js';
@@ -68,7 +74,6 @@ export interface AdminAnimalListItemDto {
 
 /** Ficha completa del animal en el panel (CU-28). */
 export interface AdminAnimalDto extends AdminAnimalListItemDto {
-  breed: string | null;
   sex: AnimalSex;
   approxBirthDate: string | null;
   arrivalDate: string;
@@ -211,6 +216,8 @@ export interface AdminAdoptionDetailDto extends AdminAdoptionListItemDto {
   endReason: AdoptionEndReason | null;
   notes: string | null;
   createdBy: AdminPersonRef | null;
+  /** CU-49: forma de pago que eligió el adoptante. */
+  paymentMode: PaymentMode;
   payments: AdminAdoptionPaymentDto[];
   /** CU-38 A2: cuota que se puede registrar a mano ahora (o `null` si no hay ninguna). */
   pendingFee: { periodStart: string; periodEnd: string; amount: string } | null;

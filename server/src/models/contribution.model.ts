@@ -2,6 +2,7 @@ import type {
   ContributionDonationDto,
   ContributionPaymentDto,
   ContributionsResponse,
+  DonorTaxData,
   PaymentMethod,
   PaymentStatus,
 } from '@sanctuary/shared';
@@ -114,7 +115,12 @@ export async function totals(db: Queryable, userId: number): Promise<Contributio
   };
 }
 
-interface ReceiptRow {
+/** CU-05: datos fiscales de una donación, `NULL` si no pidió el certificado (y en las cuotas). */
+export const COLUMNAS_FISCALES = `CASE WHEN tax_certificate THEN json_build_object(
+    'taxId', donor_tax_id, 'address', donor_address, 'postalCode', donor_postal_code,
+    'province', donor_province, 'country', donor_country) END AS fiscal`;
+
+export interface ReceiptRow {
   id: number;
   payment_reference: string;
   amount: string;
@@ -126,6 +132,7 @@ interface ReceiptRow {
   plan_name: string | null;
   period_start: string | null;
   period_end: string | null;
+  fiscal: DonorTaxData | null;
 }
 
 export interface ReceiptRecord {
@@ -140,6 +147,7 @@ export interface ReceiptRecord {
   planName: string | null;
   periodStart: string | null;
   periodEnd: string | null;
+  fiscal: DonorTaxData | null;
 }
 
 export function mapReceiptRow(row: ReceiptRow): ReceiptRecord {
@@ -155,6 +163,7 @@ export function mapReceiptRow(row: ReceiptRow): ReceiptRecord {
     planName: row.plan_name,
     periodStart: row.period_start,
     periodEnd: row.period_end,
+    fiscal: row.fiscal,
   };
 }
 
@@ -164,7 +173,7 @@ export async function findOwnPaymentReceipt(db: Queryable, userId: number, id: n
     `SELECT p.id, p.payment_reference, p.amount, p.method, p.status, p.paid_at, p.refunded_at,
             an.name AS animal_name,
             pl.name AS plan_name,
-            p.period_start::text AS period_start, p.period_end::text AS period_end
+            p.period_start::text AS period_start, p.period_end::text AS period_end, NULL AS fiscal
        FROM payments p
        JOIN adoptions a ON a.id = p.adoption_id
        JOIN animals an ON an.id = a.animal_id
@@ -178,7 +187,8 @@ export async function findOwnPaymentReceipt(db: Queryable, userId: number, id: n
 export async function findOwnDonationReceipt(db: Queryable, userId: number, id: number): Promise<ReceiptRecord | null> {
   const { rows } = await db.query<ReceiptRow>(
     `SELECT id, payment_reference, amount, method, status, paid_at, refunded_at,
-            NULL AS animal_name, NULL AS plan_name, NULL AS period_start, NULL AS period_end
+            NULL AS animal_name, NULL AS plan_name, NULL AS period_start, NULL AS period_end,
+            ${COLUMNAS_FISCALES}
        FROM donations WHERE id = $2 AND user_id = $1`,
     [userId, id],
   );

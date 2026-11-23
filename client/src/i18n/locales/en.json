@@ -358,7 +358,16 @@
     "notice": "Simulated payment: no real charge will be made.",
     "succeed": "Simulate a successful payment",
     "fail": "Simulate a failed payment",
-    "processing": "Processing the payment…"
+    "processing": "Processing the payment…",
+    "cardHolder": "Cardholder name",
+    "cardNumber": "Card number",
+    "cardExpiry": "Expiry date (MM/YY)",
+    "cardCvc": "CVC",
+    "cardWarning": "Do not enter the details of a real card. Only their format is checked; they are never sent or stored.",
+    "testCard": "You can use the test card 4242 4242 4242 4242, with any future expiry date and any CVC.",
+    "failedTitle": "Payment declined",
+    "retry": "Try again",
+    "notNow": "Not now"
   },
   "forbidden": {
     "title": "You do not have access to this page"
@@ -662,7 +671,6 @@
       "texts": "Description",
       "name": "Name",
       "species": "Species",
-      "breed": "Breed",
       "sex": "Sex",
       "approxBirthDate": "Approximate date of birth",
       "arrivalDate": "Arrival date",
@@ -848,6 +856,11 @@
       "logoutAllDone_zero": "They had no open sessions",
       "logoutAllDone_one": "{{count}} session closed",
       "logoutAllDone_other": "{{count}} sessions closed",
+      "sendPasswordReset": "Send password link",
+      "confirmPasswordReset": "Send {{name}} a link to change their password?",
+      "passwordResetExplain": "They will receive an email with a link to choose a new password. The link expires in 30 minutes and cancels any previous ones. Nobody else will see the password. Until they change it, the current one still works; changing it will close their sessions.",
+      "passwordResetConfirm": "Send link",
+      "passwordResetSent": "We have sent {{email}} a link to change their password.",
       "adoptions": "Adoptions",
       "noAdoptions": "No adoptions",
       "contributions": "Contributions",
@@ -871,6 +884,7 @@
       "status": "Status",
       "startDate": "Start",
       "nextBilling": "Next charge",
+      "paymentMode": "Fee collection",
       "endDate": "End",
       "endReason": "Reason for closing",
       "origin": "Origin",
@@ -1157,18 +1171,29 @@
     "other": "Other",
     "amount": "Amount (€)",
     "noMinimum": "No minimum amount.",
-    "name": "Name (optional)",
-    "email": "Email (optional)",
-    "emailHelp": "So we can send you the receipt.",
+    "name": "First name",
+    "email": "Email",
+    "emailHelp": "To send you the receipt and let you know about any change to your donation.",
     "anonymous": "I want my donation to be anonymous",
     "message": "Message (optional)",
     "continue": "Continue to payment",
     "failed": "The payment was not completed. You can try again.",
     "thanksEmail": "Thank you for your donation! We have emailed you the receipt.",
-    "thanksNoEmail": "Thank you for your donation! You can print the receipt from this page.",
-    "printReceipt": "Print receipt",
     "another": "Make another donation",
-    "noNotices": "If you do not give us your email and you have not logged in with your adopter account, we will not be able to tell you anything about this donation (for example, if it had to be refunded)."
+    "surname": "Last name",
+    "phone": "Phone (optional)",
+    "phoneHelp": "Spanish mobile number, 9 digits, without the +34 prefix.",
+    "taxCertificate": "I want the certificate for my tax return",
+    "taxTitle": "Details for the certificate",
+    "taxHelp": "These are the details the Spanish tax office needs so you can deduct the donation in your income tax return.",
+    "taxId": "NIF or NIE",
+    "address": "Address",
+    "postalCode": "Postcode",
+    "province": "Province",
+    "country": "Country",
+    "defaultCountry": "Spain",
+    "viewReceipt": "View receipt",
+    "downloadReceipt": "Download receipt"
   },
   "legal": {
     "lastUpdated": "Last updated: {{date}}",
@@ -1178,7 +1203,7 @@
       "responsibleTitle": "Who is responsible",
       "responsibleText": "The Santuario de Animales is responsible for your data. You can write to us using the contact details in <0>About the sanctuary</0>.",
       "dataTitle": "What data we keep",
-      "dataText": "When you create your account we keep your first name, surname, email, encrypted password and, if you give it to us, your phone number. When you adopt, we keep your adoptions, the chosen plan and the payments. We never keep card details: payments are simulated and, even if they were not, the payment gateway would handle them.",
+      "dataText": "When you create your account we keep your first name, surname, email, encrypted password and, if you give it to us, your phone number. When you adopt, we keep your adoptions, the chosen plan and the payments. If you donate, we keep your name, surname, email, your phone number if you give it to us and, if you ask for the tax certificate, your NIF and address. We never keep card details: payments are simulated and, even if they were not, the payment gateway would handle them.",
       "purposeTitle": "What we use it for",
       "purposeText": "To manage your account and your adoptions, to send you news about the animals you adopt and notices about your fees according to your profile preferences, and to show your name on an animal's profile only if you turn it on.",
       "retentionTitle": "How long we keep it",
@@ -1237,9 +1262,9 @@
     "news": "Their news"
   },
   "certificate": {
-    "download": "Certificate",
+    "download": "Download certificate",
     "downloadOf": "Download {{name}}'s certificate (PDF)",
-    "view": "View",
+    "view": "Certificate",
     "viewOf": "View {{name}}'s certificate (PDF)"
   },
   "language": {
@@ -1249,5 +1274,19 @@
       "ca": "Valencià",
       "en": "English"
     }
+  },
+  "paymentMode": {
+    "title": "Payment method",
+    "automatic": "Automatic",
+    "automaticHelp": "We collect the fee every month without you having to do anything.",
+    "manual": "Manual",
+    "manualHelp": "We remind you 7 days before each fee and you pay it from \"My animals\".",
+    "note": "You can change it whenever you like from \"My animals\".",
+    "cardAutomatic": "Automatic monthly payment",
+    "cardManual": "Manual payment: we will remind you of each fee",
+    "appliesNext": "The change applies from the next fee.",
+    "saved": "Payment method saved.",
+    "due": "{{name}}'s fee is due on {{date}}. You can pay it until {{deadline}} without the adoption being paused.",
+    "payFee": "Pay the fee"
   }
 }

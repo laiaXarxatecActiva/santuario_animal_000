@@ -1,4 +1,5 @@
 import {
+  changePaymentModeSchema,
   changePlanSchema,
   createAdoptionSchema,
   idParamsSchema,
@@ -46,5 +47,10 @@ export function createAdoptionController(service: AdoptionService) {
     res.json(await service.cancel(usuario(req).id, validated(res, 'params', idParamsSchema).id));
   };
 
-  return { create, listMine, getMine, pay, changePlan, cancel };
+  const changePaymentMode: RequestHandler = async (req, res) => {
+    const { id } = validated(res, 'params', idParamsSchema);
+    const { paymentMode } = validated(res, 'body', changePaymentModeSchema);
+    res.json(await service.changePaymentMode(usuario(req).id, id, paymentMode));
+  };
+  return { create, listMine, getMine, pay, changePlan, changePaymentMode, cancel };
 }

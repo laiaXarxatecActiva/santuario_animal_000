@@ -49,6 +49,7 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [cerrandoSesiones, setCerrandoSesiones] = useState(false);
+  const [enviandoEnlace, setEnviandoEnlace] = useState(false);
   const [rol, setRol] = useState<RolTrabajador>(usuario.role === 'admin' ? 'admin' : 'caretaker');
   const nombre = `${usuario.firstName} ${usuario.lastName}`;
   const esAdoptante = usuario.role === 'adopter';
@@ -83,6 +84,19 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
     onError: fallo,
   });
 
+  // CU-51: el enlace llega al trabajador; el administrador nunca ve la contraseña.
+  const enviarCambioPassword = useMutation({
+    mutationFn: () => adminApi.users.sendPasswordReset(usuario.id),
+    onSuccess: () => {
+      setEnviandoEnlace(false);
+      setAviso({ type: 'success', message: t('admin.users.passwordResetSent', { email: usuario.email }) });
+    },
+    onError: (error) => {
+      setEnviandoEnlace(false);
+      fallo(error);
+    },
+  });
+
   const cerrarSesiones = useMutation({
     mutationFn: (reason: string) => adminApi.users.logoutAll(usuario.id, { reason }),
     onSuccess: ({ closedSessions }) => {
@@ -106,6 +120,12 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
           {usuario.invitationPending && (
             <Button variant="outline" disabled={reenviar.isPending} onClick={() => reenviar.mutate()}>
               {t('admin.users.resendInvitation')}
+            </Button>
+          )}
+          {/* CU-51 1a: solo a un trabajador activo que no sea quien mira (el servidor también lo comprueba). */}
+          {isWorkerRole(usuario.role) && usuario.status === 'active' && usuario.id !== yo?.id && (
+            <Button variant="outline" onClick={() => setEnviandoEnlace(true)}>
+              {t('admin.users.sendPasswordReset')}
             </Button>
           )}
           {/* CU-48: una cuenta inactiva o anonimizada ya no tiene sesiones. */}
@@ -200,6 +220,24 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
       >
         <p>{t('admin.users.deactivateSessions')}</p>
         {esAdoptante && adopcionesAbiertas && <p>{t('admin.users.deactivateAdoptions')}</p>}
+      </Modal>
+
+      <Modal
+        open={enviandoEnlace}
+        title={t('admin.users.confirmPasswordReset', { name: nombre })}
+        onClose={() => setEnviandoEnlace(false)}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setEnviandoEnlace(false)}>
+              {t('admin.common.cancel')}
+            </Button>
+            <Button disabled={enviarCambioPassword.isPending} onClick={() => enviarCambioPassword.mutate()}>
+              {t('admin.users.passwordResetConfirm')}
+            </Button>
+          </>
+        }
+      >
+        <p>{t('admin.users.passwordResetExplain')}</p>
       </Modal>
 
       {cerrandoSesiones && (

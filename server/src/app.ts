@@ -151,17 +151,32 @@ export function createApp(options: AppOptions): Express {
   app.use('/api', createFeedRoutes(createFeedService({ db })));
   const contributionService = createContributionService({ db });
   app.use('/api', createContributionRoutes(contributionService));
-  // CU-22 y CU-19: certificado y recibos en PDF.
+  const donationService = createDonationService({
+    db,
+    reloj,
+    payments: options.payments,
+    email: options.email,
+    receiptSecret: options.sessionSecret,
+    clientUrl: options.clientUrl,
+    logEmailError,
+  });
+  // CU-22, CU-19 y CU-05: certificado y recibos en PDF.
   app.use(
     '/api',
     createDocumentRoutes(
-      createDocumentService({ db, pdf: createPdfService(), storage, contributions: contributionService }),
+      createDocumentService({
+        db,
+        pdf: createPdfService(),
+        storage,
+        contributions: contributionService,
+        donations: donationService,
+      }),
     ),
   );
   app.use(
     '/api',
     createDonationRoutes(
-      createDonationService({ db, reloj, payments: options.payments, email: options.email, logEmailError }),
+      donationService,
       createContactService({
         email: options.email,
         sanctuaryEmail: options.sanctuaryEmail ?? DEFAULT_SANCTUARY_EMAIL,

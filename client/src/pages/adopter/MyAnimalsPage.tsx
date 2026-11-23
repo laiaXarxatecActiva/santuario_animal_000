@@ -1,5 +1,12 @@
-import { faCertificate, faFeather } from '@fortawesome/free-solid-svg-icons';
-import { isOpenAdoptionStatus, type AdoptionDto, type AdoptionPlanDto, type SimulatedOutcome } from '@sanctuary/shared';
+import { faCertificate, faDownload, faFeather } from '@fortawesome/free-solid-svg-icons';
+import {
+  isOpenAdoptionStatus,
+  PAYMENT_MODES,
+  type AdoptionDto,
+  type AdoptionPlanDto,
+  type PaymentMode,
+  type SimulatedOutcome,
+} from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +20,7 @@ import { Button, ButtonLink } from '../../components/Button';
 import { CardSkeletons } from '../../components/CardSkeleton';
 import { EmptyState } from '../../components/EmptyState';
 import { Modal } from '../../components/Modal';
+import { PaymentFailedModal } from '../../components/PaymentFailedModal';
 import { PaymentModal } from '../../components/PaymentModal';
 import { MY_ADOPTIONS_KEY, useMyAdoptions } from '../../hooks/useAdoptions';
 import { CONTRIBUTIONS_KEY } from '../../hooks/useContributions';
@@ -32,7 +40,10 @@ export function MyAnimalsPage() {
   const [aPagar, setAPagar] = useState<AdoptionDto | null>(null);
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [aDarDeBaja, setADarDeBaja] = useState<AdoptionDto | null>(null);
+  /** CU-14 3a: adopción cuyo pago se rechazó, para reintentarlo desde el aviso emergente. */
+  const [rechazada, setRechazada] = useState<AdoptionDto | null>(null);
   const [cambiandoPlan, setCambiandoPlan] = useState<number | null>(null);
+  const [cambiandoForma, setCambiandoForma] = useState<number | null>(null);
 
   const refrescar = () => {
     void queryClient.invalidateQueries({ queryKey: MY_ADOPTIONS_KEY });
@@ -53,6 +64,18 @@ export function MyAnimalsPage() {
     onSettled: refrescar,
   });
 
+  // CU-49: forma de pago automática o manual.
+  const cambiarForma = useMutation({
+    mutationFn: ({ adopcion, paymentMode }: { adopcion: AdoptionDto; paymentMode: PaymentMode }) =>
+      adoptionsApi.changePaymentMode(adopcion.id, paymentMode),
+    onSuccess: () => {
+      setCambiandoForma(null);
+      setAviso({ type: 'success', message: t('paymentMode.saved') });
+    },
+    onError: (error) => setAviso({ type: 'error', message: errorMessage(t, error) }),
+    onSettled: refrescar,
+  });
+
   const darDeBaja = useMutation({
     mutationFn: (adopcion: AdoptionDto) => adoptionsApi.cancel(adopcion.id),
     onSuccess: () => setAviso({ type: 'success', message: t('manageAdoption.cancelled') }),
@@ -68,17 +91,16 @@ export function MyAnimalsPage() {
       adoptionsApi.pay(adopcion.id, outcome),
     onSuccess: ({ payment }, { adopcion }) => {
       const nombre = adopcion.animal.name;
-      setAviso(
-        payment.status === 'completed'
-          ? {
-              type: 'success',
-              message:
-                adopcion.status === 'pending'
-                  ? t('adopt.success', { name: nombre })
-                  : t('adopt.paid', { name: nombre }),
-            }
-          : { type: 'error', message: t('adopt.paymentFailed') },
-      );
+      // 3a: el pago rechazado se avisa en una ventana emergente que deja reintentar.
+      if (payment.status !== 'completed') {
+        setRechazada(adopcion);
+        return;
+      }
+      setAviso({
+        type: 'success',
+        message:
+          adopcion.status === 'pending' ? t('adopt.success', { name: nombre }) : t('adopt.paid', { name: nombre }),
+      });
     },
     onError: (error) => setAviso({ type: 'error', message: errorMessage(t, error) }),
     onSettled: () => {
@@ -132,10 +154,20 @@ export function MyAnimalsPage() {
                   guardandoPlan={cambiarPlan.isPending}
                   onChangePlan={() => {
                     setAviso(null);
+                    setCambiandoForma(null);
                     setCambiandoPlan(adopcion.id);
                   }}
                   onSavePlan={(planId) => cambiarPlan.mutate({ adopcion, planId })}
                   onClosePlan={() => setCambiandoPlan(null)}
+                  editandoForma={cambiandoForma === adopcion.id}
+                  guardandoForma={cambiarForma.isPending}
+                  onChangeMode={() => {
+                    setAviso(null);
+                    setCambiandoPlan(null);
+                    setCambiandoForma(adopcion.id);
+                  }}
+                  onSaveMode={(paymentMode) => cambiarForma.mutate({ adopcion, paymentMode })}
+                  onCloseMode={() => setCambiandoForma(null)}
                   onCancel={() => {
                     setAviso(null);
                     setADarDeBaja(adopcion);
@@ -163,13 +195,22 @@ export function MyAnimalsPage() {
       {contenido}
       <PaymentModal
         open={aPagar !== null}
-        concept={aPagar ? t('payment.conceptValue', { name: aPagar.animal.name, plan: aPagar.plan.name }) : ''}
-        amount={aPagar?.plan.monthlyAmount ?? '0'}
+        concept={aPagar ? t('payment.conceptValue', { name: aPagar.animal.name, plan: planACobrar(aPagar).name }) : ''}
+        amount={aPagar ? planACobrar(aPagar).monthlyAmount : '0'}
         processing={pagar.isPending}
         onPay={(outcome) => {
           if (aPagar) pagar.mutate({ adopcion: aPagar, outcome });
         }}
         onClose={() => setAPagar(null)}
+      />
+      <PaymentFailedModal
+        open={rechazada !== null}
+        message={t('adopt.paymentFailed')}
+        onRetry={() => {
+          if (rechazada) abrirPago(rechazada);
+          setRechazada(null);
+        }}
+        onClose={() => setRechazada(null)}
       />
       {aDarDeBaja && (
         <ConfirmarBaja
@@ -183,6 +224,10 @@ export function MyAnimalsPage() {
   );
 }
 
+/** CU-49: en la cuota manual de una activa se cobra el plan programado, si lo hay (como en CU-43). */
+const planACobrar = (adopcion: AdoptionDto) =>
+  adopcion.status === 'active' ? (adopcion.nextPlan ?? adopcion.plan) : adopcion.plan;
+
 interface TarjetaProps {
   adopcion: AdoptionDto;
   onPay: () => void;
@@ -191,6 +236,11 @@ interface TarjetaProps {
   onChangePlan: () => void;
   onSavePlan: (planId: number) => void;
   onClosePlan: () => void;
+  editandoForma: boolean;
+  guardandoForma: boolean;
+  onChangeMode: () => void;
+  onSaveMode: (paymentMode: PaymentMode) => void;
+  onCloseMode: () => void;
   onCancel: () => void;
 }
 
@@ -202,6 +252,11 @@ function TarjetaAdopcion({
   onChangePlan,
   onSavePlan,
   onClosePlan,
+  editandoForma,
+  guardandoForma,
+  onChangeMode,
+  onSaveMode,
+  onCloseMode,
   onCancel,
 }: TarjetaProps) {
   const { t } = useTranslation();
@@ -211,14 +266,18 @@ function TarjetaAdopcion({
   // Las acciones que ofrece la API (CU-20 1a, CU-21): el servidor vuelve a comprobarlas.
   const activaSinBaja = adopcion.status === 'active' && !adopcion.cancelRequested;
   const acciones: ActionsMenuItem[] = [];
+  const abiertaSinBaja = activaSinBaja || adopcion.status === 'paused' || adopcion.status === 'pending';
   if (activaSinBaja) acciones.push({ label: t('manageAdoption.changePlan'), onSelect: onChangePlan });
-  if (activaSinBaja || adopcion.status === 'paused' || adopcion.status === 'pending') {
-    acciones.push({ label: t('manageAdoption.cancel'), onSelect: onCancel });
-  }
+  // CU-49 1a: abierta y sin la baja pedida.
+  if (abiertaSinBaja) acciones.push({ label: t('paymentMode.title'), onSelect: onChangeMode });
+  if (abiertaSinBaja) acciones.push({ label: t('manageAdoption.cancel'), onSelect: onCancel });
 
   return (
     <article className={styles.card}>
-      <AnimalPhoto photo={animal.coverPhoto} thumbnail className={styles.photo} />
+      {/* La foto también abre la ficha; para teclado y lectores de pantalla ya está «Ver la ficha de…». */}
+      <Link to={`/my-animals/${animal.id}`} className={styles.photoLink} aria-hidden="true" tabIndex={-1}>
+        <AnimalPhoto photo={animal.coverPhoto} thumbnail className={styles.photo} />
+      </Link>
       <div className={styles.body}>
         <div className={styles.heading}>
           <h2 className={styles.name}>{animal.name}</h2>
@@ -241,12 +300,20 @@ function TarjetaAdopcion({
             })}
           </p>
         )}
+        {abiertaSinBaja && (
+          <p className={styles.muted}>
+            {t(adopcion.paymentMode === 'manual' ? 'paymentMode.cardManual' : 'paymentMode.cardAutomatic')}
+          </p>
+        )}
         {adopcion.nextUpdateExpected && (
           <p className={styles.muted}>{t('adoption.nextUpdate', { date: formatDate(adopcion.nextUpdateExpected) })}</p>
         )}
         <EstadoPago adopcion={adopcion} onPay={onPay} />
         {editandoPlan && activaSinBaja && (
           <CambioDePlan adopcion={adopcion} saving={guardandoPlan} onSave={onSavePlan} onClose={onClosePlan} />
+        )}
+        {editandoForma && abiertaSinBaja && (
+          <CambioDeFormaDePago adopcion={adopcion} saving={guardandoForma} onSave={onSaveMode} onClose={onCloseMode} />
         )}
         <div className={styles.actions}>
           <ButtonLink to={`/my-animals/${animal.id}`}>{t('myAnimals.seeProfile', { name: animal.name })}</ButtonLink>
@@ -256,15 +323,6 @@ function TarjetaAdopcion({
               <ButtonLink
                 variant="outline"
                 icon={faCertificate}
-                to={`/api/me/adoptions/${adopcion.id}/certificate?download=1`}
-                reloadDocument
-                download
-                aria-label={t('certificate.downloadOf', { name: animal.name })}
-              >
-                {t('certificate.download')}
-              </ButtonLink>
-              <ButtonLink
-                variant="ghost"
                 to={`/api/me/adoptions/${adopcion.id}/certificate`}
                 reloadDocument
                 target="_blank"
@@ -272,6 +330,16 @@ function TarjetaAdopcion({
                 aria-label={t('certificate.viewOf', { name: animal.name })}
               >
                 {t('certificate.view')}
+              </ButtonLink>
+              <ButtonLink
+                variant="outline"
+                icon={faDownload}
+                to={`/api/me/adoptions/${adopcion.id}/certificate?download=1`}
+                reloadDocument
+                download
+                aria-label={t('certificate.downloadOf', { name: animal.name })}
+              >
+                {t('certificate.download')}
               </ButtonLink>
             </>
           )}
@@ -288,6 +356,18 @@ function EstadoPago({ adopcion, onPay }: { adopcion: AdoptionDto; onPay: () => v
 
   if (adopcion.cancelRequested && adopcion.endDate) {
     return <Alert type="info">{t('adoption.activeUntil', { date: formatDate(adopcion.endDate) })}</Alert>;
+  }
+  // CU-49: cuota manual que ya se puede pagar, con el último día antes de pausarse.
+  if (adopcion.status === 'active' && adopcion.canPay && adopcion.nextBillingDate && adopcion.paymentDeadline) {
+    return (
+      <Alert type="warning" action={<Button onClick={onPay}>{t('paymentMode.payFee')}</Button>}>
+        {t('paymentMode.due', {
+          name: nombre,
+          date: formatDate(adopcion.nextBillingDate),
+          deadline: formatDate(adopcion.paymentDeadline),
+        })}
+      </Alert>
+    );
   }
   if (adopcion.status !== 'pending' && adopcion.status !== 'paused') return null;
   if (!adopcion.canPay) return <Alert type="info">{t('adoption.paymentExpired', { name: nombre })}</Alert>;
@@ -379,6 +459,59 @@ function CambioDePlan({
             />
             {t('manageAdoption.planOption', { plan: plan.name, amount: formatCurrency(plan.monthlyAmount) })}
             {plan.id === adopcion.plan.id && ` ${t('manageAdoption.currentPlan')}`}
+          </label>
+        ))}
+        <div className={styles.actions}>
+          <Button type="submit">{t('manageAdoption.save')}</Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            {t('common.cancel')}
+          </Button>
+        </div>
+      </fieldset>
+    </form>
+  );
+}
+
+/** CU-49: desplegable en la tarjeta para elegir entre el pago automático y el manual. */
+function CambioDeFormaDePago({
+  adopcion,
+  saving,
+  onSave,
+  onClose,
+}: {
+  adopcion: AdoptionDto;
+  saving: boolean;
+  onSave: (paymentMode: PaymentMode) => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const nombre = useId();
+  const [elegida, setElegida] = useState<PaymentMode>(adopcion.paymentMode);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        // Elegir la que ya tenía no cambia nada: se cierra sin llamar a la API.
+        if (elegida === adopcion.paymentMode) onClose();
+        else onSave(elegida);
+      }}
+    >
+      <fieldset className={styles.planForm} disabled={saving}>
+        <legend className={styles.planLegend}>{t('paymentMode.title')}</legend>
+        <p className={styles.muted}>{t('paymentMode.appliesNext')}</p>
+        {PAYMENT_MODES.map((modo) => (
+          <label key={modo} className={styles.planOption}>
+            <input
+              type="radio"
+              name={nombre}
+              value={modo}
+              checked={elegida === modo}
+              onChange={() => setElegida(modo)}
+            />
+            <span>
+              <strong>{t(`paymentMode.${modo}`)}</strong> · {t(`paymentMode.${modo}Help`)}
+            </span>
           </label>
         ))}
         <div className={styles.actions}>

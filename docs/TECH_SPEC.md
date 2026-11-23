@@ -313,6 +313,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `adoption_plans.is_default`, `adoption_plans.sort_order` | Plan preseleccionado (Usual) y orden de presentación |
 | `adoptions.next_plan_id` | El cambio de plan se aplica en la siguiente cuota |
 | `adoptions.cancel_requested_at` | La baja mantiene la adopción activa hasta el final del mes pagado |
+| `adoptions.payment_mode`, `adoptions.payment_reminder_sent_for` | Forma de pago elegida por el adoptante (`automatic` por defecto o `manual`, CU-49) y última cuota manual avisada (CU-50) |
 | `adoptions.end_reason` | Motivo de cierre (baja, impago, fallecimiento, traslado…) |
 | `adoptions.gifted_by_user_id` | Adopción regalo (CU-26, descartada en la Fase 3: la columna se conserva, siempre a `NULL`) |
 | `adoptions.created_by`, `adoptions.notes` | Adopciones creadas a mano por un administrador |
@@ -320,6 +321,8 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | `payments.plan_id` | Plan con el que se cobró la cuota; el recibo lo muestra aunque la adopción cambie de plan después |
 | `payments.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Trazabilidad de fallos, cobros, devoluciones y pagos manuales |
 | `donations.failure_reason`, `paid_at`, `refunded_at`, `recorded_by` | Igual que en `payments` |
+| `donations.donor_surname`, `donor_phone` | Datos del donante que pide la web (CU-05); el teléfono, móvil español sin separadores (`donations_phone_format`) |
+| `donations.tax_certificate`, `donor_tax_id`, `donor_address`, `donor_postal_code`, `donor_province`, `donor_country` | Certificado para desgravar: si se pide, los datos fiscales son obligatorios (`donations_tax_data_required`) |
 
 ### 8.3 Estados de una adopción
 
@@ -345,7 +348,7 @@ stateDiagram-v2
 | Estado | Significado | ¿Se cobra? | ¿Recibe actualizaciones? |
 | --- | --- | --- | --- |
 | `pending` | Creada; primer pago no confirmado | No | No |
-| `active` | Pago al día | Sí, cada mes en `next_billing_date` (salvo baja solicitada) | Sí |
+| `active` | Pago al día | Sí, cada mes en `next_billing_date` (salvo baja solicitada). Con pago manual (CU-49) la paga el adoptante; si pasan 7 días sin pagarla, pasa a `paused` (CU-50) | Sí |
 | `paused` | Falló una cuota o la pausó un administrador | No, hasta que se regularice | No (ver [§18](#18-cuestiones-abiertas)) |
 | `cancelled` | Terminada antes de tiempo | No | No |
 | `finished` | Terminada de forma normal | No | No; conserva el historial |
@@ -512,18 +515,20 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/animals/memorial` | Público | Animales fallecidos con `show_in_memorial = TRUE` (Fase 3), del fallecimiento más reciente al más antiguo. Cada uno trae lo que necesita su ficha de solo lectura: foto de portada, especie, llegada (`arrivalDate`), fallecimiento (`deathDate`), historia, fotos públicas y actualizaciones públicas (como mucho 50). Sin datos de adopción. En el panel, `showInMemorial` se marca al registrar el fallecimiento (`PATCH …/status`) o en la edición (`PUT /api/admin/animals/:id`); solo vale para fallecidos (422 `MEMORIAL_ONLY_DECEASED`) | CU-12 |
 | GET | `/api/species` | Público | Lista de especies (para los filtros) | CU-02 |
 | GET | `/api/plans` | Público | Planes activos | CU-04, CU-13 |
-| POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName?, donorEmail?, isAnonymous, message?, simulatedOutcome? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
+| POST | `/api/donations` | Público (sesión opcional) | `{ amount, donorName, donorSurname, donorEmail, donorPhone?, isAnonymous, message?, acceptPrivacy: true, taxCertificate, donorTaxId?, donorAddress?, donorPostalCode?, donorProvince?, donorCountry?, simulatedOutcome?, language? }`: cobra con la pasarela simulada y guarda la donación con el resultado (201, también si falla: `status = 'failed'`). Con `taxCertificate`, los datos fiscales son obligatorios (NIF o NIE con su letra, código postal español); sin él, se descartan. Devuelve `receiptToken`, la firma del enlace al recibo. Un adoptante la vincula a su cuenta; un trabajador no. 10 por hora y por IP | CU-05 |
+| GET | `/api/donations/:id/receipt.pdf?token=&lang=` | Público, con la firma | Recibo en PDF de una donación cobrada o devuelta (o «Certificado de donación», si pidió el certificado). `token` es la firma HMAC-SHA256 de `donation-receipt:<id>` con `SESSION_SECRET`: sin ella, con una que no es la suya o si la donación falló, 404. `lang` elige el idioma del PDF; `?download=1` lo descarga. `Cache-Control: no-store` | CU-05 |
 | POST | `/api/contact` | Público | `{ name, email, subject, message, acceptPrivacy: true }`: email al santuario con `Reply-To` del visitante (202). Si falla el envío, 503 `EMAIL_NOT_SENT`. No se guarda. 5 por hora y por IP | CU-06 |
 
 ### 10.4 Área del adoptante (rol `adopter`)
 
 | Método | Ruta | Descripción | CU |
 | --- | --- | --- | --- |
-| POST | `/api/adoptions` | `{ animalId, planId }`: crea la adopción `pending` (CU-13 paso 5). El primer pago se hace después con `/api/me/adoptions/:id/pay`, así que si se abandona la ventana de pago la adopción queda pendiente (6b) | CU-13 |
-| GET | `/api/me/adoptions` | Mis adopciones con animal, plan, estado, fechas, `canPay` y próxima actualización prevista. Filtro `?animalId=` (lo usa la pantalla «Adoptar» para el caso 5a) | CU-15 |
+| POST | `/api/adoptions` | `{ animalId, planId, paymentMode? }` (`automatic` si no llega, CU-49): crea la adopción `pending` (CU-13 paso 5). El primer pago se hace después con `/api/me/adoptions/:id/pay`, así que si se abandona la ventana de pago la adopción queda pendiente (6b) | CU-13 |
+| GET | `/api/me/adoptions` | Mis adopciones con animal, plan, estado, fechas, `canPay`, `paymentMode`, `paymentDeadline` (último día para pagar la cuota manual sin pausa, o `null`) y próxima actualización prevista. Filtro `?animalId=` (lo usa la pantalla «Adoptar» para el caso 5a) | CU-15 |
 | GET | `/api/me/adoptions/:id` | Detalle de una adopción | CU-15 |
-| POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`. Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
+| POST | `/api/me/adoptions/:id/pay` | `{ simulatedOutcome? }`: primer pago (CU-13 pasos 6-8) o reintento de una adopción `pending` o `paused`, o cuota de una `active` con pago manual desde 7 días antes (CU-49; antes, 422 `ADOPTION_NOT_PAYABLE`). Un pago fallido responde 200 con `payment.status = 'failed'` | CU-13, CU-14 |
 | PATCH | `/api/me/adoptions/:id/plan` | `{ planId }`: cambio de plan para la próxima cuota (o anulación del cambio si es el plan actual). Solo `active` sin baja (422 `PLAN_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-20 |
+| PATCH | `/api/me/adoptions/:id/payment-mode` | `{ paymentMode }` (`automatic` o `manual`): forma de pago desde la próxima cuota. Solo `pending`, `paused` o `active` sin baja (422 `PAYMENT_MODE_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-49 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja (`{}`): la activa sigue hasta el último día pagado, la pendiente pasa a `cancelled` y la pausada a `finished`. Baja ya pedida: 409 `ADOPTION_CANCEL_ALREADY_REQUESTED`; cerrada: 422 `ADOPTION_CLOSED`. Devuelve la adopción | CU-21 |
 | GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) de una adopción propia `active` (si no, 422 `CERTIFICATE_NOT_AVAILABLE`): nombre del adoptante, nombre, especie y foto de portada del animal (sin foto si no tiene o no se puede leer) y fecha de inicio. Se abre en el navegador (`inline`) o, con `?download=1`, se descarga como `certificado-<animal>.pdf`. `Cache-Control: no-store` | CU-22 |
 | GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
@@ -586,6 +591,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/admin/users/:id/invitation` | Reenvía la invitación (anula la anterior). Solo a un trabajador activo que nunca ha entrado; si no, 409 `INVITATION_NOT_PENDING` | CU-36 |
 | POST | `/api/admin/users` | Crear cuenta de trabajador | CU-36 |
 | POST | `/api/admin/users/:id/logout-all` | `{ reason }` obligatorio (1-500 caracteres). Cierra todas las sesiones del usuario y responde `{ closedSessions }`; sobre la propia cuenta mantiene la sesión actual. No cambia nada más de la cuenta. Queda en el registro de actividad con el motivo | CU-48 |
+| POST | `/api/admin/users/:id/password-reset` | Solo admin. Envía al trabajador (cuidador u otro administrador, activo y que no sea quien lo pide) un enlace `password_reset` de 30 minutos para elegir otra contraseña; anula los anteriores. `204`; si no se puede, 422 `PASSWORD_RESET_NOT_ALLOWED` | CU-51 |
 | GET | `/api/admin/adoptions` | Listado con `?q` (adoptante por nombre o email, o animal), `status`, `planId`, `animalId`, `userId` y `sort` (lista blanca; por defecto `-createdAt`) | CU-37 |
 | GET | `/api/admin/adoptions/:id` | Detalle con sus pagos (con quién registró los manuales), las notas internas y quién la creó | CU-37 |
 | POST | `/api/admin/adoptions` | Alta manual `{ userId, animalId, planId, method, notes? }`: nace `active` con su primer pago `completed` (`cash` o `bank_transfer`, referencia `CASH-…` o `TRF-…`, `recorded_by`) y se avisa como en CU-13. El adoptante debe tener la cuenta activa (422 `ADOPTER_NOT_AVAILABLE`); no hace falta que haya verificado el email | CU-37 |
@@ -639,7 +645,7 @@ export interface PaymentGateway {
    - `always_fail`.
    - `random`, con `PAYMENT_SIMULATION_FAILURE_RATE` (de 0 a 1). Es útil para la tarea de cobro mensual.
 
-**Nunca** se piden ni se guardan datos de tarjeta, ni siquiera inventados.
+La ventana de pago pide una tarjeta (titular, número, caducidad y CVC) para que el pago se parezca a uno real. Solo se comprueba su formato en el navegador (`tarjetaSimuladaSchema` de `shared`: Luhn, caducidad no vencida, CVC de 3 o 4 dígitos), y **los datos de la tarjeta nunca se envían al servidor ni se guardan**: la API sigue recibiendo solo `simulatedOutcome`. Un aviso en la ventana pide no escribir una tarjeta real (DESIGN_SYSTEM §8.4).
 
 ### 11.2 Servicio de email
 
@@ -684,7 +690,8 @@ export interface StorageService {
 
 | Tarea (`jobName`) | Horario | Qué hace | CU |
 | --- | --- | --- | --- |
-| `billing` | Diaria, 03:00 | Para cada adopción `active` sin baja solicitada y con `next_billing_date <= hoy`: aplica `next_plan_id` si existe, cobra, crea el registro en `payments` y avanza `next_billing_date` un mes. Si falla: pago `failed`, adopción `paused`, aviso al adoptante. Cada adopción se procesa en su propia transacción. | CU-43 |
+| `billing` | Diaria, 03:00 | Para cada adopción `active` con pago automático, sin baja solicitada y con `next_billing_date <= hoy`: aplica `next_plan_id` si existe, cobra, crea el registro en `payments` y avanza `next_billing_date` un mes. Si falla: pago `failed`, adopción `paused`, aviso al adoptante. Cada adopción se procesa en su propia transacción. | CU-43 |
+| `manual-payments` | Diaria, 03:15 | Adopciones `active` con pago manual y sin baja: avisa (campana `system` y email) 7 días antes de la cuota, una vez por cuota (`payment_reminder_sent_for`), y pasa a `paused` las que llevan 7 días desde la cuota sin pagarla (notificación `payment_failed`, email y registro de actividad) | CU-50 |
 | `expire-pending` | Diaria, 03:30 | Adopciones `pending` creadas hace más de 7 días → `cancelled` (`payment_not_completed`) | CU-44 |
 | `finish-cancelled` | Diaria, 03:45 | Adopciones `active` con `cancel_requested_at` y `end_date < hoy` → `finished` (`user_cancelled`) | CU-45 |
 | `monthly-digest` | Día 1, 09:00 | Email resumen para adoptantes con `monthly_digest` y novedades en el mes anterior | CU-46 |
@@ -734,7 +741,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 - **Textos** siempre con `t('clave')` desde `i18n/locales/` (`es.json`, `ca.json` y `en.json`, con las mismas claves). Nunca texto fijo en los componentes.
 - **Importes** con `Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' })` y **fechas** con `Intl.DateTimeFormat('es-ES')`.
 - **Antes de adoptar**, la interfaz explica que la adopción es simbólica, que el animal no sale del santuario y que puede tener varios adoptantes.
-- **Pasarela simulada:** una pantalla propia con un aviso claro de «Pago simulado: no se realizará ningún cargo real» y los botones de resultado.
+- **Pasarela simulada:** una pantalla propia con un aviso claro de «Pago simulado: no se realizará ningún cargo real», los campos de una tarjeta que solo se comprueban en el navegador (§11.1) y los botones de resultado.
 - **Diseño adaptable:** la web pública y el área del adoptante se diseñan primero para móvil (desde 360 px); el panel prioriza el escritorio, pero debe poder usarse en una tablet.
 
 ## 13. Requisitos no funcionales
@@ -747,7 +754,7 @@ Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que rediri
 | **XSS** | React escapa por defecto; prohibido `dangerouslySetInnerHTML` con contenido del usuario. Los textos de las actualizaciones son texto plano con saltos de línea. |
 | **Autorización** | En el servidor, en cada ruta ([§9](#9-autenticación-y-autorización)) |
 | **RGPD** | Casilla de aceptación de la política de privacidad al registrarse (`privacy_accepted_at`); banner de cookies informativo (solo hay cookies técnicas de sesión). Derecho de acceso: el perfil y «Mis aportaciones». Rectificación: editar el perfil. Supresión: CU-25. |
-| **Anonimización (CU-25)** | `first_name = 'Usuario'`, `last_name = 'eliminado'`, `email = 'deleted-<id>@anonymized.invalid'`, `phone = NULL`, contraseña aleatoria, `is_active = FALSE`, `email_verified = FALSE`, `show_public_name = FALSE`, `email_notifications = FALSE`, `last_login_at = NULL`, `anonymized_at = NOW()`. Se cierran sus adopciones abiertas (`account_deleted`), se borran sus sesiones, tokens, notificaciones y lecturas, y en sus donaciones se vacían `donor_name` y `donor_email`. Se conservan los importes de pagos y donaciones. |
+| **Anonimización (CU-25)** | `first_name = 'Usuario'`, `last_name = 'eliminado'`, `email = 'deleted-<id>@anonymized.invalid'`, `phone = NULL`, contraseña aleatoria, `is_active = FALSE`, `email_verified = FALSE`, `show_public_name = FALSE`, `email_notifications = FALSE`, `last_login_at = NULL`, `anonymized_at = NOW()`. Se cierran sus adopciones abiertas (`account_deleted`), se borran sus sesiones, tokens, notificaciones y lecturas, y en sus donaciones se vacían los datos del donante (nombre, apellidos, email, teléfono y datos fiscales). Se conservan los importes de pagos y donaciones. |
 | **Accesibilidad** | `alt_text` obligatorio en cada foto; contraste AA (4,5:1); navegación completa con teclado y foco visible; etiquetas `<label>` en todos los campos; HTML semántico |
 | **Imágenes** | JPEG, PNG o WebP, máximo 5 MB. `sharp` las redimensiona a un máximo de 1600 px de ancho (WebP, calidad 80) y crea una miniatura de 400 px. Vídeos: MP4, máximo 50 MB, sin procesar; en la Fase 4 se revisará según el almacenamiento disponible. Máximo 10 archivos por subida. |
 | **Rendimiento** | Paginación en todos los listados; índices definidos en `seedsql.sql`; miniaturas en las tarjetas del catálogo |
@@ -960,7 +967,7 @@ Recogidas en `docs/AUTH_SPEC.md` (§1). No cambian el esquema de la base de dato
 
 | Ampliación | Cómo hacerla |
 | --- | --- |
-| **Nueva especie** (por ejemplo, lince ibérico) | Alta desde el panel (CU-30). Si la especie tiene razas, se usa `animals.breed`. No requiere cambios de código. |
+| **Nueva especie** (por ejemplo, lince ibérico) | Alta desde el panel (CU-30): cada especie (lince ibérico, oso pardo, otra ave…) es una fila de `species` y la ficha del animal la muestra. Los animales no tienen campo de raza (se quitó `animals.breed`). No requiere cambios de código. |
 | **Nuevo idioma** | Añadir `client/src/i18n/locales/<código>.json`, el código en `shared/src/constants/languages.ts` y en el `CHECK` de `users.preferred_language`, sus textos en las plantillas de email, en `textos-avisos.ts`, en `dominio/documentos.ts` y en `i18n/mensajesValidacion.ts` |
 | **Pasarela de pago real** | Nueva clase que implemente `PaymentGateway`; se elige por configuración. Ver el anexo «Paso a producción real». |
 | **Nuevo tipo de notificación** | Añadir el valor al `CHECK` de `notifications.type`, a las constantes de `shared/` y crear la plantilla de email |

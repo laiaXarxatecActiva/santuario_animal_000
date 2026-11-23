@@ -2,7 +2,7 @@
    móvil se desplazan en horizontal dentro de su barra. */
 .tabs {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-5);
   overflow-x: auto;
   border-bottom: 1px solid var(--color-border);
 }

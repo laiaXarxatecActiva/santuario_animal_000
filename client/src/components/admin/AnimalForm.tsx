@@ -17,7 +17,6 @@ import styles from './AnimalForm.module.css';
 export const ANIMAL_FIELDS = [
   'name',
   'speciesId',
-  'breed',
   'sex',
   'approxBirthDate',
   'arrivalDate',
@@ -41,7 +40,6 @@ interface AnimalFormProps {
 const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
   name: a?.name ?? '',
   speciesId: a?.species.id ?? '',
-  breed: a?.breed ?? '',
   sex: a?.sex ?? 'unknown',
   approxBirthDate: a?.approxBirthDate ?? '',
   arrivalDate: a?.arrivalDate ?? '',
@@ -86,7 +84,6 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
               </option>
             ))}
           </SelectField>
-          <TextField label={opcional('admin.animal.breed')} error={errors.breed?.message} {...register('breed')} />
           <SelectField label={t('admin.animal.sex')} error={errors.sex?.message} {...register('sex')}>
             {ANIMAL_SEXES.map((s) => (
               <option key={s} value={s}>

@@ -1,4 +1,4 @@
-import { idParamsSchema, pdfQuerySchema } from '@sanctuary/shared';
+import { idParamsSchema, pdfQuerySchema, publicReceiptQuerySchema } from '@sanctuary/shared';
 import { Router } from 'express';
 import { createDocumentController } from '../controllers/document.controller.js';
 import { requireRole } from '../middlewares/auth.js';
@@ -13,5 +13,11 @@ export function createDocumentRoutes(service: DocumentService): Router {
   router.get('/me/adoptions/:id/certificate', requireRole('adopter'), entrada, c.certificate);
   router.get('/me/payments/:id/receipt.pdf', requireRole('adopter'), entrada, c.paymentReceipt);
   router.get('/me/donations/:id/receipt.pdf', requireRole('adopter'), entrada, c.donationReceipt);
+  // CU-05: pública; la firma del enlace hace de permiso (docs/AUTH_SPEC.md).
+  router.get(
+    '/donations/:id/receipt.pdf',
+    validate({ params: idParamsSchema, query: publicReceiptQuerySchema }),
+    c.publicDonationReceipt,
+  );
   return router;
 }

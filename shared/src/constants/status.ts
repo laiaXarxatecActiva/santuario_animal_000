@@ -9,6 +9,11 @@ export const ARCHIVED_ANIMAL_STATUSES = ['deceased', 'transferred'] as const sat
 export const ADOPTION_STATUSES = ['pending', 'active', 'paused', 'cancelled', 'finished'] as const;
 export type AdoptionStatus = (typeof ADOPTION_STATUSES)[number];
 
+// CU-49: forma de pago de una adopción. Debe coincidir con el CHECK de adoptions.payment_mode.
+// `automatic`: la tarea `billing` cobra cada mes; `manual`: el adoptante paga cada cuota.
+export const PAYMENT_MODES = ['automatic', 'manual'] as const;
+export type PaymentMode = (typeof PAYMENT_MODES)[number];
+
 // Adopción abierta: pendiente, activa o pausada (glosario de TECH_SPEC).
 export const OPEN_ADOPTION_STATUSES = ['pending', 'active', 'paused'] as const satisfies readonly AdoptionStatus[];
 

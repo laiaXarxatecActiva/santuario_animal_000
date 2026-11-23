@@ -58,7 +58,7 @@ export function UserMenu({ name, links, onLogout }: UserMenuProps) {
         aria-label={t('nav.userMenu', { name })}
         onClick={() => setAbierto((a) => !a)}
       >
-        {name}
+        <span className={styles.name}>{name}</span>
         <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" className={styles.chevron} />
       </Button>
       <div id={panelId} className={styles.panel} hidden={!abierto}>

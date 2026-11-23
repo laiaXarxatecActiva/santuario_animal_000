@@ -38,6 +38,13 @@
   font-weight: 600;
 }
 
+/* Por debajo de 480 px no cabe junto a los botones; el menú lateral lo repite. */
+@media (max-width: 479px) {
+  .title {
+    display: none;
+  }
+}
+
 .actions {
   display: flex;
   align-items: center;

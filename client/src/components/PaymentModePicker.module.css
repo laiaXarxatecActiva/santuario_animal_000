@@ -1,0 +1,7 @@
+/* Forma de pago (CU-49): usa las tarjetas de la selección de plan (DESIGN_SYSTEM §8.5), en dos columnas. */
+@media (min-width: 768px) {
+  /* `div.` sube la especificidad sobre las tres columnas de PlanPicker.module.css. */
+  div.twoColumns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

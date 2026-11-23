@@ -109,6 +109,9 @@ export interface ContenidoRecibo {
 const RECIBO = {
   es: {
     titulo: 'Recibo',
+    tituloCertificado: 'Certificado de donación',
+    nif: 'NIF',
+    direccion: 'Dirección',
     pagador: 'Pagado por',
     concepto: 'Concepto',
     importe: 'Importe',
@@ -127,6 +130,9 @@ const RECIBO = {
   },
   ca: {
     titulo: 'Rebut',
+    tituloCertificado: 'Certificat de donació',
+    nif: 'NIF',
+    direccion: 'Adreça',
     pagador: 'Pagat per',
     concepto: 'Concepte',
     importe: 'Import',
@@ -145,6 +151,9 @@ const RECIBO = {
   },
   en: {
     titulo: 'Receipt',
+    tituloCertificado: 'Donation certificate',
+    nif: 'Tax ID (NIF)',
+    direccion: 'Address',
     pagador: 'Paid by',
     concepto: 'Concept',
     importe: 'Amount',
@@ -174,10 +183,19 @@ export function contenidoRecibo(r: ReceiptDto, idioma: Language = 'es'): Conteni
     if (r.periodStart && r.periodEnd) partes.push(t.periodo(f.fechaCorta(r.periodStart), f.fechaCorta(r.periodEnd)));
     concepto = partes.join(' · ');
   }
+  // CU-05: con los datos fiscales, es el certificado para desgravar.
+  const fiscal = r.kind === 'donation' ? r.fiscal : null;
+  const filasFiscales: [string, string][] = fiscal
+    ? [
+        [t.nif, fiscal.taxId],
+        [t.direccion, `${fiscal.address}\n${fiscal.postalCode} ${fiscal.province} (${fiscal.country})`],
+      ]
+    : [];
   return {
-    titulo: t.titulo,
+    titulo: fiscal ? t.tituloCertificado : t.titulo,
     filas: [
       [t.pagador, `${r.payer.fullName}\n${r.payer.email}`],
+      ...filasFiscales,
       [t.concepto, concepto],
       [t.importe, f.euros(r.amount)],
       [t.fecha, f.instante(r.paidAt)],
@@ -185,7 +203,7 @@ export function contenidoRecibo(r: ReceiptDto, idioma: Language = 'es'): Conteni
       [t.referencia, r.reference],
       [t.estado, r.refundedAt ? t.devuelto(f.instante(r.refundedAt)) : t.cobrado],
     ],
-    filaImporte: 2,
+    filaImporte: 2 + filasFiscales.length,
     aviso: r.method === 'simulated' ? t.aviso : null,
     idioma,
   };

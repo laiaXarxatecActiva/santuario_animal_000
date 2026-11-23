@@ -359,6 +359,16 @@ export class PlanChangeNotAllowedError extends BusinessRuleError {
   }
 }
 
+/** CU-49 1a: la forma de pago solo se cambia en una adopción abierta sin baja solicitada. */
+export class PaymentModeChangeNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super(
+      'PAYMENT_MODE_CHANGE_NOT_ALLOWED',
+      'Solo puedes cambiar la forma de pago de una adopción en curso sin baja solicitada.',
+    );
+  }
+}
+
 /** CU-21: la baja ya estaba solicitada. */
 export class AdoptionCancelAlreadyRequestedError extends ConflictError {
   constructor() {
@@ -471,6 +481,16 @@ export class WorkerEmailTakenError extends AppError {
 export class InvitationNotPendingError extends ConflictError {
   constructor() {
     super('INVITATION_NOT_PENDING', 'Esta cuenta no tiene ninguna invitación pendiente.');
+  }
+}
+
+// CU-51 1a: solo a un trabajador activo distinto del propio administrador.
+export class PasswordResetNotAllowedError extends BusinessRuleError {
+  constructor() {
+    super(
+      'PASSWORD_RESET_NOT_ALLOWED',
+      'Solo se puede enviar a una cuenta de trabajador activa que no sea la tuya. Tu contraseña se cambia en «Mi perfil».',
+    );
   }
 }
 

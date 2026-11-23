@@ -1,5 +1,6 @@
 // Usuarios de database/TEST_DATA.sql (sus contraseñas están en la cabecera de ese archivo).
 
+export const MARTA = { email: 'marta.soler@santuario.test', password: 'MartaSoler26#!' } as const; // administradora
 export const NURIA = { email: 'nuria.peris@santuario.test', password: 'NuriaPeris26#!' } as const; // cuidadora
 export const LUCIA = { email: 'lucia.martinez@correo.test', password: 'Lucia.buitres1' } as const; // adopta a Rufo
 

@@ -11,6 +11,9 @@ export interface DonationResultDto {
   paidAt: string | null;
   failureReason: string | null;
   donorName: string | null;
+  donorSurname: string | null;
   donorEmail: string | null;
   isAnonymous: boolean;
+  /** Firma para ver o descargar el recibo sin cuenta (`/api/donations/:id/receipt.pdf?token=`). */
+  receiptToken: string;
 }

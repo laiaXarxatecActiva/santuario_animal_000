@@ -268,3 +268,12 @@ describe('CU-37 Gestionar adopciones: pausar, reanudar y cancelar', () => {
     expect((await accion(1, { action: 'delete' })).status).toBe(400);
   });
 });
+
+describe('CU-37 y CU-49 La ficha del panel muestra la forma de pago', () => {
+  it('automática por defecto; manual si el adoptante la eligió', async () => {
+    expect((await ficha(14)).paymentMode).toBe('automatic');
+    await t.pool.query("UPDATE adoptions SET payment_mode = 'manual' WHERE id = 14");
+    expect((await ficha(14)).paymentMode).toBe('manual');
+    await t.pool.query("UPDATE adoptions SET payment_mode = 'automatic' WHERE id = 14");
+  });
+});

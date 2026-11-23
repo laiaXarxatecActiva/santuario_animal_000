@@ -176,6 +176,8 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     usuarios.update,
   );
   router.post('/users/:id/invitation', soloAdmin, conId, usuarios.resendInvitation);
+  // CU-51: enlace para que un trabajador cambie su contraseña.
+  router.post('/users/:id/password-reset', soloAdmin, conId, usuarios.sendPasswordReset);
   // CU-48: cerrar todas las sesiones de un usuario, solo con motivo.
   router.post(
     '/users/:id/logout-all',

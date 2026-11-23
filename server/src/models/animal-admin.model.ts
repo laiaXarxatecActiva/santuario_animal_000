@@ -11,7 +11,6 @@ interface AnimalAdminRow extends CoverRow {
   name: string;
   species_id: number;
   species_name: string;
-  breed: string | null;
   sex: AnimalSex;
   approx_birth_date: string | null;
   arrival_date: string;
@@ -34,7 +33,6 @@ export function mapRow(row: AnimalAdminRow): AdminAnimalDto {
     id: row.id,
     name: row.name,
     species: { id: row.species_id, name: row.species_name },
-    breed: row.breed,
     sex: row.sex,
     approxBirthDate: row.approx_birth_date,
     arrivalDate: row.arrival_date,
@@ -56,7 +54,7 @@ export function mapRow(row: AnimalAdminRow): AdminAnimalDto {
 }
 
 const SELECT = `
-  SELECT a.id, a.name, a.species_id, s.name AS species_name, a.breed, a.sex,
+  SELECT a.id, a.name, a.species_id, s.name AS species_name, a.sex,
          a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament, a.special_needs,
          a.health_summary, a.status, a.status_changed_at, a.show_in_memorial, a.is_adoptable, a.is_published,
          ad.active_adopters, ad.open_adoptions, ad.has_adoption_history,
@@ -160,7 +158,6 @@ function traducirError(error: unknown): never {
 const COLUMNAS = [
   'name',
   'species_id',
-  'breed',
   'sex',
   'approx_birth_date',
   'arrival_date',
@@ -175,7 +172,6 @@ const COLUMNAS = [
 const valores = (d: AnimalData) => [
   d.name,
   d.speciesId,
-  d.breed,
   d.sex,
   d.approxBirthDate,
   d.arrivalDate,

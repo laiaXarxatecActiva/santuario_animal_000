@@ -1,4 +1,4 @@
-import type { ReceiptDto } from '@sanctuary/shared';
+import type { Language, ReceiptDto } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import { contenidoCertificado, contenidoRecibo, nombreArchivo, PREFIJOS } from '../dominio/documentos.js';
 import { CertificateNotAvailableError, NotFoundError } from '../errors/app-error.js';
@@ -7,6 +7,7 @@ import * as userModel from '../models/user.model.js';
 import type { PdfService } from '../services/pdf/pdf.service.js';
 import type { StorageService } from '../services/storage/storage.service.js';
 import type { ContributionService } from './contribution.service.js';
+import type { DonationService } from './donation.service.js';
 
 export interface DocumentoPdf {
   filename: string;
@@ -18,12 +19,13 @@ export interface DocumentServiceDeps {
   pdf: PdfService;
   storage: StorageService;
   contributions: ContributionService;
+  donations: DonationService;
 }
 
 export type DocumentService = ReturnType<typeof createDocumentService>;
 
 // CU-22 certificado y CU-19 recibos en PDF. Se generan al momento y no se guardan.
-export function createDocumentService({ db, pdf, storage, contributions }: DocumentServiceDeps) {
+export function createDocumentService({ db, pdf, storage, contributions, donations }: DocumentServiceDeps) {
   /** La portada del animal; si falta el archivo o no se puede leer, sin foto (2a). */
   async function portada(url: string | undefined): Promise<Buffer | null> {
     const ruta = url ? storage.pathFromUrl(url) : null;
@@ -73,5 +75,14 @@ export function createDocumentService({ db, pdf, storage, contributions }: Docum
 
     donationReceipt: async (userId: number, donationId: number) =>
       reciboPdf(userId, await contributions.donationReceipt(userId, donationId)),
+
+    /** CU-05: recibo (o certificado) de una donación sin cuenta, con la firma del enlace. */
+    async publicDonationReceipt(donationId: number, token: string | undefined, idioma: Language = 'es') {
+      const recibo = await donations.publicReceipt(donationId, token);
+      return {
+        filename: nombreArchivo(PREFIJOS[idioma].recibo, recibo.reference),
+        pdf: await pdf.receipt(contenidoRecibo(recibo, idioma)),
+      };
+    },
   };
 }

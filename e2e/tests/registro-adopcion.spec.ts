@@ -1,5 +1,5 @@
 import { enlaceDelCorreo, esperarCorreo } from '../support/mailpit.js';
-import { expect, rellenarLogin, test } from '../support/test.js';
+import { expect, rellenarLogin, rellenarTarjeta, test } from '../support/test.js';
 import { t } from '../support/textos.js';
 import { GRETA } from '../support/usuarios.js';
 
@@ -53,6 +53,7 @@ test.describe('CU-07, CU-08, CU-13, CU-14, CU-15 Registrarse, verificar el email
     const pago = page.getByRole('dialog', { name: t('payment.title') });
     await expect(pago).toBeVisible();
     await expect(pago.getByText(/Extraordinaria/)).toBeVisible();
+    await rellenarTarjeta(pago);
     await pago.getByRole('button', { name: t('payment.succeed'), exact: true }).click();
 
     // CU-15: termina en «Mis animales», con Greta.

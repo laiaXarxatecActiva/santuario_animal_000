@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { adoption, animal, payment, plans, sessionUser } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
+import { rellenarTarjeta } from './helpers/tarjeta';
 import { ADOPTER_HOME } from '../src/utils/redirect';
 
 const conSesion = (user = sessionUser()) => ({ body: { user } });
@@ -78,13 +79,14 @@ describe('CU-13 Adoptar un animal', () => {
     });
     const { router } = renderRoute('/adopt/1');
     const dialogo = await continuar();
+    await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago correcto' }));
     await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));
     expect(enviados('/api/me/adoptions/40/pay')).toEqual([{ simulatedOutcome: 'success' }]);
     expect(await screen.findByText('¡Ya adoptas a Rufo! Te hemos enviado un email de bienvenida.')).toBeInTheDocument();
   });
 
-  it('con el pago fallido, se queda en la página con el error y puede reintentar (6a)', async () => {
+  it('con el pago fallido, sale el aviso emergente con el error y puede reintentar (6a)', async () => {
     let intentos = 0;
     apiAdoptante({
       '/api/adoptions': { status: 201, body: adoption() },
@@ -101,15 +103,18 @@ describe('CU-13 Adoptar un animal', () => {
     });
     const { router } = renderRoute('/adopt/1');
     const dialogo = await continuar();
+    await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago fallido' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    const aviso = await screen.findByRole('dialog', { name: 'Pago rechazado' });
+    expect(within(aviso).getByRole('alert')).toHaveTextContent(
       'El pago no se ha completado. Puedes intentarlo de nuevo ahora o desde «Mis animales» durante 7 días.',
     );
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Pago simulado' })).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/adopt/1');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Pagar ahora' }));
+    await userEvent.click(within(aviso).getByRole('button', { name: 'Volver a intentarlo' }));
     const otra = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    await rellenarTarjeta();
     await userEvent.click(within(otra).getByRole('button', { name: 'Simular pago correcto' }));
     await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));
     expect(intentos).toBe(2);
@@ -150,6 +155,7 @@ describe('CU-13 Adoptar un animal', () => {
     expect(screen.queryByRole('button', { name: 'Continuar con el pago' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Pagar ahora' }));
     const dialogo = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago correcto' }));
     await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));
   });
@@ -208,5 +214,18 @@ describe('CU-13 Adoptar un animal', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Continuar con el pago' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Este plan ya no está disponible. Elige otro.');
     await waitFor(() => expect(peticionesPlanes).toBe(2));
+  });
+});
+
+describe('CU-49 Elegir la forma de pago al adoptar', () => {
+  it('por defecto, el pago automático; se puede elegir el manual y se envía', async () => {
+    const { enviados } = apiAdoptante({ '/api/adoptions': { status: 201, body: adoption({ paymentMode: 'manual' }) } });
+    renderRoute('/adopt/1');
+    const grupo = await screen.findByRole('group', { name: 'Forma de pago' });
+    expect(within(grupo).getByRole('radio', { name: /Automático/ })).toBeChecked();
+    expect(within(grupo).getByRole('radio', { name: /Manual/ })).not.toBeChecked();
+    await userEvent.click(within(grupo).getByRole('radio', { name: /Manual/ }));
+    await continuar();
+    expect(enviados('/api/adoptions')).toEqual([{ animalId: 1, planId: 2, paymentMode: 'manual' }]);
   });
 });

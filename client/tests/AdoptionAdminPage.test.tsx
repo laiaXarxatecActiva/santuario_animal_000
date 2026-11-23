@@ -93,3 +93,12 @@ describe('CU-37 Gestionar adopciones: ficha', () => {
     expect(await screen.findByText('Esta adopción no existe')).toBeInTheDocument();
   });
 });
+
+describe('CU-37 y CU-49 Forma de pago en la ficha', () => {
+  it('muestra si el adoptante paga de forma automática o manual', async () => {
+    api(adminAdoptionDetail({ paymentMode: 'manual' }));
+    renderRoute('/admin/adoptions/4');
+    const forma = await screen.findByText('Cobro de las cuotas');
+    expect(forma.nextElementSibling).toHaveTextContent('Manual');
+  });
+});

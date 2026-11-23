@@ -24,7 +24,6 @@ async function edicion(id: number, cambios: Record<string, unknown>) {
   return {
     name: body.name,
     speciesId: body.species.id,
-    breed: body.breed,
     sex: body.sex,
     approxBirthDate: body.approxBirthDate,
     arrivalDate: body.arrivalDate,

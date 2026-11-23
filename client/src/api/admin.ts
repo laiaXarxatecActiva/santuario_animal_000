@@ -103,6 +103,8 @@ export const adminApi = {
     /** CU-48: cierra todas las sesiones del usuario (en la propia cuenta, todas menos la actual). */
     logoutAll: (id: number, body: AdminUserLogoutAllBody) =>
       apiPost<AdminUserLogoutAllDto>(`/api/admin/users/${id}/logout-all`, body),
+    /** CU-51: envía al trabajador un enlace para cambiar su contraseña. */
+    sendPasswordReset: (id: number) => apiPost<void>(`/api/admin/users/${id}/password-reset`, {}),
   },
 
   // CU-40 (solo administradores).

@@ -4,6 +4,7 @@ import {
   type CreateAdoptionInput,
   type Language,
   type PayAdoptionResponse,
+  type PaymentMode,
   type SessionUser,
   type SimulatedOutcome,
 } from '@sanctuary/shared';
@@ -14,8 +15,10 @@ import {
   bajaAdopcion,
   cambioDePlan,
   esAdoptable,
+  limiteCuotaManual,
   periodoCuota,
   proximaActualizacionPrevista,
+  puedeCambiarFormaDePago,
   puedeCambiarPlan,
   puedePagar,
 } from '../dominio/adopcion.js';
@@ -29,6 +32,7 @@ import {
   AnimalNotAdoptableError,
   AnimalNotAvailableError,
   NotFoundError,
+  PaymentModeChangeNotAllowedError,
   PlanChangeNotAllowedError,
   PlanNotAvailableError,
   WorkerCannotAdoptError,
@@ -65,6 +69,10 @@ export function createAdoptionService({
   clientUrl,
   logEmailError = () => {},
 }: AdoptionServiceDeps) {
+  /** CU-14 y CU-49: si ahora tiene una cuota que se pueda pagar. */
+  const pagable = (adopcion: adoptionModel.Adoption) =>
+    puedePagar({ ...adopcion, cancelRequested: adopcion.cancelRequestedAt !== null }, reloj.ahora(), reloj.hoy());
+
   const toDto = (adopcion: adoptionModel.Adoption): AdoptionDto => ({
     id: adopcion.id,
     status: adopcion.status,
@@ -78,7 +86,12 @@ export function createAdoptionService({
     endReason: adopcion.endReason,
     nextUpdateExpected: proximaActualizacionPrevista(adopcion, adopcion.lastUpdateDate),
     createdAt: adopcion.createdAt.toISOString(),
-    canPay: puedePagar(adopcion, reloj.ahora()),
+    canPay: pagable(adopcion),
+    paymentMode: adopcion.paymentMode,
+    paymentDeadline:
+      adopcion.status === 'active' && adopcion.nextBillingDate && pagable(adopcion)
+        ? limiteCuotaManual(adopcion.nextBillingDate)
+        : null,
   });
 
   async function animalAdoptable(animalId: number): Promise<animalModel.PublicAnimal> {
@@ -89,14 +102,17 @@ export function createAdoptionService({
   }
 
   /** CU-13 pasos 2-5: comprueba las reglas y crea la adopción pendiente. */
-  async function create(user: SessionUser, { animalId, planId }: CreateAdoptionInput): Promise<AdoptionDto> {
+  async function create(
+    user: SessionUser,
+    { animalId, planId, paymentMode = 'automatic' }: CreateAdoptionInput,
+  ): Promise<AdoptionDto> {
     if (isWorkerRole(user.role)) throw new WorkerCannotAdoptError();
     const animal = await animalAdoptable(animalId);
     if (!(await planModel.findActiveById(db, planId))) throw new PlanNotAvailableError();
     if (await adoptionModel.findOpenByUserAndAnimal(db, user.id, animalId)) {
       throw new AdoptionAlreadyOpenError(animal.name);
     }
-    return toDto(await adoptionModel.create(db, { userId: user.id, animalId, planId }));
+    return toDto(await adoptionModel.create(db, { userId: user.id, animalId, planId, paymentMode }));
   }
 
   /** CU-15: mis adopciones, las más recientes primero. */
@@ -113,7 +129,7 @@ export function createAdoptionService({
 
   /** Comprueba que la adopción tiene una cuota pendiente que se pueda pagar ahora. */
   function comprobarPagable(adopcion: adoptionModel.Adoption): void {
-    if (puedePagar(adopcion, reloj.ahora())) return;
+    if (pagable(adopcion)) return;
     if (adopcion.status === 'pending') throw new AdoptionPaymentExpiredError();
     if (adopcion.status === 'active') throw new AdoptionNotPayableError();
     throw new AdoptionClosedError();
@@ -150,7 +166,9 @@ export function createAdoptionService({
   /**
    * CU-13 pasos 6-8 y CU-14. Pendiente: cobra el mes que empieza hoy y la
    * activa. Pausada: cobra el mes que empieza en `next_billing_date` y avanza
-   * el siguiente cobro. Un pago fallido se guarda y no cambia el estado.
+   * el siguiente cobro. CU-49: activa con pago manual: cobra igual la cuota
+   * de `next_billing_date` (con el cambio de plan programado, si lo hay). Un
+   * pago fallido se guarda y no cambia el estado.
    */
   async function pay(
     userId: number,
@@ -165,17 +183,20 @@ export function createAdoptionService({
 
     const hoy = reloj.hoy();
     const periodo = periodoCuota(primerPago ? hoy : (adopcion.nextBillingDate ?? hoy));
+    // CU-49: en la cuota manual se aplica el cambio de plan programado, como en CU-43 paso 1.
+    const cuotaManual = adopcion.status === 'active';
+    const plan = cuotaManual ? (adopcion.nextPlan ?? adopcion.plan) : adopcion.plan;
     const resultado = await payments.charge({
-      amount: adopcion.plan.monthlyAmount,
-      description: `Cuota ${adopcion.plan.name} - ${adopcion.animal.name} - ${periodo.periodStart.slice(0, 7)}`,
+      amount: plan.monthlyAmount,
+      description: `Cuota ${plan.name} - ${adopcion.animal.name} - ${periodo.periodStart.slice(0, 7)}`,
       simulatedOutcome,
     });
 
     const payment = await withTransaction(db, async (client) => {
       const pago = await paymentModel.create(client, {
         adoptionId,
-        planId: adopcion.plan.id,
-        amount: adopcion.plan.monthlyAmount,
+        planId: plan.id,
+        amount: plan.monthlyAmount,
         periodStart: periodo.periodStart,
         periodEnd: periodo.periodEnd,
         status: resultado.success ? 'completed' : 'failed',
@@ -184,6 +205,7 @@ export function createAdoptionService({
         paidAt: resultado.success ? reloj.ahora() : null,
       });
       if (resultado.success) {
+        if (cuotaManual && adopcion.nextPlan) await adoptionModel.applyNextPlan(client, adoptionId);
         await adoptionModel.activate(client, adoptionId, { startDate: hoy, nextBillingDate: periodo.nextBillingDate });
         await notificationModel.create(client, {
           userId,
@@ -196,7 +218,7 @@ export function createAdoptionService({
     });
 
     if (resultado.success) {
-      await enviarRecibo(userId, adopcion, { ...periodo, reference: resultado.reference }, primerPago);
+      await enviarRecibo(userId, { ...adopcion, plan }, { ...periodo, reference: resultado.reference }, primerPago);
     }
     const actualizada = (await adoptionModel.findOwnedById(db, userId, adoptionId)) ?? adopcion;
     return { adoption: toDto(actualizada), payment };
@@ -264,6 +286,18 @@ export function createAdoptionService({
     return getMine(userId, adoptionId);
   }
 
+  /** CU-49: cambia la forma de pago (vale desde la siguiente cuota). */
+  async function changePaymentMode(userId: number, adoptionId: number, paymentMode: PaymentMode): Promise<AdoptionDto> {
+    await withTransaction(db, async (client) => {
+      const adopcion = await propiaBloqueada(client, userId, adoptionId);
+      if (!puedeCambiarFormaDePago({ status: adopcion.status, cancelRequested: adopcion.cancelRequestedAt !== null })) {
+        throw new PaymentModeChangeNotAllowedError();
+      }
+      await adoptionModel.setPaymentMode(client, adoptionId, paymentMode);
+    });
+    return getMine(userId, adoptionId);
+  }
+
   /** CU-21: baja de la adopción (RN-10). */
   async function cancel(userId: number, adoptionId: number): Promise<AdoptionDto> {
     const { adopcion, baja } = await withTransaction(db, async (client) => {
@@ -299,7 +333,7 @@ export function createAdoptionService({
     return getMine(userId, adoptionId);
   }
 
-  return { create, listMine, getMine, pay, changePlan, cancel };
+  return { create, listMine, getMine, pay, changePlan, changePaymentMode, cancel };
 }
 
 export type AdoptionService = ReturnType<typeof createAdoptionService>;

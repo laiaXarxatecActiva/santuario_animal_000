@@ -30,6 +30,14 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.animal:hover .animalName,
+.animal:focus-visible .animalName {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .animal > :first-child {

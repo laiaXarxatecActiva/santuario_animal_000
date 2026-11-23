@@ -31,7 +31,7 @@ export function PublicLayout() {
     !location.pathname.startsWith('/adopt/');
 
   return (
-    <>
+    <div className={styles.page}>
       <a href="#main" className={styles.skipLink}>
         {t('common.skipToContent')}
       </a>
@@ -59,6 +59,6 @@ export function PublicLayout() {
         <Footer />
         <CookieNotice />
       </div>
-    </>
+    </div>
   );
 }

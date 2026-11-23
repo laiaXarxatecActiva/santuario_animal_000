@@ -107,7 +107,7 @@ export function AnimalProfile({ animal, breadcrumb, notice, aside, extra, news }
   const { t } = useTranslation();
   const sep = t('common.listSeparator');
 
-  const especie = [animal.species.name, animal.breed, t(`animal.sex.${animal.sex}`)].filter(Boolean).join(sep);
+  const especie = [animal.species.name, t(`animal.sex.${animal.sex}`)].filter(Boolean).join(sep);
   const edad =
     animal.approxAgeYears === null
       ? null
