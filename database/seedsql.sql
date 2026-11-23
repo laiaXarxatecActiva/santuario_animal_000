@@ -166,7 +166,6 @@ CREATE TABLE animals (
     id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name                VARCHAR(100) NOT NULL,
     species_id          INTEGER      NOT NULL REFERENCES species (id) ON DELETE RESTRICT,
-    breed               VARCHAR(100),                       -- opcional; vacío en buitres
     sex                 VARCHAR(10)  NOT NULL DEFAULT 'unknown'
                         CHECK (sex IN ('male', 'female', 'unknown')),
     approx_birth_date   DATE,
@@ -342,6 +341,10 @@ CREATE TABLE adoptions (
     start_date           DATE,                               -- se fija al confirmarse el primer pago
     end_date             DATE,                               -- último día cubierto / fecha de cierre
     next_billing_date    DATE,                               -- próxima cuota prevista
+    -- CU-49: 'automatic' (la tarea billing cobra cada mes) o 'manual' (el adoptante paga cada cuota).
+    payment_mode         VARCHAR(20) NOT NULL DEFAULT 'automatic'
+                         CHECK (payment_mode IN ('automatic', 'manual')),
+    payment_reminder_sent_for DATE,                          -- CU-50: cuota manual ya avisada (idempotencia)
     cancel_requested_at  TIMESTAMPTZ,                        -- el adoptante pidió la baja (sigue activa hasta end_date)
     end_reason           VARCHAR(30)
                          CHECK (end_reason IN (
@@ -452,7 +455,16 @@ CREATE TABLE donations (
     id                 INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id            INTEGER       REFERENCES users (id) ON DELETE RESTRICT, -- opcional
     donor_name         VARCHAR(200),
+    donor_surname      VARCHAR(100),                -- CU-05: obligatorio en la web, no en el alta manual
     donor_email        VARCHAR(255),
+    donor_phone        VARCHAR(9),                  -- móvil español sin separadores, opcional
+    -- CU-05: certificado para desgravar; si se pide, los datos fiscales son obligatorios.
+    tax_certificate    BOOLEAN       NOT NULL DEFAULT FALSE,
+    donor_tax_id       VARCHAR(20),
+    donor_address      VARCHAR(200),
+    donor_postal_code  VARCHAR(10),
+    donor_province     VARCHAR(100),
+    donor_country      VARCHAR(100),
     amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
     is_anonymous       BOOLEAN       NOT NULL DEFAULT FALSE,
     message            VARCHAR(1000),
@@ -470,7 +482,11 @@ CREATE TABLE donations (
     CONSTRAINT donations_paid_at_required
         CHECK (status NOT IN ('completed', 'refunded') OR paid_at IS NOT NULL),
     CONSTRAINT donations_refunded_at_consistent
-        CHECK ((status = 'refunded') = (refunded_at IS NOT NULL))
+        CHECK ((status = 'refunded') = (refunded_at IS NOT NULL)),
+    CONSTRAINT donations_phone_format CHECK (donor_phone IS NULL OR donor_phone ~ '^[67][0-9]{8}$'),
+    CONSTRAINT donations_tax_data_required
+        CHECK (NOT tax_certificate OR (donor_tax_id IS NOT NULL AND donor_address IS NOT NULL
+               AND donor_postal_code IS NOT NULL AND donor_province IS NOT NULL AND donor_country IS NOT NULL))
 );
 
 CREATE INDEX donations_user_idx ON donations (user_id);

@@ -70,3 +70,10 @@
   flex-wrap: wrap;
   gap: var(--space-3);
 }
+
+/* Desde `md` (768 px), más aire entre tarjetas (DESIGN_SYSTEM §7). */
+@media (min-width: 768px) {
+  .stats {
+    gap: var(--space-5);
+  }
+}

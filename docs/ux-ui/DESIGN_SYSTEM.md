@@ -309,6 +309,8 @@ Se diseña **primero para móvil** (desde 360 px de ancho) y se añaden ajustes 
 - Los formularios ocupan todo el ancho en móvil; en escritorio, como máximo 560 px y centrados (o en dos columnas en el panel).
 - Las ventanas emergentes ocupan casi toda la pantalla en móvil y tienen un ancho máximo de 560 px en escritorio.
 - Las tablas del panel se convierten en **lista de tarjetas** por debajo de `md` (768 px).
+- **Separación entre tarjetas** de una lista o cuadrícula («Mis animales», escritorio y estadísticas del panel, planes): 16 px (`--space-4`) en móvil y 24 px (`--space-5`) desde `md`.
+- **Cabecera por debajo de 480 px:** para que quepa sin desplazamiento lateral, el selector de idioma se muestra como un botón redondo de 44 px con solo el icono `language` (la lista desplegada sigue con los nombres completos), el botón del menú de usuario muestra solo sus iconos (conserva el `aria-label` con el nombre) y la cabecera del panel oculta el texto «Panel», que repite el menú lateral.
 - Se comprueba siempre a 360, 768, 1024 y 1440 px, y con la letra del navegador al 200 %.
 
 ## 8. Componentes
@@ -361,6 +363,7 @@ El componente más importante de la web pública.
 - **Toda la tarjeta es un único enlace** a la ficha del animal (sin enlaces anidados dentro). El nombre del animal es el texto del enlace para los lectores de pantalla.
 - Hover y foco: el borde pasa a `--color-primary` y la foto hace un zoom muy leve (`scale(1.03)`, 200 ms) dentro de su marco. Sin sombras ni desplazamientos de la tarjeta.
 - Si el animal no admite adopciones, insignia neutra «No disponible para adoptar». Si no tiene adoptantes, el texto es «Sin adoptantes todavía».
+- Fuera de esta tarjeta, la foto pequeña de un animal también lleva a su ficha cuando la tarjeta que la contiene no es ya un enlace: en «Mis animales» la foto es un enlace con el mismo zoom (oculto al teclado, que usa «Ver la ficha de…»), y en «Novedades» la miniatura y el nombre del animal forman un enlace.
 - Mismas proporciones y alturas en toda la cuadrícula: los textos largos se cortan con puntos suspensivos a una línea (el nombre) o dos (el resto).
 
 **Otras tarjetas** (adopción en «Mis animales», actualización del muro, resumen del escritorio) siguen la misma base: fondo `--color-surface`, borde fino, `--radius-lg`, sin sombra, mismo relleno.
@@ -416,7 +419,7 @@ Los mensajes de error, éxito, advertencia e información **no son ventanas emer
 Solo se usan donde tienen sentido:
 
 1. **Confirmar acciones importantes o que no se pueden deshacer:** borrar (animal, foto, actualización, especie), darse de baja de una adopción, eliminar la cuenta, registrar un fallecimiento o traslado, cancelar una adopción o devolver un pago (panel).
-2. **La pasarela de pago simulado.**
+2. **La pasarela de pago simulado** y el **aviso del pago rechazado**, que la sigue.
 3. **Ver las fotos de la galería en grande** (visor con flechas anterior y siguiente).
 
 Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la página.
@@ -426,7 +429,9 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 | Base técnica | Elemento nativo `<dialog>` con `showModal()` |
 | Fondo de detrás | Velo `rgba(30, 25, 21, 0.55)` en ambos modos |
 | Caja | `--color-surface`, borde fino, `--radius-lg`, sin sombra, relleno `--space-5` |
+| Posición | Centrada en la pantalla (`margin: auto`, que hay que poner a mano porque `reset.css` quita los márgenes a todo) |
 | Ancho | Máximo 560 px; en móvil, el ancho de la pantalla menos 16 px a cada lado |
+| Alto | Como mucho, el de la pantalla menos 16 px arriba y abajo; si no cabe, el contenido se desplaza por dentro |
 | Cabecera | Título (Fraunces, h2) y botón de cerrar `xmark` |
 | Pie | Botones alineados a la derecha en escritorio y apilados (ancho completo) en móvil; la acción principal la última en escritorio y la primera en móvil |
 | Visor de fotos | Fondo casi opaco (`--viewer-backdrop`, `rgba(30, 25, 21, 0.92)`, en ambos modos), foto centrada al máximo tamaño posible, flechas laterales (`chevron-left` / `chevron-right`, desactivadas en los extremos; también con las flechas del teclado), contador «3 de 8» arriba a la izquierda y ✕ arriba a la derecha. Texto y botones en `--viewer-text` (`#fffdf9`), con el borde de los botones al 50 % de opacidad. Con una sola foto, sin flechas ni contador |
@@ -435,7 +440,9 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 
 **Confirmación destructiva:** título en forma de pregunta («¿Eliminar la foto?»), una frase con la consecuencia, botón `outline` «Cancelar» y botón `danger` con el verbo concreto («Eliminar foto»), nunca un simple «Aceptar». La eliminación de la cuenta pide además la contraseña dentro de la ventana.
 
-**Pago simulado:** muestra el concepto, el importe y un aviso `info` fijo («Pago simulado: no se realizará ningún cargo real»), con dos botones: `primary` «Simular pago correcto» y `outline` «Simular pago fallido». El resultado se muestra después, como aviso en línea en la página de destino.
+**Pago simulado:** muestra el concepto, el importe y un aviso `info` fijo («Pago simulado: no se realizará ningún cargo real» y, debajo, «No escribas los datos de una tarjeta real…»). Debajo, los campos de la tarjeta: titular y número a todo el ancho (el número con la ayuda de la tarjeta de prueba 4242 4242 4242 4242), y caducidad (MM/AA) y CVC en una fila de dos columnas. Todos con `autocomplete="off"`. Solo se comprueba el formato (número con la comprobación de Luhn, caducidad no vencida, CVC de 3 o 4 dígitos), y los errores salen bajo cada campo. Los datos nunca salen del navegador ni se guardan (TECH_SPEC §11.1). Botones: `primary` «Simular pago correcto» y `outline` «Simular pago fallido»; los dos exigen la tarjeta bien escrita. Cada vez que se abre, la tarjeta empieza vacía. El aviso depende de la constante `AVISO_PAGO_SIMULADO` de `PaymentModal.tsx`, para poder quitarlo si algún día hay pagos reales. Un pago correcto se muestra después, como aviso en línea en la página de destino.
+
+**Pago rechazado** (`PaymentFailedModal`): si el pago simulado no se completa, en lugar de un aviso en la página se abre otra ventana con el título «Pago rechazado», un aviso `error` con el mensaje de cada pantalla (al adoptar, el plazo de 7 días) y los botones `outline` «Ahora no» y `primary` «Volver a intentarlo», que vuelve a abrir la ventana de pago con los mismos datos. «Ahora no», la ✕ y Esc la cierran y dejan la página como estaba (el formulario de donar conserva los datos). Los errores de datos (un campo no válido, un animal que ya no admite adopciones) siguen en la página.
 
 ### 8.5 Formularios
 
@@ -448,6 +455,7 @@ Cualquier otra cosa (formularios, mensajes de resultado, explicaciones) va en la
 - **Interruptores** (`Switch`, sí/no en preferencias): casilla nativa con `role="switch"` en forma de píldora de 48 × 28 px; apagado con fondo `--color-surface-alt` y círculo `--color-text-muted`, encendido con fondo `--color-primary` y círculo `--color-on-primary`. Etiqueta a la izquierda y el texto del estado al lado («Sí» / «No»).
 - **Teléfono:** campo numérico que solo admite dígitos (como mucho 9) y añade los guiones solo mientras se escribe: `612-34-56-78`. Ayuda: «Móvil español de 9 dígitos, sin el prefijo +34».
 - **Selección de plan** (adoptar): tres tarjetas seleccionables (radio) con nombre, importe y descripción; la seleccionada lleva borde `--color-primary` de 2 px y fondo `--color-primary-soft`. El plan Usual viene marcado.
+- **Forma de pago** (`PaymentModePicker`, adoptar, CU-49): las mismas tarjetas que la selección de plan, en dos columnas desde 768 px («Automático», marcada por defecto, y «Manual»), con nombre y descripción y una nota debajo en `--font-size-sm` y `--color-text-muted`.
 - **Subida de fotos:** zona de arrastrar y soltar con borde discontinuo `--color-border-strong`, `--radius-lg`, icono `camera` y el botón «Elegir archivos» (para quien no puede arrastrar).
 - Los errores del servidor se muestran igual que los del cliente.
 
@@ -477,10 +485,10 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 - **Desde `lg` (1024 px):** enlaces visibles. El enlace activo está subrayado con una línea terracota de 2 px.
 - **Por debajo de `lg`:** botón de hamburguesa (`bars`) a la derecha. El **selector de idioma, el botón de tema y la campana siguen visibles** fuera del menú.
 - **Selector de idioma** (`LanguageSelect`, Fase 3): lista desplegable nativa (`<select>`) de 44 px de alto, con borde `--color-border`, `--radius-pill`, fondo transparente (al pasar el ratón, `--color-surface-alt`), texto `--font-size-sm` y el icono `language` en `--color-text-muted` dentro, a la izquierda. Etiqueta «Idioma» solo para lectores de pantalla. Cada idioma se nombra en su propia lengua y con su `lang`: «Castellano», «Valencià», «English». También está en la cabecera del panel.
-- **Menú de hamburguesa:** panel que se despliega bajo la cabecera a todo el ancho, con fondo `--color-surface`. Enlaces en lista con zona pulsable de 48 px. Se cierra con Esc, con ✕ o al elegir un enlace. El botón tiene `aria-expanded` y `aria-controls`.
+- **Menú de hamburguesa:** panel que se despliega bajo la cabecera a todo el ancho, con fondo `--color-surface`. Enlaces en lista con zona pulsable de 48 px, alineados con el logotipo: llevan los mismos márgenes laterales que el contenido (`.container`, §7: 16, 24 o 32 px según el ancho), igual que los botones «Entrar» y «Registrarse». Se cierra con Esc, con ✕ o al elegir un enlace. El botón tiene `aria-expanded` y `aria-controls`.
 - **Menú de usuario** (con sesión, desde `lg`): botón `outline` con el icono `circle-user`, el nombre y `chevron-down`, con `aria-expanded` y `aria-controls`. Despliega bajo el botón un panel alineado a la derecha, de 240 px, con fondo `--color-surface`, borde fino y `--radius-md`; enlaces en lista con zona pulsable de 44 px y, al final, separado por una línea, «Cerrar sesión» (`right-from-bracket`). Se cierra con Esc, al pulsar fuera o al elegir una opción. Por debajo de `lg`, sus opciones van al final del menú de hamburguesa.
 
-**Pie:** fondo `--color-surface-alt`, borde superior fino. Enlaces informativos, contacto, aviso de privacidad y la nota «Proyecto académico — pagos simulados».
+**Pie:** fondo `--color-surface-alt`, borde superior fino. Enlaces informativos, contacto, aviso de privacidad y la nota «Proyecto académico — pagos simulados». No es fijo: la plantilla ocupa al menos el alto de la ventana (`min-height: 100dvh`, en columna) y el `<main>` se estira (`flex: 1`), así que en las páginas cortas el pie queda en la parte inferior de la ventana y en las largas, tras el contenido.
 
 **Panel de gestión:** ver [§8.10](#810-panel-de-gestión).
 
@@ -498,7 +506,7 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | **Paginación** | Botones en píldora: «Anterior», números (con «…» si son muchos) y «Siguiente». La página actual tiene fondo terracota y `aria-current="page"`. En móvil, solo «Anterior», «Página 2 de 7» y «Siguiente». |
 | **Filtros** | En escritorio, barra horizontal sobre el listado. En móvil, botón «Filtros» (`sliders`) que despliega un panel. Los filtros activos se muestran como píldoras con ✕ y un enlace «Limpiar filtros». |
 | **Pestañas** | Para la ficha del animal en el panel (Datos, Fotos, Actualizaciones, Veterinario) y para «Mis aportaciones» (Cuotas, Donaciones). Texto con línea inferior terracota en la activa. En móvil, se pueden desplazar en horizontal **dentro** de su barra. Las que cambian de contenido sin cambiar de página usan `role="tablist"`/`tab`/`tabpanel` y se mueven con las flechas. |
-| **Menú de acciones** (`ActionsMenu`) | Acciones secundarias de una tarjeta («Cambiar plan», «Darme de baja»). Botón `icon` con `ellipsis` y `aria-label` con el nombre del elemento («Más acciones de Rufo»), `aria-haspopup="menu"` y `aria-expanded`. Despliega el mismo panel que el menú de usuario (§8.7): 240 px, alineado a la derecha, `--color-surface`, borde fino, `--radius-md`, opciones de 44 px con `role="menuitem"`. Se cierra con Esc (el foco vuelve al botón), al pulsar fuera o al elegir una opción. Si no hay acciones, no se muestra. |
+| **Menú de acciones** (`ActionsMenu`) | Acciones secundarias de una tarjeta («Cambiar plan», «Forma de pago», «Darme de baja»). Botón `icon` con `ellipsis` y `aria-label` con el nombre del elemento («Más acciones de Rufo»), `aria-haspopup="menu"` y `aria-expanded`. Despliega el mismo panel que el menú de usuario (§8.7): 240 px, alineado a la derecha, `--color-surface`, borde fino, `--radius-md`, opciones de 44 px con `role="menuitem"`. Se cierra con Esc (el foco vuelve al botón), al pulsar fuera o al elegir una opción. Si no hay acciones, no se muestra. |
 | **Recibo imprimible** | Tarjeta (`--color-surface`, borde fino, `--radius-lg`) con el nombre del santuario, «Recibo» (h1) y una lista de pares etiqueta/valor (etiquetas en `--color-text-muted` 600). Encima, «Volver» y el botón `outline` «Imprimir» (`print`). En el agradecimiento de una donación, el título del recibo es h2 y los botones van debajo. Al imprimir se ocultan la cabecera, el pie, el aviso de cookies y la barra de botones (utilidad `.print-hidden`), y la tarjeta pierde el borde y el fondo. |
 | **Selector de importe** | Donar (CU-05): botones de opción nativos con aspecto de píldora (`--radius-pill`, 44 px de alto, borde fino, fondo `--color-surface`, texto 600). El elegido, con fondo `--color-primary` y texto `--color-on-primary`; el foco, con el contorno `--color-focus`. Debajo, el campo «Importe (€)» siempre visible: las píldoras lo rellenan y, si se escribe otra cantidad, queda marcada «Otra». |
 | **Galería** | Foto principal 4:3 y miniaturas cuadradas debajo; al pulsar, se abre el visor ([§8.4](#84-ventanas-emergentes-modal)). En móvil, las miniaturas se desplazan en horizontal. |
@@ -522,11 +530,13 @@ Usa **la misma paleta y los mismos componentes**, pero con un estilo **más sobr
 - Los botones y campos usan la **variante compacta** (36 px) en escritorio; en pantallas táctiles, siempre 44 px.
 - **Tablas:**
   - Cabecera con fondo `--color-surface-alt` y texto `--font-size-sm` 600.
-  - Filas de 48 px, separadas por un borde fino; filas alternas con un fondo muy suave.
+  - Filas de 56 px con 12 px (`--space-3`) de relleno, separadas por un borde fino; filas alternas con un fondo muy suave.
   - Cabecera fija al desplazar.
   - Importes y fechas alineados a la derecha, con `tabular-nums`.
   - Acciones de cada fila al final, como botones `icon` con `aria-label`.
-  - **Por debajo de `md` (768 px), cada fila se convierte en una tarjeta:** título (lo más importante de la fila), los demás datos como pares «etiqueta: valor» y las acciones abajo.
+  - **Por debajo de `md` (768 px), cada fila se convierte en una tarjeta:** título (lo más importante de la fila), los demás datos como pares «etiqueta: valor» y las acciones abajo. Relleno de 16 px y 16 px entre tarjetas.
+- **Fichas de datos** (`<dl>` de una adopción, un usuario…): etiqueta en `--color-text-muted` 600 y valor en dos columnas, con 12 px entre filas y 24 px entre columnas. Por debajo de `md`, la etiqueta va encima de su valor (4 px) y cada dato se separa 16 px del siguiente.
+- **Separaciones del panel:** 24 px entre los bloques de una página; 16 px más antes de cada sección de una ficha («Pagos», «Notas internas»); 12 px entre los botones del título y entre el buscador y su botón; 16 px entre los filtros; 24 px entre pestañas; 8 px entre el título de una ficha y sus etiquetas de estado.
 - **Escritorio del panel:** tarjetas de resumen con una cifra grande (Fraunces, `--font-size-h1`), su etiqueta y, si procede, un enlace. Las alertas de actualización usan avisos `warning` (12–13 días) y `error` (14 días o más).
 
 ## 9. Movimiento

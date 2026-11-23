@@ -242,7 +242,6 @@ export const animalBodySchema = z
   .object({
     name: textoObligatorio(100, 'Escribe el nombre del animal.'),
     speciesId: z.coerce.number({ error: 'Elige la especie.' }).int().positive({ error: 'Elige la especie.' }),
-    breed: textoOpcional(100),
     sex: z.enum(ANIMAL_SEXES, { error: 'Elige el sexo.' }),
     approxBirthDate: z
       .union([z.literal(''), fecha('La fecha no es válida.')])

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { activeAdoption, adoption, payment, sessionUser } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
+import { rellenarTarjeta } from './helpers/tarjeta';
 
 const conSesion = (user = sessionUser()) => ({ body: { user } });
 const conAdopciones = (data: unknown[]) => ({
@@ -78,13 +79,14 @@ describe('CU-15 Consultar «Mis animales»', () => {
     expect(within(rufo).getByText('Tu adopción de Rufo está pendiente de pago.')).toBeInTheDocument();
     await userEvent.click(within(rufo).getByRole('button', { name: 'Pagar ahora' }));
     const dialogo = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago correcto' }));
     expect(await screen.findByText('¡Ya adoptas a Rufo! Te hemos enviado un email de bienvenida.')).toBeInTheDocument();
     expect(enviados('/api/me/adoptions/40/pay')).toEqual([{ simulatedOutcome: 'success' }]);
     expect(await within(await tarjeta('Rufo')).findByText('Activa')).toBeInTheDocument();
   });
 
-  it('CU-14 3a: si el pago falla, lo explica y deja reintentar', async () => {
+  it('CU-14 3a: si el pago falla, lo explica en un aviso emergente y deja reintentar', async () => {
     mockApi({
       ...conAdopciones([adoption({ status: 'paused', startDate: '2025-09-05' })]),
       '/api/me/adoptions/40/pay': {
@@ -96,8 +98,12 @@ describe('CU-15 Consultar «Mis animales»', () => {
     expect(within(rufo).getByText('Pausada')).toBeInTheDocument();
     expect(within(rufo).getByText('No hemos podido cobrar la última cuota de Rufo.')).toBeInTheDocument();
     await userEvent.click(within(rufo).getByRole('button', { name: 'Pagar ahora' }));
+    await rellenarTarjeta();
     await userEvent.click(await screen.findByRole('button', { name: 'Simular pago fallido' }));
-    expect(await screen.findByText(/El pago no se ha completado/)).toBeInTheDocument();
+    const aviso = await screen.findByRole('dialog', { name: 'Pago rechazado' });
+    expect(within(aviso).getByText(/El pago no se ha completado/)).toBeInTheDocument();
+    await userEvent.click(within(aviso).getByRole('button', { name: 'Ahora no' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(within(rufo).getByRole('button', { name: 'Pagar ahora' })).toBeInTheDocument();
   });
 
@@ -142,5 +148,21 @@ describe('CU-15 Consultar «Mis animales»', () => {
     renderRoute('/my-animals');
     expect(await screen.findByText('No hemos podido cargar tus adopciones')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+describe('CU-15 La foto de la tarjeta abre la ficha del animal', () => {
+  it('pulsar la foto de Rufo abre su ficha, sin añadir un segundo enlace para el teclado', async () => {
+    mockApi(conAdopciones([activeAdoption()]));
+    const { router } = renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    const enlaceFoto = rufo.querySelector('a[href="/my-animals/1"][aria-hidden="true"]');
+    expect(enlaceFoto).not.toBeNull();
+    expect(enlaceFoto).toHaveAttribute('tabindex', '-1');
+    // Para lectores de pantalla y teclado, el enlace a la ficha sigue siendo el botón.
+    expect(within(rufo).getByRole('link', { name: 'Ver la ficha de Rufo' })).toHaveAttribute('href', '/my-animals/1');
+
+    await userEvent.click(enlaceFoto?.querySelector('img') as HTMLElement);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/my-animals/1'));
   });
 });

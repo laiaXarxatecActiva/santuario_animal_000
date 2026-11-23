@@ -45,7 +45,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-05 | Un animal puede tener varios adoptantes a la vez y un adoptante puede adoptar a varios animales, pero no puede tener dos adopciones abiertas (`pending`, `active` o `paused`) del mismo animal. |
 | RN-06 | Solo se puede adoptar un animal publicado (`is_published`), disponible (`is_adoptable`) y en estado `in_sanctuary` o `in_treatment`. |
 | RN-07 | Una adopción se crea como `pending` y pasa a `active` cuando se confirma el primer pago. Si en 7 días no se completa el pago, pasa a `cancelled` (`payment_not_completed`). |
-| RN-08 | Cada mes, en `next_billing_date`, se cobra la cuota de las adopciones activas. Si el cobro falla, la adopción pasa a `paused` y se avisa al adoptante, que puede regularizarla. |
+| RN-08 | Cada mes, en `next_billing_date`, se cobra la cuota de las adopciones activas con pago automático (`payment_mode = 'automatic'`, el valor por defecto). Si el cobro falla, la adopción pasa a `paused` y se avisa al adoptante, que puede regularizarla. Con pago manual (CU-49), el adoptante paga cada cuota: se le avisa 7 días antes y, si pasan 7 días desde la cuota sin pagarla, la adopción pasa a `paused` (CU-50). |
 | RN-09 | Un cambio de plan se aplica a partir de la siguiente cuota. |
 | RN-10 | Cuando el adoptante se da de baja, la adopción sigue activa hasta el final del mes pagado y después pasa a `finished` (`user_cancelled`). No se hacen devoluciones parciales. |
 | RN-11 | Si un animal fallece o se traslada, sus adopciones abiertas pasan a `finished` (`animal_deceased` o `animal_transferred`) y se ofrece al adoptante continuar con otro animal. El aviso de fallecimiento lo redacta el santuario a mano. |
@@ -137,7 +137,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal**
 
 1. El visitante abre la ficha (`/animals/:id`).
-2. El sistema muestra la galería de fotos públicas en su orden, nombre, especie, raza (si tiene), sexo, edad aproximada, fecha de llegada, historia de rescate, carácter y necesidades especiales.
+2. El sistema muestra la galería de fotos públicas en su orden, nombre, especie, sexo, edad aproximada, fecha de llegada, historia de rescate, carácter y necesidades especiales.
 3. El sistema muestra el número de adoptantes activos y los nombres de quienes han permitido aparecer.
 4. El sistema muestra las últimas actualizaciones marcadas como públicas.
 5. Si el animal es adoptable, el sistema muestra el botón «Adoptar a este animal», que inicia CU-13.
@@ -196,21 +196,22 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal**
 
 1. El usuario entra en «Donar» (`/donate`).
-2. El sistema muestra el formulario: importe (libre, con algunas cantidades sugeridas), nombre, email, casilla «Donación anónima» y mensaje opcional. Si hay sesión de adoptante, el nombre y el email se rellenan con los de su cuenta.
+2. El sistema muestra el formulario: importe (libre, con algunas cantidades sugeridas), nombre, apellidos, email, teléfono opcional, casilla «Donación anónima», mensaje opcional, casilla «Quiero el certificado para desgravar» y la aceptación de la política de privacidad. Si hay sesión de adoptante, el nombre, los apellidos y el email se rellenan con los de su cuenta. El email es obligatorio aunque la donación sea anónima: con él se envía el recibo y se avisa de la operación.
 3. El usuario completa el formulario y pulsa «Continuar».
-4. El sistema valida los datos y muestra la pantalla de pago simulado con el aviso «Pago simulado: no se realizará ningún cargo real».
-5. El usuario pulsa «Simular pago correcto».
+4. El sistema valida los datos y muestra la pantalla de pago simulado con el aviso «Pago simulado: no se realizará ningún cargo real» y los campos de la tarjeta.
+5. El usuario escribe una tarjeta con buen formato (solo se comprueba el formato y nunca se envía ni se guarda) y pulsa «Simular pago correcto».
 6. El sistema crea la donación (`pending`), la cobra con la pasarela simulada y la marca como `completed` con su `paid_at` y su referencia.
-7. El sistema muestra una página de agradecimiento con el recibo y envía un email de agradecimiento con el recibo, si hay email.
+7. El sistema muestra una página de agradecimiento con el recibo, que se puede ver o descargar en PDF, y envía un email de agradecimiento con el recibo y el enlace al PDF.
 8. Si el usuario es adoptante, la donación queda vinculada a su cuenta y aparece en «Mis aportaciones» (CU-19), además de recibir una notificación `donation_thanks`.
 
 **Flujos alternativos**
 
 - **3a.** Importe vacío, 0, negativo o con más de dos decimales: error en el campo. No hay importe mínimo.
-- **3b.** Email con formato no válido: error en el campo. El email es opcional sin sesión.
-- **5a.** El usuario pulsa «Simular pago fallido»: la donación se guarda como `failed` con su motivo, y el sistema muestra «El pago no se ha completado» con la opción de volver a intentarlo. Un nuevo intento crea una donación nueva.
+- **3b.** Falta el nombre, los apellidos, el email o la aceptación de la privacidad, o el email o el teléfono tienen un formato no válido: error en el campo.
+- **3c.** Con «Quiero el certificado para desgravar» marcado, faltan el NIF, la dirección, el código postal, la provincia o el país, o el NIF (con su letra) o el código postal no son válidos: error en el campo. Con los datos correctos, el PDF se titula «Certificado de donación» e incluye el NIF y la dirección.
+- **5b.** La tarjeta tiene un formato no válido (número, caducidad pasada o CVC): error en el campo y no se cobra.
+- **5a.** El usuario pulsa «Simular pago fallido»: la donación se guarda como `failed` con su motivo, y el sistema muestra en una ventana emergente «El pago no se ha completado» con la opción de volver a intentarlo. Un nuevo intento crea una donación nueva.
 - **6a.** El usuario tiene sesión de trabajador: la donación se guarda sin `user_id` (RN-03).
-- **7a.** No se indicó email: no se envía ningún email; el recibo solo se muestra en pantalla y se puede imprimir.
 
 **Postcondiciones**
 
@@ -434,8 +435,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. Desde la ficha del animal (CU-03), el usuario pulsa «Adoptar a este animal».
 2. Si no tiene sesión, el sistema le pide iniciar sesión (CU-09) o registrarse (CU-07) y después vuelve a este paso.
-3. El sistema muestra los planes activos, con el plan por defecto (Usual) preseleccionado, y recuerda que la adopción es simbólica, que el animal no sale del santuario y que puede tener otros adoptantes.
-4. El adoptante elige un plan y pulsa «Continuar».
+3. El sistema muestra los planes activos, con el plan por defecto (Usual) preseleccionado, y recuerda que la adopción es simbólica, que el animal no sale del santuario y que puede tener otros adoptantes. También muestra la forma de pago (CU-49), con «Automático» marcado.
+4. El adoptante elige un plan (y, si quiere, el pago «Manual») y pulsa «Continuar».
 5. El sistema comprueba las reglas, crea la adopción en estado `pending` y muestra la pantalla de pago simulado con el importe de la primera cuota.
 6. El adoptante pulsa «Simular pago correcto».
 7. El sistema, en una sola transacción:
@@ -450,7 +451,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **5a.** Ya tiene una adopción abierta de ese animal: se muestra «Ya tienes una adopción en curso de [nombre]» con un enlace a ella. Si está `pending` o `paused`, se ofrece reintentar el pago (CU-14).
 - **5b.** El animal ha dejado de ser adoptable mientras tanto: se muestra «Este animal ya no admite adopciones» y no se crea nada.
 - **5c.** El plan elegido ya no está activo: se vuelven a cargar los planes y se pide elegir de nuevo.
-- **6a.** El adoptante pulsa «Simular pago fallido»: se guarda el pago como `failed` con su motivo; la adopción sigue `pending` y se muestra «El pago no se ha completado. Puedes intentarlo de nuevo ahora o desde "Mis animales" durante 7 días» (CU-14).
+- **6a.** El adoptante pulsa «Simular pago fallido»: se guarda el pago como `failed` con su motivo; la adopción sigue `pending` y se muestra, en una ventana emergente con el botón «Volver a intentarlo», «El pago no se ha completado. Puedes intentarlo de nuevo ahora o desde "Mis animales" durante 7 días» (CU-14).
 - **6b.** El adoptante abandona la pantalla de pago: la adopción queda `pending` sin pago, y podrá completarla durante 7 días (CU-14). Si no, se cancela (CU-44).
 
 **Postcondiciones**
@@ -468,7 +469,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Precondiciones**
 
-- El adoptante tiene una adopción propia en estado `pending` (creada hace 7 días o menos) o `paused`.
+- El adoptante tiene una adopción propia en estado `pending` (creada hace 7 días o menos) o `paused`, o una `active` con pago manual cuya cuota vence en 7 días o menos (CU-49).
 
 **Flujo principal**
 
@@ -477,12 +478,14 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 3. El adoptante pulsa «Simular pago correcto».
 4. El sistema crea el pago `completed` y:
    - si estaba `pending`: la pasa a `active` como en CU-13, paso 7;
-   - si estaba `paused`: cobra el periodo que empieza en `next_billing_date`, la pasa a `active` y avanza `next_billing_date` un mes.
+   - si estaba `paused`: cobra el periodo que empieza en `next_billing_date`, la pasa a `active` y avanza `next_billing_date` un mes;
+   - si estaba `active` con pago manual: aplica el cambio de plan programado (como CU-43, paso 1), cobra el periodo que empieza en `next_billing_date` y lo avanza un mes.
 5. El sistema notifica el cobro (`adoption_welcome` o `payment_completed`) y vuelve a «Mis animales».
 
 **Flujos alternativos**
 
 - **1a.** Adopción `pending` creada hace más de 7 días: no se ofrece pagar, porque CU-44 la cancelará. Se ofrece iniciar una adopción nueva.
+- **1b.** Adopción `active` con pago manual: el aviso dice cuándo vence la cuota y hasta qué día se puede pagar sin que se pause, con el botón «Pagar la cuota». Antes de los 7 días previos no se ofrece pagar (422 `ADOPTION_NOT_PAYABLE`).
 - **3a.** «Simular pago fallido»: se guarda otro pago `failed` y la adopción no cambia de estado.
 - **4a.** El animal ha fallecido o se ha trasladado entre tanto: la adopción ya estará cerrada (RN-11) y se informa al adoptante.
 
@@ -698,7 +701,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-10.
 
-**Notas:** volver a adoptar al mismo animal más adelante crea una adopción nueva (CU-13), una vez cerrada la anterior.
+**Notas:** volver a adoptar al mismo animal más adelante crea una adopción nueva (CU-13), una vez cerrada la anterior. La baja funciona igual con pago automático o manual (CU-49).
 
 ### CU-22 — Descargar el certificado de adopción
 
@@ -712,9 +715,9 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujo principal**
 
-1. En «Mis animales», el adoptante pulsa «Certificado».
+1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o, a su lado, «Descargar certificado».
 2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
-3. El navegador descarga el archivo `certificado-<animal>.pdf`. También se puede abrir en el navegador para verlo o imprimirlo.
+3. El navegador lo muestra para verlo o imprimirlo, o descarga el archivo `certificado-<animal>.pdf`.
 
 **Flujos alternativos**
 
@@ -851,6 +854,37 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Notas:** la decisión pendiente sobre quién paga las cuotas siguientes (`TECH_SPEC.md` §18, cuestión 6) ya no hace falta: el caso se ha descartado.
 
+### CU-49 — Elegir la forma de pago de una adopción
+
+| Actor principal | Fase |
+| --- | --- |
+| Adoptante | Mejora tras la fase 3 |
+
+**Precondiciones**
+
+- Al adoptar (CU-13), o con una adopción propia `pending`, `paused` o `active` sin baja solicitada.
+
+**Flujo principal**
+
+1. Al adoptar, el adoptante elige la forma de pago: «Automático» (por defecto: el sistema cobra la cuota cada mes, CU-43) o «Manual» (el adoptante paga cada cuota).
+2. Más adelante, en «Mis animales», abre el menú «⋯» de la adopción y pulsa «Forma de pago».
+3. El sistema muestra las dos opciones con la actual marcada y explica que el cambio vale desde la próxima cuota.
+4. El adoptante elige la otra y pulsa «Guardar».
+5. El sistema guarda `payment_mode` y la tarjeta muestra «Pago automático cada mes» o «Pago manual: te avisaremos de cada cuota».
+
+**Flujos alternativos**
+
+- **1a.** Adopción con la baja solicitada, `cancelled` o `finished`: la opción no aparece y la API responde 422 `PAYMENT_MODE_CHANGE_NOT_ALLOWED`.
+- **4a.** Elige la que ya tenía: se cierra sin cambios.
+
+**Postcondiciones**
+
+- Con pago automático, la tarea `billing` cobra las cuotas (CU-43). Con pago manual, `billing` no las cobra: se avisan y, si no se pagan, se pausan (CU-50), y se pagan desde «Mis animales» (CU-14, 1b).
+
+**Reglas de negocio:** RN-08, RN-10.
+
+**Notas:** las adopciones creadas desde el panel (CU-37) son automáticas; el adoptante puede cambiarlo después. La ficha de la adopción en el panel muestra la forma de pago («Cobro de las cuotas»).
+
 ## 7. Panel: cuidador y administrador
 
 ### CU-27 — Consultar el escritorio del panel
@@ -898,7 +932,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal (alta)**
 
 1. El trabajador entra en «Animales» (`/admin/animals`) y pulsa «Nuevo animal».
-2. Rellena nombre, especie (de la lista de especies), raza (opcional), sexo (macho, hembra o desconocido), fecha de nacimiento aproximada, fecha de llegada, historia de rescate, carácter, necesidades especiales y resumen de salud, y marca si es adoptable y si se publica.
+2. Rellena nombre, especie (de la lista de especies), sexo (macho, hembra o desconocido), fecha de nacimiento aproximada, fecha de llegada, historia de rescate, carácter, necesidades especiales y resumen de salud, y marca si es adoptable y si se publica.
 3. El sistema valida y crea el animal (por defecto, `in_sanctuary`) y lleva a la gestión de fotos (CU-29).
 
 **Flujo principal (listado y edición)**
@@ -1171,6 +1205,37 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Reglas de negocio:** RN-02, RN-03.
 
 **Notas:** las cuentas de `TEST_DATA.sql` ya tienen contraseña, siguiendo el convenio `NombreApellido26#!`. En la aplicación real, la contraseña la elige el trabajador.
+
+### CU-51 — Enviar a un trabajador el enlace para cambiar su contraseña
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Mejora tras la fase 3 |
+
+**Precondiciones**
+
+- El usuario es administrador.
+- La cuenta es de un trabajador (cuidador u otro administrador), está activa y no es la suya.
+
+**Flujo principal**
+
+1. En la ficha del trabajador (`/admin/users/:id`), el administrador pulsa «Enviar enlace de contraseña».
+2. El sistema explica qué pasará: el trabajador recibirá un email con un enlace de 30 minutos, nadie más verá la contraseña y, hasta que la cambie, la actual sigue funcionando.
+3. El administrador confirma.
+4. El sistema anula los enlaces de recuperación anteriores, crea uno nuevo (`password_reset`), envía el email en el idioma del trabajador, lo anota en el registro de actividad (sin el enlace) y muestra «Hemos enviado a [email] un enlace para cambiar su contraseña».
+5. El trabajador abre el enlace y elige su contraseña como en CU-10 (desde el paso 4): se cierran todas sus sesiones.
+
+**Flujos alternativos**
+
+- **1a.** Adoptante, cuenta desactivada o anonimizada, o la propia cuenta: la opción no aparece y la API responde 422 `PASSWORD_RESET_NOT_ALLOWED`. La propia contraseña se cambia en «Mi perfil» (CU-24); los adoptantes usan «¿Has olvidado tu contraseña?» (CU-10).
+- **3a.** El administrador cancela: no se envía nada.
+- **5a.** El enlace caduca o ya se usó: el administrador puede enviar otro.
+
+**Postcondiciones**
+
+- El trabajador tiene un enlace válido durante 30 minutos. El administrador nunca conoce la contraseña.
+
+**Reglas de negocio:** RN-02.
 
 ### CU-37 — Gestionar adopciones
 
@@ -1520,3 +1585,31 @@ Para cada adopción, en su propia transacción:
 - Los trabajadores reciben el aviso en la campana, además de la alerta del escritorio (CU-27).
 
 **Reglas de negocio:** RN-14.
+
+### CU-50 — Avisar y pausar las cuotas con pago manual
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (tarea `manual-payments`) | Mejora tras la fase 3 |
+
+**Precondiciones**
+
+- Hay adopciones `active`, con pago manual (CU-49) y sin baja solicitada.
+
+**Flujo principal**
+
+Cada día, para cada una de ellas y en su propia transacción:
+
+1. Si la cuota (`next_billing_date`) vence en 7 días o menos y todavía no se ha avisado de ella (`payment_reminder_sent_for`), crea una notificación `system` con enlace a «Mis animales», envía un email con el importe, la fecha y el último día para pagarla, y anota la cuota avisada.
+2. Si han pasado 7 días desde la cuota sin pagarla (el último día para pagar es `next_billing_date` + 6), pasa la adopción a `paused`, lo anota en el registro de actividad como «Sistema», crea la notificación `payment_failed` y envía un email con el enlace para pagar (CU-14).
+
+**Flujos alternativos**
+
+- **1a.** El adoptante paga antes (CU-14, 1b): `next_billing_date` avanza un mes y el siguiente aviso será el de la cuota nueva.
+- **Error inesperado** con una adopción: se deshace su transacción, se registra el error y se continúa con las demás.
+
+**Postcondiciones**
+
+- Cada cuota manual se avisa una sola vez; la tarea es idempotente.
+
+**Reglas de negocio:** RN-08, RN-13, RN-19.

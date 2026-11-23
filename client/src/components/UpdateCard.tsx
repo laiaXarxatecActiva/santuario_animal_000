@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { AnimalUpdateDto, PhotoDto } from '@sanctuary/shared';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { useReadMark } from '../hooks/useFeed';
 import { formatLongDate } from '../utils/format';
 import { AnimalPhoto } from './AnimalPhoto';
@@ -14,7 +15,7 @@ interface UpdateCardProps {
   update: AnimalUpdateDto;
   headingLevel: 2 | 3;
   /** En el muro se indica de qué animal es. */
-  animal?: { name: string; coverPhoto: PhotoDto | null };
+  animal?: { id: number; name: string; coverPhoto: PhotoDto | null };
   /** Botón para volver a marcarla como no leída (CU-17 paso 4). */
   allowToggle?: boolean;
 }
@@ -62,10 +63,11 @@ export function UpdateCard({ update, headingLevel, animal, allowToggle = false }
     <article ref={tarjeta} className={`${styles.card} ${update.isRead === false ? styles.unread : ''}`}>
       <div className={styles.header}>
         {animal && (
-          <div className={styles.animal}>
+          // La miniatura y el nombre abren la ficha del animal adoptado.
+          <Link to={`/my-animals/${animal.id}`} className={styles.animal}>
             <AnimalPhoto photo={animal.coverPhoto && { ...animal.coverPhoto, altText: '' }} thumbnail ratio="1/1" />
             <span className={styles.animalName}>{animal.name}</span>
-          </div>
+          </Link>
         )}
         <p className={styles.date}>
           {!animal && <FontAwesomeIcon icon={faNewspaper} aria-hidden="true" />}

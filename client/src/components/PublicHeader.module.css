@@ -68,7 +68,9 @@ button.link {
   display: none;
 }
 
-.mobileLinks {
+/* `ul.` gana a `ul[class] { padding: 0 }` de reset.css. Los márgenes laterales
+   son los de `.container`, para que los apartados se alineen con el logotipo. */
+ul.mobileLinks {
   padding: var(--space-2) var(--space-4);
 }
 
@@ -95,6 +97,20 @@ button.link {
   gap: var(--space-3);
   padding: var(--space-4);
   border-top: 1px solid var(--color-border);
+}
+
+@media (min-width: 600px) {
+  ul.mobileLinks,
+  .mobileAuth {
+    padding-inline: var(--space-5);
+  }
+}
+
+@media (min-width: 768px) {
+  ul.mobileLinks,
+  .mobileAuth {
+    padding-inline: var(--space-6);
+  }
 }
 
 @keyframes slide-in {

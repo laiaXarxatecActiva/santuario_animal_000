@@ -3,10 +3,14 @@ import {
   bajaAdopcion,
   bajaVencida,
   cambioDePlan,
+  cuotaManualVencida,
+  debeAvisarCuotaManual,
   debeCobrarse,
   esAdoptable,
+  limiteCuotaManual,
   limitePagoPendiente,
   periodoCuota,
+  puedeCambiarFormaDePago,
   puedeCambiarPlan,
   proximaActualizacionPrevista,
   puedePagar,
@@ -201,5 +205,65 @@ describe('CU-19 tieneRecibo', () => {
     expect(tieneRecibo('refunded')).toBe(true);
     expect(tieneRecibo('failed')).toBe(false);
     expect(tieneRecibo('pending')).toBe(false);
+  });
+});
+
+describe('CU-49 y CU-50 Cuotas con pago manual', () => {
+  const ahora = new Date('2026-11-12T12:00:00Z');
+  const manual = {
+    status: 'active' as const,
+    paymentMode: 'manual' as const,
+    cancelRequested: false,
+    nextBillingDate: '2026-11-20',
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    reminderSentFor: null as string | null,
+  };
+
+  it('la tarea de cobro no cobra las manuales; las automáticas, como siempre (RN-08)', () => {
+    expect(debeCobrarse({ ...manual, nextBillingDate: '2026-11-17' }, '2026-11-17')).toBe(false);
+    expect(debeCobrarse({ ...manual, paymentMode: 'automatic', nextBillingDate: '2026-11-17' }, '2026-11-17')).toBe(
+      true,
+    );
+  });
+
+  it('se avisa una vez, desde 7 días antes de la cuota y hasta que se pausa', () => {
+    expect(debeAvisarCuotaManual(manual, '2026-11-12')).toBe(false); // 8 días antes
+    expect(debeAvisarCuotaManual(manual, '2026-11-13')).toBe(true); // 7 días antes
+    expect(debeAvisarCuotaManual(manual, '2026-11-26')).toBe(true); // 6 días después
+    expect(debeAvisarCuotaManual(manual, '2026-11-27')).toBe(false); // ya se pausa
+    expect(debeAvisarCuotaManual({ ...manual, reminderSentFor: '2026-11-20' }, '2026-11-15')).toBe(false);
+    expect(debeAvisarCuotaManual({ ...manual, reminderSentFor: '2026-10-20' }, '2026-11-15')).toBe(true);
+  });
+
+  it('no se avisa a las automáticas, con la baja pedida ni si no está activa', () => {
+    expect(debeAvisarCuotaManual({ ...manual, paymentMode: 'automatic' }, '2026-11-15')).toBe(false);
+    expect(debeAvisarCuotaManual({ ...manual, cancelRequested: true }, '2026-11-15')).toBe(false);
+    expect(debeAvisarCuotaManual({ ...manual, status: 'paused' }, '2026-11-15')).toBe(false);
+  });
+
+  it('se puede pagar desde 7 días antes; el último día sin pausar es el sexto después de la cuota', () => {
+    expect(puedePagar(manual, ahora, '2026-11-12')).toBe(false);
+    expect(puedePagar(manual, ahora, '2026-11-13')).toBe(true);
+    expect(puedePagar(manual, ahora, '2026-11-26')).toBe(true);
+    expect(limiteCuotaManual('2026-11-20')).toBe('2026-11-26');
+    expect(puedePagar({ ...manual, paymentMode: 'automatic' }, ahora, '2026-11-15')).toBe(false);
+    expect(puedePagar({ ...manual, cancelRequested: true }, ahora, '2026-11-15')).toBe(false);
+  });
+
+  it('pasados los 7 días de margen sin pagar, la cuota manual está vencida (se pausa)', () => {
+    expect(cuotaManualVencida(manual, '2026-11-26')).toBe(false);
+    expect(cuotaManualVencida(manual, '2026-11-27')).toBe(true);
+    expect(cuotaManualVencida({ ...manual, paymentMode: 'automatic' }, '2026-12-30')).toBe(false);
+    expect(cuotaManualVencida({ ...manual, cancelRequested: true }, '2026-12-30')).toBe(false);
+  });
+
+  it('la forma de pago se cambia en una adopción pendiente, pausada o activa sin baja', () => {
+    for (const status of ['pending', 'paused', 'active'] as const) {
+      expect(puedeCambiarFormaDePago({ status, cancelRequested: false })).toBe(true);
+    }
+    expect(puedeCambiarFormaDePago({ status: 'active', cancelRequested: true })).toBe(false);
+    for (const status of ['cancelled', 'finished'] as const) {
+      expect(puedeCambiarFormaDePago({ status, cancelRequested: false })).toBe(false);
+    }
   });
 });

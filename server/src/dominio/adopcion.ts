@@ -1,4 +1,10 @@
-import { PUBLIC_ANIMAL_STATUSES, type AdoptionStatus, type AnimalStatus, type PaymentStatus } from '@sanctuary/shared';
+import {
+  PUBLIC_ANIMAL_STATUSES,
+  type AdoptionStatus,
+  type AnimalStatus,
+  type PaymentMode,
+  type PaymentStatus,
+} from '@sanctuary/shared';
 
 // Reglas de las adopciones (RN-06, RN-07) y de las fechas de sus cuotas.
 
@@ -12,11 +18,68 @@ export function esAdoptable(animal: { status: AnimalStatus; isAdoptable: boolean
   return animal.isAdoptable && (PUBLIC_ANIMAL_STATUSES as readonly AnimalStatus[]).includes(animal.status);
 }
 
-/** CU-14: se puede pagar una pendiente creada hace 7 días o menos (RN-07) o una pausada (RN-08). */
-export function puedePagar(adopcion: { status: AdoptionStatus; createdAt: Date }, ahora: Date): boolean {
+/** CU-50: la cuota manual se avisa (y se puede pagar) desde 7 días antes. */
+export const DIAS_AVISO_CUOTA_MANUAL = 7;
+/** CU-50: días de margen tras la cuota manual antes de pausar la adopción. */
+export const DIAS_MARGEN_CUOTA_MANUAL = 7;
+
+/** Datos de una adopción que deciden sus cuotas (CU-43, CU-49, CU-50). Sin forma de pago, automática. */
+interface EstadoCuotas {
+  status: AdoptionStatus;
+  paymentMode?: PaymentMode;
+  cancelRequested?: boolean;
+  nextBillingDate?: string | null;
+}
+
+/** Activa, con pago manual, sin baja y con una próxima cuota. */
+const manualEnCurso = (a: EstadoCuotas): a is EstadoCuotas & { nextBillingDate: string } =>
+  a.status === 'active' && a.paymentMode === 'manual' && !a.cancelRequested && !!a.nextBillingDate;
+
+/**
+ * CU-14: se puede pagar una pendiente creada hace 7 días o menos (RN-07) o una
+ * pausada (RN-08). CU-49: una activa con pago manual, desde 7 días antes de la
+ * cuota (hace falta `hoy`).
+ */
+export function puedePagar(adopcion: EstadoCuotas & { createdAt: Date }, ahora: Date, hoy?: string): boolean {
   if (adopcion.status === 'paused') return true;
+  if (adopcion.status === 'active') {
+    return (
+      hoy !== undefined &&
+      manualEnCurso(adopcion) &&
+      adopcion.nextBillingDate <= sumarDias(hoy, DIAS_AVISO_CUOTA_MANUAL)
+    );
+  }
   if (adopcion.status !== 'pending') return false;
   return ahora.getTime() - adopcion.createdAt.getTime() <= DIAS_PARA_COMPLETAR_PAGO * DIA_MS;
+}
+
+/** CU-50: último día para pagar la cuota manual de `fecha` sin que se pause la adopción. */
+export function limiteCuotaManual(fecha: string): string {
+  return sumarDias(fecha, DIAS_MARGEN_CUOTA_MANUAL - 1);
+}
+
+/** CU-50: pasado el margen sin pagar, la cuota manual está vencida y la adopción se pausa. */
+export function cuotaManualVencida(adopcion: EstadoCuotas, hoy: string): boolean {
+  return manualEnCurso(adopcion) && limiteCuotaManual(adopcion.nextBillingDate) < hoy;
+}
+
+/** CU-50: se avisa una sola vez de cada cuota manual, desde 7 días antes y mientras no esté vencida. */
+export function debeAvisarCuotaManual(
+  adopcion: EstadoCuotas & { reminderSentFor: string | null },
+  hoy: string,
+): boolean {
+  return (
+    manualEnCurso(adopcion) &&
+    adopcion.reminderSentFor !== adopcion.nextBillingDate &&
+    adopcion.nextBillingDate <= sumarDias(hoy, DIAS_AVISO_CUOTA_MANUAL) &&
+    !cuotaManualVencida(adopcion, hoy)
+  );
+}
+
+/** CU-49: la forma de pago se cambia en una adopción abierta, salvo con la baja pedida. */
+export function puedeCambiarFormaDePago(adopcion: { status: AdoptionStatus; cancelRequested: boolean }): boolean {
+  if (adopcion.status === 'active') return !adopcion.cancelRequested;
+  return adopcion.status === 'pending' || adopcion.status === 'paused';
 }
 
 const aFecha = (y: number, m: number, d: number) => new Date(Date.UTC(y, m, d)).toISOString().slice(0, 10);
@@ -61,13 +124,19 @@ export function proximaActualizacionPrevista(
   return desde === null ? null : sumarDias(desde, DIAS_ENTRE_ACTUALIZACIONES);
 }
 
-/** CU-43: activa, sin baja solicitada y con la cuota vencida hoy o antes (RN-08). */
+/** CU-43: activa, con pago automático, sin baja solicitada y con la cuota vencida hoy o antes (RN-08). */
 export function debeCobrarse(
-  adopcion: { status: AdoptionStatus; cancelRequested: boolean; nextBillingDate: string | null },
+  adopcion: {
+    status: AdoptionStatus;
+    cancelRequested: boolean;
+    nextBillingDate: string | null;
+    paymentMode?: PaymentMode;
+  },
   hoy: string,
 ): boolean {
   return (
     adopcion.status === 'active' &&
+    adopcion.paymentMode !== 'manual' &&
     !adopcion.cancelRequested &&
     adopcion.nextBillingDate !== null &&
     adopcion.nextBillingDate <= hoy

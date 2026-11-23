@@ -283,3 +283,77 @@ describe('CU-36 Crear una cuenta de trabajador', () => {
     expect((await marta.post('/api/admin/users/999/invitation').send({})).status).toBe(404);
   });
 });
+
+describe('CU-51 Enviar a un trabajador el enlace para cambiar su contraseña', () => {
+  // Usuarios de TEST_DATA.sql: 2 Javier (admin), 3 Nuria y 5 Carmen (cuidadoras), 6 Lucía (adoptante).
+  const enviar = (agente: Agente | ReturnType<typeof request>, id: number) =>
+    agente.post(`/api/admin/users/${id}/password-reset`).send({});
+
+  it('solo el administrador: sin sesión 401; cuidadora 403; usuario que no existe 404', async () => {
+    expect((await enviar(request(t.app), 3)).status).toBe(401);
+    const nuria = await entrarComo(t.app, 'nuria');
+    expect((await enviar(nuria, 5)).status).toBe(403);
+    expect((await enviar(marta, 9999)).status).toBe(404);
+    expect(t.mailer.outbox).toHaveLength(0);
+  });
+
+  it('envía a la cuidadora un enlace de 30 minutos que sirve para elegir otra contraseña', async () => {
+    const res = await enviar(marta, 3);
+    expect(res.status).toBe(204);
+    expect(t.mailer.outbox).toHaveLength(1);
+    expect(t.mailer.outbox[0]).toMatchObject({ to: 'nuria.peris@santuario.test' });
+    const token = tokenDelEmail(t.mailer, 'nuria.peris@santuario.test');
+    expect(t.mailer.outbox[0]?.text).toContain(`${TEST_CLIENT_URL}/reset-password?token=${token}`);
+    expect(t.mailer.outbox[0]?.text).not.toContain('invite=1');
+    const { rows } = await t.pool.query('SELECT type, expires_at FROM user_tokens WHERE token_hash = $1', [
+      hashToken(token),
+    ]);
+    expect(rows[0]).toEqual({
+      type: 'password_reset',
+      expires_at: new Date(t.reloj.ahora().getTime() + 30 * 60_000),
+    });
+
+    // Hasta que la cambie, su contraseña sigue sirviendo; al cambiarla se cierran sus sesiones.
+    const sesionAnterior = await entrar('nuria.peris@santuario.test', 'NuriaPeris26#!');
+    const cambio = await request(t.app)
+      .post('/api/auth/reset-password')
+      .send({ token, password: 'nuria-nueva-2026', passwordConfirm: 'nuria-nueva-2026' });
+    expect(cambio.status).toBe(204);
+    expect((await sesionAnterior.get('/api/auth/me')).body.user).toBeNull();
+    await entrar('nuria.peris@santuario.test', 'nuria-nueva-2026');
+  });
+
+  it('también a otro administrador; cada envío anula el anterior', async () => {
+    expect((await enviar(marta, 2)).status).toBe(204);
+    const primero = tokenDelEmail(t.mailer, 'javier.ortega@santuario.test');
+    t.mailer.outbox.length = 0;
+    expect((await enviar(marta, 2)).status).toBe(204);
+    const segundo = tokenDelEmail(t.mailer, 'javier.ortega@santuario.test');
+    const usarPrimero = await request(t.app)
+      .post('/api/auth/reset-password')
+      .send({ token: primero, password: 'javier-nueva-26', passwordConfirm: 'javier-nueva-26' });
+    expect(usarPrimero.status).toBe(422);
+    expect(usarPrimero.body.error.code).toBe('INVALID_TOKEN');
+    expect(segundo).not.toBe(primero);
+  });
+
+  it('no se puede con un adoptante, con una cuenta desactivada ni con la propia cuenta', async () => {
+    await t.pool.query('UPDATE users SET is_active = FALSE WHERE id = 5');
+    for (const id of [6, 5, 1]) {
+      const res = await enviar(marta, id);
+      expect(res.status, `usuario ${id}`).toBe(422);
+      expect(res.body.error.code).toBe('PASSWORD_RESET_NOT_ALLOWED');
+    }
+    await t.pool.query('UPDATE users SET is_active = TRUE WHERE id = 5');
+    expect(t.mailer.outbox).toHaveLength(0);
+  });
+
+  it('queda en el registro de actividad, sin el enlace', async () => {
+    await enviar(marta, 4);
+    const { rows } = await t.pool.query(
+      `SELECT user_id, action, details FROM activity_logs
+        WHERE table_name = 'users' AND record_id = 4 ORDER BY id DESC LIMIT 1`,
+    );
+    expect(rows[0]).toEqual({ user_id: 1, action: 'update', details: { resetLinkSent: true } });
+  });
+});

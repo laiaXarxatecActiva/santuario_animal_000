@@ -6,6 +6,7 @@ import type {
   AdoptionStatus,
   EmailFrequency,
   Language,
+  PaymentMode,
   PhotoDto,
 } from '@sanctuary/shared';
 import { escaparLike, sinTildes } from '../db/busqueda.js';
@@ -51,6 +52,8 @@ interface AdoptionRow extends CoverRow {
   end_reason: AdoptionEndReason | null;
   last_update_date: string | null;
   created_at: Date;
+  payment_mode: PaymentMode;
+  payment_reminder_sent_for: string | null;
 }
 
 interface PlanSummary {
@@ -75,6 +78,10 @@ export interface Adoption {
   /** Día (en la zona del santuario) de la última actualización del animal. */
   lastUpdateDate: string | null;
   createdAt: Date;
+  /** CU-49: cobro automático cada mes o pago manual de cada cuota. */
+  paymentMode: PaymentMode;
+  /** CU-50: cuota manual ya avisada. */
+  reminderSentFor: string | null;
 }
 
 export function mapRow(row: AdoptionRow): Adoption {
@@ -95,12 +102,15 @@ export function mapRow(row: AdoptionRow): Adoption {
     endReason: row.end_reason,
     lastUpdateDate: row.last_update_date,
     createdAt: row.created_at,
+    paymentMode: row.payment_mode,
+    reminderSentFor: row.payment_reminder_sent_for,
   };
 }
 
 const SELECT_ADOPCION = `
   SELECT ad.id, ad.user_id, ad.status, ad.start_date, ad.end_date, ad.next_billing_date,
          ad.cancel_requested_at, ad.end_reason, ad.created_at,
+         ad.payment_mode, ad.payment_reminder_sent_for::text AS payment_reminder_sent_for,
          an.id AS animal_id, an.name AS animal_name, s.name AS species_name,
          ${COLUMNAS_PORTADA},
          p.id AS plan_id, p.name AS plan_name, p.monthly_amount,
@@ -165,13 +175,15 @@ export async function listByUser(
  */
 export async function create(
   db: Queryable,
-  datos: { userId: number; animalId: number; planId: number },
+  /** Sin forma de pago, automática (CU-49). */
+  datos: { userId: number; animalId: number; planId: number; paymentMode?: PaymentMode },
 ): Promise<Adoption> {
   let id: number;
   try {
     const { rows } = await db.query<{ id: number }>(
-      "INSERT INTO adoptions (user_id, animal_id, plan_id, status) VALUES ($1, $2, $3, 'pending') RETURNING id",
-      [datos.userId, datos.animalId, datos.planId],
+      `INSERT INTO adoptions (user_id, animal_id, plan_id, status, payment_mode)
+       VALUES ($1, $2, $3, 'pending', $4) RETURNING id`,
+      [datos.userId, datos.animalId, datos.planId, datos.paymentMode ?? 'automatic'],
     );
     id = (rows[0] as { id: number }).id;
   } catch (error) {
@@ -263,7 +275,8 @@ export async function listActiveAdopters(db: Queryable, animalId: number): Promi
 export async function listDueForBilling(db: Queryable, hoy: string): Promise<number[]> {
   const { rows } = await db.query<{ id: number }>(
     `SELECT id FROM adoptions
-      WHERE status = 'active' AND cancel_requested_at IS NULL AND next_billing_date <= $1
+      WHERE status = 'active' AND payment_mode = 'automatic' AND cancel_requested_at IS NULL
+        AND next_billing_date <= $1
       ORDER BY next_billing_date, id`,
     [hoy],
   );
@@ -298,6 +311,31 @@ export async function setNextBillingDate(db: Queryable, id: number, fecha: strin
 }
 
 /** CU-43 3a: cuota fallida. `next_billing_date` se conserva: es la cuota pendiente de regularizar. */
+/**
+ * CU-50: ids de las adopciones activas con pago manual cuya cuota cae dentro de
+ * `hasta` (las que pueden necesitar aviso o pausa). Las reglas las decide el dominio.
+ */
+export async function listManualDueBy(db: Queryable, hasta: string): Promise<number[]> {
+  const { rows } = await db.query<{ id: number }>(
+    `SELECT id FROM adoptions
+      WHERE status = 'active' AND payment_mode = 'manual' AND cancel_requested_at IS NULL
+        AND next_billing_date <= $1
+      ORDER BY next_billing_date, id`,
+    [hasta],
+  );
+  return rows.map((r) => r.id);
+}
+
+/** CU-50: anota que ya se avisó de la cuota de `fecha`. */
+export async function setReminderSentFor(db: Queryable, id: number, fecha: string): Promise<void> {
+  await db.query('UPDATE adoptions SET payment_reminder_sent_for = $2 WHERE id = $1', [id, fecha]);
+}
+
+/** CU-49: cambia la forma de pago. */
+export async function setPaymentMode(db: Queryable, id: number, paymentMode: PaymentMode): Promise<void> {
+  await db.query('UPDATE adoptions SET payment_mode = $2 WHERE id = $1', [id, paymentMode]);
+}
+
 export async function pause(db: Queryable, id: number): Promise<void> {
   await db.query("UPDATE adoptions SET status = 'paused' WHERE id = $1 AND status = 'active'", [id]);
 }
@@ -401,6 +439,7 @@ interface AdminAdoptionRow {
   next_plan_monthly_amount: string | null;
   created_by_id: number | null;
   created_by_name: string | null;
+  payment_mode: PaymentMode;
 }
 
 /** Adopción vista desde el panel: la fila del listado y los datos de la ficha. */
@@ -459,7 +498,7 @@ const FROM_ADMIN = `
 
 const SELECT_ADMIN = `
   SELECT ad.id, ad.status, ad.start_date, ad.end_date, ad.next_billing_date, ad.cancel_requested_at,
-         ad.end_reason, ad.created_at, ad.notes,
+         ad.end_reason, ad.created_at, ad.notes, ad.payment_mode,
          u.id AS user_id, u.first_name, u.last_name, u.email,
          an.id AS animal_id, an.name AS animal_name,
          p.id AS plan_id, p.name AS plan_name, p.monthly_amount,
@@ -534,12 +573,17 @@ export async function listForAdmin(
 }
 
 /** Con `forUpdate`, bloquea la fila de la adopción hasta el final de la transacción. */
-export async function findForAdmin(db: Queryable, id: number, forUpdate = false): Promise<AdminAdoption | null> {
+export async function findForAdmin(
+  db: Queryable,
+  id: number,
+  forUpdate = false,
+): Promise<(AdminAdoption & { paymentMode: PaymentMode }) | null> {
   const { rows } = await db.query<AdminAdoptionRow>(
     `${SELECT_ADMIN} WHERE ad.id = $1${forUpdate ? ' FOR UPDATE OF ad' : ''}`,
     [id],
   );
-  return rows[0] ? mapAdminRow(rows[0]) : null;
+  // CU-49: la forma de pago solo va en la ficha, no en el listado.
+  return rows[0] ? { ...mapAdminRow(rows[0]), paymentMode: rows[0].payment_mode } : null;
 }
 
 /**

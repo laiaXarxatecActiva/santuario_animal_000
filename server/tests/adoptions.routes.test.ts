@@ -92,6 +92,8 @@ describe('CU-13 Adoptar un animal', () => {
       nextUpdateExpected: null,
       createdAt: expect.any(String),
       canPay: true,
+      paymentMode: 'automatic',
+      paymentDeadline: null,
     });
     const id: number = creada.body.id;
     expect(await pagosDe(id)).toEqual([]);
@@ -371,5 +373,84 @@ describe('CU-15 Consultar «Mis animales»', () => {
     expect((await lucia.get('/api/me/adoptions/abc')).status).toBe(400);
     expect((await request(t.app).get('/api/me/adoptions/3')).status).toBe(401);
     expect((await (await como('nuria.peris@santuario.test')).get('/api/me/adoptions/3')).status).toBe(403);
+  });
+});
+
+describe('CU-49 Forma de pago automática o manual', () => {
+  // Adopción 18: Lucía (usuaria 6) adopta a un animal, activa.
+  const LUCIA = 'lucia.martinez@correo.test';
+  const adopcion18 = async () =>
+    (
+      await t.pool.query<{ status: string; payment_mode: string; next_billing_date: string }>(
+        'SELECT status, payment_mode, next_billing_date::text AS next_billing_date FROM adoptions WHERE id = 18',
+      )
+    ).rows[0];
+  const cuotaA = (dias: number) =>
+    t.pool.query('UPDATE adoptions SET next_billing_date = $1 WHERE id = 18', [sumarDias(t.hoy, dias)]);
+  const cambiar = async (email: string, id: number, paymentMode: string) =>
+    (await como(email)).patch(`/api/me/adoptions/${id}/payment-mode`).send({ paymentMode });
+
+  it('al adoptar se elige la forma de pago; sin elegir, automática', async () => {
+    const res = await (
+      await como('hector.benet@correo.test')
+    )
+      .post('/api/adoptions')
+      .send({ animalId: 3, planId: 1, paymentMode: 'manual' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ status: 'pending', paymentMode: 'manual', paymentDeadline: null });
+    const { rows } = await t.pool.query('SELECT payment_mode FROM adoptions WHERE id = $1', [res.body.id]);
+    expect(rows[0]?.payment_mode).toBe('manual');
+  });
+
+  it('se cambia desde «Mis animales»; sin sesión 401, ajena 404, valor no válido 400', async () => {
+    expect(
+      (await request(t.app).patch('/api/me/adoptions/18/payment-mode').send({ paymentMode: 'manual' })).status,
+    ).toBe(401);
+    expect((await cambiar('pablo.garcia@correo.test', 18, 'manual')).status).toBe(404);
+    expect((await cambiar(LUCIA, 18, 'semanal')).status).toBe(400);
+    const res = await cambiar(LUCIA, 18, 'manual');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ id: 18, status: 'active', paymentMode: 'manual' });
+    expect((await adopcion18())?.payment_mode).toBe('manual');
+  });
+
+  it('una manual se puede pagar desde 7 días antes de la cuota, con el plazo sin pausa', async () => {
+    await cambiar(LUCIA, 18, 'manual');
+    await cuotaA(10);
+    let mia = (await (await como(LUCIA)).get('/api/me/adoptions/18')).body as AdoptionDto;
+    expect(mia).toMatchObject({ canPay: false, paymentMode: 'manual', paymentDeadline: null });
+    const pronto = await pagar(LUCIA, 18, 'success');
+    expect(pronto.status).toBe(422);
+    expect(pronto.body.error.code).toBe('ADOPTION_NOT_PAYABLE');
+
+    await cuotaA(5);
+    const cuota = sumarDias(t.hoy, 5);
+    mia = (await (await como(LUCIA)).get('/api/me/adoptions/18')).body as AdoptionDto;
+    expect(mia).toMatchObject({ canPay: true, paymentDeadline: sumarDias(cuota, 6) });
+
+    const res = await pagar(LUCIA, 18, 'success');
+    expect(res.status).toBe(200);
+    expect(res.body.payment).toMatchObject({ status: 'completed', periodStart: cuota });
+    expect(res.body.adoption).toMatchObject({ status: 'active', nextBillingDate: sumarMeses(cuota, 1), canPay: false });
+    expect(await adopcion18()).toMatchObject({ status: 'active', next_billing_date: sumarMeses(cuota, 1) });
+  });
+
+  it('un pago manual fallido no cambia nada: sigue activa y se puede reintentar', async () => {
+    await cambiar(LUCIA, 18, 'manual');
+    await cuotaA(2);
+    const res = await pagar(LUCIA, 18, 'failure');
+    expect(res.status).toBe(200);
+    expect(res.body.payment.status).toBe('failed');
+    expect(res.body.adoption).toMatchObject({ status: 'active', canPay: true, nextBillingDate: sumarDias(t.hoy, 2) });
+  });
+
+  it('la baja funciona igual con pago manual; después ya no se puede cambiar la forma de pago', async () => {
+    await cambiar(LUCIA, 18, 'manual');
+    const baja = await (await como(LUCIA)).post('/api/me/adoptions/18/cancel').send({});
+    expect(baja.status).toBe(200);
+    expect(baja.body).toMatchObject({ status: 'active', cancelRequested: true, canPay: false });
+    const res = await cambiar(LUCIA, 18, 'automatic');
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('PAYMENT_MODE_CHANGE_NOT_ALLOWED');
   });
 });

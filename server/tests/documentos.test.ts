@@ -86,3 +86,42 @@ describe('Nombres de los archivos PDF', () => {
     expect(nombreArchivo('certificado', '¡¿?!')).toBe('certificado.pdf');
   });
 });
+
+describe('CU-05 Certificado de donación para desgravar', () => {
+  const donacion: ReceiptDto = {
+    ...cuota,
+    kind: 'donation',
+    animalName: null,
+    planName: null,
+    periodStart: null,
+    periodEnd: null,
+    payer: { fullName: 'Marta Soler Ruiz', email: 'marta@correo.test' },
+  };
+
+  it('con los datos fiscales, se titula «Certificado de donación» y lleva el NIF y la dirección', () => {
+    const r = contenidoRecibo({
+      ...donacion,
+      fiscal: {
+        taxId: '12345678Z',
+        address: 'Calle Mayor 1',
+        postalCode: '46001',
+        province: 'Valencia',
+        country: 'España',
+      },
+    });
+    expect(r.titulo).toBe('Certificado de donación');
+    expect(r.filas.slice(0, 3)).toEqual([
+      ['Pagado por', 'Marta Soler Ruiz\nmarta@correo.test'],
+      ['NIF', '12345678Z'],
+      ['Dirección', 'Calle Mayor 1\n46001 Valencia (España)'],
+    ]);
+    expect(r.filaImporte).toBe(4);
+    expect(plano(r.filas[r.filaImporte]?.[1] ?? '')).toBe('5,00 €');
+  });
+
+  it('sin los datos fiscales es un recibo normal', () => {
+    const r = contenidoRecibo({ ...donacion, fiscal: null });
+    expect(r.titulo).toBe('Recibo');
+    expect(r.filas.map(([k]) => k)).not.toContain('NIF');
+  });
+});

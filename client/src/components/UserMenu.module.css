@@ -2,6 +2,13 @@
   position: relative;
 }
 
+/* Por debajo de 480 px solo se ven los iconos; el botón conserva su `aria-label`. */
+@media (max-width: 479px) {
+  .name {
+    display: none;
+  }
+}
+
 .chevron {
   font-size: var(--font-size-sm);
 }

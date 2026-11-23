@@ -165,3 +165,16 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
     ]);
   });
 });
+
+describe('CU-43 y CU-49 Las adopciones con pago manual no se cobran solas', () => {
+  it('una manual con la cuota vencida no se cobra ni cambia', async () => {
+    // Adopción 19: Sergio (usuario 9), activa; los casos anteriores no la tocan.
+    await t.pool.query("UPDATE adoptions SET payment_mode = 'manual' WHERE id = 19");
+    await vencerHoy(19);
+    const antes = (await pagos(19)).length;
+    expect(await runBilling(depsDePrueba(t))).toMatchObject({ charged: 0, failed: 0 });
+    expect(await pagos(19)).toHaveLength(antes);
+    expect(await adopcion(19)).toMatchObject({ status: 'active', next_billing_date: t.hoy });
+    await t.pool.query("UPDATE adoptions SET payment_mode = 'automatic' WHERE id = 19");
+  });
+});

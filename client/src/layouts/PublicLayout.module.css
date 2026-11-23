@@ -1,3 +1,14 @@
+/* La página ocupa al menos el alto de la ventana y el contenido se estira,
+   para que el pie quede abajo aunque haya poco contenido (SCREENS §2.3).
+   La cabecera y el pie son hijos directos porque `.print-hidden` usa
+   `display: contents`. */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .skipLink {
   position: absolute;
   top: var(--space-2);
@@ -14,6 +25,7 @@
 }
 
 .main {
+  flex: 1;
   padding-top: var(--space-6);
 }
 

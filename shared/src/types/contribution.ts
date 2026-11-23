@@ -49,4 +49,15 @@ export interface ReceiptDto {
   periodStart: string | null;
   periodEnd: string | null;
   payer: { fullName: string; email: string };
+  /** CU-05: datos para el certificado de donación (si el donante lo pidió). */
+  fiscal?: DonorTaxData | null;
+}
+
+/** CU-05: datos fiscales del donante para desgravar. */
+export interface DonorTaxData {
+  taxId: string;
+  address: string;
+  postalCode: string;
+  province: string;
+  country: string;
 }

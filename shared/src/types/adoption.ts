@@ -1,4 +1,4 @@
-import type { AdoptionEndReason, AdoptionStatus, PaymentStatus } from '../constants/status.js';
+import type { AdoptionEndReason, AdoptionStatus, PaymentMode, PaymentStatus } from '../constants/status.js';
 import type { PhotoDto } from './public.js';
 
 // Área del adoptante (TECH_SPEC §10.4). Fechas `DATE` como `YYYY-MM-DD`,
@@ -27,8 +27,15 @@ export interface AdoptionDto {
   /** Solo en las activas: última actualización del animal + 14 días (RN-14). */
   nextUpdateExpected: string | null;
   createdAt: string;
-  /** Se puede pagar ahora: pendiente de 7 días o menos, o pausada (CU-14). */
+  /**
+   * Se puede pagar ahora: pendiente de 7 días o menos, pausada (CU-14) o, con
+   * pago manual, desde 7 días antes de la cuota (CU-49).
+   */
   canPay: boolean;
+  /** CU-49: cobro automático cada mes o pago manual de cada cuota. */
+  paymentMode: PaymentMode;
+  /** CU-50: con pago manual y la cuota a pagar, último día para pagarla sin que se pause. */
+  paymentDeadline: string | null;
 }
 
 export interface PaymentDto {

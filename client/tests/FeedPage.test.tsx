@@ -119,3 +119,15 @@ describe('CU-17 Consultar el muro de actualizaciones', () => {
     expect(await screen.findByText('Aún no hay novedades de tus animales')).toBeInTheDocument();
   });
 });
+
+describe('CU-17 La miniatura del animal abre su ficha', () => {
+  it('la foto y el nombre de Rufo enlazan a su ficha y al pulsarlos se abre', async () => {
+    apiMuro();
+    const { router } = renderRoute('/feed');
+    const enlace = await screen.findByRole('link', { name: 'Rufo' });
+    expect(enlace).toHaveAttribute('href', '/my-animals/1');
+    expect(screen.getByRole('link', { name: 'Sombra' })).toHaveAttribute('href', '/my-animals/8');
+    await userEvent.click(enlace);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/my-animals/1'));
+  });
+});

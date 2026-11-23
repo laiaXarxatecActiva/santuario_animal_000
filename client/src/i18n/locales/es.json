@@ -358,7 +358,16 @@
     "notice": "Pago simulado: no se realizará ningún cargo real.",
     "succeed": "Simular pago correcto",
     "fail": "Simular pago fallido",
-    "processing": "Procesando el pago…"
+    "processing": "Procesando el pago…",
+    "cardHolder": "Titular de la tarjeta",
+    "cardNumber": "Número de tarjeta",
+    "cardExpiry": "Caducidad (MM/AA)",
+    "cardCvc": "CVC",
+    "cardWarning": "No escribas los datos de una tarjeta real. Se comprueba solo su formato y no se envían ni se guardan.",
+    "testCard": "Puedes usar la tarjeta de prueba 4242 4242 4242 4242, con cualquier caducidad futura y cualquier CVC.",
+    "failedTitle": "Pago rechazado",
+    "retry": "Volver a intentarlo",
+    "notNow": "Ahora no"
   },
   "forbidden": {
     "title": "No tienes acceso a esta página"
@@ -662,7 +671,6 @@
       "texts": "Descripción",
       "name": "Nombre",
       "species": "Especie",
-      "breed": "Raza",
       "sex": "Sexo",
       "approxBirthDate": "Fecha de nacimiento aproximada",
       "arrivalDate": "Fecha de llegada",
@@ -848,6 +856,11 @@
       "logoutAllDone_zero": "No tenía ninguna sesión abierta",
       "logoutAllDone_one": "Se ha cerrado {{count}} sesión",
       "logoutAllDone_other": "Se han cerrado {{count}} sesiones",
+      "sendPasswordReset": "Enviar enlace de contraseña",
+      "confirmPasswordReset": "¿Enviar a {{name}} un enlace para cambiar su contraseña?",
+      "passwordResetExplain": "Recibirá un email con un enlace para elegir una contraseña nueva. El enlace caduca en 30 minutos y anula los anteriores. Nadie más verá la contraseña. Hasta que la cambie, la actual sigue funcionando; al cambiarla se cerrarán sus sesiones.",
+      "passwordResetConfirm": "Enviar enlace",
+      "passwordResetSent": "Hemos enviado a {{email}} un enlace para cambiar su contraseña.",
       "adoptions": "Adopciones",
       "noAdoptions": "No tiene adopciones",
       "contributions": "Aportaciones",
@@ -871,6 +884,7 @@
       "status": "Estado",
       "startDate": "Inicio",
       "nextBilling": "Próximo cobro",
+      "paymentMode": "Cobro de las cuotas",
       "endDate": "Fin",
       "endReason": "Motivo del cierre",
       "origin": "Origen",
@@ -1157,18 +1171,29 @@
     "other": "Otra",
     "amount": "Importe (€)",
     "noMinimum": "Sin importe mínimo.",
-    "name": "Nombre (opcional)",
-    "email": "Email (opcional)",
-    "emailHelp": "Para enviarte el recibo.",
+    "name": "Nombre",
+    "email": "Email",
+    "emailHelp": "Para enviarte el recibo y avisarte de cualquier cambio en tu donación.",
     "anonymous": "Quiero que mi donación sea anónima",
     "message": "Mensaje (opcional)",
     "continue": "Continuar con el pago",
     "failed": "El pago no se ha completado. Puedes intentarlo de nuevo.",
     "thanksEmail": "¡Gracias por tu donación! Te hemos enviado el recibo por email.",
-    "thanksNoEmail": "¡Gracias por tu donación! Puedes imprimir el recibo desde esta página.",
-    "printReceipt": "Imprimir recibo",
     "another": "Hacer otra donación",
-    "noNotices": "Si no nos das tu email y no has entrado con tu cuenta de adoptante, no podremos avisarte de nada sobre esta donación (por ejemplo, si hubiera que devolverla)."
+    "surname": "Apellidos",
+    "phone": "Teléfono (opcional)",
+    "phoneHelp": "Móvil español de 9 dígitos, sin el prefijo +34.",
+    "taxCertificate": "Quiero el certificado para desgravar",
+    "taxTitle": "Datos para el certificado",
+    "taxHelp": "Son los datos que pide Hacienda para que puedas desgravar la donación en la declaración de la renta.",
+    "taxId": "NIF o NIE",
+    "address": "Dirección",
+    "postalCode": "Código postal",
+    "province": "Provincia",
+    "country": "País",
+    "defaultCountry": "España",
+    "viewReceipt": "Ver recibo",
+    "downloadReceipt": "Descargar recibo"
   },
   "legal": {
     "lastUpdated": "Última actualización: {{date}}",
@@ -1178,7 +1203,7 @@
       "responsibleTitle": "Quién es el responsable",
       "responsibleText": "El responsable de tus datos es el Santuario de Animales. Puedes escribirnos con los datos de contacto de <0>Sobre el santuario</0>.",
       "dataTitle": "Qué datos guardamos",
-      "dataText": "Al crear tu cuenta guardamos tu nombre, tus apellidos, tu email, tu contraseña cifrada y, si nos lo das, tu teléfono. Cuando adoptas, guardamos tus adopciones, el plan elegido y los pagos. Nunca guardamos datos de tarjetas: los pagos son simulados y, aunque no lo fueran, los gestionaría la pasarela de pago.",
+      "dataText": "Al crear tu cuenta guardamos tu nombre, tus apellidos, tu email, tu contraseña cifrada y, si nos lo das, tu teléfono. Cuando adoptas, guardamos tus adopciones, el plan elegido y los pagos. Si donas, guardamos tu nombre, tus apellidos, tu email, tu teléfono si nos lo das y, si pides el certificado para desgravar, tu NIF y tu dirección. Nunca guardamos datos de tarjetas: los pagos son simulados y, aunque no lo fueran, los gestionaría la pasarela de pago.",
       "purposeTitle": "Para qué los usamos",
       "purposeText": "Para gestionar tu cuenta y tus adopciones, enviarte las noticias de los animales que adoptas y los avisos de tus cuotas según las preferencias de tu perfil, y mostrar tu nombre en la ficha de un animal solo si lo activas.",
       "retentionTitle": "Cuánto tiempo los guardamos",
@@ -1237,9 +1262,9 @@
     "news": "Sus noticias"
   },
   "certificate": {
-    "download": "Certificado",
+    "download": "Descargar certificado",
     "downloadOf": "Descargar el certificado de {{name}} (PDF)",
-    "view": "Ver",
+    "view": "Certificado",
     "viewOf": "Ver el certificado de {{name}} (PDF)"
   },
   "language": {
@@ -1249,5 +1274,19 @@
       "ca": "Valencià",
       "en": "English"
     }
+  },
+  "paymentMode": {
+    "title": "Forma de pago",
+    "automatic": "Automático",
+    "automaticHelp": "Cobramos la cuota cada mes sin que tengas que hacer nada.",
+    "manual": "Manual",
+    "manualHelp": "Te avisamos 7 días antes de cada cuota y la pagas tú desde «Mis animales».",
+    "note": "Puedes cambiarla cuando quieras desde «Mis animales».",
+    "cardAutomatic": "Pago automático cada mes",
+    "cardManual": "Pago manual: te avisaremos de cada cuota",
+    "appliesNext": "El cambio vale desde la próxima cuota.",
+    "saved": "Forma de pago guardada.",
+    "due": "La cuota de {{name}} vence el {{date}}. Puedes pagarla hasta el {{deadline}} sin que la adopción se pause.",
+    "payFee": "Pagar la cuota"
   }
 }

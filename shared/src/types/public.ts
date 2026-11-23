@@ -35,7 +35,6 @@ export interface AnimalCardDto {
 
 /** Ficha pública de un animal (CU-03). */
 export interface PublicAnimalDto extends AnimalCardDto {
-  breed: string | null;
   approxBirthDate: string | null;
   arrivalDate: string;
   rescueStory: string | null;

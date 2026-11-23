@@ -48,7 +48,6 @@ describe('CU-28 Gestionar animales: alta', () => {
       sex: 'female',
       arrivalDate: '2026-11-01',
       approxBirthDate: null,
-      breed: null,
       rescueStory: 'Apareció agotada.',
       isPublished: true,
       isAdoptable: true,
@@ -187,5 +186,17 @@ describe('CU-28 A4 Borrar un animal', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/admin/animals'));
     expect(await screen.findByText('Roca se ha borrado')).toBeInTheDocument();
     expect(pedidas('/api/admin/animals/15').length).toBeGreaterThan(0);
+  });
+});
+
+describe('CU-28 Ficha del animal sin «Raza»', () => {
+  it('el formulario no pide la raza: la especie ya distingue a cada animal', async () => {
+    const { enviados } = api();
+    renderRoute('/admin/animals/1');
+    await screen.findByLabelText('Carácter (opcional)');
+    expect(screen.queryByLabelText(/Raza/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    await screen.findByText('Cambios guardados');
+    expect(enviados('/api/admin/animals/1').at(-1)).not.toHaveProperty('breed');
   });
 });

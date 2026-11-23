@@ -18,6 +18,7 @@ import { caducidadToken } from '../dominio/token.js';
 import {
   comprobarCambioEstado,
   comprobarCambioRol,
+  puedeEnviarCambioPassword,
   puedeReenviarInvitacion,
   type ProblemaCuenta,
 } from '../dominio/usuarios-admin.js';
@@ -27,6 +28,7 @@ import {
   InvitationNotPendingError,
   LastActiveAdminError,
   NotFoundError,
+  PasswordResetNotAllowedError,
   RoleChangeNotAllowedError,
 } from '../errors/app-error.js';
 import * as adoptionModel from '../models/adoption.model.js';
@@ -35,6 +37,7 @@ import * as sessionModel from '../models/session.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
+import { adminPasswordResetEmail } from '../services/email/templates/admin-password-reset.js';
 import { workerInvitationEmail } from '../services/email/templates/worker-invitation.js';
 import { hashPassword } from '../utils/passwords.js';
 import { generarToken } from '../utils/tokens.js';
@@ -241,6 +244,42 @@ export function createUserAdminService({
       if (!puedeReenviarInvitacion({ ...user, lastLoginAt: user.lastLoginDate })) throw new InvitationNotPendingError();
       const token = await withTransaction(db, (client) => nuevaInvitacion(client, id));
       await enviarInvitacion(user, token);
+    },
+
+    /**
+     * CU-51: envía al trabajador un enlace de recuperación (`password_reset`, 30
+     * minutos) que anula los anteriores. El administrador nunca ve la contraseña;
+     * al usar el enlace (CU-10) se cierran las sesiones del trabajador.
+     */
+    async sendPasswordReset(actorId: number, id: number): Promise<void> {
+      const user = await buscar(db, id);
+      if (!puedeEnviarCambioPassword(user, actorId)) throw new PasswordResetNotAllowedError();
+      const token = await withTransaction(db, async (client) => {
+        await tokenModel.invalidateUnused(client, id, 'password_reset', reloj.ahora());
+        const nuevo = generarToken();
+        await tokenModel.create(client, {
+          userId: id,
+          type: 'password_reset',
+          tokenHash: nuevo.hash,
+          expiresAt: caducidadToken('password_reset', reloj.ahora()),
+        });
+        return nuevo.token;
+      });
+      const url = new URL('/reset-password', clientUrl);
+      url.searchParams.set('token', token);
+      // Un fallo del envío no deshace nada: el administrador puede volver a enviarlo.
+      try {
+        await email.send({
+          to: user.email,
+          ...adminPasswordResetEmail({
+            firstName: user.firstName,
+            url: url.toString(),
+            language: await userModel.findLanguage(db, id),
+          }),
+        });
+      } catch (error) {
+        logEmailError(error);
+      }
     },
   };
 }

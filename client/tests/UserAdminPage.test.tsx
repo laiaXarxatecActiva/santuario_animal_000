@@ -163,3 +163,46 @@ describe('CU-48 Cerrar todas las sesiones de un usuario', () => {
     }
   });
 });
+
+describe('CU-51 Enviar a un trabajador el enlace para cambiar su contraseña', () => {
+  it('1-4: explica qué pasará, lo envía y lo confirma', async () => {
+    const { pedidas } = api(nuria({ lastLoginAt: '2026-11-20T08:00:00.000Z', invitationPending: false }), {
+      '/api/admin/users/3/password-reset': () => ({ status: 204 }),
+    });
+    renderRoute('/admin/users/3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Enviar enlace de contraseña' }));
+    const ventana = await screen.findByRole('dialog', {
+      name: '¿Enviar a Nuria Peris Gil un enlace para cambiar su contraseña?',
+    });
+    expect(ventana).toHaveTextContent('Nadie más verá la contraseña');
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar enlace' }));
+    expect(
+      await screen.findByText('Hemos enviado a nuria.peris@santuario.test un enlace para cambiar su contraseña.'),
+    ).toBeInTheDocument();
+    expect(pedidas('/api/admin/users/3/password-reset')).toHaveLength(1);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('«Cancelar» cierra la ventana sin enviar nada', async () => {
+    const { pedidas } = api(nuria(), { '/api/admin/users/3/password-reset': () => ({ status: 204 }) });
+    renderRoute('/admin/users/3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Enviar enlace de contraseña' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+    expect(pedidas('/api/admin/users/3/password-reset')).toHaveLength(0);
+  });
+
+  it('1a: no aparece para adoptantes, cuentas desactivadas ni la propia cuenta', async () => {
+    const fichas = [
+      adminUserDetail(),
+      nuria({ status: 'inactive' }),
+      adminUserDetail({ id: 1, firstName: 'Marta', lastName: 'Soler Vidal', role: 'admin', adoptions: [] }),
+    ];
+    for (const ficha of fichas) {
+      api(ficha);
+      const vista = renderRoute(`/admin/users/${ficha.id}`);
+      await screen.findByRole('heading', { level: 1 });
+      expect(screen.queryByRole('button', { name: 'Enviar enlace de contraseña' })).not.toBeInTheDocument();
+      vista.unmount();
+    }
+  });
+});

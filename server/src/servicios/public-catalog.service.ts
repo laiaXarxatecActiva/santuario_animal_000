@@ -118,7 +118,6 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
       ]);
       return {
         ...aTarjeta(animal, reloj.hoy()),
-        breed: animal.breed,
         approxBirthDate: animal.approxBirthDate,
         arrivalDate: animal.arrivalDate,
         rescueStory: animal.rescueStory,

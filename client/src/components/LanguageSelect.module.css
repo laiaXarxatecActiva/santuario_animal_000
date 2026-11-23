@@ -35,3 +35,20 @@
   background: var(--color-surface);
   color: var(--color-text);
 }
+
+/* Por debajo de 480 px, botón redondo de 44 px con el icono, como el del tema,
+   para que la cabecera quepa sin desplazamiento lateral (DESIGN_SYSTEM §7). La
+   lista desplegada sigue mostrando los nombres completos. */
+@media (max-width: 479px) {
+  .icon {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .select {
+    width: var(--size-touch);
+    padding: 0;
+    color: transparent;
+    appearance: none;
+  }
+}

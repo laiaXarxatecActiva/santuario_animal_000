@@ -1,5 +1,11 @@
 import { faFeather } from '@fortawesome/free-solid-svg-icons';
-import { isOpenAdoptionStatus, type AdoptionDto, type PublicAnimalDto, type SimulatedOutcome } from '@sanctuary/shared';
+import {
+  isOpenAdoptionStatus,
+  type AdoptionDto,
+  type PaymentMode,
+  type PublicAnimalDto,
+  type SimulatedOutcome,
+} from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +16,9 @@ import { Alert } from '../../components/Alert';
 import { AnimalPhoto } from '../../components/AnimalPhoto';
 import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
+import { PaymentFailedModal } from '../../components/PaymentFailedModal';
 import { PaymentModal } from '../../components/PaymentModal';
+import { PaymentModePicker } from '../../components/PaymentModePicker';
 import { PlanPicker } from '../../components/PlanPicker';
 import { ResendVerificationButton } from '../../components/ResendVerificationButton';
 import { MY_ADOPTIONS_KEY, useMyAdoptionsOf } from '../../hooks/useAdoptions';
@@ -142,7 +150,7 @@ function Adopcion({ animal }: { animal: PublicAnimalDto }) {
         void navigate(ADOPTER_HOME, { state: flashState({ type: 'success', message: mensaje }) });
         return;
       }
-      // 6a: el pago fallido se queda en la página y se puede reintentar.
+      // 6a: el pago fallido se avisa en una ventana emergente y se puede reintentar.
       queryClient.setQueryData<AdoptionDto[]>([...MY_ADOPTIONS_KEY, animal.id], [adoption]);
       setPagoAbierto(false);
       setPagoFallido(true);
@@ -180,15 +188,10 @@ function Adopcion({ animal }: { animal: PublicAnimalDto }) {
     <>
       {pagar.isError && <Alert type="error">{errorMessage(t, pagar.error)}</Alert>}
       {abierta.canPay ? (
-        <Alert
-          type={pagoFallido ? 'error' : 'warning'}
-          action={<Button onClick={abrirPago}>{t('adopt.payNow')}</Button>}
-        >
-          {pagoFallido
-            ? t('adopt.paymentFailed')
-            : abierta.status === 'paused'
-              ? t('adopt.pausedPayment', { name: animal.name })
-              : t('adopt.pendingPayment', { name: animal.name })}
+        <Alert type="warning" action={<Button onClick={abrirPago}>{t('adopt.payNow')}</Button>}>
+          {abierta.status === 'paused'
+            ? t('adopt.pausedPayment', { name: animal.name })
+            : t('adopt.pendingPayment', { name: animal.name })}
         </Alert>
       ) : (
         <Alert
@@ -211,6 +214,12 @@ function Adopcion({ animal }: { animal: PublicAnimalDto }) {
         // 6b: si cierra la ventana, la adopción queda pendiente y puede pagarla después.
         onClose={() => setPagoAbierto(false)}
       />
+      <PaymentFailedModal
+        open={pagoFallido && abierta.canPay}
+        message={t('adopt.paymentFailed')}
+        onRetry={abrirPago}
+        onClose={() => setPagoFallido(false)}
+      />
     </>
   );
 }
@@ -221,6 +230,8 @@ function Formulario({ animal, onCreated }: { animal: PublicAnimalDto; onCreated:
   const queryClient = useQueryClient();
   const planes = usePlans();
   const [elegido, setElegido] = useState<number | undefined>();
+  // CU-49: por defecto, el pago automático.
+  const [formaDePago, setFormaDePago] = useState<PaymentMode>('automatic');
 
   const crear = useMutation({
     mutationFn: adoptionsApi.create,
@@ -250,12 +261,20 @@ function Formulario({ animal, onCreated }: { animal: PublicAnimalDto; onCreated:
       className={styles.form}
       onSubmit={(e) => {
         e.preventDefault();
-        if (plan) crear.mutate({ animalId: animal.id, planId: plan.id });
+        // Sin forma de pago, el servidor usa la automática; solo se envía la manual.
+        if (plan) {
+          crear.mutate({
+            animalId: animal.id,
+            planId: plan.id,
+            ...(formaDePago === 'manual' && { paymentMode: formaDePago }),
+          });
+        }
       }}
     >
       {crear.isError && <Alert type="error">{errorMessage(t, crear.error)}</Alert>}
       <Alert type="info">{t('adopt.symbolic', { name: animal.name })}</Alert>
       <PlanPicker plans={planes.data} value={plan?.id} onChange={setElegido} disabled={crear.isPending} />
+      <PaymentModePicker value={formaDePago} onChange={setFormaDePago} disabled={crear.isPending} />
 
       {plan && (
         <section className={styles.summary} aria-labelledby="adopt-summary">

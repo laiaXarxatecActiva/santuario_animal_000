@@ -50,7 +50,6 @@ export function animal(overrides: Partial<PublicAnimalDto> = {}): PublicAnimalDt
   const base = card();
   return {
     ...base,
-    breed: null,
     approxBirthDate: '2014-11-12',
     arrivalDate: '2021-08-12',
     rescueStory: 'Llegó tras electrocutarse en un tendido eléctrico.',
@@ -123,6 +122,8 @@ export function adoption(overrides: Partial<AdoptionDto> = {}): AdoptionDto {
     nextUpdateExpected: null,
     createdAt: '2026-11-12T10:00:00.000Z',
     canPay: true,
+    paymentMode: 'automatic',
+    paymentDeadline: null,
     ...overrides,
   };
 }
@@ -224,7 +225,6 @@ export function adminAnimal(overrides: Partial<AdminAnimalDto> = {}): AdminAnima
     id: 1,
     name: 'Rufo',
     species: { id: 1, name: 'Buitre leonado' },
-    breed: null,
     sex: 'male',
     approxBirthDate: '2014-11-12',
     arrivalDate: '2021-08-12',
@@ -369,6 +369,7 @@ export function adminAdoptionDetail(overrides: Partial<AdminAdoptionDetailDto> =
     endReason: null,
     notes: 'Alta en la jornada de puertas abiertas.',
     createdBy: { id: 1, name: 'Marta Soler Ferrer' },
+    paymentMode: 'automatic',
     pendingFee: { periodStart: '2026-12-16', periodEnd: '2027-01-15', amount: '1.00' },
     lastRefundablePayment: { id: 40, amount: '1.00' },
     payments: [

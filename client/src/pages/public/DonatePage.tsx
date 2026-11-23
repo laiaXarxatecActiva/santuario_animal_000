@@ -1,4 +1,4 @@
-import { faPrint } from '@fortawesome/free-solid-svg-icons';
+import { faDownload, faFilePdf } from '@fortawesome/free-solid-svg-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   donationSchema,
@@ -11,21 +11,42 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { donationsApi } from '../../api/donations';
 import { Alert } from '../../components/Alert';
-import { Button } from '../../components/Button';
+import { Button, ButtonLink } from '../../components/Button';
 import { Checkbox, TextAreaField, TextField } from '../../components/FormFields';
+import { PaymentFailedModal } from '../../components/PaymentFailedModal';
 import { PaymentModal } from '../../components/PaymentModal';
 import { ReceiptCard } from '../../components/ReceiptCard';
 import { useSession } from '../../hooks/useSession';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import styles from './DonatePage.module.css';
-import { conIdioma } from '../../i18n/idioma';
+import { conIdioma, idiomaActual } from '../../i18n/idioma';
 
 /** Cantidades sugeridas (SCREENS §3.5); la de 20 € va marcada al entrar. */
 const SUGERIDAS = ['5', '10', '20', '50'] as const;
-const CAMPOS = ['amount', 'donorName', 'donorEmail', 'isAnonymous', 'message'] as const;
+const CAMPOS = [
+  'amount',
+  'donorName',
+  'donorSurname',
+  'donorEmail',
+  'donorPhone',
+  'isAnonymous',
+  'message',
+  'acceptPrivacy',
+  'taxCertificate',
+  'donorTaxId',
+  'donorAddress',
+  'donorPostalCode',
+  'donorProvince',
+  'donorCountry',
+] as const;
+
+/** CU-05: el recibo (o el certificado) en PDF, con la firma que devuelve la donación. */
+const urlRecibo = (d: DonationResultDto) =>
+  `/api/donations/${d.id}/receipt.pdf?token=${encodeURIComponent(d.receiptToken)}&lang=${idiomaActual()}`;
 
 // CU-05 Hacer una donación (SCREENS §3.5).
 export function DonatePage() {
@@ -34,6 +55,8 @@ export function DonatePage() {
   const [aPagar, setAPagar] = useState<DonationData | null>(null);
   const [fallo, setFallo] = useState<string | null>(null);
   const [hecha, setHecha] = useState<DonationResultDto | null>(null);
+  /** 5a: donación cuyo pago se rechazó, para reintentarla desde el aviso emergente. */
+  const [rechazada, setRechazada] = useState<DonationData | null>(null);
   const grupo = useId();
   const {
     register,
@@ -47,22 +70,33 @@ export function DonatePage() {
     formState: { errors },
   } = useForm<DonationInput, unknown, DonationData>({
     resolver: zodResolver(donationSchema),
-    defaultValues: { amount: '20', donorName: '', donorEmail: '', isAnonymous: false, message: '' },
+    defaultValues: {
+      amount: '20',
+      donorName: '',
+      donorSurname: '',
+      donorEmail: '',
+      donorPhone: '',
+      isAnonymous: false,
+      message: '',
+      taxCertificate: false,
+      donorCountry: t('donate.defaultCountry'),
+    },
   });
 
-  // 2: un adoptante encuentra su nombre y su email ya escritos (si no los ha cambiado).
+  // 2: un adoptante encuentra sus datos ya escritos (si no los ha cambiado).
   useEffect(() => {
     if (!user || isWorkerRole(user.role)) return;
-    if (!getValues('donorName')) setValue('donorName', `${user.firstName} ${user.lastName}`);
+    if (!getValues('donorName')) setValue('donorName', user.firstName);
+    if (!getValues('donorSurname')) setValue('donorSurname', user.lastName);
     if (!getValues('donorEmail')) setValue('donorEmail', user.email);
   }, [user, getValues, setValue]);
 
   const donar = useMutation({
     mutationFn: ({ datos, outcome }: { datos: DonationData; outcome: SimulatedOutcome }) =>
       donationsApi.donate({ ...datos, simulatedOutcome: outcome, ...conIdioma('language') }),
-    onSuccess: (resultado) => {
+    onSuccess: (resultado, { datos }) => {
       if (resultado.status === 'completed') setHecha(resultado);
-      else setFallo(t('donate.failed'));
+      else setRechazada(datos);
     },
     onError: (error) => {
       applyFieldErrors(error, setError, CAMPOS);
@@ -75,7 +109,7 @@ export function DonatePage() {
     return (
       <div className={`container ${styles.thanks}`}>
         <h1 className="visually-hidden">{t('donate.title')}</h1>
-        <Alert type="success">{hecha.donorEmail ? t('donate.thanksEmail') : t('donate.thanksNoEmail')}</Alert>
+        <Alert type="success">{t('donate.thanksEmail')}</Alert>
         <ReceiptCard
           titleAs="h2"
           concept={t('contributions.donation')}
@@ -84,12 +118,25 @@ export function DonatePage() {
           reference={hecha.reference}
           paidAt={hecha.paidAt ?? ''}
           refundedAt={null}
-          payer={{ fullName: hecha.donorName, email: hecha.donorEmail }}
+          payer={{
+            fullName: [hecha.donorName, hecha.donorSurname].filter(Boolean).join(' ') || null,
+            email: hecha.donorEmail,
+          }}
         />
         <div className={styles.thanksActions}>
-          <Button variant="outline" icon={faPrint} onClick={() => window.print()}>
-            {t('donate.printReceipt')}
-          </Button>
+          <ButtonLink
+            variant="outline"
+            icon={faFilePdf}
+            to={urlRecibo(hecha)}
+            reloadDocument
+            target="_blank"
+            rel="noopener"
+          >
+            {t('donate.viewReceipt')}
+          </ButtonLink>
+          <ButtonLink variant="outline" icon={faDownload} to={`${urlRecibo(hecha)}&download=1`} reloadDocument download>
+            {t('donate.downloadReceipt')}
+          </ButtonLink>
           <Button
             variant="ghost"
             onClick={() => {
@@ -105,6 +152,7 @@ export function DonatePage() {
   }
 
   const importe = watch('amount');
+  const conCertificado = watch('taxCertificate');
   const sugerida = SUGERIDAS.find((s) => s === importe.trim());
 
   return (
@@ -164,12 +212,20 @@ export function DonatePage() {
               {...register('amount')}
             />
           </fieldset>
-          <TextField
-            label={t('donate.name')}
-            autoComplete="name"
-            error={errors.donorName?.message}
-            {...register('donorName')}
-          />
+          <div className={styles.row}>
+            <TextField
+              label={t('donate.name')}
+              autoComplete="given-name"
+              error={errors.donorName?.message}
+              {...register('donorName')}
+            />
+            <TextField
+              label={t('donate.surname')}
+              autoComplete="family-name"
+              error={errors.donorSurname?.message}
+              {...register('donorSurname')}
+            />
+          </div>
           <TextField
             label={t('donate.email')}
             type="email"
@@ -178,14 +234,65 @@ export function DonatePage() {
             error={errors.donorEmail?.message}
             {...register('donorEmail')}
           />
-          {/* CU-39 A2: sin email ni cuenta de adoptante no hay forma de avisarle (p. ej., de una devolución). */}
-          {(!user || isWorkerRole(user.role)) && <p className={styles.notice}>{t('donate.noNotices')}</p>}
+          <TextField
+            label={t('donate.phone')}
+            type="tel"
+            autoComplete="tel-national"
+            help={t('donate.phoneHelp')}
+            error={errors.donorPhone?.message}
+            {...register('donorPhone')}
+          />
           <Checkbox label={t('donate.anonymous')} {...register('isAnonymous')} />
           <TextAreaField
             label={t('donate.message')}
             rows={3}
             error={errors.message?.message}
             {...register('message')}
+          />
+          <Checkbox label={t('donate.taxCertificate')} {...register('taxCertificate')} />
+          {conCertificado && (
+            <fieldset className={styles.tax}>
+              <legend className={styles.legend}>{t('donate.taxTitle')}</legend>
+              <p className={styles.help}>{t('donate.taxHelp')}</p>
+              <TextField
+                label={t('donate.taxId')}
+                autoComplete="off"
+                error={errors.donorTaxId?.message}
+                {...register('donorTaxId')}
+              />
+              <TextField
+                label={t('donate.address')}
+                autoComplete="street-address"
+                error={errors.donorAddress?.message}
+                {...register('donorAddress')}
+              />
+              <div className={styles.row}>
+                <TextField
+                  label={t('donate.postalCode')}
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  error={errors.donorPostalCode?.message}
+                  {...register('donorPostalCode')}
+                />
+                <TextField
+                  label={t('donate.province')}
+                  autoComplete="address-level1"
+                  error={errors.donorProvince?.message}
+                  {...register('donorProvince')}
+                />
+              </div>
+              <TextField
+                label={t('donate.country')}
+                autoComplete="country-name"
+                error={errors.donorCountry?.message}
+                {...register('donorCountry')}
+              />
+            </fieldset>
+          )}
+          <Checkbox
+            label={<Trans i18nKey="auth.register.privacy" components={[<Link key="privacidad" to="/privacy" />]} />}
+            error={errors.acceptPrivacy?.message}
+            {...register('acceptPrivacy')}
           />
           <Button type="submit" block>
             {t('donate.continue')}
@@ -202,6 +309,15 @@ export function DonatePage() {
           if (aPagar) donar.mutate({ datos: aPagar, outcome });
         }}
         onClose={() => setAPagar(null)}
+      />
+      <PaymentFailedModal
+        open={rechazada !== null}
+        message={t('donate.failed')}
+        onRetry={() => {
+          setAPagar(rechazada);
+          setRechazada(null);
+        }}
+        onClose={() => setRechazada(null)}
       />
     </div>
   );

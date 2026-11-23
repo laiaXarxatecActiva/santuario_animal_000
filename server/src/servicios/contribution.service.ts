@@ -39,6 +39,8 @@ export function createContributionService({ db }: { db: Pool }) {
       periodStart: registro.periodStart,
       periodEnd: registro.periodEnd,
       payer: { fullName: `${user.firstName} ${user.lastName}`, email: user.email },
+      // CU-05: solo si pidió el certificado para desgravar.
+      ...(registro.fiscal ? { fiscal: registro.fiscal } : {}),
     };
   }
 

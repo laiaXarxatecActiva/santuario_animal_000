@@ -167,7 +167,6 @@ describe('CU-03 Consultar la ficha pública de un animal', () => {
       approxAgeYears: 12,
       adopterCount: 2,
       isAdoptable: true,
-      breed: null,
     });
     expect(rufo.arrivalDate).toMatch(FECHA);
     expect(rufo.approxBirthDate).toMatch(FECHA);
@@ -348,5 +347,16 @@ describe('CU-01 Consultar la página de inicio', () => {
     await t.pool.query('UPDATE animals SET is_published = FALSE');
     const res = await request(t.app).get('/api/home');
     expect(res.body).toEqual({ shelteredCount: 0, featured: [] });
+  });
+});
+
+describe('CU-03 La ficha pública no tiene «Raza»', () => {
+  it('la especie distingue a cada animal; no se devuelve ninguna raza', async () => {
+    // El caso anterior despublica todos los animales: se vuelve a publicar a Rufo.
+    await t.pool.query('UPDATE animals SET is_published = TRUE WHERE id = 1');
+    const res = await request(t.app).get('/api/animals/1');
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('breed');
+    expect(res.body.species).toMatchObject({ name: 'Buitre leonado' });
   });
 });

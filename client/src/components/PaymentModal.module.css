@@ -18,3 +18,17 @@
   font-size: var(--font-size-h3);
   font-weight: 600;
 }
+
+/* Tarjeta del pago simulado: titular y número a todo el ancho; caducidad y CVC en una fila. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}

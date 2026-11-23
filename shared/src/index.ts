@@ -19,6 +19,7 @@ export * from './schemas/notification.schema.js';
 export * from './schemas/pagination.schema.js';
 export * from './schemas/profile.schema.js';
 export * from './schemas/vet-record.schema.js';
+export * from './schemas/simulated-card.schema.js';
 export type * from './types/activity.js';
 export type * from './types/adoption.js';
 export type * from './types/api.js';

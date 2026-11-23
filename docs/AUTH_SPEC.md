@@ -1,6 +1,6 @@
 # Autenticación, sesiones y seguridad (AUTH_SPEC)
 
-Política de seguridad del proyecto: **qué** se exige, **dónde** está implementado y **qué tests** lo comprueban. Sustituye al antiguo `AUTHENTICATION_SESSIONS_AND_SECURITY.md`. Las decisiones con su motivo también aparecen en `TECH_SPEC.md` (§9 Autenticación y autorización, §10 API y §13 Requisitos no funcionales) y en los casos de uso CU-07 a CU-11, CU-24, CU-25, CU-35, CU-36 y CU-48 de `USE_CASES.md`. Si este documento y la especificación no coinciden, hay un error: se corrigen los dos en el mismo commit.
+Política de seguridad del proyecto: **qué** se exige, **dónde** está implementado y **qué tests** lo comprueban. Sustituye al antiguo `AUTHENTICATION_SESSIONS_AND_SECURITY.md`. Las decisiones con su motivo también aparecen en `TECH_SPEC.md` (§9 Autenticación y autorización, §10 API y §13 Requisitos no funcionales) y en los casos de uso CU-07 a CU-11, CU-24, CU-25, CU-35, CU-36, CU-48 y CU-51 de `USE_CASES.md`. Si este documento y la especificación no coinciden, hay un error: se corrigen los dos en el mismo commit.
 
 Términos que se usan en todo el documento:
 
@@ -24,6 +24,8 @@ Este documento nació como una lista de mejoras. Algunas propuestas se aplicaron
 | `register` responde 201 con el usuario | Descartada: responde **202 con un mensaje**, siempre el mismo | Si respondiera distinto cuando el email ya existe, cualquiera podría averiguar quién tiene cuenta |
 | Login: 10 intentos cada 15 minutos por IP | Descartada: **5 fallos por IP y email** y **50 por IP** cada 15 minutos | Es más estricto, y además no permite bloquear la cuenta de otra persona |
 | Mensajes de error genéricos («Sin permiso», «Datos no válidos») | Descartada: se mantienen los mensajes actuales (§9) | Explican mejor qué pasa sin revelar nada sensible |
+| Recibo en PDF de una donación sin cuenta (CU-05) | **Aplicada** como ruta pública `GET /api/donations/:id/receipt.pdf?token=`, autorizada por la propietaria del proyecto | El token es una firma HMAC-SHA256 de `donation-receipt:<id>` con `SESSION_SECRET`: no se puede adivinar, no sirve para otra donación y no hay que guardar nada nuevo en la base de datos. Se compara en tiempo constante |
+| El administrador cambia la contraseña de un trabajador (CU-51) | **Aplicada** como envío de un enlace: el administrador **nunca escribe ni ve** la contraseña | Se reutiliza el enlace de recuperación (`password_reset`, 30 minutos, un solo uso, anula los anteriores). Al usarlo se cierran las sesiones del trabajador. Solo para trabajadores activos distintos del propio administrador; queda en el registro de actividad sin el enlace. Se descartó que el administrador escribiera la contraseña porque llegaría a conocer la de otra persona |
 | La cookie caduca con `expires` en lugar de `maxAge` | Descartada: se usa `maxAge` | `express-session` calcula con `maxAge` la misma fecha de caducidad (`Expires`) que recibe el navegador. Las dos formas son equivalentes |
 
 ## 2. Reglas para quien trabaje en el código (personas o agentes)
@@ -68,6 +70,7 @@ En la columna «Acceso», «autenticado» significa que hace falta haber iniciad
 | PUT | `/api/me/password` | Autenticado (con límite) | `204`; cierra las demás sesiones | CU-24 |
 | DELETE | `/api/me` | Adoptante (con límite y contraseña) | `204`; anonimiza y cierra todas las sesiones | CU-25 |
 | POST | `/api/admin/users/:id/logout-all` | **Solo administrador** | `200 { closedSessions }` | CU-48 |
+| POST | `/api/admin/users/:id/password-reset` | **Solo administrador** | `204`; envía al trabajador el enlace para elegir otra contraseña. Adoptante, cuenta desactivada o propia: 422 `PASSWORD_RESET_NOT_ALLOWED` | CU-51 |
 
 No existe un «cerrar sesión en todos mis dispositivos» al alcance de cualquier usuario. Quien sospeche que alguien usa su cuenta cambia la contraseña (CU-24), que cierra sus demás sesiones, o pide ayuda al santuario (CU-48).
 
@@ -207,6 +210,13 @@ Sirven para verificar el email, recuperar la contraseña e invitar a un trabajad
 - El enlace lleva `&invite=1` solo para que la página diga «Elige tu contraseña». Ese parámetro no da ningún permiso.
 - Reenviarla anula la anterior. Solo se puede si el trabajador está activo y nunca ha entrado.
 
+**Enlace para que un trabajador cambie su contraseña** (CU-51):
+
+- Solo lo envía un administrador, a un trabajador (cuidador u otro administrador) activo y que no sea él mismo. Su propia contraseña se cambia en «Mi perfil» (CU-24); los adoptantes usan «¿Has olvidado tu contraseña?» (CU-10).
+- Es un token `password_reset` como el de CU-10: 30 minutos, un solo uso, y anula los enlaces de recuperación anteriores. Se usa en `POST /api/auth/reset-password`, que cierra todas las sesiones del trabajador.
+- La contraseña actual sigue sirviendo hasta que el trabajador elige la nueva. El administrador nunca la ve.
+- Queda en el registro de actividad como `{ resetLinkSent: true }`: `limpiarDetalles` descarta cualquier clave que contenga «password» o «token».
+
 **Desactivar una cuenta** (CU-35):
 
 - Solo lo hace un administrador, y nunca sobre su propia cuenta.
@@ -248,7 +258,7 @@ Los formularios públicos de donación y contacto envían emails a direcciones q
   4. `requireVerifiedEmail` responde 403 si el email no está verificado.
 - Una sesión válida no da permiso para todo.
 - Cómo se declara el acceso:
-  - **Rutas públicas:** solo las de `public.routes.ts`, `GET /api/auth/me` y `POST /api/auth/{register,login,verify-email,forgot-password,reset-password}`, además de los formularios de donación y contacto (`donation.routes.ts`, CU-05 y CU-06).
+  - **Rutas públicas:** solo las de `public.routes.ts`, `GET /api/auth/me` y `POST /api/auth/{register,login,verify-email,forgot-password,reset-password}`, además de los formularios de donación y contacto (`donation.routes.ts`, CU-05 y CU-06) y del recibo en PDF de una donación con la firma de su enlace (`GET /api/donations/:id/receipt.pdf?token=`, en `document.routes.ts`, CU-05).
   - **Panel** (`/api/admin/*`): se aplica `requireRole('caretaker', 'admin')` a todo el router, y `requireRole('admin')` a las rutas solo de administrador (también CU-48).
   - **Resto de routers** (`/api/me/*`, adopciones, perfil): cada ruta declara su `requireAuth`, `requireRole` o `requireVerifiedEmail` según la matriz de TECH_SPEC §9.5. Una ruta nueva sin esa declaración es pública, así que se revisa en cada cambio y se cubre con un test de 401/403.
   - **No se añade ninguna ruta pública nueva sin autorización.**
@@ -335,6 +345,9 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
   - El PDF se genera al momento, no se guarda y se envía con `Cache-Control: no-store`.
   - El nombre del archivo se limpia (`nombreArchivo`: solo letras, números y guiones) antes de ponerlo en `Content-Disposition`.
   - La foto del certificado se lee con `StorageService.read`, que no admite rutas fuera de `uploads/`.
+  - Excepción (CU-05): el recibo de una donación se puede pedir sin sesión con `?token=`, la firma HMAC-SHA256 de `donation-receipt:<id>` con `SESSION_SECRET` (`firmar` y `firmaValida` en `server/src/utils/tokens.ts`; comparación en tiempo constante). Sin token, con uno que no es el suyo o si la donación falló, responde 404. El enlace solo lo reciben quien dona (en la respuesta y en su email).
+- **Pago simulado:** la ventana pide una tarjeta, pero solo comprueba su formato en el navegador. Los datos de la tarjeta nunca se envían al servidor, no aparecen en ninguna petición y no se guardan (TECH_SPEC §11.1).
+- **Datos del donante (CU-05):** apellidos, teléfono y, solo si pide el certificado, NIF y dirección. Al anonimizar una cuenta (CU-25) se vacían todos.
 - **Idioma:**
   - No añade rutas.
   - `PATCH /api/me/profile` y `POST /api/auth/register` aceptan `preferredLanguage`, y `POST /api/donations` acepta `language`. Siempre se validan con `z.enum(LANGUAGES)` (solo `es`, `ca` o `en`).
@@ -370,6 +383,7 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
 | La invitación sirve para elegir la contraseña, caduca en 24 horas y no la anula pedir la recuperación | `server/tests/auth.routes.test.ts`, `server/tests/token.test.ts`, `server/tests/admin-users.routes.test.ts` (CU-36) |
 | Desactivar una cuenta cierra sus sesiones; no se puede desactivar la propia ni dejar sin administrador activo | `server/tests/admin-users.routes.test.ts`, `server/tests/usuarios-admin.test.ts` (CU-35) |
 | Cerrar las sesiones de un usuario: solo el administrador, con motivo, solo las de ese usuario, la propia se mantiene y queda en el registro de actividad | `server/tests/admin-user-sessions.routes.test.ts`, `client/tests/UserAdminPage.test.tsx` (CU-48) |
+| Enlace para que un trabajador cambie su contraseña: solo el administrador, solo a trabajadores activos que no sean él, 30 minutos, anula el anterior, cierra las sesiones al usarse y queda en el registro de actividad | `server/tests/admin-users.routes.test.ts`, `server/tests/usuarios-admin.test.ts`, `server/tests/admin.routes.test.ts`, `client/tests/UserAdminPage.test.tsx` (CU-51) |
 | El cambio de contraseña cierra las demás sesiones | `server/tests/profile.routes.test.ts` (CU-24) |
 | Eliminar la cuenta pide la contraseña, solo la puede usar un adoptante, anonimiza los datos y cierra todas sus sesiones | `server/tests/account-deletion.routes.test.ts` (CU-25) |
 | Rutas privadas sin sesión o sin rol | `server/tests/admin.routes.test.ts`, `server/tests/auth.middleware.test.ts` y los tests de cada router |
@@ -379,6 +393,8 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
 | Las respuestas no exponen campos privados | `server/tests/auth.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | Los logs ocultan datos sensibles | `server/tests/logger.test.ts` |
 | Certificado y recibos en PDF: solo adoptantes, solo los propios (ajeno → 404), sin caché | `server/tests/documents.routes.test.ts` (CU-22, CU-19), `server/tests/documentos.test.ts` |
+| Recibo de una donación sin cuenta: solo con la firma de esa donación (otra, ninguna o una fallida → 404) | `server/tests/donations.routes.test.ts`, `server/tests/utils/tokens.test.ts` (CU-05) |
+| Los datos de la tarjeta del pago simulado no se pasan a la API | `client/tests/PaymentModal.test.tsx` |
 | El idioma solo admite `es`, `ca` o `en`; emails, avisos y PDF en el idioma de cada persona | `server/tests/idioma.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
 

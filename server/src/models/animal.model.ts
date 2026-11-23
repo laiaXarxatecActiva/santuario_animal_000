@@ -14,7 +14,6 @@ export interface PublicAnimal {
   id: number;
   name: string;
   species: SpeciesSummary;
-  breed: string | null;
   sex: AnimalSex;
   status: AnimalStatus;
   approxBirthDate: string | null;
@@ -35,7 +34,6 @@ interface AnimalRow extends CoverRow {
   species_id: number;
   species_name: string;
   species_scientific_name: string | null;
-  breed: string | null;
   sex: AnimalSex;
   status: AnimalStatus;
   approx_birth_date: string | null;
@@ -53,7 +51,6 @@ export function mapRow(row: AnimalRow): PublicAnimal {
     id: row.id,
     name: row.name,
     species: { id: row.species_id, name: row.species_name, scientificName: row.species_scientific_name },
-    breed: row.breed,
     sex: row.sex,
     status: row.status,
     approxBirthDate: row.approx_birth_date,
@@ -73,7 +70,7 @@ export function mapRow(row: AnimalRow): PublicAnimal {
 // adopciones activas (TECH_SPEC §8.5).
 const SELECT_PUBLICO = `
   SELECT a.id, a.name, a.species_id, s.name AS species_name, s.scientific_name AS species_scientific_name,
-         a.breed, a.sex, a.status, a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament,
+         a.sex, a.status, a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament,
          a.special_needs, a.health_summary, a.is_adoptable, ac.adopter_count,
          ${COLUMNAS_PORTADA}
     FROM animals a

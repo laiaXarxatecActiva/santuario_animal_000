@@ -1,4 +1,4 @@
-import { idParamsSchema, pdfQuerySchema } from '@sanctuary/shared';
+import { idParamsSchema, pdfQuerySchema, publicReceiptQuerySchema } from '@sanctuary/shared';
 import type { RequestHandler, Response } from 'express';
 import { UnauthorizedError } from '../errors/app-error.js';
 import { validated } from '../middlewares/validate.js';
@@ -34,5 +34,9 @@ export function createDocumentController(service: DocumentService) {
   const donationReceipt: RequestHandler = async (req, res) => {
     enviarPdf(res, await service.donationReceipt(userId(req), id(res)));
   };
-  return { certificate, paymentReceipt, donationReceipt };
+  const publicDonationReceipt: RequestHandler = async (_req, res) => {
+    const { token, lang } = validated(res, 'query', publicReceiptQuerySchema);
+    enviarPdf(res, await service.publicDonationReceipt(id(res), token, lang));
+  };
+  return { certificate, paymentReceipt, donationReceipt, publicDonationReceipt };
 }

@@ -98,7 +98,7 @@ Debajo de la cabecera, cuando procede (de tipo `warning` o `info`; no desaparece
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-En móvil, las columnas se apilan. En el panel de gestión no hay pie.
+En móvil, las columnas se apilan. El pie no está fijo en pantalla: va tras el contenido, pero si la página tiene poco contenido queda pegado a la parte inferior de la ventana. En el panel de gestión no hay pie.
 
 ### 2.4 Cookies
 
@@ -282,20 +282,31 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 │ ( 5 € ) ( 10 € ) (•20 €) ( 50 € ) (Otra) │   ← píldoras seleccionables
 │ [ 20,00 € ______ ]   Sin importe mínimo  │
 │                                          │
-│ Nombre (opcional)    [______________]    │
-│ Email (opcional)     [______________]    │
-│ Para enviarte el recibo.                 │
+│ Nombre [__________] Apellidos [________] │
+│ Email [______________________________]   │
+│ Para enviarte el recibo y avisarte…      │
+│ Teléfono (opcional) [________________]   │
 │ [☐] Quiero que mi donación sea anónima   │
 │ Mensaje (opcional)                       │
 │ [__________________________________]     │
+│ [☐] Quiero el certificado para desgravar │
+│ ┌ Datos para el certificado ──────────┐  │   ← solo con la casilla marcada
+│ │ NIF o NIE · Dirección               │  │
+│ │ Código postal · Provincia · País    │  │
+│ └─────────────────────────────────────┘  │
+│ [☐] He leído y acepto la política de     │
+│     privacidad.                          │
 │                                          │
 │ [■ Continuar con el pago]                │
 ╰──────────────────────────────────────────╯
 ```
 
-- Con sesión de adoptante, el nombre y el email aparecen rellenos.
-- «Continuar» abre la **ventana de pago simulado** (`DESIGN_SYSTEM.md` §8.4).
-- **Resultado correcto:** página de agradecimiento con aviso `success` («Te hemos enviado el recibo por email» o, sin email, «Puedes imprimir el recibo desde esta página»), el recibo imprimible (DESIGN_SYSTEM §8.9) y [Imprimir recibo] [Hacer otra donación]. **Resultado fallido:** vuelta al formulario con aviso `error` «El pago no se ha completado» y los datos conservados.
+- Obligatorios: nombre, apellidos, email y la casilla de privacidad. El email hace falta aunque la donación sea anónima: con él se envía el recibo y se avisa de cualquier cambio (por ejemplo, una devolución). El teléfono es opcional (móvil español de 9 dígitos, como en el perfil).
+- Nombre y apellidos van en dos columnas desde `sm`, igual que código postal y provincia; en móvil, una columna.
+- **Certificado para desgravar:** al marcar la casilla aparece un grupo con borde fino y `--radius-md` («Datos para el certificado», con una ayuda en `--color-text-muted`): NIF o NIE, dirección, código postal, provincia y país (relleno con «España»). Todos son obligatorios; el NIF se comprueba con su letra y el código postal debe ser español. Con estos datos, el PDF se titula «Certificado de donación» e incluye el NIF y la dirección.
+- Con sesión de adoptante, el nombre, los apellidos y el email aparecen rellenos.
+- «Continuar» abre la **ventana de pago simulado**, que pide una tarjeta (`DESIGN_SYSTEM.md` §8.4).
+- **Resultado correcto:** página de agradecimiento con aviso `success` («Te hemos enviado el recibo por email»), el recibo en pantalla (DESIGN_SYSTEM §8.9) y [Ver recibo] (abre el PDF en otra pestaña, `file-pdf`) [Descargar recibo] (`download`) [Hacer otra donación]. Los dos enlaces usan la firma que devuelve la donación (`GET /api/donations/:id/receipt.pdf?token=…`), así que también funcionan sin cuenta; el email lleva el mismo enlace. **Resultado fallido:** ventana emergente «Pago rechazado» (DESIGN_SYSTEM §8.4) con «El pago no se ha completado. Puedes intentarlo de nuevo.» y [Ahora no] [Volver a intentarlo]; al cerrarla, el formulario conserva los datos.
 - Un trabajador puede donar, pero el formulario no se rellena con su cuenta y la donación no se vincula a ella (CU-05 6a).
 
 ### 3.6 Sobre el santuario y contacto (`/about`) — CU-06
@@ -379,6 +390,14 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   ╰───────────────╯ ┗━━━━━━━━━━━━━━━━┛ ╰───────────────╯
   Puedes cambiar de plan o darte de baja cuando quieras.
 
+  Forma de pago
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ ╭─────────────────────────────╮
+  ┃ (•) Automático              ┃ │ ( ) Manual                  │   ← CU-49; mismas tarjetas,
+  ┃ Cobramos la cuota cada mes  ┃ │ Te avisamos 7 días antes de │     en dos columnas
+  ┃ sin que tengas que hacer…   ┃ │ cada cuota y la pagas tú…   │
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ ╰─────────────────────────────╯
+  Puedes cambiarla cuando quieras desde «Mis animales».
+
   ╭─────────────╮  Resumen
   │ FOTO Rufo   │  Rufo · Plan Usual
   ╰─────────────╯  5,00 € al mes. Primer cobro hoy.
@@ -390,7 +409,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
 
 - Los casos especiales (email sin verificar, ya lo adopta, trabajador) se muestran como aviso en línea en lugar del formulario (ver CU-13).
 - **Pago correcto:** se va a «Mis animales» con aviso `success` «¡Ya adoptas a Rufo! Te hemos enviado un email de bienvenida».
-- **Pago fallido:** se queda en esta página con aviso `error` y la opción de reintentar.
+- **Pago fallido:** se queda en esta página y se abre la ventana emergente «Pago rechazado» (DESIGN_SYSTEM §8.4) con el plazo de 7 días y [Volver a intentarlo]. Al cerrarla, la página muestra el aviso de la adopción pendiente con [Pagar ahora]. En «Mis animales» («Pagar ahora», CU-14) el pago rechazado se avisa igual.
 
 ### 4.2 Mis animales (`/my-animals`) — CU-15
 
@@ -404,7 +423,8 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │ │ FOTO    │  Buitre leonado                                              │
   │ │         │  Plan Usual · 5,00 €/mes · desde el 5 sep 2025               │
   │ ╰─────────╯  róxima noticia prevista: hacia el 24 nov                │
-  │              [■ Ver su ficha]  [ Cambiar plan ]  [ Certificado ]  ⋯       │
+  │              Pago automático cada mes                                    │
+  │   [■ Ver su ficha]  [ Certificado ]  [ Descargar certificado ]  ⋯       │
   ╰──────────────────────────────────────────────────────────────────────────╯
   ╭──────────────────────────────────────────────────────────────────────────╮
   │ ╭─────────╮  Lupe                                  [Pausada]             │
@@ -420,11 +440,14 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
 
 **Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Darme de baja); el botón principal va a todo el ancho.
 
-**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, descarga `certificado-<animal>.pdf`) y [Ver] (fantasma, lo abre en otra pestaña). En las demás no aparece (1a).
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: primero [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña) y a su lado [Descargar certificado] (contorno, icono `download`, descarga `certificado-<animal>.pdf`). En las demás no aparece (1a).
 
+**Forma de pago (CU-49):** las adopciones abiertas sin baja muestran «Pago automático cada mes» o «Pago manual: te avisaremos de cada cuota» (`--color-text-muted`). «Forma de pago» en el menú «⋯» abre un desplegable en la tarjeta, como «Cambiar plan»: «El cambio vale desde la próxima cuota.», las dos opciones (la actual marcada) y [■ Guardar] [Cancelar]. Con pago manual y la cuota a 7 días o menos, la tarjeta muestra un aviso `warning` «La cuota de Rufo vence el [fecha]. Puedes pagarla hasta el [fecha + 6] sin que la adopción se pause.» con [■ Pagar la cuota], que abre el pago simulado.
+
+- Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
 - «Darme de baja» y «Cambiar plan» están en el menú «⋯» en escritorio también, para no saturar la tarjeta.
 - **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
-- El menú «⋯» solo aparece si hay acciones: «Cambiar plan» en las activas sin baja; «Darme de baja» en las activas sin baja, pausadas y pendientes.
+- El menú «⋯» solo aparece si hay acciones: «Cambiar plan» en las activas sin baja; «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes.
 - Con baja solicitada: aviso `info` «Activa hasta el 29 nov. No se te volverá a cobrar».
 - Sin adopciones: estado vacío + [■ Ver animales].
 
@@ -460,6 +483,7 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
   │ …                                                      │
 ```
 
+- La miniatura y el nombre del animal de cada actualización son un enlace a su ficha (`/my-animals/:animalId`); al pasar el ratón, el nombre se subraya en `--color-primary`.
 - Las actualizaciones no leídas tienen la insignia «Nuevo» y el borde de la tarjeta en terracota. Se marcan como leídas al verse en pantalla.
 - Se cargan más al llegar al final, con un botón [Cargar más] (no carga infinita automática, para que se pueda llegar al pie).
 
@@ -617,7 +641,7 @@ Encabezado con el nombre, las insignias de estado y las acciones [Ver en la web 
 
 | Pestaña | Contenido |
 | --- | --- |
-| **Datos** | Formulario: en escritorio, dos columnas (identificación a la izquierda: nombre, especie, raza, sexo, fechas; publicación a la derecha: interruptores «Publicado» y «Admite adopciones»); debajo, a todo el ancho, las áreas de texto (historia, carácter, necesidades, resumen de salud). En móvil, una columna. [■ Guardar cambios] fijo al pie de la pestaña. |
+| **Datos** | Formulario: en escritorio, dos columnas (identificación a la izquierda: nombre, especie, sexo, fechas; publicación a la derecha: interruptores «Publicado» y «Admite adopciones»); debajo, a todo el ancho, las áreas de texto (historia, carácter, necesidades, resumen de salud). En móvil, una columna. [■ Guardar cambios] fijo al pie de la pestaña. |
 | **Fotos** | Zona de subida (arrastrar o [Elegir archivos]) y cuadrícula de miniaturas reordenables. Cada miniatura muestra la visibilidad, una estrella para la portada y los botones de editar y borrar. En móvil, el orden se cambia con los botones ↑ ↓ en lugar de arrastrar. |
 | **Actualizaciones** | Lista de las actualizaciones del animal + [■ Nueva actualización] |
 | **Veterinario** (Fase 3) | Tabla de registros + gráfico de peso + [■ Nuevo registro] |
@@ -662,7 +686,7 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 
 | Pantalla | Descripción |
 | --- | --- |
-| Detalle de usuario | Datos y estado + secciones «Adopciones» y «Aportaciones» una debajo de otra (adoptantes) o «Actividad» (trabajadores, Fase 3). Acciones: activar/desactivar (con confirmación; si es un adoptante con adopciones abiertas, avisa de que se darán de baja), cambiar rol (trabajadores activos), reenviar invitación (trabajadores que nunca han entrado) y «Cerrar sus sesiones» (CU-48, cuentas activas: botón `outline` que abre una ventana con la explicación, el campo «Motivo» obligatorio y «Cerrar sesiones»; en la propia ficha añade «Se cerrarán tus demás sesiones; esta seguirá abierta»; al terminar, aviso `success` «Se han cerrado N sesiones»). El administrador no ve «Desactivar» en su propia ficha. |
+| Detalle de usuario | Datos y estado + secciones «Adopciones» y «Aportaciones» una debajo de otra (adoptantes) o «Actividad» (trabajadores, Fase 3). Acciones: activar/desactivar (con confirmación; si es un adoptante con adopciones abiertas, avisa de que se darán de baja), cambiar rol (trabajadores activos), reenviar invitación (trabajadores que nunca han entrado) y «Cerrar sus sesiones» (CU-48, cuentas activas: botón `outline` que abre una ventana con la explicación, el campo «Motivo» obligatorio y «Cerrar sesiones»; en la propia ficha añade «Se cerrarán tus demás sesiones; esta seguirá abierta»; al terminar, aviso `success` «Se han cerrado N sesiones») y «Enviar enlace de contraseña» (CU-51, trabajadores activos que no sean el propio administrador: botón `outline` que abre una ventana de confirmación con la explicación y [Cancelar] [■ Enviar enlace]; al terminar, aviso `success` «Hemos enviado a [email] un enlace para cambiar su contraseña.»). El administrador no ve «Desactivar» ni «Enviar enlace de contraseña» en su propia ficha. |
 | Nuevo trabajador | Formulario corto: nombre, apellidos, email, teléfono, rol (cuidador/administrador). Tras crearlo: aviso `success` «Hemos enviado una invitación a…». |
 | Detalle de adopción | Datos, notas internas, tabla de pagos y acciones (pausar, reanudar, cancelar), cada una con su ventana de confirmación y nota obligatoria |
 | Nueva adopción manual | Adoptante (buscador), animal (solo adoptables), plan, método del primer pago, notas |

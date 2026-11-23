@@ -1,5 +1,6 @@
 import type {
   AdminDonationListItemDto,
+  DonorTaxData,
   AdminDonationSort,
   DonationResultDto,
   ManualPaymentMethod,
@@ -9,6 +10,7 @@ import type {
 import { escaparLike, sinTildes } from '../db/busqueda.js';
 import type { Queryable } from '../db/pool.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
+import { COLUMNAS_FISCALES, mapReceiptRow, type ReceiptRecord, type ReceiptRow } from './contribution.model.js';
 
 // CU-05: donaciones. Nunca se borran; un reintento crea otra.
 
@@ -21,11 +23,13 @@ interface DonationRow {
   paid_at: Date | null;
   failure_reason: string | null;
   donor_name: string | null;
+  donor_surname: string | null;
   donor_email: string | null;
   is_anonymous: boolean;
 }
 
-export function mapRow(row: DonationRow): DonationResultDto {
+/** El token del recibo no se guarda: lo añade el servicio. */
+export function mapRow(row: DonationRow): Omit<DonationResultDto, 'receiptToken'> {
   return {
     id: row.id,
     status: row.status,
@@ -35,6 +39,7 @@ export function mapRow(row: DonationRow): DonationResultDto {
     paidAt: row.paid_at?.toISOString() ?? null,
     failureReason: row.failure_reason,
     donorName: row.donor_name,
+    donorSurname: row.donor_surname,
     donorEmail: row.donor_email,
     isAnonymous: row.is_anonymous,
   };
@@ -43,7 +48,11 @@ export function mapRow(row: DonationRow): DonationResultDto {
 export interface NewDonation {
   userId: number | null;
   donorName: string | null;
+  donorSurname: string | null;
   donorEmail: string | null;
+  donorPhone: string | null;
+  /** CU-05: datos para el certificado de donación, si lo pidió. */
+  fiscal: DonorTaxData | null;
   amount: string;
   isAnonymous: boolean;
   message: string | null;
@@ -54,13 +63,15 @@ export interface NewDonation {
 }
 
 /** Donación de la pasarela simulada, con el resultado del cobro. */
-export async function create(db: Queryable, d: NewDonation): Promise<DonationResultDto> {
+export async function create(db: Queryable, d: NewDonation): Promise<Omit<DonationResultDto, 'receiptToken'>> {
   const { rows } = await db.query<DonationRow>(
     `INSERT INTO donations (user_id, donor_name, donor_email, amount, is_anonymous, message,
-                            method, status, payment_reference, failure_reason, paid_at)
-     VALUES ($1, $2, $3, $4, $5, $6, 'simulated', $7, $8, $9, $10)
+                            method, status, payment_reference, failure_reason, paid_at,
+                            donor_surname, donor_phone, tax_certificate, donor_tax_id, donor_address,
+                            donor_postal_code, donor_province, donor_country)
+     VALUES ($1, $2, $3, $4, $5, $6, 'simulated', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
      RETURNING id, status, amount, method, payment_reference, paid_at, failure_reason,
-               donor_name, donor_email, is_anonymous`,
+               donor_name, donor_surname, donor_email, is_anonymous`,
     [
       d.userId,
       d.donorName,
@@ -72,14 +83,56 @@ export async function create(db: Queryable, d: NewDonation): Promise<DonationRes
       d.reference,
       d.failureReason,
       d.paidAt,
+      d.donorSurname,
+      d.donorPhone,
+      d.fiscal !== null,
+      d.fiscal?.taxId ?? null,
+      d.fiscal?.address ?? null,
+      d.fiscal?.postalCode ?? null,
+      d.fiscal?.province ?? null,
+      d.fiscal?.country ?? null,
     ],
   );
   return mapRow(rows[0] as DonationRow);
 }
 
+/** CU-05: lo que necesita el recibo de una donación hecha sin cuenta. */
+export interface PublicReceiptRecord extends ReceiptRecord {
+  donorName: string | null;
+  donorSurname: string | null;
+  donorEmail: string | null;
+}
+
+export async function findReceiptById(db: Queryable, id: number): Promise<PublicReceiptRecord | null> {
+  const { rows } = await db.query<
+    ReceiptRow & { donor_name: string | null; donor_surname: string | null; donor_email: string | null }
+  >(
+    `SELECT id, payment_reference, amount, method, status, paid_at, refunded_at,
+            NULL AS animal_name, NULL AS plan_name, NULL AS period_start, NULL AS period_end,
+            ${COLUMNAS_FISCALES}, donor_name, donor_surname, donor_email
+       FROM donations WHERE id = $1`,
+    [id],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    ...mapReceiptRow(row),
+    donorName: row.donor_name,
+    donorSurname: row.donor_surname,
+    donorEmail: row.donor_email,
+  };
+}
+
 /** CU-25 4.3: las donaciones del usuario se quedan sin nombre ni email; los importes se conservan. */
 export async function clearDonorData(db: Queryable, userId: number): Promise<void> {
-  await db.query('UPDATE donations SET donor_name = NULL, donor_email = NULL WHERE user_id = $1', [userId]);
+  await db.query(
+    `UPDATE donations
+        SET donor_name = NULL, donor_surname = NULL, donor_email = NULL, donor_phone = NULL,
+            tax_certificate = FALSE, donor_tax_id = NULL, donor_address = NULL, donor_postal_code = NULL,
+            donor_province = NULL, donor_country = NULL
+      WHERE user_id = $1`,
+    [userId],
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -90,8 +143,11 @@ export async function clearDonorData(db: Queryable, userId: number): Promise<voi
 const FECHA = 'COALESCE(d.paid_at, d.created_at)';
 const DIA = `(${FECHA} AT TIME ZONE '${ZONA_HORARIA_SANTUARIO}')::date`;
 
+/** CU-05: nombre completo del donante (los apellidos se guardan aparte desde la web). */
+const NOMBRE_DONANTE = "NULLIF(concat_ws(' ', d.donor_name, d.donor_surname), '')";
+
 const SELECT_ADMIN = `
-  SELECT d.id, d.user_id, d.donor_name, d.donor_email, d.amount, d.is_anonymous, d.message, d.method, d.status,
+  SELECT d.id, d.user_id, ${NOMBRE_DONANTE} AS donor_name, d.donor_email, d.amount, d.is_anonymous, d.message, d.method, d.status,
          d.payment_reference, d.refunded_at, d.failure_reason,
          ${FECHA} AS fecha, ${DIA}::text AS dia,
          (d.refunded_at AT TIME ZONE '${ZONA_HORARIA_SANTUARIO}')::date::text AS dia_devolucion,
@@ -180,10 +236,10 @@ function filtroAdmin(filtros: AdminDonationFilters, params: unknown[] = []): { w
   if (filtros.from !== undefined) añadir((n) => `${DIA} >= ${n}::date`, filtros.from);
   if (filtros.to !== undefined) añadir((n) => `${DIA} <= ${n}::date`, filtros.to);
   if (filtros.q !== undefined) {
-    // Por el nombre o el email del donante.
+    // Por el nombre (con los apellidos) o el email del donante.
     añadir(
       (n) =>
-        `(${sinTildes("COALESCE(d.donor_name, '')")} LIKE '%' || ${sinTildes(n)} || '%'
+        `(${sinTildes(`COALESCE(${NOMBRE_DONANTE}, '')`)} LIKE '%' || ${sinTildes(n)} || '%'
           OR lower(COALESCE(d.donor_email, '')) LIKE '%' || lower(${n}) || '%')`,
       escaparLike(filtros.q),
     );

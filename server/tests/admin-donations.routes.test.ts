@@ -355,3 +355,18 @@ describe('CU-39 A2 Devolver una donación', () => {
     expect((await marta.post('/api/admin/donations/999/refund').send({})).status).toBe(404);
   });
 });
+
+describe('CU-39 y CU-05 Apellidos del donante en el panel', () => {
+  it('el listado muestra el nombre con los apellidos y se puede buscar por ellos', async () => {
+    const res = await request(t.app).post('/api/donations').send({
+      amount: '4',
+      donorName: 'Iris',
+      donorSurname: 'Valls Mora',
+      donorEmail: 'iris.valls@correo.test',
+      acceptPrivacy: true,
+    });
+    expect(res.status).toBe(201);
+    const fila = (await listar({ q: 'valls mora' })).data;
+    expect(fila.map((d) => [d.id, d.donorName])).toEqual([[res.body.id, 'Iris Valls Mora']]);
+  });
+});

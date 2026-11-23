@@ -54,6 +54,7 @@ const RUTAS: Ruta[] = [
   { metodo: 'patch', patron: '/users/:id', soloAdmin: true },
   { metodo: 'post', patron: '/users/:id/invitation', soloAdmin: true },
   { metodo: 'post', patron: '/users/:id/logout-all', soloAdmin: true },
+  { metodo: 'post', patron: '/users/:id/password-reset', soloAdmin: true },
   { metodo: 'get', patron: '/adoptions', soloAdmin: true },
   { metodo: 'post', patron: '/adoptions', soloAdmin: true },
   { metodo: 'get', patron: '/adoptions/:id', soloAdmin: true },

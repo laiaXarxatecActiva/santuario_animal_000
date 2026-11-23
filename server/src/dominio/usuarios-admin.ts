@@ -1,6 +1,6 @@
 import { isWorkerRole, type Role, type UserAccountStatus } from '@sanctuary/shared';
 
-// Reglas de la gestión de usuarios del panel (CU-35, CU-36).
+// Reglas de la gestión de usuarios del panel (CU-35, CU-36, CU-51).
 
 interface Cuenta {
   id: number;
@@ -45,4 +45,13 @@ export function comprobarCambioRol(
 /** CU-36 4a: la invitación se puede reenviar a un trabajador activo que nunca ha entrado. */
 export function puedeReenviarInvitacion(cuenta: { role: Role; isActive: boolean; lastLoginAt: Date | null }): boolean {
   return isWorkerRole(cuenta.role) && cuenta.isActive && cuenta.lastLoginAt === null;
+}
+
+/**
+ * CU-51: el administrador puede enviar el enlace para cambiar la contraseña a
+ * un trabajador activo (cuidador u otro administrador), nunca a un adoptante ni
+ * a sí mismo (su contraseña se cambia en «Mi perfil», CU-24).
+ */
+export function puedeEnviarCambioPassword(cuenta: Cuenta, actorId: number): boolean {
+  return isWorkerRole(cuenta.role) && cuenta.isActive && cuenta.anonymizedAt === null && cuenta.id !== actorId;
 }

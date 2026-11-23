@@ -29,6 +29,21 @@ export const avisos = {
     ca: `No hem pogut cobrar la quota de la teua adopció de ${a}. L'adopció està en pausa fins que es regularitze el pagament.`,
     en: `We could not collect the fee for your adoption of ${a}. The adoption is paused until the payment is settled.`,
   }),
+  cuotaManualPendiente: (a: string, fecha: string, limite: string): Textos =>
+    en3((idioma) => {
+      const vence = formatFecha(fecha);
+      const hasta = formatFecha(limite);
+      return {
+        es: `La cuota de ${a} vence el ${vence}. Puedes pagarla desde «Mis animales» hasta el ${hasta}.`,
+        ca: `La quota de ${a} venç el ${vence}. Pots pagar-la des de «Els meus animals» fins al ${hasta}.`,
+        en: `${a}'s fee is due on ${vence}. You can pay it from "My animals" until ${hasta}.`,
+      }[idioma];
+    }),
+  cuotaManualVencida: (a: string): Textos => ({
+    es: `No hemos recibido el pago de la cuota de ${a}. La adopción está pausada hasta que la pagues.`,
+    ca: `No hem rebut el pagament de la quota de ${a}. L'adopció està en pausa fins que la pagues.`,
+    en: `We have not received the payment of ${a}'s fee. The adoption is paused until you pay it.`,
+  }),
   cambioDePlan: (a: string, desde: string, importe: string, plan: string): Textos =>
     en3((idioma) => {
       const fecha = formatFecha(desde);

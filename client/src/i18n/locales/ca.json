@@ -358,7 +358,16 @@
     "notice": "Pagament simulat: no es farà cap càrrec real.",
     "succeed": "Simula un pagament correcte",
     "fail": "Simula un pagament fallit",
-    "processing": "Processant el pagament…"
+    "processing": "Processant el pagament…",
+    "cardHolder": "Titular de la targeta",
+    "cardNumber": "Número de targeta",
+    "cardExpiry": "Caducitat (MM/AA)",
+    "cardCvc": "CVC",
+    "cardWarning": "No escrigues les dades d'una targeta real. Només se'n comprova el format i no s'envien ni es guarden.",
+    "testCard": "Pots usar la targeta de prova 4242 4242 4242 4242, amb qualsevol caducitat futura i qualsevol CVC.",
+    "failedTitle": "Pagament rebutjat",
+    "retry": "Torna-ho a provar",
+    "notNow": "Ara no"
   },
   "forbidden": {
     "title": "No tens accés a esta pàgina"
@@ -662,7 +671,6 @@
       "texts": "Descripció",
       "name": "Nom",
       "species": "Espècie",
-      "breed": "Raça",
       "sex": "Sexe",
       "approxBirthDate": "Data de naixement aproximada",
       "arrivalDate": "Data d'arribada",
@@ -848,6 +856,11 @@
       "logoutAllDone_zero": "No tenia cap sessió oberta",
       "logoutAllDone_one": "S'ha tancat {{count}} sessió",
       "logoutAllDone_other": "S'han tancat {{count}} sessions",
+      "sendPasswordReset": "Envia l'enllaç de contrasenya",
+      "confirmPasswordReset": "Vols enviar a {{name}} un enllaç per a canviar la seua contrasenya?",
+      "passwordResetExplain": "Rebrà un correu amb un enllaç per a triar una contrasenya nova. L'enllaç caduca en 30 minuts i anul·la els anteriors. Ningú més veurà la contrasenya. Fins que la canvie, l'actual continua funcionant; en canviar-la es tancaran les seues sessions.",
+      "passwordResetConfirm": "Envia l'enllaç",
+      "passwordResetSent": "Hem enviat a {{email}} un enllaç per a canviar la seua contrasenya.",
       "adoptions": "Adopcions",
       "noAdoptions": "No té adopcions",
       "contributions": "Aportacions",
@@ -871,6 +884,7 @@
       "status": "Estat",
       "startDate": "Inici",
       "nextBilling": "Pròxim cobrament",
+      "paymentMode": "Cobrament de les quotes",
       "endDate": "Final",
       "endReason": "Motiu del tancament",
       "origin": "Origen",
@@ -1157,18 +1171,29 @@
     "other": "Una altra",
     "amount": "Import (€)",
     "noMinimum": "Sense import mínim.",
-    "name": "Nom (opcional)",
-    "email": "Correu electrònic (opcional)",
-    "emailHelp": "Per a enviar-te el rebut.",
+    "name": "Nom",
+    "email": "Correu",
+    "emailHelp": "Per a enviar-te el rebut i avisar-te de qualsevol canvi en la teua donació.",
     "anonymous": "Vull que la meua donació siga anònima",
     "message": "Missatge (opcional)",
     "continue": "Continua amb el pagament",
     "failed": "El pagament no s'ha completat. Pots tornar-ho a provar.",
     "thanksEmail": "Gràcies per la teua donació! T'hem enviat el rebut per correu.",
-    "thanksNoEmail": "Gràcies per la teua donació! Pots imprimir el rebut des d'esta pàgina.",
-    "printReceipt": "Imprimeix el rebut",
     "another": "Fes una altra donació",
-    "noNotices": "Si no ens dones el teu correu i no has entrat amb el teu compte d'adoptant, no podrem avisar-te de res sobre esta donació (per exemple, si calguera retornar-la)."
+    "surname": "Cognoms",
+    "phone": "Telèfon (opcional)",
+    "phoneHelp": "Mòbil espanyol de 9 dígits, sense el prefix +34.",
+    "taxCertificate": "Vull el certificat per a desgravar",
+    "taxTitle": "Dades per al certificat",
+    "taxHelp": "Són les dades que demana Hisenda perquè pugues desgravar la donació en la declaració de la renda.",
+    "taxId": "NIF o NIE",
+    "address": "Adreça",
+    "postalCode": "Codi postal",
+    "province": "Província",
+    "country": "País",
+    "defaultCountry": "Espanya",
+    "viewReceipt": "Mostra el rebut",
+    "downloadReceipt": "Descarrega el rebut"
   },
   "legal": {
     "lastUpdated": "Última actualització: {{date}}",
@@ -1178,7 +1203,7 @@
       "responsibleTitle": "Qui és el responsable",
       "responsibleText": "El responsable de les teues dades és el Santuario de Animales. Pots escriure'ns amb les dades de contacte de <0>Sobre el santuari</0>.",
       "dataTitle": "Quines dades guardem",
-      "dataText": "En crear el teu compte guardem el teu nom, els teus cognoms, el teu correu, la teua contrasenya xifrada i, si ens el dones, el teu telèfon. Quan adoptes, guardem les teues adopcions, el pla triat i els pagaments. Mai guardem dades de targetes: els pagaments són simulats i, encara que no ho foren, els gestionaria la passarel·la de pagament.",
+      "dataText": "En crear el teu compte guardem el teu nom, els teus cognoms, el teu correu, la teua contrasenya xifrada i, si ens el dones, el teu telèfon. Quan adoptes, guardem les teues adopcions, el pla triat i els pagaments. Si fas una donació, guardem el teu nom, els teus cognoms, el teu correu, el teu telèfon si ens el dones i, si demanes el certificat per a desgravar, el teu NIF i la teua adreça. Mai guardem dades de targetes: els pagaments són simulats i, encara que no ho foren, els gestionaria la passarel·la de pagament.",
       "purposeTitle": "Per a què les fem servir",
       "purposeText": "Per a gestionar el teu compte i les teues adopcions, enviar-te les notícies dels animals que adoptes i els avisos de les teues quotes segons les preferències del teu perfil, i mostrar el teu nom a la fitxa d'un animal només si ho actives.",
       "retentionTitle": "Quant de temps les guardem",
@@ -1237,9 +1262,9 @@
     "news": "Les seues notícies"
   },
   "certificate": {
-    "download": "Certificat",
+    "download": "Descarrega el certificat",
     "downloadOf": "Descarrega el certificat de {{name}} (PDF)",
-    "view": "Mostra",
+    "view": "Certificat",
     "viewOf": "Mostra el certificat de {{name}} (PDF)"
   },
   "language": {
@@ -1249,5 +1274,19 @@
       "ca": "Valencià",
       "en": "English"
     }
+  },
+  "paymentMode": {
+    "title": "Forma de pagament",
+    "automatic": "Automàtic",
+    "automaticHelp": "Cobrem la quota cada mes sense que hages de fer res.",
+    "manual": "Manual",
+    "manualHelp": "T'avisem 7 dies abans de cada quota i la pagues tu des de «Els meus animals».",
+    "note": "Pots canviar-la quan vulgues des de «Els meus animals».",
+    "cardAutomatic": "Pagament automàtic cada mes",
+    "cardManual": "Pagament manual: t'avisarem de cada quota",
+    "appliesNext": "El canvi val des de la pròxima quota.",
+    "saved": "Forma de pagament guardada.",
+    "due": "La quota de {{name}} venç el {{date}}. Pots pagar-la fins al {{deadline}} sense que l'adopció es pose en pausa.",
+    "payFee": "Paga la quota"
   }
 }

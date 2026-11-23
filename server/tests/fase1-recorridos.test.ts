@@ -76,7 +76,6 @@ describe('Fase 1: un cuidador da de alta un buitre y escribe a sus adoptantes (C
     const datos = {
       name: 'Recorrida',
       speciesId: 1,
-      breed: '',
       sex: 'female',
       approxBirthDate: '2021-04-01',
       arrivalDate: t.hoy,

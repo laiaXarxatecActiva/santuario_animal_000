@@ -6,6 +6,12 @@
   max-width: var(--content-max);
 }
 
+/* Cada sección de una ficha (Pagos, Notas internas…) se separa más de la anterior. */
+.page > section + section,
+.page > dl + section {
+  margin-top: var(--space-4);
+}
+
 .header {
   display: flex;
   flex-wrap: wrap;
@@ -17,20 +23,20 @@
 .headerActions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-items: center;
 }
 
 .filters {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
-  gap: var(--space-3);
+  gap: var(--space-4);
   align-items: end;
 }
 
 .search {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-3);
   align-items: end;
   grid-column: 1 / -1;
 }
@@ -53,7 +59,7 @@
 .table th {
   position: sticky;
   top: var(--size-header);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3);
   background: var(--color-surface-alt);
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -61,8 +67,8 @@
 }
 
 .table td {
-  height: 48px;
-  padding: var(--space-2) var(--space-3);
+  height: 56px;
+  padding: var(--space-3);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -89,6 +95,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
+}
+
+/* Etiquetas de estado bajo el título de una ficha (p. ej., «En el santuario»). */
+h1 + .badges {
+  margin-top: var(--space-2);
 }
 
 .thumb {
@@ -142,8 +153,8 @@
   }
 
   .table tr {
-    margin-bottom: var(--space-3);
-    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding: var(--space-4);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background: var(--color-surface);
@@ -175,7 +186,7 @@
 .details {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-3) var(--space-5);
   margin: 0;
 }
 
@@ -188,9 +199,19 @@
   margin: 0;
 }
 
+/* En móvil, la etiqueta va encima de su valor y cada dato se separa del siguiente. */
 @media (max-width: 767px) {
   .details {
     grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+
+  .details dt:not(:first-of-type) {
+    margin-top: var(--space-4);
+  }
+
+  .details dd {
+    margin-top: var(--space-1);
   }
 }
 
@@ -209,7 +230,7 @@
 /* Pestañas (DESIGN_SYSTEM §8.9), como en «Mis aportaciones». */
 .tabs {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-5);
   overflow-x: auto;
   border-bottom: 1px solid var(--color-border);
 }

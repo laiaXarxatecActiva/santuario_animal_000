@@ -3,6 +3,7 @@ import {
   comprobarCambioEstado,
   comprobarCambioRol,
   estadoCuenta,
+  puedeEnviarCambioPassword,
   puedeReenviarInvitacion,
 } from '../src/dominio/usuarios-admin.js';
 
@@ -72,5 +73,19 @@ describe('CU-35 Reglas de la gestión de usuarios', () => {
     expect(puedeReenviarInvitacion({ role: 'caretaker', isActive: true, lastLoginAt: new Date() })).toBe(false);
     expect(puedeReenviarInvitacion({ role: 'caretaker', isActive: false, lastLoginAt: null })).toBe(false);
     expect(puedeReenviarInvitacion({ role: 'adopter', isActive: true, lastLoginAt: null })).toBe(false);
+  });
+});
+
+describe('CU-51 Enviar a un trabajador el enlace para cambiar su contraseña', () => {
+  it('a cuidadores y otros administradores activos', () => {
+    expect(puedeEnviarCambioPassword(cuenta(), ADMIN)).toBe(true);
+    expect(puedeEnviarCambioPassword(cuenta({ id: 2, role: 'admin' }), ADMIN)).toBe(true);
+  });
+
+  it('nunca a adoptantes, cuentas desactivadas o anonimizadas, ni a la propia cuenta', () => {
+    expect(puedeEnviarCambioPassword(cuenta({ role: 'adopter' }), ADMIN)).toBe(false);
+    expect(puedeEnviarCambioPassword(cuenta({ isActive: false }), ADMIN)).toBe(false);
+    expect(puedeEnviarCambioPassword(cuenta({ anonymizedAt: new Date() }), ADMIN)).toBe(false);
+    expect(puedeEnviarCambioPassword(cuenta({ id: ADMIN, role: 'admin' }), ADMIN)).toBe(false);
   });
 });
