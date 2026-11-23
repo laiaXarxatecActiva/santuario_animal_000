@@ -1,0 +1,92 @@
+/* Calendario de turnos (CU-61, SCREENS §5.7, DESIGN_SYSTEM §8.9): un bloque por día. */
+.weekNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.weekLabel {
+  font-weight: 600;
+}
+
+.days {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--space-4);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dayTitle {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  text-transform: capitalize;
+}
+
+.shift {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.shiftHeader {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.shiftHeader h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+}
+
+.people {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.person {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.person p {
+  margin: 0;
+}
+
+.personName {
+  margin-right: var(--space-2);
+  font-weight: 600;
+}
+
+/* Hueco sin cubrir: el texto lo explica; el color solo lo refuerza. */
+.gap {
+  margin: 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-warning-bg);
+  color: var(--color-text);
+}
+
+/* «Tu turno» en «Mi día» (CU-63). */
+.mine {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}

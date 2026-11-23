@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { MAX_TEMPLATE_TIMES, TASK_RECURRENCES, TASK_STATUSES, TASK_TYPES } from '../constants/work.js';
+import {
+  ABSENCE_TYPES,
+  MAX_SHIFT_RANGE_DAYS,
+  MAX_TEMPLATE_TIMES,
+  TASK_RECURRENCES,
+  TASK_STATUSES,
+  TASK_TYPES,
+} from '../constants/work.js';
 import { textoObligatorio, textoOpcional } from './fields.js';
 
 // Trabajo diario del personal (CU-52 a CU-58).
@@ -158,3 +165,107 @@ export const workSettingsBodySchema = z.object({
 });
 export type WorkSettingsBody = z.input<typeof workSettingsBodySchema>;
 export type WorkSettingsData = z.output<typeof workSettingsBodySchema>;
+
+// CU-60: plantillas de turno con las personas que necesita cada zona.
+const diasSemana = z
+  .array(z.coerce.number().int().min(1).max(7))
+  .min(1, { error: 'Elige al menos un día de la semana.' })
+  .transform((dias) => [...new Set(dias)].sort());
+
+export const shiftTemplateBodySchema = z
+  .object({
+    name: textoObligatorio(100, 'Escribe el nombre del turno.'),
+    startTime: hora,
+    endTime: hora,
+    weekdays: diasSemana,
+    requirements: z
+      .array(
+        z.object({
+          zoneId: z.coerce.number().int().positive(),
+          minWorkers: z.coerce
+            .number({ error: 'De 1 a 20 personas.' })
+            .int({ error: 'De 1 a 20 personas.' })
+            .min(1, { error: 'De 1 a 20 personas.' })
+            .max(20, { error: 'De 1 a 20 personas.' }),
+        }),
+      )
+      .max(50)
+      .default([]),
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((p, ctx) => {
+    if (p.endTime <= p.startTime) {
+      ctx.addIssue({ code: 'custom', path: ['endTime'], message: 'La hora de fin debe ser posterior a la de inicio.' });
+    }
+    const zonas = p.requirements.map((r) => r.zoneId);
+    if (new Set(zonas).size !== zonas.length) {
+      ctx.addIssue({ code: 'custom', path: ['requirements'], message: 'Cada zona solo puede aparecer una vez.' });
+    }
+  });
+export type ShiftTemplateBody = z.input<typeof shiftTemplateBodySchema>;
+export type ShiftTemplateData = z.output<typeof shiftTemplateBodySchema>;
+
+/** Diferencia en días entre dos fechas `YYYY-MM-DD`. */
+const diasEntre = (desde: string, hasta: string) =>
+  Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86_400_000);
+
+// CU-61: calendario de un rango de días (como mucho 31). Sin fechas, la semana
+// actual; con solo `from`, los 7 días que empiezan ese día (los pone el servidor).
+export const shiftsQuerySchema = z
+  .object({
+    from: fecha('La fecha no es válida.').optional(),
+    to: fecha('La fecha no es válida.').optional(),
+  })
+  .superRefine((q, ctx) => {
+    if (q.to !== undefined && q.from === undefined) {
+      ctx.addIssue({ code: 'custom', path: ['from'], message: 'Elige la fecha de inicio.' });
+      return;
+    }
+    if (q.from === undefined || q.to === undefined) return;
+    const dias = diasEntre(q.from, q.to);
+    if (dias < 0) {
+      ctx.addIssue({ code: 'custom', path: ['to'], message: 'La fecha de fin no puede ser anterior a la de inicio.' });
+    } else if (dias >= MAX_SHIFT_RANGE_DAYS) {
+      ctx.addIssue({ code: 'custom', path: ['to'], message: `Como máximo ${MAX_SHIFT_RANGE_DAYS} días.` });
+    }
+  });
+export type ShiftsQuery = z.infer<typeof shiftsQuerySchema>;
+
+export const shiftAssignmentBodySchema = z.object({
+  shiftTemplateId: z.coerce.number({ error: 'Elige el turno.' }).int().positive({ error: 'Elige el turno.' }),
+  date: fecha('Elige el día.'),
+  userId: z.coerce.number({ error: 'Elige a una persona.' }).int().positive({ error: 'Elige a una persona.' }),
+  /** Sin zonas, las que necesita el turno. */
+  zoneIds: idsUnicos,
+});
+export type ShiftAssignmentBody = z.input<typeof shiftAssignmentBodySchema>;
+export type ShiftAssignmentData = z.output<typeof shiftAssignmentBodySchema>;
+
+export const copyWeekBodySchema = z.object({
+  weekStart: fecha('Elige la semana.').refine((d) => new Date(`${d}T00:00:00Z`).getUTCDay() === 1, {
+    error: 'La semana empieza en lunes.',
+  }),
+});
+export type CopyWeekBody = z.infer<typeof copyWeekBodySchema>;
+
+// CU-62: ausencias.
+export const absenceBodySchema = z
+  .object({
+    userId: z.coerce.number({ error: 'Elige a una persona.' }).int().positive({ error: 'Elige a una persona.' }),
+    startDate: fecha('Elige el primer día.'),
+    endDate: fecha('Elige el último día.'),
+    type: z.enum(ABSENCE_TYPES, { error: 'Elige el motivo.' }),
+    notes: textoOpcional(500),
+  })
+  .refine((a) => a.endDate >= a.startDate, {
+    path: ['endDate'],
+    message: 'El último día no puede ser anterior al primero.',
+  });
+export type AbsenceBody = z.input<typeof absenceBodySchema>;
+export type AbsenceData = z.output<typeof absenceBodySchema>;
+
+export const absencesQuerySchema = z.object({
+  from: fecha('La fecha no es válida.').optional(),
+  to: fecha('La fecha no es válida.').optional(),
+});
+export type AbsencesQuery = z.infer<typeof absencesQuerySchema>;

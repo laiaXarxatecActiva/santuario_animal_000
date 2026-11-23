@@ -145,6 +145,7 @@ Las reglas críticas se aplican **dos veces**: en el modelo, para dar un mensaje
 | Las adopciones cerradas indican el motivo; las abiertas no | `CHECK adoptions_end_reason_consistent` |
 | Emails únicos sin distinguir mayúsculas | Índice único `users_email_lower_key` |
 | No se borran especies, animales, planes ni usuarios con historial | Claves foráneas `ON DELETE RESTRICT` |
+| Trabajo diario: los turnos acaban después de empezar; la salida, después de la entrada; una persona no tiene dos veces el mismo turno el mismo día; solo los trabajadores tienen turnos y ausencias; una ausencia acaba el mismo día o después | `CHECK shift_templates_times`, `CHECK shift_assignments_check_out`, `UNIQUE shift_assignments_unique`, triggers `shift_assignments_check_worker` y `absences_check_worker`, `CHECK absences_dates`. Un turno con personas asignadas no se borra (`ON DELETE RESTRICT`) |
 
 Los modelos deben capturar estos errores de PostgreSQL (`23505` por clave duplicada, `23503` por clave foránea y `23514` por `CHECK` o trigger) y convertirlos en errores 409 o 422 con un mensaje en castellano.
 
@@ -300,6 +301,10 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | *(nuevo, trabajo diario)* | `task_templates`, `task_template_animals` | Plantillas de tareas recurrentes: tipo, horas (`TIME[]`), repetición (`daily`, `weekdays` con `weekdays SMALLINT[]` ISO 1-7, o `every_n_days` con `interval_days`), fechas, zona, animales y cualificación (CU-54) |
 | *(nuevo, trabajo diario)* | `task_instances`, `task_instance_animals` | Tareas concretas: copia de la plantilla, `due_date`/`due_time` en Madrid y `due_at` (`TIMESTAMPTZ`), estado `pending`/`completed`/`not_done`, asignación, quién y cuándo la resolvió, observaciones y foto. Sin plantilla, es puntual. Índice único parcial `(template_id, due_at)` para generar sin duplicados; el trigger `check_task_people` exige que la persona asignada y quien la completa sean trabajadores con la cualificación (CU-55 a CU-59) |
 | *(nuevo, trabajo diario)* | `work_settings` | Una sola fila (`id = 1`) con `late_margin_minutes` (CU-73) |
+| *(nuevo, trabajo diario)* | `shift_templates`, `shift_zone_requirements` | Plantillas de turno: nombre único (sin distinguir mayúsculas), `start_time` < `end_time` (el mismo día), `weekdays` (1 = lunes … 7 = domingo) y si está activa; y cuántas personas (`min_workers`, 1-20) necesita cada zona (CU-60) |
+| *(nuevo, trabajo diario)* | `shift_assignments`, `shift_assignment_zones` | Una persona en un turno un día (`shift_date`), con sus zonas, `checked_in_at` y `checked_out_at`. `UNIQUE (shift_template_id, shift_date, user_id)`; el trigger `shift_assignments_check_worker` exige un trabajador (CU-61, CU-63) |
+| *(nuevo, trabajo diario)* | `absences` | Ausencias: persona, `start_date`, `end_date`, `type` (`vacation`, `sick_leave`, `personal`, `other`), notas y quién la registró (CU-62) |
+| *(nuevo, trabajo diario)* | `staff_alerts` | Avisos internos ya enviados: `kind` y `ref_key` únicos (para `coverage_gap`, `fecha:turno:zona`), para que cada aviso salga una sola vez (CU-64) |
 
 ### 8.2 Columnas añadidas y por qué
 
@@ -588,7 +593,10 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | DELETE | `/api/admin/vet-records/:id` | Admin | Borrado (Fase 3) | CU-34 |
 | GET | `/api/admin/zones` | Cuidador, admin | Zonas por nombre con `animalCount` (sin archivados). Trabajo diario | CU-52 |
 | GET | `/api/admin/qualifications` | Cuidador, admin | Cualificaciones con `workerCount` | CU-53 |
-| GET | `/api/admin/my-day` | Cuidador, admin | `?date` (hoy por defecto). `{ date, tasks }`: cada tarea con `late` (calculado), `mine` (asignada a quien consulta) y `blockedReason` (`FUTURE_DAY`, `MISSING_QUALIFICATION` o `NOT_PENDING`) | CU-56 |
+| GET | `/api/admin/my-day` | Cuidador, admin | `?date` (hoy por defecto). `{ date, tasks, shifts }`: los turnos de quien consulta ese día y cada tarea con `late` (calculado), `mine` (asignada a quien consulta o, sin asignar, de una zona de su turno a una hora dentro del turno) y `blockedReason` (`FUTURE_DAY`, `MISSING_QUALIFICATION` o `NOT_PENDING`) | CU-56 |
+| GET | `/api/admin/shift-templates` | Cuidador, admin | Plantillas de turno por hora de inicio, con `requirements` y `hasAssignments` | CU-60 |
+| GET | `/api/admin/shifts` | Cuidador, admin | `?from&to` (como mucho 31 días; sin fechas, la semana actual de lunes a domingo). `{ from, to, shifts, assignments, absences, gaps }`; al cuidador, las ausencias ajenas le llegan sin `type` ni `notes` | CU-61, CU-62 |
+| POST | `/api/admin/shift-assignments/:id/check-in`, `/check-out` | La persona del turno | Ficha la entrada o la salida; un turno ajeno es 404. 422 `SHIFT_NOT_TODAY`; 409 `ALREADY_CHECKED_IN`, `NOT_CHECKED_IN`, `ALREADY_CHECKED_OUT` | CU-63 |
 | POST | `/api/admin/tasks/:id/complete` | Cuidador, admin | JSON `{ observations? }` o `multipart/form-data` con `observations` y una foto en `files` (se guarda en WebP en `uploads/tasks/:id/`). 409 `TASK_NOT_PENDING`, 422 `TASK_FUTURE_DAY`, 403 `MISSING_QUALIFICATION` | CU-57 |
 | POST | `/api/admin/tasks/:id/not-done` | Cuidador, admin | `{ reason }` obligatorio; mismas comprobaciones | CU-57 |
 | POST | `/api/admin/tasks/:id/reopen` | Quien la resolvió (el mismo día), admin | Vuelve a pendiente y borra observaciones y foto; 409 `TASK_IS_PENDING` | CU-57 |
@@ -630,6 +638,12 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/admin/tasks/:id/assignee` | `{ userId \| null }`: trabajador activo con la cualificación que exige la tarea | CU-55 |
 | DELETE | `/api/admin/tasks/:id` | Solo pendientes (409 `TASK_NOT_PENDING`) | CU-55 |
 | GET / PUT | `/api/admin/work-settings` | `{ lateMarginMinutes }` (0-240, 30 por defecto) | CU-73 |
+| POST / PUT / DELETE | `/api/admin/shift-templates`, `/api/admin/shift-templates/:id` | Crear, editar y borrar plantillas de turno; 409 `SHIFT_TEMPLATE_NAME_TAKEN` o `SHIFT_TEMPLATE_IN_USE` | CU-60 |
+| POST | `/api/admin/shift-assignments` | `{ shiftTemplateId, date, userId, zoneIds }` (sin zonas, las del turno). Errores en el campo: persona ausente, turno que se solapa, día pasado, turno que no se hace ese día | CU-61 |
+| DELETE | `/api/admin/shift-assignments/:id` | Quita a la persona; 409 `SHIFT_ALREADY_STARTED` si ya fichó o es de un día pasado | CU-61 |
+| POST | `/api/admin/shift-assignments/copy-week` | `{ weekStart }` (un lunes): copia la semana anterior sin duplicar; `{ created, skipped: [{ date, user, shift, reason }] }` | CU-61 |
+| GET / POST | `/api/admin/absences` | `?from&to` (desde hoy por defecto). Al crear, `{ absence, removedAssignments, keptAssignments }` | CU-62 |
+| DELETE | `/api/admin/absences/:id` | Borra la ausencia; los turnos quitados no vuelven | CU-62 |
 | POST | `/api/admin/jobs/:jobName/run` | Ejecuta una tarea programada a mano (pruebas y demostraciones) | CU-43 a CU-47 |
 
 ## 11. Servicios y tareas programadas
@@ -719,6 +733,7 @@ export interface StorageService {
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
 | `generate-tasks` | Diaria, 00:10 | Trabajo diario: crea las tareas de cada plantilla activa de hoy a 7 días vista (Europe/Madrid, solo las que no han pasado), sin los animales archivados. El índice único `(template_id, due_at)` evita duplicados. Una transacción por plantilla | CU-58 |
 | `task-alerts` | Cada 15 minutos | Pasa a `not_done` (sin persona) las tareas pendientes de días anteriores. En el Bloque C avisará también de la medicación no dada | CU-59 |
+| `coverage-check` | Cada hora, a los 5 minutos | Avisa en la campana a los administradores en activo de cada zona de un turno sin cubrir de hoy a 6 días vista (sin los turnos ya acabados), una sola vez por hueco (`staff_alerts`). El email llegará con el Bloque D | CU-64 |
 
 Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
 
@@ -755,7 +770,8 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/admin/species`, `/admin/updates`, `/admin/vet-records` | Especies, actualizaciones, historial veterinario | Cuidador, admin |
 | `/admin/users`, `/admin/adoptions`, `/admin/payments`, `/admin/donations`, `/admin/plans`, `/admin/stats`, `/admin/activity` | Administración | Admin |
 | `/admin/my-day` | «Mi día»: tareas del día en tarjetas (inicio del cuidador al entrar) | Cuidador, admin |
-| `/admin/tasks`, `/admin/task-templates`, `/admin/zones` | Tareas del día y puntuales (con los ajustes), plantillas, zonas y cualificaciones | Admin |
+| `/admin/shifts` | Calendario semanal de turnos (`?week=` lunes); el administrador asigna, quita y copia la semana | Cuidador, admin |
+| `/admin/tasks`, `/admin/task-templates`, `/admin/zones`, `/admin/shift-templates`, `/admin/absences` | Tareas del día y puntuales (con los ajustes), plantillas, zonas y cualificaciones, plantillas de turno y ausencias | Admin |
 
 Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que redirige a `/login`. Es solo una mejora de la experiencia de uso; la seguridad la garantiza el servidor.
 
@@ -956,7 +972,7 @@ Recogidas en `docs/AUTH_SPEC.md` (§1). No cambian el esquema de la base de dato
 Turnos, tareas, alimentación, limpieza y medicación, en cuatro bloques que se cierran por orden, cada uno con sus datos de prueba en `TEST_DATA.sql` y sus pruebas:
 
 - **Bloque A (terminado):** zonas (CU-52), cualificaciones (CU-53), plantillas (CU-54), tareas del día y puntuales (CU-55), «Mi día» (CU-56), completar (CU-57), generación (CU-58), cierre del día (CU-59) y el margen de «atrasada» (CU-73, parte).
-- **Bloque B:** turnos, calendario, copiar la semana anterior, ausencias, fichar la entrada y la salida, y aviso de zonas sin cubrir (CU-60 a CU-64). «Mi día» pasará a marcar como tuyas también las tareas de tu turno y zona.
+- **Bloque B (terminado):** plantillas de turno (CU-60), calendario semanal con asignar, quitar y copiar la semana anterior (CU-61), ausencias (CU-62), fichar la entrada y la salida (CU-63) y aviso de zonas sin cubrir (CU-64, tarea `coverage-check`). «Mi día» marca como tuyas también las tareas sin asignar de tu turno y zona, y desactivar a un trabajador quita sus turnos futuros sin fichar.
 - **Bloque C:** planes de dieta con registro de lo que come cada animal y aviso si deja de comer; visitas veterinarias programables; pautas de medicación y aviso de medicación no dada (CU-65 a CU-69).
 - **Bloque D:** incidencias, notas de relevo, panel «Hoy» del administrador, ajustes de los avisos por email y resumen diario (desactivado por defecto) (CU-70 a CU-74).
 

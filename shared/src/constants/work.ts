@@ -24,3 +24,26 @@ export const MAX_TEMPLATE_TIMES = 12;
 /** CU-57: por qué un trabajador no puede resolver una tarea. */
 export const TASK_BLOCK_REASONS = ['NOT_PENDING', 'FUTURE_DAY', 'MISSING_QUALIFICATION'] as const;
 export type TaskBlockReason = (typeof TASK_BLOCK_REASONS)[number];
+
+// Turnos y ausencias (CU-60 a CU-64).
+
+export const ABSENCE_TYPES = ['vacation', 'sick_leave', 'personal', 'other'] as const;
+export type AbsenceType = (typeof ABSENCE_TYPES)[number];
+
+/** CU-61: el calendario pide como mucho 31 días seguidos. */
+export const MAX_SHIFT_RANGE_DAYS = 31;
+
+/** CU-64: días que se revisan por adelantado (hoy incluido). */
+export const COVERAGE_CHECK_DAYS = 7;
+
+/** CU-61 «Copiar la semana anterior»: por qué no se copia un turno. */
+export const COPY_SKIP_REASONS = [
+  'PAST',
+  'ABSENT',
+  'ALREADY_ASSIGNED',
+  'OVERLAP',
+  'INACTIVE_USER',
+  'INACTIVE_SHIFT',
+  'NOT_THAT_WEEKDAY',
+] as const;
+export type CopySkipReason = (typeof COPY_SKIP_REASONS)[number];

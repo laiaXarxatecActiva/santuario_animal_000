@@ -1,4 +1,11 @@
-import type { TaskBlockReason, TaskRecurrence, TaskStatus, TaskType } from '../constants/work.js';
+import type {
+  AbsenceType,
+  CopySkipReason,
+  TaskBlockReason,
+  TaskRecurrence,
+  TaskStatus,
+  TaskType,
+} from '../constants/work.js';
 import type { AdminPersonRef } from './admin.js';
 
 // Trabajo diario del personal (CU-52 a CU-58).
@@ -95,9 +102,87 @@ export interface MyDayTaskDto extends TaskDto {
 export interface MyDayDto {
   date: string;
   tasks: MyDayTaskDto[];
+  /** CU-63: los turnos de quien consulta ese día, para fichar. */
+  shifts: ShiftAssignmentDto[];
 }
 
 /** CU-73. */
 export interface WorkSettingsDto {
   lateMarginMinutes: number;
+}
+
+/** CU-60. */
+export interface ShiftTemplateDto {
+  id: number;
+  name: string;
+  /** `HH:MM` de Madrid. */
+  startTime: string;
+  endTime: string;
+  weekdays: number[];
+  isActive: boolean;
+  requirements: { zone: NamedRef; minWorkers: number }[];
+  /** Tiene personas asignadas: no se puede borrar, solo desactivar. */
+  hasAssignments: boolean;
+}
+
+/** Referencia corta a un turno. */
+export interface ShiftRef {
+  id: number;
+  name: string;
+  startTime: string;
+  endTime: string;
+}
+
+/** CU-61 y CU-63: una persona en un turno un día. */
+export interface ShiftAssignmentDto {
+  id: number;
+  shift: ShiftRef;
+  date: string;
+  user: AdminPersonRef;
+  zones: NamedRef[];
+  checkedInAt: string | null;
+  checkedOutAt: string | null;
+}
+
+/** CU-62. Al cuidador, de los demás solo le llega que están ausentes (`type` y `notes` a `null`). */
+export interface AbsenceDto {
+  id: number;
+  user: AdminPersonRef;
+  startDate: string;
+  endDate: string;
+  type: AbsenceType | null;
+  notes: string | null;
+}
+
+/** CU-62: al registrar una ausencia, los turnos que se quitan y los que no (ya fichados). */
+export interface AbsenceCreatedDto {
+  absence: AbsenceDto;
+  removedAssignments: ShiftAssignmentDto[];
+  keptAssignments: ShiftAssignmentDto[];
+}
+
+/** CU-61 y CU-64: una zona de un turno con menos personas de las necesarias. */
+export interface CoverageGapDto {
+  date: string;
+  shift: ShiftRef;
+  zone: NamedRef;
+  required: number;
+  assigned: number;
+}
+
+/** CU-61: el calendario de un rango de días. */
+export interface ShiftsCalendarDto {
+  from: string;
+  to: string;
+  /** Los turnos activos y los que tienen personas en el rango. */
+  shifts: ShiftTemplateDto[];
+  assignments: ShiftAssignmentDto[];
+  absences: AbsenceDto[];
+  gaps: CoverageGapDto[];
+}
+
+/** CU-61 «Copiar la semana anterior». */
+export interface CopyWeekResultDto {
+  created: number;
+  skipped: { date: string; user: AdminPersonRef; shift: ShiftRef; reason: CopySkipReason }[];
 }

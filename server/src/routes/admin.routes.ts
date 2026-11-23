@@ -1,4 +1,10 @@
 import {
+  absenceBodySchema,
+  absencesQuerySchema,
+  copyWeekBodySchema,
+  shiftAssignmentBodySchema,
+  shiftsQuerySchema,
+  shiftTemplateBodySchema,
   adminActivityLogsQuerySchema,
   adminStatsQuerySchema,
   adminDonationMonthlyQuerySchema,
@@ -59,6 +65,7 @@ import { createUpdateAdminController } from '../controllers/update-admin.control
 import { createVetRecordAdminController } from '../controllers/vet-record-admin.controller.js';
 import { createUserAdminController } from '../controllers/user-admin.controller.js';
 import {
+  createShiftController,
   createTaskController,
   createTaskTemplateAdminController,
   createZoneAdminController,
@@ -82,6 +89,7 @@ import type { UpdateAdminService } from '../servicios/update-admin.service.js';
 import type { UserAdminService } from '../servicios/user-admin.service.js';
 import type { VetRecordAdminService } from '../servicios/vet-record-admin.service.js';
 import type { TaskTemplateAdminService } from '../servicios/task-template-admin.service.js';
+import type { ShiftService } from '../servicios/shift.service.js';
 import type { TaskService } from '../servicios/task.service.js';
 import type { ZoneAdminService } from '../servicios/zone-admin.service.js';
 
@@ -106,6 +114,7 @@ export interface AdminRoutesDeps {
   zones: ZoneAdminService;
   taskTemplates: TaskTemplateAdminService;
   tasks: TaskService;
+  shifts: ShiftService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -319,6 +328,28 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   // CU-73: ajustes del trabajo diario, solo administradores.
   router.get('/work-settings', soloAdmin, tareas.settings);
   router.put('/work-settings', soloAdmin, validate({ body: workSettingsBodySchema }), tareas.updateSettings);
+
+  // CU-60 a CU-63: turnos. Los consulta todo el personal; los cambia el administrador.
+  // Cada persona ficha sus propios turnos y las ausencias son solo del administrador.
+  const turnos = createShiftController(deps.shifts, deps.activity);
+  router.get('/shift-templates', turnos.listTemplates);
+  router.post('/shift-templates', soloAdmin, validate({ body: shiftTemplateBodySchema }), turnos.createTemplate);
+  router.put(
+    '/shift-templates/:id',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: shiftTemplateBodySchema }),
+    turnos.updateTemplate,
+  );
+  router.delete('/shift-templates/:id', soloAdmin, conId, turnos.removeTemplate);
+  router.get('/shifts', validate({ query: shiftsQuerySchema }), turnos.calendar);
+  router.post('/shift-assignments', soloAdmin, validate({ body: shiftAssignmentBodySchema }), turnos.createAssignment);
+  router.post('/shift-assignments/copy-week', soloAdmin, validate({ body: copyWeekBodySchema }), turnos.copyWeek);
+  router.delete('/shift-assignments/:id', soloAdmin, conId, turnos.removeAssignment);
+  router.post('/shift-assignments/:id/check-in', conId, turnos.checkIn);
+  router.post('/shift-assignments/:id/check-out', conId, turnos.checkOut);
+  router.get('/absences', soloAdmin, validate({ query: absencesQuerySchema }), turnos.listAbsences);
+  router.post('/absences', soloAdmin, validate({ body: absenceBodySchema }), turnos.createAbsence);
+  router.delete('/absences/:id', soloAdmin, conId, turnos.removeAbsence);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

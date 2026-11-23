@@ -60,6 +60,7 @@ export const NOTIFICATION_TYPES = [
   'adoption_closed',
   'donation_thanks',
   'update_reminder',
+  'coverage_gap',
   'system',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

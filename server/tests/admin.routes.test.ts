@@ -96,6 +96,19 @@ const RUTAS: Ruta[] = [
   { metodo: 'post', patron: '/tasks/:id/reopen' },
   { metodo: 'get', patron: '/work-settings', soloAdmin: true },
   { metodo: 'put', patron: '/work-settings', soloAdmin: true },
+  { metodo: 'get', patron: '/shift-templates' },
+  { metodo: 'post', patron: '/shift-templates', soloAdmin: true },
+  { metodo: 'put', patron: '/shift-templates/:id', soloAdmin: true },
+  { metodo: 'delete', patron: '/shift-templates/:id', soloAdmin: true },
+  { metodo: 'get', patron: '/shifts' },
+  { metodo: 'post', patron: '/shift-assignments', soloAdmin: true },
+  { metodo: 'post', patron: '/shift-assignments/copy-week', soloAdmin: true },
+  { metodo: 'delete', patron: '/shift-assignments/:id', soloAdmin: true },
+  { metodo: 'post', patron: '/shift-assignments/:id/check-in' },
+  { metodo: 'post', patron: '/shift-assignments/:id/check-out' },
+  { metodo: 'get', patron: '/absences', soloAdmin: true },
+  { metodo: 'post', patron: '/absences', soloAdmin: true },
+  { metodo: 'delete', patron: '/absences/:id', soloAdmin: true },
 ];
 
 const url = (r: Ruta) => `/api/admin${r.patron.replace(':id', '1')}`;

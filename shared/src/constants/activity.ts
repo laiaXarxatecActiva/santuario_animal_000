@@ -20,6 +20,9 @@ export const ACTIVITY_TABLES = [
   'task_templates',
   'task_instances',
   'work_settings',
+  'shift_templates',
+  'shift_assignments',
+  'absences',
 ] as const;
 export type ActivityTable = (typeof ACTIVITY_TABLES)[number];
 

@@ -268,6 +268,7 @@ Los formularios públicos de donación y contacto envían emails a direcciones q
   - Un recurso ajeno responde **404** (no 403), para no revelar que existe.
   - Vale igual para leer, modificar y borrar.
 - **Trabajo diario del personal (CU-52 a CU-59):** las rutas del panel siguen la misma regla. Las de consulta y «Mi día» (`GET /zones`, `GET /qualifications`, `GET /my-day`, `POST /tasks/:id/{complete,not-done,reopen}`) son de todo el personal; las de configuración (zonas, cualificaciones, plantillas, tareas puntuales, reasignar, borrar, ajustes) llevan `requireRole('admin')`. Además, completar o marcar como no realizada una tarea que exige una cualificación pide tenerla: el servicio responde 403 `MISSING_QUALIFICATION` y el trigger `check_task_people` lo impide también en la base de datos. «Deshacer» solo lo puede quien la resolvió, el mismo día, o un administrador (403 si no). Subir la foto de una tarea exige `X-Requested-With`, como las demás subidas.
+- **Turnos y ausencias (CU-60 a CU-64):** consultar las plantillas de turno y el calendario (`GET /shift-templates`, `GET /shifts`) es de todo el personal; crear, editar o borrar plantillas, asignar, quitar, copiar la semana y todo lo de las ausencias lleva `requireRole('admin')`. En el calendario, el servidor quita el motivo y las notas de las ausencias ajenas cuando consulta un cuidador (dato personal). Fichar (`POST /shift-assignments/:id/check-in` y `/check-out`) solo se puede sobre un turno propio: uno ajeno responde **404**, como cualquier recurso de otra persona. Desactivar a un trabajador quita también sus turnos futuros sin fichar.
 - El cliente nunca decide permisos: solo oculta la interfaz (`RequireRole` en las rutas de React). El servidor decide siempre.
 
 ## 9. Respuestas y mensajes de error
@@ -399,6 +400,7 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
 | El idioma solo admite `es`, `ca` o `en`; emails, avisos y PDF en el idioma de cada persona | `server/tests/idioma.routes.test.ts`, `server/tests/profile.routes.test.ts` |
 | El registro de actividad no guarda contraseñas ni tokens y solo lo ve el administrador | `server/tests/actividad.test.ts`, `server/tests/admin-activity.routes.test.ts` (CU-42) |
 | Trabajo diario: configuración solo del administrador; completar exige la cualificación (servicio y trigger); deshacer, quien la resolvió o un administrador | `server/tests/admin.routes.test.ts`, `server/tests/admin-zones.routes.test.ts`, `server/tests/admin-task-templates.routes.test.ts`, `server/tests/my-day.routes.test.ts` (CU-52 a CU-57) |
+| Turnos: cambiar el calendario, las plantillas y las ausencias es solo del administrador; cada persona ficha solo sus turnos (404 en los ajenos); el cuidador no ve el motivo de las ausencias ajenas | `server/tests/admin.routes.test.ts`, `server/tests/shifts.routes.test.ts`, `server/tests/absences.routes.test.ts`, `server/tests/my-day-shifts.routes.test.ts` (CU-60 a CU-63) |
 
 ## 15. Fuera de alcance
 

@@ -52,6 +52,12 @@ BEGIN;
 -- 0. Vaciar todas las tablas y reiniciar los contadores de id
 -- -----------------------------------------------------------------------------
 TRUNCATE TABLE
+    staff_alerts,
+    absences,
+    shift_assignment_zones,
+    shift_assignments,
+    shift_zone_requirements,
+    shift_templates,
     task_instance_animals,
     task_instances,
     task_template_animals,
@@ -682,6 +688,56 @@ VALUES ('maintenance', 'Reparar la puerta del almacén', 'La bisagra de arriba e
         CURRENT_DATE, '15:00', (CURRENT_DATE + TIME '15:00') AT TIME ZONE 'Europe/Madrid', 4, 1);
 
 -- -----------------------------------------------------------------------------
+-- 16. Turnos y ausencias (CU-60 a CU-64)
+-- -----------------------------------------------------------------------------
+
+-- Mañana y Tarde todos los días; Mantenimiento de lunes a viernes, sin mínimos.
+INSERT INTO shift_templates (id, name, start_time, end_time, weekdays) OVERRIDING SYSTEM VALUE VALUES
+(1, 'Mañana',        '07:00', '15:00', '{1,2,3,4,5,6,7}'),
+(2, 'Tarde',         '14:00', '22:00', '{1,2,3,4,5,6,7}'),
+(3, 'Mantenimiento', '08:00', '14:00', '{1,2,3,4,5}');
+
+-- Por la mañana hace falta una persona en el gran voladero, la clínica y la
+-- cocina; por la tarde, en el gran voladero y la clínica.
+INSERT INTO shift_zone_requirements (shift_template_id, zone_id, min_workers) VALUES
+(1, 1, 1), (1, 4, 1), (1, 5, 1),
+(2, 1, 1), (2, 4, 1);
+
+-- Ausencias: Andrés estuvo de baja hace 5 y 4 días; Carmen tiene vacaciones
+-- dentro de 3 y 4 días (esos días la tarde queda sin cubrir).
+INSERT INTO absences (user_id, start_date, end_date, type, notes, created_by, created_at) VALUES
+(4, CURRENT_DATE - 5, CURRENT_DATE - 4, 'sick_leave', 'Gripe.', 1, pg_temp.ago_ts('6 days')),
+(5, CURRENT_DATE + 3, CURRENT_DATE + 4, 'vacation', NULL, 1, pg_temp.ago_ts('20 days'));
+
+-- De hace 7 días a dentro de 6:
+--   Nuria (3), mañana, clínica y alimoches, todos los días.
+--   Andrés (4), mañana, gran voladero, buitres negros y cocina, salvo los
+--     domingos (por la mañana el gran voladero y la cocina quedan sin cubrir).
+--   Carmen (5), tarde, todas las zonas.
+--   Sin los días en que la persona está ausente.
+INSERT INTO shift_assignments (shift_template_id, shift_date, user_id, created_by, created_at)
+SELECT p.turno, d::date, p.usuario, 1, pg_temp.ago_ts('21 days')
+  FROM (VALUES (1, 3), (1, 4), (2, 5)) AS p (turno, usuario)
+ CROSS JOIN generate_series(CURRENT_DATE - 7, CURRENT_DATE + 6, INTERVAL '1 day') AS d
+ WHERE NOT (p.usuario = 4 AND EXTRACT(ISODOW FROM d) = 7)
+   AND NOT EXISTS (SELECT 1 FROM absences a
+                    WHERE a.user_id = p.usuario AND d::date BETWEEN a.start_date AND a.end_date)
+ ORDER BY d, p.turno, p.usuario;
+
+INSERT INTO shift_assignment_zones (assignment_id, zone_id)
+SELECT a.id, z.zone_id
+  FROM shift_assignments a
+  JOIN (VALUES (3, 4), (3, 3), (4, 1), (4, 2), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)) AS z (usuario, zone_id)
+    ON z.usuario = a.user_id;
+
+-- Los turnos pasados se ficharon (entrada 2 minutos antes, salida 5 después).
+UPDATE shift_assignments a
+   SET checked_in_at  = (a.shift_date + t.start_time - INTERVAL '2 minutes') AT TIME ZONE 'Europe/Madrid',
+       checked_out_at = (a.shift_date + t.end_time + INTERVAL '5 minutes') AT TIME ZONE 'Europe/Madrid'
+  FROM shift_templates t
+ WHERE t.id = a.shift_template_id AND a.shift_date < CURRENT_DATE;
+
+-- -----------------------------------------------------------------------------
 -- 14. Ajustar los contadores de id tras insertar ids explícitos
 -- -----------------------------------------------------------------------------
 SELECT setval(pg_get_serial_sequence('users', 'id'),          (SELECT MAX(id) FROM users));
@@ -695,5 +751,6 @@ SELECT setval(pg_get_serial_sequence('donations', 'id'),      (SELECT MAX(id) FR
 SELECT setval(pg_get_serial_sequence('zones', 'id'),          (SELECT MAX(id) FROM zones));
 SELECT setval(pg_get_serial_sequence('qualifications', 'id'), (SELECT MAX(id) FROM qualifications));
 SELECT setval(pg_get_serial_sequence('task_templates', 'id'), (SELECT MAX(id) FROM task_templates));
+SELECT setval(pg_get_serial_sequence('shift_templates', 'id'), (SELECT MAX(id) FROM shift_templates));
 
 COMMIT;

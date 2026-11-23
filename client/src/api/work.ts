@@ -1,5 +1,14 @@
 import type {
+  AbsenceBody,
+  AbsenceCreatedDto,
+  AbsenceDto,
   AdminTasksQuery,
+  CopyWeekResultDto,
+  ShiftAssignmentBody,
+  ShiftAssignmentDto,
+  ShiftsCalendarDto,
+  ShiftTemplateBody,
+  ShiftTemplateDto,
   MyDayDto,
   OneOffTaskBody,
   QualificationBody,
@@ -66,6 +75,32 @@ export const workApi = {
     },
     notDone: (id: number, reason: string) => apiPost<TaskDto>(`/api/admin/tasks/${id}/not-done`, { reason }),
     reopen: (id: number) => apiPost<TaskDto>(`/api/admin/tasks/${id}/reopen`),
+  },
+
+  // CU-60.
+  shiftTemplates: {
+    list: () => apiGet<{ data: ShiftTemplateDto[] }>('/api/admin/shift-templates'),
+    create: (body: ShiftTemplateBody) => apiPost<ShiftTemplateDto>('/api/admin/shift-templates', body),
+    update: (id: number, body: ShiftTemplateBody) => apiPut<ShiftTemplateDto>(`/api/admin/shift-templates/${id}`, body),
+    remove: (id: number) => apiDelete(`/api/admin/shift-templates/${id}`),
+  },
+
+  // CU-61 y CU-63. Sin `from`, la semana actual.
+  shifts: {
+    calendar: (from?: string, to?: string) => apiGet<ShiftsCalendarDto>('/api/admin/shifts', { from, to }),
+    assign: (body: ShiftAssignmentBody) => apiPost<ShiftAssignmentDto>('/api/admin/shift-assignments', body),
+    unassign: (id: number) => apiDelete(`/api/admin/shift-assignments/${id}`),
+    copyWeek: (weekStart: string) =>
+      apiPost<CopyWeekResultDto>('/api/admin/shift-assignments/copy-week', { weekStart }),
+    checkIn: (id: number) => apiPost<ShiftAssignmentDto>(`/api/admin/shift-assignments/${id}/check-in`),
+    checkOut: (id: number) => apiPost<ShiftAssignmentDto>(`/api/admin/shift-assignments/${id}/check-out`),
+  },
+
+  // CU-62.
+  absences: {
+    list: () => apiGet<{ data: AbsenceDto[] }>('/api/admin/absences'),
+    create: (body: AbsenceBody) => apiPost<AbsenceCreatedDto>('/api/admin/absences', body),
+    remove: (id: number) => apiDelete(`/api/admin/absences/${id}`),
   },
 
   // CU-73.

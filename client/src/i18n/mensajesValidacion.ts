@@ -199,10 +199,59 @@ const FIJOS: Record<string, Traduccion> = {
     en: 'Tasks cannot be created for past days.',
   },
   'Adjunta una sola foto.': { ca: 'Adjunta una sola foto.', en: 'Attach a single photo.' },
+  // Turnos y ausencias (CU-60 a CU-62).
+  'Escribe el nombre del turno.': { ca: 'Escriu el nom del torn.', en: 'Enter the shift name.' },
+  'La hora de fin debe ser posterior a la de inicio.': {
+    ca: 'L’hora de fi ha de ser posterior a la d’inici.',
+    en: 'The end time must be after the start time.',
+  },
+  'De 1 a 20 personas.': { ca: 'D’1 a 20 persones.', en: 'From 1 to 20 people.' },
+  'Cada zona solo puede aparecer una vez.': {
+    ca: 'Cada zona només pot aparéixer una vegada.',
+    en: 'Each zone can only appear once.',
+  },
+  'Elige el turno.': { ca: 'Tria el torn.', en: 'Choose the shift.' },
+  'Elige a una persona.': { ca: 'Tria una persona.', en: 'Choose a person.' },
+  'La semana empieza en lunes.': { ca: 'La setmana comença en dilluns.', en: 'The week starts on Monday.' },
+  'Elige la semana.': { ca: 'Tria la setmana.', en: 'Choose the week.' },
+  'Elige el primer día.': { ca: 'Tria el primer dia.', en: 'Choose the first day.' },
+  'Elige el último día.': { ca: 'Tria l’últim dia.', en: 'Choose the last day.' },
+  'Elige el motivo.': { ca: 'Tria el motiu.', en: 'Choose the reason.' },
+  'El último día no puede ser anterior al primero.': {
+    ca: 'L’últim dia no pot ser anterior al primer.',
+    en: 'The last day cannot be before the first.',
+  },
+  'Esta persona está ausente ese día.': {
+    ca: 'Aquesta persona està absent aquest dia.',
+    en: 'This person is absent that day.',
+  },
+  'Esta persona ya tiene un turno a esa hora ese día.': {
+    ca: 'Aquesta persona ja té un torn a aquesta hora aquest dia.',
+    en: 'This person already has a shift at that time that day.',
+  },
+  'No se pueden asignar turnos de días pasados.': {
+    ca: 'No es poden assignar torns de dies passats.',
+    en: 'Shifts cannot be assigned on past days.',
+  },
+  'Este turno no se hace ese día de la semana.': {
+    ca: 'Aquest torn no es fa aquest dia de la setmana.',
+    en: 'This shift does not run on that day of the week.',
+  },
+  'Este turno no existe o está desactivado.': {
+    ca: 'Aquest torn no existeix o està desactivat.',
+    en: 'This shift does not exist or is deactivated.',
+  },
+  'Ya tiene una ausencia en esas fechas.': {
+    ca: 'Ja té una absència en aquestes dates.',
+    en: 'They already have an absence on those dates.',
+  },
+  'Elige a un trabajador.': { ca: 'Tria un treballador.', en: 'Choose a worker.' },
+  'Elige la fecha de fin.': { ca: 'Tria la data de fi.', en: 'Choose the end date.' },
 };
 
 /** Mensajes con un número (longitudes máximas y mínimas). */
 const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
+  [/^Como máximo (\d+) días\.$/, (n) => ({ ca: `Com a màxim ${n} dies.`, en: `At most ${n} days.` })],
   [
     /^La contraseña debe tener al menos (\d+) caracteres\.$/,
     (n) => ({

@@ -9,6 +9,16 @@ export type Textos = Record<Language, string>;
 const en3 = (f: (idioma: Language) => string): Textos => ({ es: f('es'), ca: f('ca'), en: f('en') });
 
 export const avisos = {
+  /** CU-64: una zona de un turno con menos personas de las necesarias (a los administradores). */
+  huecoEnTurno: (zona: string, turno: string, fecha: string, hay: number, hacen: number): Textos =>
+    en3((idioma) => {
+      const dia = formatFecha(fecha);
+      return {
+        es: `Falta personal en «${zona}» en el turno de ${turno} del ${dia}: ${hay} de ${hacen}.`,
+        ca: `Falta personal a «${zona}» en el torn de ${turno} del ${dia}: ${hay} de ${hacen}.`,
+        en: `“${zona}” is short-staffed on the ${turno} shift on ${dia}: ${hay} of ${hacen}.`,
+      }[idioma];
+    }),
   adopcionActiva: (a: string): Textos => ({
     es: `¡Ya adoptas a ${a}! Gracias por tu apoyo.`,
     ca: `Ja adoptes ${a}! Gràcies pel teu suport.`,

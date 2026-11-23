@@ -1,4 +1,14 @@
-import type { MyDayTaskDto, QualificationDto, TaskDto, TaskTemplateDto, ZoneDto } from '@sanctuary/shared';
+import type {
+  AbsenceDto,
+  MyDayTaskDto,
+  QualificationDto,
+  ShiftAssignmentDto,
+  ShiftsCalendarDto,
+  ShiftTemplateDto,
+  TaskDto,
+  TaskTemplateDto,
+  ZoneDto,
+} from '@sanctuary/shared';
 
 // Datos del trabajo diario del personal (CU-52 en adelante), como en TEST_DATA.sql.
 
@@ -63,4 +73,102 @@ export function tarea(overrides: Partial<TaskDto> = {}): TaskDto {
 
 export function tareaDelDia(overrides: Partial<MyDayTaskDto> = {}): MyDayTaskDto {
   return { ...tarea(), mine: false, blockedReason: null, ...overrides };
+}
+
+// Turnos (CU-60 a CU-63). La semana del lunes 23 al domingo 29 de noviembre de 2026.
+
+const clinica = { id: 4, name: 'Clínica y recuperación' };
+const cocina = { id: 5, name: 'Cocina y almacén' };
+const granVoladero = { id: 1, name: 'Gran voladero' };
+
+export const turnoManana: ShiftTemplateDto = {
+  id: 1,
+  name: 'Mañana',
+  startTime: '07:00',
+  endTime: '15:00',
+  weekdays: [1, 2, 3, 4, 5, 6, 7],
+  isActive: true,
+  requirements: [
+    { zone: clinica, minWorkers: 1 },
+    { zone: cocina, minWorkers: 1 },
+    { zone: granVoladero, minWorkers: 1 },
+  ],
+  hasAssignments: true,
+};
+
+export const turnoTarde: ShiftTemplateDto = {
+  id: 2,
+  name: 'Tarde',
+  startTime: '14:00',
+  endTime: '22:00',
+  weekdays: [1, 2, 3, 4, 5, 6, 7],
+  isActive: true,
+  requirements: [
+    { zone: clinica, minWorkers: 1 },
+    { zone: granVoladero, minWorkers: 1 },
+  ],
+  hasAssignments: true,
+};
+
+export const turnoMantenimiento: ShiftTemplateDto = {
+  id: 3,
+  name: 'Mantenimiento',
+  startTime: '08:00',
+  endTime: '14:00',
+  weekdays: [1, 2, 3, 4, 5],
+  isActive: true,
+  requirements: [],
+  hasAssignments: false,
+};
+
+const ref = (t: ShiftTemplateDto) => ({ id: t.id, name: t.name, startTime: t.startTime, endTime: t.endTime });
+
+export function asignacion(overrides: Partial<ShiftAssignmentDto> = {}): ShiftAssignmentDto {
+  return {
+    id: 501,
+    shift: ref(turnoManana),
+    date: '2026-11-23',
+    user: { id: 3, name: 'Nuria Peris Gil' },
+    zones: [clinica, { id: 3, name: 'Voladero de alimoches' }],
+    checkedInAt: null,
+    checkedOutAt: null,
+    ...overrides,
+  };
+}
+
+export function ausencia(overrides: Partial<AbsenceDto> = {}): AbsenceDto {
+  return {
+    id: 2,
+    user: { id: 5, name: 'Carmen Boix Vidal' },
+    startDate: '2026-11-26',
+    endDate: '2026-11-27',
+    type: 'vacation',
+    notes: null,
+    ...overrides,
+  };
+}
+
+/** Lunes 23: Nuria y Andrés por la mañana y Carmen por la tarde; el jueves 26, Carmen de vacaciones. */
+export function calendarioSemana(overrides: Partial<ShiftsCalendarDto> = {}): ShiftsCalendarDto {
+  return {
+    from: '2026-11-23',
+    to: '2026-11-29',
+    shifts: [turnoManana, turnoMantenimiento, turnoTarde],
+    assignments: [
+      asignacion({ checkedInAt: '2026-11-23T06:58:00.000Z' }),
+      asignacion({ id: 502, user: { id: 4, name: 'Andrés Climent Mas' }, zones: [granVoladero, cocina] }),
+      asignacion({
+        id: 503,
+        shift: ref(turnoTarde),
+        user: { id: 5, name: 'Carmen Boix Vidal' },
+        zones: [clinica, granVoladero],
+      }),
+    ],
+    absences: [ausencia()],
+    gaps: [
+      { date: '2026-11-26', shift: ref(turnoTarde), zone: clinica, required: 1, assigned: 0 },
+      { date: '2026-11-26', shift: ref(turnoTarde), zone: granVoladero, required: 1, assigned: 0 },
+    ],
+    ...overrides,
+  };
 }
