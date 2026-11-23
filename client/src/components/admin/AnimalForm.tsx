@@ -9,6 +9,7 @@ import {
 import { Controller, useForm, type UseFormSetError } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useAdminSpecies } from '../../hooks/useAdmin';
+import { useZones } from '../../hooks/useWork';
 import { Button } from '../Button';
 import { SelectField, TextAreaField, TextField } from '../FormFields';
 import { Switch } from '../Switch';
@@ -27,6 +28,7 @@ export const ANIMAL_FIELDS = [
   'isAdoptable',
   'isPublished',
   'showInMemorial',
+  'zoneId',
 ] as const;
 
 interface AnimalFormProps {
@@ -49,6 +51,7 @@ const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
   healthSummary: a?.healthSummary ?? '',
   isAdoptable: a?.isAdoptable ?? true,
   isPublished: a?.isPublished ?? false,
+  zoneId: a?.zone?.id ?? '',
   // CU-12: solo un fallecido puede aparecer en «En memoria» (RN-22).
   ...(a?.status === 'deceased' ? { showInMemorial: a.showInMemorial } : {}),
 });
@@ -57,6 +60,9 @@ const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
 export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSubmit }: AnimalFormProps) {
   const { t } = useTranslation();
   const especies = useAdminSpecies();
+  const zonas = useZones();
+  // CU-52: las zonas activas y, si está en una desactivada, también esa.
+  const opcionesZona = (zonas.data ?? []).filter((z) => z.isActive || z.id === animal?.zone?.id);
   const archivado = animal?.status === 'deceased' || animal?.status === 'transferred';
   const {
     register,
@@ -81,6 +87,14 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
             {especies.data?.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
+              </option>
+            ))}
+          </SelectField>
+          <SelectField label={opcional('admin.animal.zone')} error={errors.zoneId?.message} {...register('zoneId')}>
+            <option value="">{t('form.choose')}</option>
+            {opcionesZona.map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.name}
               </option>
             ))}
           </SelectField>

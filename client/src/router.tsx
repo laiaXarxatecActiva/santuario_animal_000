@@ -30,6 +30,10 @@ import { PlansAdminPage } from './pages/admin/PlansAdminPage';
 import { UserAdminPage } from './pages/admin/UserAdminPage';
 import { UsersAdminPage } from './pages/admin/UsersAdminPage';
 import { SpeciesAdminPage } from './pages/admin/SpeciesAdminPage';
+import { MyDayPage } from './pages/admin/MyDayPage';
+import { TasksAdminPage } from './pages/admin/TasksAdminPage';
+import { TaskTemplatesAdminPage } from './pages/admin/TaskTemplatesAdminPage';
+import { ZonesAdminPage } from './pages/admin/ZonesAdminPage';
 import { AdoptedAnimalPage } from './pages/adopter/AdoptedAnimalPage';
 import { AdoptPage } from './pages/adopter/AdoptPage';
 import { ContributionsPage } from './pages/adopter/ContributionsPage';
@@ -79,6 +83,7 @@ export const routes: RouteObject[] = [
           { path: 'updates', element: <UpdatesAdminPage /> },
           { path: 'updates/new', element: <UpdateFormPage /> },
           { path: 'updates/:id', element: <UpdateFormPage /> },
+          { path: 'my-day', element: <MyDayPage /> },
           {
             // Administración (TECH_SPEC §10.7): solo administradores.
             element: <RequireRole roles={['admin']} />,
@@ -95,6 +100,9 @@ export const routes: RouteObject[] = [
               { path: 'plans', element: <PlansAdminPage /> },
               { path: 'stats', element: <StatsAdminPage /> },
               { path: 'activity', element: <ActivityAdminPage /> },
+              { path: 'tasks', element: <TasksAdminPage /> },
+              { path: 'task-templates', element: <TaskTemplatesAdminPage /> },
+              { path: 'zones', element: <ZonesAdminPage /> },
             ],
           },
           { path: '*', element: <NotFoundPage /> },

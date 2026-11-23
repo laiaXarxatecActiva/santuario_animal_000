@@ -533,6 +533,11 @@ Usa `AdminLayout`: más sobrio y compacto (`DESIGN_SYSTEM.md` §8.10).
 │  Actualizac.   │                                                             │
 │  Especies      │                                                             │
 │  Veterinario   │                                                             │
+│  TRABAJO DIARIO│                                                             │
+│  Mi día        │                                                             │
+│  Tareas del día│                                                             │
+│  Plantillas    │                                                             │
+│  Zonas y cual. │                                                             │
 │  ADMINISTRAC.  │                                                             │
 │  Usuarios      │                                                             │
 │  Adopciones    │                                                             │
@@ -546,7 +551,7 @@ Usa `AdminLayout`: más sobrio y compacto (`DESIGN_SYSTEM.md` §8.10).
 └────────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
-- La sección «Administración» solo aparece para el administrador.
+- La sección «Administración» solo aparece para el administrador. En «Trabajo diario», el cuidador solo ve «Mi día»; «Tareas del día», «Plantillas de tareas» y «Zonas y cualificaciones» son del administrador.
 - Las secciones de la Fase 3 (Veterinario, Estadísticas, Actividad) aparecen cuando estén implementadas.
 - **Móvil y tablet:** el menú lateral se oculta. La cabecera muestra ☰ · «Panel» · · , y la hamburguesa despliega el mismo menú a todo el ancho.
 
@@ -694,6 +699,58 @@ Debajo, la línea informativa «Se avisará a 2 adoptantes» y [■ Publicar]. T
 | Planes | Una tarjeta editable en línea por plan (de entrada, los tres de RN-04): nombre, importe, descripción, por defecto, activo y número de adopciones activas. Botón «Nuevo plan» con una ventana emergente (siempre mensual). Al cambiar un importe con adopciones activas, aviso `warning` con «Confirmar y guardar» antes de guardar. |
 | Estadísticas (Fase 3, `/admin/stats`) | Filtros «Desde» y «Hasta» (en la URL; por defecto, los últimos 12 meses) y, debajo, «Del nov 25 al nov 26». Tarjetas (dos columnas en escritorio, una en móvil): «Ingresos por mes» (`BarChart`, terracota cuotas y oliva donaciones), «Adopciones nuevas y bajas» (`BarChart`, terracota nuevas y oliva bajas), «Animales más adoptados» y «Adopciones activas por plan» (`BarList`) y «Animales sin adoptantes» (lista con enlace a la ficha del panel). Las tres últimas llevan la nota «Situación actual (no depende del rango)». Sin datos: «No hay datos en este rango» en cada gráfico (3a). Enlace «Estadísticas» (icono `chart-column`) en la sección «Administración» del menú. |
 | Registro de actividad (Fase 3) | Listado con el patrón común; filtros por usuario, tabla, acción y fechas |
+
+### 5.7 Trabajo diario del personal
+
+#### «Mi día» (`/admin/my-day`) — CU-56, CU-57
+
+Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (rejilla de 320 px mínimo en pantallas anchas).
+
+```text
+┌──────────────────────────────────────────────┐
+│ Mi día              ‹  lunes, 23 de noviembre  ›  [Hoy] │
+│                                              │
+│ Asignadas a ti                               │
+│ ┌──────────────────────────────────────────┐ │
+│ │ 15:00  Reparar la puerta del almacén     │ │
+│ │ [Mantenimiento] [Puntual]                │ │
+│ │ Cocina y almacén                         │ │
+│ │ [■ Hecha] [Con nota o foto] [No se ha…]  │ │
+│ └──────────────────────────────────────────┘ │
+│ Tareas del día                               │
+│ ┃08:30  Revisión de los animales en trat.   │  ← borde izquierdo de error si está atrasada
+│ ┃[Revisión de salud] [Atrasada]             │
+│ ┃Clínica y recuperación · Exige: Manejo…    │
+│ ┃[■ Hecha] [Con nota o foto] [No se ha…]    │
+└──────────────────────────────────────────────┘
+```
+
+- Cada tarjeta es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» y «Tareas del día» (h2), ordenadas por hora.
+- **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota o foto» (`outline`: ventana con «Observaciones (opcional)», «Foto (opcional)» y [Cancelar] [■ Marcar como hecha]) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
+- **Sin la cualificación:** texto en cursiva «Necesitas la cualificación «…».» y sin botones. **Otro día:** «Se podrá marcar ese mismo día.»
+- **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
+- Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
+- Vacío: `EmptyState` con `list-check` y «No hay tareas para este día.». Avisos `success` tras cada acción («Tarea marcada como hecha»…).
+
+#### Tareas del día (`/admin/tasks`) — CU-55, CU-73
+
+- Cabecera: «Tareas del día» y, a la derecha, «Ajustes» (`outline`, `gear`) y «Nueva tarea puntual» (`primary`, `plus`).
+- Filtros: «Día» (hoy por defecto), «Zona» y «Estado».
+- Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones, foto) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
+- «Nueva tarea puntual»: ventana con tipo, título, descripción, zona, animales (casillas, solo los que siguen en el santuario), cualificación, día, hora (HH:MM) y persona.
+- «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)». En el Bloque D se convertirá en una pantalla con los avisos por email.
+
+#### Plantillas de tareas (`/admin/task-templates`) — CU-54
+
+- Tabla: Título · Tipo (con «Desactivada» si lo está) · Zona · Cuándo («Cada día · 09:00, 17:00», «Lun, Mié, Vie · 09:00», «Cada 3 días · 13:00») · editar y borrar.
+- Ventana de alta y edición: tipo, título, descripción, zona (o «Según sus animales»), animales (casillas), cualificación necesaria, «Horas (HH:MM, separadas por comas)», «Se repite» (cada día, algunos días de la semana con siete casillas, o cada varios días con «Cada cuántos días»), «Desde», «Hasta» y el interruptor «Activa». Al editar, aviso `info` «Al guardar, las tareas pendientes de hoy en adelante se vuelven a generar.»
+- Borrar una plantilla con tareas resueltas no pregunta: aviso `error` «Esta plantilla ya tiene tareas resueltas: desactívala en lugar de borrarla.»
+
+#### Zonas y cualificaciones (`/admin/zones`) — CU-52, CU-53
+
+- Dos secciones con el patrón de «Especies»: «Zonas» (nombre, animales, insignia «Desactivada») y «Cualificaciones» (nombre, trabajadores, descripción), cada una con su botón «Nueva…» y ventanas de alta, edición y borrado.
+- En la ficha de un trabajador (§5.6), sección «Cualificaciones» antes de «Actividad»: casillas con todas las cualificaciones y «Guardar cualificaciones» (`outline`).
+- En la ficha del animal (§5.4, pestaña «Datos»), el desplegable «Zona (opcional)» con las zonas activas.
 
 ## 6. Estados generales
 

@@ -273,6 +273,13 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Certificado de adopción (Fase 3) | `certificate` |
 | Ver un PDF (recibo, Fase 3) | `file-pdf` |
 | Idioma (Fase 3) | `language` |
+| Mi día (trabajo diario) | `list-check` |
+| Tareas del día | `clipboard-list` |
+| Plantillas de tareas (repetición) | `repeat` |
+| Zonas y cualificaciones | `map-location-dot` |
+| Reasignar una tarea | `user-pen` |
+| Ajustes | `gear` |
+| Día anterior / siguiente | `chevron-left` / `chevron-right` |
 
 ### 6.2 Logo provisional
 
@@ -475,6 +482,11 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | Animal oculto (panel) | Neutro | Oculto |
 | Actualización `adopters` | Terracota suave (`--color-primary-soft`) | Solo adoptantes |
 | Actualización no leída | Terracota relleno, texto `--color-on-primary` | Nuevo |
+| Tipo de tarea (trabajo diario) | Neutro | Alimentación, Limpieza, Medicación… |
+| Tarea atrasada | `error` | Atrasada |
+| Tarea puntual | `primary` | Puntual |
+| Tarea `completed` / `not_done` | `success` / `warning` | Hecha / No realizada |
+| Zona, plantilla desactivada | Neutro | Desactivada |
 
 ### 8.7 Navegación
 
@@ -519,6 +531,8 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | **Gráfico de barras** (`BarChart`, Fase 3) | Estadísticas (CU-41). SVG dibujado en el propio componente, sin librerías. Barras verticales agrupadas por mes, con la esquina superior en `--radius-sm`; cada serie con su color de marca: la primera `--color-primary` (cuotas) y la segunda `--color-secondary` (donaciones). Cuatro líneas guía horizontales en `--color-border` y etiquetas de los ejes en `--color-text-muted`, `--font-size-xs` y `tabular-nums`. Encima, la leyenda: un cuadrado de 12 px del color de la serie y su nombre (el color nunca es la única pista). El SVG lleva `role="img"` y un `aria-label` que resume el gráfico; debajo, un `<details>` «Ver los datos» con la misma información en una tabla. Sin datos en el rango: el texto «No hay datos en este rango» en lugar del gráfico. Ocupa todo el ancho de su tarjeta y conserva la proporción 2:1. |
 | **Gráfico de evolución** (`LineChart`, Fase 3) | Evolución del peso en el historial veterinario (CU-34). Mismo SVG, ejes, accesibilidad y estado vacío que el gráfico de barras, con una línea de 2 px en `--color-primary` y un punto de 6 px por cada valor; el eje horizontal muestra la primera y la última fecha. Con un solo valor se dibuja solo el punto. |
 | **Lista de barras** (`BarList`, Fase 3) | Rankings y repartos de las estadísticas (animales más adoptados, adopciones por plan). Una fila por elemento: el nombre a la izquierda, la cifra a la derecha (`tabular-nums`) y debajo una barra de 8 px con fondo `--color-primary-soft` y relleno `--color-primary` proporcional al valor más alto, con `--radius-pill`. Es una lista HTML (`<ol>`), así que no necesita tabla aparte. |
+| **Tarjeta de tarea** (`TaskCard`, trabajo diario) | «Mi día» (CU-56). Fondo `--color-surface`, borde fino, `--radius-lg`, relleno 16 px y 8 px entre filas. Arriba, la hora (600, `tabular-nums`) y el título (h3, `--font-size-lg`); debajo, las insignias (`TaskBadges`), la zona y los animales (`--font-size-sm`, `--color-text-muted`), la cualificación que exige y, si está resuelta, una línea fina y quién y cuándo, las observaciones y «Ver la foto». Si está atrasada, borde izquierdo de 4 px en `--color-error` (además de la insignia). Botones de 44 px; en móvil, uno debajo de otro a todo el ancho. Es un `<article>` con el título como nombre accesible. |
+| **Grupo de casillas** (`CheckboxGroup`) | Elegir varios valores (días de la semana, animales, cualificaciones). `fieldset` sin borde con la leyenda en 600 y las casillas (§8.5) en rejilla de columnas de 160 px mínimo, con 16 px entre columnas; el error debajo. |
 | **Separador decorativo** | Línea fina caramelo (`--color-accent`) de 48 px bajo los títulos de sección de la página de inicio. Solo decorativa. |
 
 ### 8.10 Panel de gestión

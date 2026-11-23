@@ -1,6 +1,10 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   faArrowUpRightFromSquare,
+  faClipboardList,
+  faListCheck,
+  faMapLocationDot,
+  faRepeat,
   faChartColumn,
   faClockRotateLeft,
   faBars,
@@ -38,6 +42,8 @@ interface Enlace {
   icon: IconDefinition;
   /** Solo se marca como activo en su ruta exacta. */
   end?: boolean;
+  /** Roles que ven el enlace; sin indicar, los del grupo. */
+  roles?: readonly Role[];
 }
 
 interface Grupo {
@@ -57,6 +63,15 @@ const GRUPOS: readonly Grupo[] = [
       { to: '/admin/updates', key: 'admin.nav.updates', icon: faNewspaper },
       { to: '/admin/species', key: 'admin.nav.species', icon: faTags },
       { to: '/admin/vet-records', key: 'admin.nav.vet', icon: faStethoscope },
+    ],
+  },
+  {
+    key: 'admin.nav.groupWork',
+    links: [
+      { to: '/admin/my-day', key: 'admin.nav.myDay', icon: faListCheck },
+      { to: '/admin/tasks', key: 'admin.nav.tasks', icon: faClipboardList, roles: ['admin'] },
+      { to: '/admin/task-templates', key: 'admin.nav.taskTemplates', icon: faRepeat, roles: ['admin'] },
+      { to: '/admin/zones', key: 'admin.nav.zones', icon: faMapLocationDot, roles: ['admin'] },
     ],
   },
   {
@@ -101,7 +116,11 @@ export function AdminLayout() {
     return () => document.removeEventListener('keydown', alPulsar);
   }, [abierto]);
 
-  const grupos = GRUPOS.filter((g) => !g.roles || (user !== null && g.roles.includes(user.role)));
+  const puedeVer = (roles?: readonly Role[]) => !roles || (user !== null && roles.includes(user.role));
+  const grupos = GRUPOS.filter((g) => puedeVer(g.roles)).map((g) => ({
+    ...g,
+    links: g.links.filter((enlace) => puedeVer(enlace.roles)),
+  }));
 
   return (
     <div className={styles.shell}>

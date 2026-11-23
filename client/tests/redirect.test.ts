@@ -20,7 +20,7 @@ describe('redirecciones tras entrar', () => {
   });
 
   it('CU-09 paso 5: el trabajador va siempre a su inicio', () => {
-    expect(homeFor(sessionUser({ role: 'caretaker' }), '/animals/3')).toBe(WORKER_HOME);
+    expect(homeFor(sessionUser({ role: 'caretaker' }), '/animals/3')).toBe('/admin/my-day');
     expect(homeFor(sessionUser({ role: 'admin' }), undefined)).toBe(WORKER_HOME);
   });
 });

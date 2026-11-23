@@ -84,6 +84,19 @@ export function createMediaUploader(storage: StorageService, logError: (error: u
       return { guardados, rechazados, indicesRechazados };
     },
     borrar,
+
+    /**
+     * CU-57 y CU-70: una sola imagen, sin miniatura, en `carpeta/` con nombre
+     * aleatorio. Devuelve su URL o el motivo del rechazo.
+     */
+    async guardarImagen(carpeta: string, archivo: ArchivoSubido): Promise<{ url: string } | RejectedFileDto> {
+      const tipo = clasificarArchivo(archivo);
+      if ('rechazo' in tipo) return rechazo(archivo, tipo.rechazo);
+      if (tipo.mediaType !== 'image') return rechazo(archivo, 'UNSUPPORTED_FORMAT');
+      const procesada = await procesarImagen(archivo.buffer);
+      if (!procesada) return rechazo(archivo, 'INVALID_FILE');
+      return { url: await storage.save(procesada.imagen, `${carpeta}/${randomUUID()}.webp`, 'image/webp') };
+    },
   };
 }
 

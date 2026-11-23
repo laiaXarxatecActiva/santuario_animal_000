@@ -235,6 +235,7 @@ export function adminAnimal(overrides: Partial<AdminAnimalDto> = {}): AdminAnima
     status: 'in_sanctuary',
     statusChangedAt: null,
     showInMemorial: false,
+    zone: null,
     isAdoptable: true,
     isPublished: true,
     activeAdopters: 2,

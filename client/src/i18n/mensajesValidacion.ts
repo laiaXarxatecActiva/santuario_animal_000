@@ -140,6 +140,65 @@ const FIJOS: Record<string, Traduccion> = {
   },
   'La fecha no puede ser futura.': { ca: 'La data no pot ser futura.', en: 'The date cannot be in the future.' },
   'La subida no es válida.': { ca: 'La pujada no és vàlida.', en: 'The upload is not valid.' },
+  // Trabajo diario del personal (CU-52 en adelante).
+  'Escribe la hora como HH:MM.': { ca: 'Escriu l’hora com a HH:MM.', en: 'Enter the time as HH:MM.' },
+  'Escribe el nombre de la zona.': { ca: 'Escriu el nom de la zona.', en: 'Enter the name of the area.' },
+  'Escribe el nombre de la cualificación.': {
+    ca: 'Escriu el nom de la qualificació.',
+    en: 'Enter the name of the qualification.',
+  },
+  'Elige el tipo de tarea.': { ca: 'Tria el tipus de tasca.', en: 'Choose the type of task.' },
+  'Añade al menos una hora.': { ca: 'Afig almenys una hora.', en: 'Add at least one time.' },
+  'Elige cada cuánto se repite.': { ca: 'Tria cada quant es repeteix.', en: 'Choose how often it repeats.' },
+  'Elige la fecha de inicio.': { ca: 'Tria la data d’inici.', en: 'Choose the start date.' },
+  'Elige una zona o al menos un animal.': {
+    ca: 'Tria una zona o almenys un animal.',
+    en: 'Choose an area or at least one animal.',
+  },
+  'Elige al menos un día de la semana.': {
+    ca: 'Tria almenys un dia de la setmana.',
+    en: 'Choose at least one day of the week.',
+  },
+  'Indica cada cuántos días (de 2 a 365).': {
+    ca: 'Indica cada quants dies (de 2 a 365).',
+    en: 'Enter every how many days (2 to 365).',
+  },
+  'La fecha de fin no puede ser anterior a la de inicio.': {
+    ca: 'La data de fi no pot ser anterior a la d’inici.',
+    en: 'The end date cannot be before the start date.',
+  },
+  'Elige el día.': { ca: 'Tria el dia.', en: 'Choose the day.' },
+  'Elige una zona, un animal o una persona.': {
+    ca: 'Tria una zona, un animal o una persona.',
+    en: 'Choose an area, an animal or a person.',
+  },
+  'Explica por qué no se ha podido hacer.': {
+    ca: 'Explica per què no s’ha pogut fer.',
+    en: 'Explain why it could not be done.',
+  },
+  'Indica los minutos.': { ca: 'Indica els minuts.', en: 'Enter the minutes.' },
+  'Entre 0 y 240 minutos.': { ca: 'Entre 0 i 240 minuts.', en: 'Between 0 and 240 minutes.' },
+  'Esta zona no existe.': { ca: 'Esta zona no existeix.', en: 'This area does not exist.' },
+  'Esta zona está desactivada.': { ca: 'Esta zona està desactivada.', en: 'This area is deactivated.' },
+  'Esta zona no existe o está desactivada.': {
+    ca: 'Esta zona no existeix o està desactivada.',
+    en: 'This area does not exist or is deactivated.',
+  },
+  'Esta cualificación no existe.': { ca: 'Esta qualificació no existeix.', en: 'This qualification does not exist.' },
+  'Estos animales no viven en la misma zona: elige una zona para la tarea.': {
+    ca: 'Estos animals no viuen en la mateixa zona: tria una zona per a la tasca.',
+    en: 'These animals do not live in the same area: choose an area for the task.',
+  },
+  'Elige a un trabajador en activo.': { ca: 'Tria un treballador en actiu.', en: 'Choose an active worker.' },
+  'Esta persona no tiene la cualificación que exige la tarea.': {
+    ca: 'Esta persona no té la qualificació que exigeix la tasca.',
+    en: 'This person does not have the qualification the task requires.',
+  },
+  'No se pueden crear tareas de días pasados.': {
+    ca: 'No es poden crear tasques de dies passats.',
+    en: 'Tasks cannot be created for past days.',
+  },
+  'Adjunta una sola foto.': { ca: 'Adjunta una sola foto.', en: 'Attach a single photo.' },
 };
 
 /** Mensajes con un número (longitudes máximas y mínimas). */
@@ -157,6 +216,10 @@ const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
       ca: `La contrasenya no pot tindre més de ${n} caràcters.`,
       en: `The password cannot be longer than ${n} characters.`,
     }),
+  ],
+  [
+    /^Como máximo (\d+) horas al día\.$/,
+    (n) => ({ ca: `Com a màxim ${n} hores al dia.`, en: `At most ${n} times a day.` }),
   ],
   [
     /^No puede tener más de (\d+) caracteres\.$/,

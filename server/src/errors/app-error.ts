@@ -542,3 +542,61 @@ export class ManualPaymentNotAllowedError extends BusinessRuleError {
     super('MANUAL_PAYMENT_NOT_ALLOWED', 'Esta adopción no tiene ninguna cuota pendiente de pago.');
   }
 }
+
+// Trabajo diario del personal (CU-52 a CU-58).
+
+export class ZoneNameTakenError extends ConflictError {
+  constructor() {
+    super('ZONE_NAME_TAKEN', 'Ya existe una zona con este nombre.');
+  }
+}
+
+export class ZoneInUseError extends ConflictError {
+  constructor() {
+    super('ZONE_IN_USE', 'Esta zona tiene animales, tareas o turnos: desactívala en lugar de borrarla.');
+  }
+}
+
+export class QualificationNameTakenError extends ConflictError {
+  constructor() {
+    super('QUALIFICATION_NAME_TAKEN', 'Ya existe una cualificación con este nombre.');
+  }
+}
+
+export class QualificationInUseError extends ConflictError {
+  constructor() {
+    super('QUALIFICATION_IN_USE', 'Esta cualificación la tienen trabajadores o la exigen tareas: no se puede borrar.');
+  }
+}
+
+// CU-54 A2: con historial, la plantilla se desactiva.
+export class TemplateHasHistoryError extends ConflictError {
+  constructor() {
+    super('TEMPLATE_HAS_HISTORY', 'Esta plantilla ya tiene tareas resueltas: desactívala en lugar de borrarla.');
+  }
+}
+
+// CU-57 2a-2b.
+export class TaskNotPendingError extends ConflictError {
+  constructor() {
+    super('TASK_NOT_PENDING', 'Esta tarea ya está resuelta.');
+  }
+}
+
+export class TaskIsPendingError extends ConflictError {
+  constructor() {
+    super('TASK_IS_PENDING', 'Esta tarea sigue pendiente.');
+  }
+}
+
+export class TaskFutureDayError extends BusinessRuleError {
+  constructor() {
+    super('TASK_FUTURE_DAY', 'Todavía no se puede hacer: es de otro día.');
+  }
+}
+
+export class MissingQualificationError extends AppError {
+  constructor() {
+    super(403, 'MISSING_QUALIFICATION', 'Esta tarea exige una cualificación que no tienes.');
+  }
+}

@@ -250,7 +250,16 @@
     "PAYMENT_NOT_REFUNDABLE": "Només es pot retornar un pagament cobrat.",
     "REFUND_FAILED": "La passarel·la no ha pogut fer la devolució. Torna-ho a provar més tard.",
     "MANUAL_PAYMENT_NOT_ALLOWED": "Esta adopció no té cap quota pendent de pagament.",
-    "DONATION_NOT_REFUNDABLE": "Només es pot retornar una donació cobrada."
+    "DONATION_NOT_REFUNDABLE": "Només es pot retornar una donació cobrada.",
+    "ZONE_NAME_TAKEN": "Ja hi ha una zona amb este nom.",
+    "ZONE_IN_USE": "Esta zona té animals, tasques o torns: desactiva-la en lloc d’esborrar-la.",
+    "QUALIFICATION_NAME_TAKEN": "Ja hi ha una qualificació amb este nom.",
+    "QUALIFICATION_IN_USE": "Esta qualificació la tenen treballadors o l’exigixen tasques: no es pot esborrar.",
+    "TEMPLATE_HAS_HISTORY": "Esta plantilla ja té tasques resoltes: desactiva-la en lloc d’esborrar-la.",
+    "TASK_NOT_PENDING": "Esta tasca ja està resolta.",
+    "TASK_IS_PENDING": "Esta tasca continua pendent.",
+    "TASK_FUTURE_DAY": "Encara no es pot fer: és d’un altre dia.",
+    "MISSING_QUALIFICATION": "Esta tasca exigix una qualificació que no tens."
   },
   "form": {
     "showPassword": "Mostra la contrasenya",
@@ -580,7 +589,12 @@
       "donations": "Donacions",
       "activity": "Activitat",
       "vet": "Veterinari",
-      "stats": "Estadístiques"
+      "stats": "Estadístiques",
+      "groupWork": "Treball diari",
+      "myDay": "El meu dia",
+      "tasks": "Tasques del dia",
+      "taskTemplates": "Plantilles de tasques",
+      "zones": "Zones i qualificacions"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -718,7 +732,8 @@
       "tabUpdates": "Actualitzacions",
       "tabVet": "Veterinari",
       "showInMemorial": "Mostra a «En memòria»",
-      "showInMemorialHelp": "La seua fitxa apareixerà a la secció pública «En memòria», sense opció d'adoptar."
+      "showInMemorialHelp": "La seua fitxa apareixerà a la secció pública «En memòria», sense opció d'adoptar.",
+      "zone": "Zona"
     },
     "media": {
       "dropHere": "Arrossega ací les fotos o els vídeos",
@@ -1288,5 +1303,167 @@
     "saved": "Forma de pagament guardada.",
     "due": "La quota de {{name}} venç el {{date}}. Pots pagar-la fins al {{deadline}} sense que l'adopció es pose en pausa.",
     "payFee": "Paga la quota"
+  },
+  "work": {
+    "types": {
+      "feeding": "Alimentació",
+      "cleaning": "Neteja",
+      "medication": "Medicació",
+      "enrichment": "Enriquiment",
+      "health_check": "Revisió de salut",
+      "maintenance": "Manteniment"
+    },
+    "status": {
+      "pending": "Pendent",
+      "completed": "Feta",
+      "not_done": "No feta"
+    },
+    "late": "Endarrerida",
+    "oneOff": "Puntual",
+    "resolvedBy": "{{name}}, a les {{time}}",
+    "resolvedBySystem": "Tancada pel sistema en acabar el dia",
+    "assignedTo": "Assignada a {{name}}",
+    "requires": "Exigix: {{name}}",
+    "photo": "Foto",
+    "viewPhoto": "Veure la foto",
+    "blocked": {
+      "MISSING_QUALIFICATION": "Necessites la qualificació «{{name}}».",
+      "FUTURE_DAY": "Es podrà marcar eixe mateix dia."
+    },
+    "weekdayShort": {
+      "1": "Dl",
+      "2": "Dt",
+      "3": "Dc",
+      "4": "Dj",
+      "5": "Dv",
+      "6": "Ds",
+      "7": "Dg"
+    },
+    "weekdayLong": {
+      "1": "Dilluns",
+      "2": "Dimarts",
+      "3": "Dimecres",
+      "4": "Dijous",
+      "5": "Divendres",
+      "6": "Dissabte",
+      "7": "Diumenge"
+    },
+    "myDay": {
+      "title": "El meu dia",
+      "mine": "Assignades a tu",
+      "rest": "Tasques del dia",
+      "empty": "No hi ha tasques per a este dia.",
+      "prevDay": "Dia anterior",
+      "nextDay": "Dia següent",
+      "today": "Hui",
+      "done": "Feta",
+      "withNote": "Amb nota o foto",
+      "notDone": "No s’ha pogut fer",
+      "undo": "Desfer",
+      "markedDone": "Tasca marcada com a feta",
+      "markedNotDone": "Tasca marcada com a no feta",
+      "reopened": "La tasca torna a estar pendent",
+      "observations": "Observacions",
+      "completeSubmit": "Marcar com a feta",
+      "reason": "Motiu",
+      "loadError": "No s’han pogut carregar les tasques."
+    },
+    "tasks": {
+      "title": "Tasques del dia",
+      "new": "Nova tasca puntual",
+      "created": "Tasca creada",
+      "day": "Dia",
+      "time": "Hora",
+      "zone": "Zona",
+      "status": "Estat",
+      "all": "Totes",
+      "allStatuses": "Tots",
+      "task": "Tasca",
+      "assignee": "Assignada a",
+      "result": "Resultat",
+      "reassign": "Reassignar {{title}}",
+      "reassignTitle": "Reassignar: {{title}}",
+      "person": "Persona",
+      "noPerson": "Sense assignar (segons la zona)",
+      "reassigned": "Tasca reassignada",
+      "deleted": "Tasca esborrada",
+      "confirmDelete": "Vols esborrar «{{title}}»?",
+      "confirmDeleteText": "La tasca desapareixerà de «El meu dia».",
+      "empty": "No hi ha tasques amb estos filtres.",
+      "settings": "Configuració",
+      "type": "Tipus",
+      "titleField": "Títol",
+      "description": "Descripció",
+      "animals": "Animals",
+      "qualification": "Qualificació necessària",
+      "none": "Cap",
+      "loadError": "No s’han pogut carregar les tasques."
+    },
+    "templates": {
+      "title": "Plantilles de tasques",
+      "new": "Nova plantilla",
+      "editTitle": "Editar plantilla",
+      "saved": "Plantilla guardada",
+      "deleted": "Plantilla esborrada",
+      "zoneFromAnimals": "Segons els seus animals",
+      "times": "Hores (HH:MM, separades per comes)",
+      "recurrence": "Es repetix",
+      "recurrences": {
+        "daily": "Cada dia",
+        "weekdays": "Alguns dies de la setmana",
+        "every_n_days": "Cada uns quants dies"
+      },
+      "weekdays": "Dies",
+      "intervalDays": "Cada quants dies",
+      "startDate": "Des de",
+      "endDate": "Fins a",
+      "active": "Activa",
+      "inactive": "Desactivada",
+      "when": "Quan",
+      "scheduleDaily": "Cada dia · {{times}}",
+      "scheduleEvery": "Cada {{count}} dies · {{times}}",
+      "scheduleWeekdays": "{{days}} · {{times}}",
+      "regenerateNotice": "En guardar, les tasques pendents d’avui en avant es tornen a generar.",
+      "confirmDelete": "Vols esborrar la plantilla «{{title}}»?",
+      "confirmDeleteText": "També s’esborraran les seues tasques pendents.",
+      "empty": "Encara no hi ha plantilles.",
+      "loadError": "No s’han pogut carregar les plantilles."
+    },
+    "zones": {
+      "title": "Zones i qualificacions",
+      "zonesTitle": "Zones",
+      "new": "Nova zona",
+      "editTitle": "Editar zona",
+      "saved": "Zona guardada",
+      "deleted": "Zona esborrada",
+      "name": "Nom",
+      "description": "Descripció",
+      "animalCount": "Animals",
+      "active": "Activa",
+      "inactive": "Desactivada",
+      "confirmDelete": "Vols esborrar la zona «{{name}}»?",
+      "confirmDeleteText": "No es pot desfer.",
+      "empty": "Encara no hi ha zones.",
+      "loadError": "No s’han pogut carregar les zones."
+    },
+    "qualifications": {
+      "title": "Qualificacions",
+      "new": "Nova qualificació",
+      "editTitle": "Editar qualificació",
+      "saved": "Qualificació guardada",
+      "deleted": "Qualificació esborrada",
+      "workerCount": "Treballadors",
+      "confirmDelete": "Vols esborrar la qualificació «{{name}}»?",
+      "empty": "Encara no hi ha qualificacions.",
+      "loadError": "No s’han pogut carregar les qualificacions.",
+      "userSave": "Guardar qualificacions",
+      "userSaved": "Qualificacions guardades",
+      "userHelp": "Les tasques que exigixen una qualificació només les pot marcar qui la té."
+    },
+    "settings": {
+      "title": "Configuració del treball diari",
+      "lateMargin": "Marge per a considerar endarrerida una tasca (minuts)",
+      "saved": "Configuració guardada"
+    }
   }
 }

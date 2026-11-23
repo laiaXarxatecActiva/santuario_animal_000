@@ -15,6 +15,11 @@ export const ACTIVITY_TABLES = [
   'adoptions',
   'payments',
   'donations',
+  'zones',
+  'qualifications',
+  'task_templates',
+  'task_instances',
+  'work_settings',
 ] as const;
 export type ActivityTable = (typeof ACTIVITY_TABLES)[number];
 

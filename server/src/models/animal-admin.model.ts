@@ -21,6 +21,8 @@ interface AnimalAdminRow extends CoverRow {
   status: AnimalStatus;
   status_changed_at: string | null;
   show_in_memorial: boolean;
+  zone_id: number | null;
+  zone_name: string | null;
   is_adoptable: boolean;
   is_published: boolean;
   active_adopters: number;
@@ -43,6 +45,7 @@ export function mapRow(row: AnimalAdminRow): AdminAnimalDto {
     status: row.status,
     statusChangedAt: row.status_changed_at,
     showInMemorial: row.show_in_memorial,
+    zone: row.zone_id === null ? null : { id: row.zone_id, name: row.zone_name ?? '' },
     isAdoptable: row.is_adoptable,
     isPublished: row.is_published,
     activeAdopters: row.active_adopters,
@@ -57,10 +60,12 @@ const SELECT = `
   SELECT a.id, a.name, a.species_id, s.name AS species_name, a.sex,
          a.approx_birth_date, a.arrival_date, a.rescue_story, a.temperament, a.special_needs,
          a.health_summary, a.status, a.status_changed_at, a.show_in_memorial, a.is_adoptable, a.is_published,
+         a.zone_id, zo.name AS zone_name,
          ad.active_adopters, ad.open_adoptions, ad.has_adoption_history,
          ${COLUMNAS_PORTADA}
     FROM animals a
     JOIN species s ON s.id = a.species_id
+    LEFT JOIN zones zo ON zo.id = a.zone_id
     ${JOIN_PORTADA('a')}
    CROSS JOIN LATERAL (
          SELECT count(*) FILTER (WHERE x.status = 'active')::int AS active_adopters,
@@ -222,6 +227,11 @@ export async function updateStatus(
   );
 }
 
+/** CU-52: zona donde vive. */
+export async function setZone(db: Queryable, id: number, zoneId: number | null): Promise<void> {
+  await db.query('UPDATE animals SET zone_id = $2 WHERE id = $1', [id, zoneId]);
+}
+
 /** CU-12: aparece o no en «En memoria» (la BD exige que esté fallecido). */
 export async function setShowInMemorial(db: Queryable, id: number, show: boolean): Promise<void> {
   await db.query('UPDATE animals SET show_in_memorial = $2 WHERE id = $1', [id, show]);
@@ -259,4 +269,17 @@ export async function findStatus(db: Queryable, id: number): Promise<AnimalStatu
 export async function findName(db: Queryable, id: number): Promise<string | null> {
   const { rows } = await db.query<{ name: string }>('SELECT name FROM animals WHERE id = $1', [id]);
   return rows[0]?.name ?? null;
+}
+
+/** CU-54: datos de los animales de una plantilla (los que no existen no aparecen). */
+export async function findForTasks(
+  db: Queryable,
+  ids: readonly number[],
+): Promise<{ id: number; name: string; status: AnimalStatus; zoneId: number | null }[]> {
+  if (ids.length === 0) return [];
+  const { rows } = await db.query<{ id: number; name: string; status: AnimalStatus; zone_id: number | null }>(
+    'SELECT id, name, status, zone_id FROM animals WHERE id = ANY($1::int[]) ORDER BY id',
+    [ids],
+  );
+  return rows.map((r) => ({ id: r.id, name: r.name, status: r.status, zoneId: r.zone_id }));
 }
