@@ -279,6 +279,9 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Zonas y cualificaciones | `map-location-dot` |
 | Reasignar una tarea | `user-pen` |
 | Ajustes | `gear` |
+| Aviso de un animal que come poco (campana) | `utensils` |
+| Aviso de medicación no dada (campana) | `pills` |
+| Aviso de visita veterinaria de hoy (campana) | `stethoscope` |
 | Día anterior / siguiente | `chevron-left` / `chevron-right` |
 
 ### 6.2 Logo provisional
@@ -485,6 +488,10 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | Tipo de tarea (trabajo diario) | Neutro | Alimentación, Limpieza, Medicación… |
 | Tarea atrasada | `error` | Atrasada |
 | Tarea puntual | `primary` | Puntual |
+| Visita veterinaria programada (trabajo diario) | `info` | Visita veterinaria |
+| Lo que ha comido un animal (trabajo diario) | `success` / neutro / `warning` / `error` | Todo / Más de la mitad / Menos de la mitad / Nada |
+| Visita veterinaria (estado) | `primary` / `success` / neutro | Programada / Hecha / Cancelada |
+| Dieta o pauta terminada | Neutro | Terminada |
 | Tarea `completed` / `not_done` | `success` / `warning` | Hecha / No realizada |
 | Zona, plantilla desactivada | Neutro | Desactivada |
 

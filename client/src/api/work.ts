@@ -1,4 +1,13 @@
 import type {
+  AnimalCareDto,
+  DietItemBody,
+  DietItemDto,
+  IntakeLevel,
+  MedicationPlanBody,
+  MedicationPlanDto,
+  VetRecordBody,
+  VetVisitBody,
+  VetVisitDto,
   AbsenceBody,
   AbsenceCreatedDto,
   AbsenceDto,
@@ -64,12 +73,20 @@ export const workApi = {
     create: (body: OneOffTaskBody) => apiPost<TaskDto>('/api/admin/tasks', body),
     setAssignee: (id: number, body: TaskAssigneeBody) => apiPatch<TaskDto>(`/api/admin/tasks/${id}/assignee`, body),
     remove: (id: number) => apiDelete(`/api/admin/tasks/${id}`),
-    /** Con un toque (JSON) o con observaciones y foto (multipart). */
-    complete: (id: number, datos: { observations?: string; photo?: File } = {}) => {
+    /**
+     * Con un toque (JSON) o con observaciones y foto (multipart). En las comidas,
+     * lo que ha comido cada animal (CU-66).
+     */
+    complete: (
+      id: number,
+      datos: { observations?: string; photo?: File; intakes?: { animalId: number; intake: IntakeLevel }[] } = {},
+    ) => {
+      const intakes = datos.intakes && datos.intakes.length > 0 ? datos.intakes : undefined;
       if (!datos.photo)
-        return apiPost<TaskDto>(`/api/admin/tasks/${id}/complete`, { observations: datos.observations });
+        return apiPost<TaskDto>(`/api/admin/tasks/${id}/complete`, { observations: datos.observations, intakes });
       const form = new FormData();
       if (datos.observations) form.append('observations', datos.observations);
+      if (intakes) form.append('intakes', JSON.stringify(intakes));
       form.append('files', datos.photo);
       return apiUpload<TaskDto>(`/api/admin/tasks/${id}/complete`, form);
     },
@@ -101,6 +118,27 @@ export const workApi = {
     list: () => apiGet<{ data: AbsenceDto[] }>('/api/admin/absences'),
     create: (body: AbsenceBody) => apiPost<AbsenceCreatedDto>('/api/admin/absences', body),
     remove: (id: number) => apiDelete(`/api/admin/absences/${id}`),
+  },
+
+  // CU-65 a CU-69: pestaña «Cuidados» de la ficha del animal.
+  care: {
+    get: (animalId: number) => apiGet<AnimalCareDto>(`/api/admin/animals/${animalId}/care`),
+    createDietItem: (animalId: number, body: DietItemBody) =>
+      apiPost<DietItemDto>(`/api/admin/animals/${animalId}/diet-items`, body),
+    updateDietItem: (id: number, body: DietItemBody) => apiPut<DietItemDto>(`/api/admin/diet-items/${id}`, body),
+    removeDietItem: (id: number) => apiDelete(`/api/admin/diet-items/${id}`),
+    createPlan: (animalId: number, body: MedicationPlanBody) =>
+      apiPost<MedicationPlanDto>(`/api/admin/animals/${animalId}/medication-plans`, body),
+    updatePlan: (id: number, body: MedicationPlanBody) =>
+      apiPut<MedicationPlanDto>(`/api/admin/medication-plans/${id}`, body),
+    endPlan: (id: number) => apiPost<MedicationPlanDto>(`/api/admin/medication-plans/${id}/end`),
+    removePlan: (id: number) => apiDelete(`/api/admin/medication-plans/${id}`),
+    createVisit: (animalId: number, body: VetVisitBody) =>
+      apiPost<VetVisitDto>(`/api/admin/animals/${animalId}/vet-visits`, body),
+    updateVisit: (id: number, body: VetVisitBody) => apiPut<VetVisitDto>(`/api/admin/vet-visits/${id}`, body),
+    cancelVisit: (id: number) => apiPost<VetVisitDto>(`/api/admin/vet-visits/${id}/cancel`),
+    completeVisit: (id: number, body: VetRecordBody) =>
+      apiPost<VetVisitDto>(`/api/admin/vet-visits/${id}/complete`, body),
   },
 
   // CU-73.

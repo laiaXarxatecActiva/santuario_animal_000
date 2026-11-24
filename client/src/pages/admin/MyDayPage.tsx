@@ -1,17 +1,25 @@
 import { faChevronLeft, faChevronRight, faListCheck } from '@fortawesome/free-solid-svg-icons';
-import { taskNotDoneBodySchema, type MyDayTaskDto, type ShiftAssignmentDto } from '@sanctuary/shared';
+import {
+  INTAKE_LEVELS,
+  taskNotDoneBodySchema,
+  type IntakeLevel,
+  type MyDayTaskDto,
+  type NamedRef,
+  type ShiftAssignmentDto,
+} from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
+import { VetRecordForm } from '../../components/admin/VetRecords';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
-import { TextAreaField, TextField } from '../../components/FormFields';
+import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { TaskCard } from '../../components/work/TaskCard';
 import { useSession } from '../../hooks/useSession';
-import { TASKS_KEY, useMyDay } from '../../hooks/useWork';
+import { CARE_KEY, TASKS_KEY, useMyDay } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { addDays, formatTime, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
@@ -19,7 +27,12 @@ import diaStyles from './MyDayPage.module.css';
 import turnoStyles from './ShiftsPage.module.css';
 
 type Aviso = { type: 'success' | 'error'; message: string };
-type Ventana = { tipo: 'completar' | 'noRealizada'; tarea: MyDayTaskDto };
+type Ventana = { tipo: 'completar' | 'noRealizada' | 'visita'; tarea: MyDayTaskDto };
+type Ingesta = { animalId: number; intake: IntakeLevel };
+
+/** CU-66: en una comida se anota lo que ha comido cada animal. */
+const animalesDeLaComida = (tarea: MyDayTaskDto): NamedRef[] =>
+  tarea.type === 'feeding' ? (tarea.feedingAnimals ?? []) : [];
 
 // CU-56 y CU-57: «Mi día» (SCREENS §5.16). Pensada para el móvil.
 export function MyDayPage() {
@@ -39,8 +52,17 @@ export function MyDayPage() {
   const alFallar = (error: unknown) => setAviso({ type: 'error', message: errorMessage(t, error) });
 
   const completar = useMutation({
-    mutationFn: ({ id, observations, photo }: { id: number; observations?: string; photo?: File }) =>
-      workApi.tasks.complete(id, { observations, photo }),
+    mutationFn: ({
+      id,
+      observations,
+      photo,
+      intakes,
+    }: {
+      id: number;
+      observations?: string;
+      photo?: File;
+      intakes?: Ingesta[];
+    }) => workApi.tasks.complete(id, { observations, photo, intakes }),
     onSuccess: alTerminar('work.myDay.markedDone'),
     onError: alFallar,
   });
@@ -67,6 +89,29 @@ export function MyDayPage() {
   const acciones = (tarea: MyDayTaskDto) => {
     if (tarea.status === 'pending') {
       if (tarea.blockedReason) return null;
+      const noRealizadaBoton = (
+        <Button variant="ghost" onClick={() => setVentana({ tipo: 'noRealizada', tarea })}>
+          {t('work.myDay.notDone')}
+        </Button>
+      );
+      // CU-68: una visita veterinaria se registra en el historial.
+      if (tarea.vetVisitId) {
+        return (
+          <>
+            <Button onClick={() => setVentana({ tipo: 'visita', tarea })}>{t('work.myDay.registerVisit')}</Button>
+            {noRealizadaBoton}
+          </>
+        );
+      }
+      // CU-66: en una comida, «Hecha» pregunta lo que ha comido cada animal.
+      if (animalesDeLaComida(tarea).length > 0) {
+        return (
+          <>
+            <Button onClick={() => setVentana({ tipo: 'completar', tarea })}>{t('work.myDay.done')}</Button>
+            {noRealizadaBoton}
+          </>
+        );
+      }
       return (
         <>
           <Button disabled={ocupado} onClick={() => completar.mutate({ id: tarea.id })}>
@@ -177,7 +222,21 @@ export function MyDayPage() {
           tarea={ventana.tarea}
           pendiente={completar.isPending}
           onClose={() => setVentana(null)}
-          onSubmit={(observations, photo) => completar.mutate({ id: ventana.tarea.id, observations, photo })}
+          onSubmit={(observations, photo, intakes) =>
+            completar.mutate({ id: ventana.tarea.id, observations, photo, intakes })
+          }
+        />
+      )}
+      {ventana?.tipo === 'visita' && (
+        <VetRecordForm
+          titulo={t('work.care.visits.registerTitle')}
+          valores={{ description: ventana.tarea.title }}
+          enviar={(registro) => workApi.care.completeVisit(ventana.tarea.vetVisitId ?? 0, registro)}
+          onClose={() => setVentana(null)}
+          onSaved={async () => {
+            await queryClient.invalidateQueries({ queryKey: CARE_KEY });
+            await alTerminar('work.care.visits.registered')();
+          }}
         />
       )}
       {ventana?.tipo === 'noRealizada' && (
@@ -257,7 +316,7 @@ function Grupo({
   );
 }
 
-/** CU-57 paso 3: observaciones y foto opcionales. */
+/** CU-57 paso 3: observaciones y foto opcionales; en las comidas, lo que ha comido cada animal (CU-66). */
 function VentanaCompletar({
   tarea,
   pendiente,
@@ -267,11 +326,15 @@ function VentanaCompletar({
   tarea: MyDayTaskDto;
   pendiente: boolean;
   onClose: () => void;
-  onSubmit: (observations: string | undefined, photo: File | undefined) => void;
+  onSubmit: (observations: string | undefined, photo: File | undefined, intakes: Ingesta[] | undefined) => void;
 }) {
   const { t } = useTranslation();
   const [observaciones, setObservaciones] = useState('');
   const [foto, setFoto] = useState<File | undefined>(undefined);
+  const animales = animalesDeLaComida(tarea);
+  const [ingestas, setIngestas] = useState<Record<number, IntakeLevel>>(() =>
+    Object.fromEntries(animales.map((a) => [a.id, 'all' as IntakeLevel])),
+  );
   const formId = 'completar-tarea';
   return (
     <Modal
@@ -295,9 +358,34 @@ function VentanaCompletar({
         className={styles.modalForm}
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit(observaciones.trim() === '' ? undefined : observaciones, foto);
+          onSubmit(
+            observaciones.trim() === '' ? undefined : observaciones,
+            foto,
+            animales.length > 0
+              ? animales.map((a) => ({ animalId: a.id, intake: ingestas[a.id] ?? 'all' }))
+              : undefined,
+          );
         }}
       >
+        {animales.length > 0 && (
+          <fieldset className={styles.modalForm}>
+            <legend>{t('work.myDay.intakesLegend')}</legend>
+            {animales.map((a) => (
+              <SelectField
+                key={a.id}
+                label={a.name}
+                value={ingestas[a.id] ?? 'all'}
+                onChange={(e) => setIngestas((actual) => ({ ...actual, [a.id]: e.target.value as IntakeLevel }))}
+              >
+                {INTAKE_LEVELS.map((nivel) => (
+                  <option key={nivel} value={nivel}>
+                    {t(`work.care.intakes.${nivel}`)}
+                  </option>
+                ))}
+              </SelectField>
+            ))}
+          </fieldset>
+        )}
         <TextAreaField
           label={t('form.optional', { label: t('work.myDay.observations') })}
           rows={3}

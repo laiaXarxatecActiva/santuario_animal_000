@@ -69,6 +69,11 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-29 | Al registrar una ausencia se quitan los turnos de esos días que la persona no ha fichado, y se dice cuáles; borrar la ausencia no los devuelve. El motivo de una ausencia solo lo ven el administrador y la propia persona; el resto del personal solo ve que está ausente. |
 | RN-30 | Cada persona ficha solo sus turnos y solo el día del turno: primero la entrada y después la salida, una vez cada una. |
 | RN-31 | Una zona de un turno está **sin cubrir** si tiene menos personas de las que pide la plantilla del turno; se calcula al consultar, no se guarda. Cada hueco se avisa a los administradores una sola vez. |
+| RN-32 | La **dieta** es la ficha de qué come cada animal y no crea tareas. Al completar una tarea de alimentación se anota lo que ha comido cada animal (sus animales o, si no tiene, los que viven en su zona) en cuatro niveles: «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada». |
+| RN-33 | Un animal **come poco** si en sus últimas tomas seguidas (2 por defecto, configurable de 1 a 10) ha comido «Menos de la mitad» o «Nada». Cada racha se avisa una sola vez. |
+| RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
+| RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
+| RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
 
 ## 4. Web pública y cuenta
 
@@ -1625,7 +1630,7 @@ Cada día, para cada una de ellas y en su propia transacción:
 
 ## 10. Trabajo diario del personal
 
-Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU-59) y turnos y ausencias (Bloque B, CU-60 a CU-64). La alimentación y la medicación (Bloque C) y las incidencias y avisos (Bloque D) se añadirán como CU-65 en adelante.
+Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU-59), turnos y ausencias (Bloque B, CU-60 a CU-64) y dietas, visitas veterinarias y medicación (Bloque C, CU-65 a CU-69). Las incidencias y avisos (Bloque D) se añadirán como CU-70 en adelante.
 
 ### CU-52 — Gestionar zonas
 
@@ -1900,3 +1905,114 @@ Cada día, para cada plantilla activa y en su propia transacción:
 **Postcondiciones:** la tarea es idempotente (`staff_alerts` guarda cada aviso por día, turno y zona).
 
 **Reglas de negocio:** RN-31.
+
+### CU-65 — Gestionar la dieta de un animal
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque C |
+
+**Flujo principal**
+
+1. En la ficha del animal, pestaña «Cuidados», pulsa «Nuevo alimento».
+2. Escribe el alimento, la cantidad y la unidad (g, kg, unidades o ml) y, si quiere, las tomas («Mañana y tarde»), notas y las fechas de inicio (hoy por defecto) y de fin.
+3. El sistema lo guarda y lo muestra en «Dieta».
+
+**Flujos alternativos**
+
+- **2a.** Cantidad no mayor que 0, con más de dos decimales, o fin anterior al inicio: error en el campo.
+- **3a.** El animal ha fallecido o ha sido trasladado: «Este animal ya no está en el santuario.».
+- **4.** Editar o borrar: si deja de comerlo, se le pone fecha de fin y queda «Terminada» en el historial.
+
+**Postcondiciones:** el cambio queda en el registro de actividad. La dieta no crea tareas.
+
+**Reglas de negocio:** RN-32.
+
+### CU-66 — Anotar lo que ha comido cada animal
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque C |
+
+**Flujo principal**
+
+1. En «Mi día», pulsa «Hecha» en una tarea de alimentación.
+2. La ventana muestra un desplegable por animal con «Todo» ya elegido; cambia los que han comido menos y, si quiere, añade observaciones o una foto.
+3. Pulsa «Marcar como hecha»: la tarea se completa y lo que ha comido cada animal se guarda.
+
+**Flujos alternativos**
+
+- **3a.** Un animal que no es de esa comida, o anotar comida en una tarea que no es de alimentación: error en el campo.
+- **3b.** Si un animal llega a las tomas seguidas comiendo poco: CU-67.
+- **4.** «Deshacer» la tarea borra también lo anotado.
+
+**Postcondiciones:** la pestaña «Cuidados» muestra las comidas de los últimos 14 días.
+
+**Reglas de negocio:** RN-26, RN-32.
+
+### CU-67 — Avisar si un animal come poco
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (al completar una comida) | Trabajo diario, Bloque C |
+
+**Flujo principal**
+
+1. Al anotar una comida, el sistema cuenta las últimas tomas seguidas del animal en las que comió «Menos de la mitad» o «Nada».
+2. Si llegan al número de los ajustes (2 por defecto), avisa en la campana, en su idioma, a los administradores y a quien tiene turno ese día en la zona: «Carbón ha comido poco en sus 2 últimas tomas.», con enlace a su pestaña «Cuidados».
+
+**Flujos alternativos**
+
+- **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una toma buena la corta y la siguiente racha sí se avisa.
+- **2b.** El administrador cambia el número de tomas en «Tareas del día» → «Ajustes» (de 1 a 10).
+
+**Postcondiciones:** el aviso queda en `staff_alerts`. El email llegará con el Bloque D.
+
+**Reglas de negocio:** RN-33, RN-34.
+
+### CU-68 — Programar y registrar visitas veterinarias
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador; sistema (tarea `task-alerts`) | Trabajo diario, Bloque C |
+
+**Flujo principal**
+
+1. En «Cuidados», pulsa «Programar visita» y elige día (hoy o después), hora, motivo y, si quiere, veterinario.
+2. El sistema guarda la visita y crea su tarea de revisión en «Mi día» de la zona del animal, con la insignia «Visita veterinaria».
+3. El día de la visita, la tarea `task-alerts` avisa en la campana a los administradores y a quien tiene turno en la zona: «Hoy a las 11:00, visita veterinaria de Pipa: …».
+4. Tras la visita, pulsa «Registrar la visita» (en «Mi día» o en «Cuidados») y rellena el formulario del historial veterinario (CU-34), con la descripción ya puesta.
+5. El sistema crea el registro, marca la visita como hecha y completa su tarea.
+
+**Flujos alternativos**
+
+- **1a.** El animal no tiene zona: «Este animal no tiene zona…»; archivado: «Este animal ya no está en el santuario.».
+- **4a.** Antes de su día: «La visita se podrá registrar el día en que está programada.».
+- **4b.** «Hecha» sobre su tarea no vale: hay que registrarla con el formulario.
+- **6.** «Cambiar» mueve la visita y su tarea; «Cancelar la visita» la cancela y quita su tarea. Una visita hecha o cancelada ya no cambia.
+
+**Postcondiciones:** cada cambio queda en el registro de actividad; el aviso de la visita, en `staff_alerts`.
+
+**Reglas de negocio:** RN-34, RN-36.
+
+### CU-69 — Gestionar pautas de medicación y avisar de la medicación no dada
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador; sistema (tareas `generate-tasks` y `task-alerts`) | Trabajo diario, Bloque C |
+
+**Flujo principal**
+
+1. En «Cuidados», pulsa «Nueva pauta»: medicamento, dosis, vía, horas, fechas, cualificación necesaria y notas.
+2. El sistema guarda la pauta y crea sus dosis de hoy a 7 días vista como tareas de medicación («Doxiciclina · 100 mg») en la zona del animal; `generate-tasks` sigue creándolas cada día.
+3. Quien la da la marca como hecha en «Mi día» (si tiene la cualificación).
+4. Cada 15 minutos, `task-alerts` busca las dosis de ayer y de hoy no dadas (pendientes pasada la hora y el margen, o no realizadas) y avisa una vez de cada una: «Carbón no ha recibido la dosis de las 10:00: Doxiciclina · 100 mg.».
+
+**Flujos alternativos**
+
+- **1a.** Sin horas, horas mal escritas, fin antes del inicio o más de 12 horas: error en el campo. Animal sin zona o archivado: como en CU-68.
+- **5.** «Editar» rehace las dosis pendientes desde ahora. «Terminar» la cierra hoy y quita las dosis que faltan. «Borrar» solo si no tiene dosis resueltas («Esta pauta ya tiene dosis resueltas: termínala en lugar de borrarla.»).
+
+**Postcondiciones:** la tarjeta de la pauta muestra las dosis dadas y no dadas; los cambios quedan en el registro de actividad.
+
+**Reglas de negocio:** RN-25, RN-34, RN-35.

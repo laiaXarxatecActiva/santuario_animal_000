@@ -32,6 +32,8 @@ BEGIN;
 -- 0. Limpieza: se borra todo lo que crea este script
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS
+    feeding_logs,
+    diet_items,
     staff_alerts,
     absences,
     shift_assignment_zones,
@@ -43,6 +45,8 @@ DROP TABLE IF EXISTS
     task_instances,
     task_template_animals,
     task_templates,
+    medication_plans,
+    vet_visits,
     user_qualifications,
     qualifications,
     activity_logs,
@@ -69,6 +73,7 @@ DROP FUNCTION IF EXISTS check_update_author_role() CASCADE;
 DROP FUNCTION IF EXISTS check_animal_cover_photo() CASCADE;
 DROP FUNCTION IF EXISTS check_worker_user() CASCADE;
 DROP FUNCTION IF EXISTS check_task_people() CASCADE;
+DROP FUNCTION IF EXISTS check_feeding_log_task() CASCADE;
 
 -- -----------------------------------------------------------------------------
 -- 1. Funciones auxiliares
@@ -561,6 +566,9 @@ CREATE TABLE notifications (
                     'donation_thanks',     -- agradecimiento por donación
                     'update_reminder',     -- aviso interno: animal sin actualización
                     'coverage_gap',        -- aviso interno: turno con una zona sin cubrir (CU-64)
+                    'low_intake',          -- aviso interno: un animal come poco varias tomas seguidas (CU-67)
+                    'medication_missed',   -- aviso interno: dosis de medicación no dada (CU-69)
+                    'vet_visit_today',     -- aviso interno: visita veterinaria programada para hoy (CU-68)
                     'system'
                 )),
     message     VARCHAR(500) NOT NULL,
@@ -657,6 +665,61 @@ CREATE TRIGGER user_qualifications_check_worker
     BEFORE INSERT OR UPDATE OF user_id ON user_qualifications
     FOR EACH ROW EXECUTE FUNCTION check_worker_user();
 
+-- Visitas veterinarias programadas (CU-68). Cada una tiene su tarea en «Mi
+-- día»; al hacerla se crea el registro del historial (vet_record_id).
+--   scheduled -> programada (también si ya pasó y aún no se ha registrado)
+--   done      -> hecha, con su registro veterinario
+--   cancelled -> cancelada
+CREATE TABLE vet_visits (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    animal_id       INTEGER      NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    visit_date      DATE         NOT NULL,                  -- día en Europe/Madrid
+    visit_time      TIME         NOT NULL,                  -- hora en Europe/Madrid
+    reason          VARCHAR(500) NOT NULL,
+    veterinarian    VARCHAR(150),
+    status          VARCHAR(20)  NOT NULL DEFAULT 'scheduled'
+                    CHECK (status IN ('scheduled', 'done', 'cancelled')),
+    vet_record_id   INTEGER      REFERENCES vet_records (id) ON DELETE SET NULL,
+    created_by      INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT vet_visits_record_only_done CHECK (vet_record_id IS NULL OR status = 'done')
+);
+
+CREATE INDEX vet_visits_animal_idx ON vet_visits (animal_id, visit_date DESC);
+
+CREATE TRIGGER vet_visits_set_updated_at
+    BEFORE UPDATE ON vet_visits
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Pautas de medicación (CU-69): un medicamento, todos los días a las horas
+-- indicadas (Europe/Madrid) entre start_date y end_date. De cada una salen sus
+-- tareas de medicación con generate-tasks. Con dosis resueltas no se borra: se termina.
+CREATE TABLE medication_plans (
+    id                INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    animal_id         INTEGER      NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    medication        VARCHAR(150) NOT NULL,
+    dose              VARCHAR(100) NOT NULL,
+    route             VARCHAR(20)  NOT NULL
+                      CHECK (route IN ('oral', 'injection', 'topical', 'eye_drops', 'other')),
+    times             TIME[]       NOT NULL,
+    start_date        DATE         NOT NULL,
+    end_date          DATE,
+    qualification_id  INTEGER      REFERENCES qualifications (id) ON DELETE RESTRICT,
+    notes             VARCHAR(1000),
+    created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT medication_plans_times_count CHECK (cardinality(times) BETWEEN 1 AND 12),
+    CONSTRAINT medication_plans_dates_order CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+CREATE INDEX medication_plans_animal_idx ON medication_plans (animal_id);
+
+CREATE TRIGGER medication_plans_set_updated_at
+    BEFORE UPDATE ON medication_plans
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
 -- Plantillas de tareas recurrentes (CU-54). De cada una salen las tareas
 -- concretas de cada día (task_instances) con la tarea generate-tasks.
 --   recurrence = 'daily'        -> todos los días
@@ -737,8 +800,13 @@ CREATE TABLE task_instances (
     observations      VARCHAR(1000),
     photo_url         VARCHAR(500),
     created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT, -- admin, si es puntual
+    medication_plan_id INTEGER     REFERENCES medication_plans (id) ON DELETE CASCADE, -- dosis de una pauta (CU-69)
+    vet_visit_id      INTEGER      REFERENCES vet_visits (id) ON DELETE CASCADE,       -- visita programada (CU-68)
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    -- Sale de una plantilla, de una pauta, de una visita o de ninguna (puntual), nunca de dos.
+    CONSTRAINT task_instances_one_origin
+        CHECK (num_nonnulls(template_id, medication_plan_id, vet_visit_id) <= 1),
     CONSTRAINT task_instances_resolved_consistent CHECK ((status = 'pending') = (resolved_at IS NULL)),
     CONSTRAINT task_instances_completed_by CHECK (status <> 'completed' OR resolved_by IS NOT NULL),
     -- Siempre hay alguien responsable: la gente de la zona o una persona concreta.
@@ -748,6 +816,9 @@ CREATE TABLE task_instances (
 -- Generación idempotente: una sola tarea por plantilla e instante.
 CREATE UNIQUE INDEX task_instances_template_due_key
     ON task_instances (template_id, due_at) WHERE template_id IS NOT NULL;
+CREATE UNIQUE INDEX task_instances_medication_due_key
+    ON task_instances (medication_plan_id, due_at) WHERE medication_plan_id IS NOT NULL;
+CREATE INDEX task_instances_vet_visit_idx ON task_instances (vet_visit_id) WHERE vet_visit_id IS NOT NULL;
 CREATE INDEX task_instances_day_idx ON task_instances (due_date, zone_id);
 CREATE INDEX task_instances_pending_idx ON task_instances (due_at) WHERE status = 'pending';
 
@@ -792,11 +863,66 @@ CREATE TABLE task_instance_animals (
 
 CREATE INDEX task_instance_animals_animal_idx ON task_instance_animals (animal_id);
 
+-- Dieta de cada animal (CU-65): qué come, cuánto y cuándo. No genera tareas
+-- (la comida se organiza con las plantillas de alimentación). Una dieta que
+-- deja de valer se termina con end_date en lugar de borrarse.
+CREATE TABLE diet_items (
+    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    animal_id   INTEGER       NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    food        VARCHAR(150)  NOT NULL,
+    quantity    NUMERIC(8,2)  NOT NULL CHECK (quantity > 0),
+    unit        VARCHAR(10)   NOT NULL CHECK (unit IN ('g', 'kg', 'units', 'ml')),
+    schedule    VARCHAR(100),                               -- en qué tomas, p. ej. «Lun, Mié y Vie»
+    notes       VARCHAR(1000),
+    start_date  DATE          NOT NULL,
+    end_date    DATE,
+    created_by  INTEGER       REFERENCES users (id) ON DELETE RESTRICT,
+    created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    CONSTRAINT diet_items_dates_order CHECK (end_date IS NULL OR end_date >= start_date)
+);
+
+CREATE INDEX diet_items_animal_idx ON diet_items (animal_id, start_date DESC);
+
+CREATE TRIGGER diet_items_set_updated_at
+    BEFORE UPDATE ON diet_items
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Lo que comió cada animal en una tarea de alimentación (CU-66). Se anota al
+-- completarla («todo» por defecto) y se borra si se deshace.
+CREATE TABLE feeding_logs (
+    task_id      INTEGER      NOT NULL REFERENCES task_instances (id) ON DELETE CASCADE,
+    animal_id    INTEGER      NOT NULL REFERENCES animals (id) ON DELETE CASCADE,
+    intake       VARCHAR(10)  NOT NULL CHECK (intake IN ('all', 'most', 'little', 'none')),
+    recorded_by  INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    recorded_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (task_id, animal_id)
+);
+
+CREATE INDEX feeding_logs_animal_idx ON feeding_logs (animal_id);
+
+-- Solo se anota la comida de una tarea de alimentación completada (CU-66).
+CREATE FUNCTION check_feeding_log_task() RETURNS trigger AS $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM task_instances WHERE id = NEW.task_id AND type = 'feeding' AND status = 'completed') THEN
+        RAISE EXCEPTION 'La tarea % no es una tarea de alimentación completada', NEW.task_id
+            USING ERRCODE = 'check_violation';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER feeding_logs_check_task
+    BEFORE INSERT OR UPDATE OF task_id ON feeding_logs
+    FOR EACH ROW EXECUTE FUNCTION check_feeding_log_task();
+
 -- Ajustes del trabajo diario (CU-73). Una sola fila, que crea este script.
 CREATE TABLE work_settings (
     id                   SMALLINT    PRIMARY KEY DEFAULT 1 CHECK (id = 1),
     late_margin_minutes  SMALLINT    NOT NULL DEFAULT 30
                          CHECK (late_margin_minutes BETWEEN 0 AND 240), -- «atrasada» tras la hora + este margen
+    low_intake_meals     SMALLINT    NOT NULL DEFAULT 2
+                         CHECK (low_intake_meals BETWEEN 1 AND 10),      -- tomas seguidas comiendo poco para avisar (CU-67)
     updated_by           INTEGER     REFERENCES users (id) ON DELETE RESTRICT,
     updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

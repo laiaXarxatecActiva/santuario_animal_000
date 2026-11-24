@@ -137,8 +137,8 @@ export function createTaskController(service: TaskService, actividad: ActivityLo
     complete: (async (req, res) => {
       const archivos = archivosSubidos(req);
       if (archivos.length > 1) throw new ValidationError([{ field: 'files', message: 'Adjunta una sola foto.' }]);
-      const { observations } = validated(res, 'body', taskCompleteBodySchema);
-      res.json(await service.complete(req.user!, id(res), observations ?? null, archivos[0]));
+      const { observations, intakes } = validated(res, 'body', taskCompleteBodySchema);
+      res.json(await service.complete(req.user!, id(res), observations ?? null, archivos[0], intakes));
     }) satisfies RequestHandler,
     notDone: (async (req, res) => {
       res.json(await service.notDone(req.user!, id(res), validated(res, 'body', taskNotDoneBodySchema).reason));

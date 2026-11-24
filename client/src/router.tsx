@@ -13,6 +13,7 @@ import { AnimalDataTab } from './pages/admin/AnimalDataTab';
 import { AnimalPhotosTab } from './pages/admin/AnimalPhotosTab';
 import { AnimalUpdatesTab } from './pages/admin/AnimalUpdatesTab';
 import { AnimalVetTab } from './pages/admin/AnimalVetTab';
+import { AnimalCareTab } from './pages/admin/AnimalCareTab';
 import { VetRecordsAdminPage } from './pages/admin/VetRecordsAdminPage';
 import { UpdateFormPage } from './pages/admin/UpdateFormPage';
 import { UpdatesAdminPage } from './pages/admin/UpdatesAdminPage';
@@ -79,6 +80,7 @@ export const routes: RouteObject[] = [
               { path: 'photos', element: <AnimalPhotosTab /> },
               { path: 'updates', element: <AnimalUpdatesTab /> },
               { path: 'vet', element: <AnimalVetTab /> },
+              { path: 'care', element: <AnimalCareTab /> },
             ],
           },
           { path: 'species', element: <SpeciesAdminPage /> },

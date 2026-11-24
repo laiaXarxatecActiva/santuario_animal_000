@@ -7,6 +7,9 @@ import {
   faHandHoldingHeart,
   faHeart,
   faNewspaper,
+  faPills,
+  faStethoscope,
+  faUtensils,
   faReceipt,
   faUserClock,
 } from '@fortawesome/free-solid-svg-icons';
@@ -24,6 +27,9 @@ const ICONOS: Record<NotificationType, IconDefinition> = {
   donation_thanks: faHeart,
   update_reminder: faNewspaper,
   coverage_gap: faUserClock,
+  low_intake: faUtensils,
+  medication_missed: faPills,
+  vet_visit_today: faStethoscope,
   system: faBell,
 };
 

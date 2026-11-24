@@ -61,6 +61,9 @@ export const NOTIFICATION_TYPES = [
   'donation_thanks',
   'update_reminder',
   'coverage_gap',
+  'low_intake',
+  'medication_missed',
+  'vet_visit_today',
   'system',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -9,6 +9,7 @@ export const QUALIFICATIONS_KEY = [...WORK_KEY, 'qualifications'] as const;
 export const TEMPLATES_KEY = [...WORK_KEY, 'templates'] as const;
 export const TASKS_KEY = [...WORK_KEY, 'tasks'] as const;
 export const SHIFTS_KEY = [...WORK_KEY, 'shifts'] as const;
+export const CARE_KEY = [...WORK_KEY, 'care'] as const;
 
 /** CU-52: zonas (también para los formularios). */
 export const useZones = () =>
@@ -77,3 +78,9 @@ export const useShiftCalendar = (from?: string, to?: string) =>
 /** CU-62: ausencias de hoy en adelante. */
 export const useAbsences = () =>
   useQuery({ queryKey: [...SHIFTS_KEY, 'absences'], queryFn: () => workApi.absences.list().then((r) => r.data) });
+
+export const animalCareKey = (animalId: number) => [...CARE_KEY, animalId] as const;
+
+/** CU-65 a CU-69: la pestaña «Cuidados» de un animal. */
+export const useAnimalCare = (animalId: number) =>
+  useQuery({ queryKey: animalCareKey(animalId), queryFn: () => workApi.care.get(animalId) });

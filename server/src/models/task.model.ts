@@ -1,5 +1,6 @@
-import type { NamedRef, TaskDto, TaskStatus, TaskType } from '@sanctuary/shared';
+import type { IntakeLevel, NamedRef, TaskDto, TaskStatus, TaskType } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
+import { animalesDeLaComida } from '../dominio/cuidados.js';
 import { estaAtrasada } from '../dominio/tareas.js';
 
 // CU-55 a CU-59: tareas concretas de cada día.
@@ -25,7 +26,12 @@ interface TaskRow {
   resolved_at: Date | null;
   observations: string | null;
   photo_url: string | null;
+  medication_plan_id: number | null;
+  vet_visit_id: number | null;
   animals: NamedRef[];
+  /** Solo en las de alimentación: los animales que viven ahora en su zona. */
+  zone_animals: NamedRef[];
+  intakes: { animal: NamedRef; intake: IntakeLevel }[];
 }
 
 /** Lo que hace falta para saber si una tarea está atrasada (CU-56). */
@@ -57,7 +63,11 @@ export function mapRow(row: TaskRow, contexto: Contexto): TaskDto {
     resolvedAt: row.resolved_at?.toISOString() ?? null,
     observations: row.observations,
     photoUrl: row.photo_url,
-    isOneOff: row.template_id === null,
+    isOneOff: row.template_id === null && row.medication_plan_id === null && row.vet_visit_id === null,
+    medicationPlanId: row.medication_plan_id,
+    vetVisitId: row.vet_visit_id,
+    feedingAnimals: row.type === 'feeding' ? animalesDeLaComida(row.animals, row.zone_animals) : [],
+    intakes: row.intakes,
   };
 }
 
@@ -66,10 +76,19 @@ const SELECT = `
          i.qualification_id, q.name AS qualification_name, i.due_date, to_char(i.due_time, 'HH24:MI') AS due_time,
          i.due_at, i.status, i.assigned_to, ua.first_name || ' ' || ua.last_name AS assigned_name,
          i.resolved_by, ur.first_name || ' ' || ur.last_name AS resolved_name, i.resolved_at,
-         i.observations, i.photo_url,
+         i.observations, i.photo_url, i.medication_plan_id, i.vet_visit_id,
          COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name) ORDER BY a.name, a.id)
                      FROM task_instance_animals ta JOIN animals a ON a.id = ta.animal_id
-                    WHERE ta.task_id = i.id), '[]'::json) AS animals
+                    WHERE ta.task_id = i.id), '[]'::json) AS animals,
+         CASE WHEN i.type = 'feeding' THEN
+           COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name) ORDER BY a.name, a.id)
+                       FROM animals a
+                      WHERE a.zone_id = i.zone_id AND a.status IN ('in_sanctuary', 'in_treatment')), '[]'::json)
+         ELSE '[]'::json END AS zone_animals,
+         COALESCE((SELECT json_agg(json_build_object('animal', json_build_object('id', a.id, 'name', a.name),
+                                                     'intake', f.intake) ORDER BY a.name, a.id)
+                     FROM feeding_logs f JOIN animals a ON a.id = f.animal_id
+                    WHERE f.task_id = i.id), '[]'::json) AS intakes
     FROM task_instances i
     LEFT JOIN zones z ON z.id = i.zone_id
     LEFT JOIN qualifications q ON q.id = i.qualification_id
@@ -124,8 +143,9 @@ export async function resolve(
   );
 }
 
-/** CU-57 A2: vuelve a pendiente. Devuelve la foto que tenía, para borrarla. */
+/** CU-57 A2: vuelve a pendiente (sin lo anotado de la comida, CU-66). Devuelve la foto que tenía, para borrarla. */
 export async function reopen(db: Queryable, id: number): Promise<string | null> {
+  await db.query('DELETE FROM feeding_logs WHERE task_id = $1', [id]);
   const { rows } = await db.query<{ photo_url: string | null }>(
     `UPDATE task_instances i
         SET status = 'pending', resolved_by = NULL, resolved_at = NULL, observations = NULL, photo_url = NULL
@@ -158,18 +178,23 @@ export interface NuevaTarea {
   assignedTo: number | null;
   createdBy: number | null;
   animalIds: readonly number[];
+  /** CU-69: dosis de una pauta. */
+  medicationPlanId?: number | null;
+  /** CU-68: tarea de una visita programada. */
+  vetVisitId?: number | null;
 }
 
 /**
- * Inserta una tarea y sus animales. Las generadas no se duplican (índice
- * `task_instances_template_due_key`): si ya existía, devuelve `null`.
+ * Inserta una tarea y sus animales. Las generadas no se duplican (índices
+ * `task_instances_template_due_key` y `task_instances_medication_due_key`):
+ * si ya existía, devuelve `null`.
  */
 export async function insert(db: Queryable, t: NuevaTarea): Promise<number | null> {
   const { rows } = await db.query<{ id: number }>(
     `INSERT INTO task_instances (template_id, type, title, description, zone_id, qualification_id,
-                                 due_date, due_time, due_at, assigned_to, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-     ON CONFLICT (template_id, due_at) WHERE template_id IS NOT NULL DO NOTHING
+                                 due_date, due_time, due_at, assigned_to, created_by, medication_plan_id, vet_visit_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+     ON CONFLICT DO NOTHING
      RETURNING id`,
     [
       t.templateId,
@@ -183,6 +208,8 @@ export async function insert(db: Queryable, t: NuevaTarea): Promise<number | nul
       t.dueAt,
       t.assignedTo,
       t.createdBy,
+      t.medicationPlanId ?? null,
+      t.vetVisitId ?? null,
     ],
   );
   const id = rows[0]?.id ?? null;
@@ -230,4 +257,74 @@ export async function closePastPending(db: Queryable, hoy: string, ahora: Date):
     [hoy, ahora],
   );
   return rowCount ?? 0;
+}
+
+/** CU-69: al editar o terminar una pauta, sus dosis pendientes desde ahora desaparecen. */
+export async function deletePendingOfPlan(db: Queryable, planId: number, desde: Date): Promise<number> {
+  const { rowCount } = await db.query(
+    "DELETE FROM task_instances WHERE medication_plan_id = $1 AND status = 'pending' AND due_at >= $2",
+    [planId, desde],
+  );
+  return rowCount ?? 0;
+}
+
+/** CU-68: al cambiar o cancelar una visita, su tarea pendiente desaparece. */
+export async function deletePendingOfVisit(db: Queryable, visitId: number): Promise<void> {
+  await db.query("DELETE FROM task_instances WHERE vet_visit_id = $1 AND status = 'pending'", [visitId]);
+}
+
+/** CU-69: ¿tiene la pauta dosis ya resueltas? */
+export async function planHasHistory(db: Queryable, planId: number): Promise<boolean> {
+  const { rows } = await db.query(
+    "SELECT 1 FROM task_instances WHERE medication_plan_id = $1 AND status <> 'pending' LIMIT 1",
+    [planId],
+  );
+  return rows.length > 0;
+}
+
+/** Una dosis que puede tocar avisar (CU-69). */
+export interface DosisParaAvisar {
+  id: number;
+  title: string;
+  dueTime: string;
+  dueDate: string;
+  zoneId: number | null;
+  animal: NamedRef | null;
+}
+
+/**
+ * CU-69: dosis de medicación de esos días no dadas: marcadas como no
+ * realizadas o pendientes pasada su hora y el margen (`limite`).
+ */
+export async function listMissedDoses(
+  db: Queryable,
+  filtros: { desde: string; hasta: string; limite: Date },
+): Promise<DosisParaAvisar[]> {
+  const { rows } = await db.query<{
+    id: number;
+    title: string;
+    due_time: string;
+    due_date: string;
+    zone_id: number | null;
+    animal_id: number | null;
+    animal_name: string | null;
+  }>(
+    `SELECT i.id, i.title, to_char(i.due_time, 'HH24:MI') AS due_time, i.due_date::text AS due_date, i.zone_id,
+            a.id AS animal_id, a.name AS animal_name
+       FROM task_instances i
+       LEFT JOIN LATERAL (SELECT an.id, an.name FROM task_instance_animals ta JOIN animals an ON an.id = ta.animal_id
+                           WHERE ta.task_id = i.id ORDER BY an.name, an.id LIMIT 1) a ON TRUE
+      WHERE i.medication_plan_id IS NOT NULL AND i.due_date BETWEEN $1 AND $2
+        AND (i.status = 'not_done' OR (i.status = 'pending' AND i.due_at < $3))
+      ORDER BY i.due_at, i.id`,
+    [filtros.desde, filtros.hasta, filtros.limite],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    dueTime: r.due_time,
+    dueDate: r.due_date,
+    zoneId: r.zone_id,
+    animal: r.animal_id === null ? null : { id: r.animal_id, name: r.animal_name ?? '' },
+  }));
 }

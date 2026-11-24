@@ -35,6 +35,9 @@ import {
   updateCreateBodySchema,
   updateEditBodySchema,
   vetRecordBodySchema,
+  vetVisitBodySchema,
+  dietItemBodySchema,
+  medicationPlanBodySchema,
   WORKER_ROLES,
   workerCreateSchema,
   adminTasksQuerySchema,
@@ -91,6 +94,8 @@ import type { VetRecordAdminService } from '../servicios/vet-record-admin.servic
 import type { TaskTemplateAdminService } from '../servicios/task-template-admin.service.js';
 import type { ShiftService } from '../servicios/shift.service.js';
 import type { TaskService } from '../servicios/task.service.js';
+import type { CareService } from '../servicios/care.service.js';
+import { createCareAdminController } from '../controllers/care-admin.controller.js';
 import type { ZoneAdminService } from '../servicios/zone-admin.service.js';
 
 export interface AdminRoutesDeps {
@@ -115,6 +120,7 @@ export interface AdminRoutesDeps {
   taskTemplates: TaskTemplateAdminService;
   tasks: TaskService;
   shifts: ShiftService;
+  care: CareService;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -350,6 +356,45 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.get('/absences', soloAdmin, validate({ query: absencesQuerySchema }), turnos.listAbsences);
   router.post('/absences', soloAdmin, validate({ body: absenceBodySchema }), turnos.createAbsence);
   router.delete('/absences/:id', soloAdmin, conId, turnos.removeAbsence);
+
+  // CU-65 a CU-69: pestaña «Cuidados» (dieta, medicación y visitas), de todo el personal.
+  const cuidados = createCareAdminController(deps.care, deps.activity);
+  router.get('/animals/:id/care', conId, cuidados.get);
+  router.post(
+    '/animals/:id/diet-items',
+    validate({ params: idParamsSchema, body: dietItemBodySchema }),
+    cuidados.createDietItem,
+  );
+  router.put(
+    '/diet-items/:id',
+    validate({ params: idParamsSchema, body: dietItemBodySchema }),
+    cuidados.updateDietItem,
+  );
+  router.delete('/diet-items/:id', conId, cuidados.removeDietItem);
+  router.post(
+    '/animals/:id/medication-plans',
+    validate({ params: idParamsSchema, body: medicationPlanBodySchema }),
+    cuidados.createPlan,
+  );
+  router.put(
+    '/medication-plans/:id',
+    validate({ params: idParamsSchema, body: medicationPlanBodySchema }),
+    cuidados.updatePlan,
+  );
+  router.post('/medication-plans/:id/end', conId, cuidados.endPlan);
+  router.delete('/medication-plans/:id', conId, cuidados.removePlan);
+  router.post(
+    '/animals/:id/vet-visits',
+    validate({ params: idParamsSchema, body: vetVisitBodySchema }),
+    cuidados.createVisit,
+  );
+  router.put('/vet-visits/:id', validate({ params: idParamsSchema, body: vetVisitBodySchema }), cuidados.updateVisit);
+  router.post('/vet-visits/:id/cancel', conId, cuidados.cancelVisit);
+  router.post(
+    '/vet-visits/:id/complete',
+    validate({ params: idParamsSchema, body: vetRecordBodySchema }),
+    cuidados.completeVisit,
+  );
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

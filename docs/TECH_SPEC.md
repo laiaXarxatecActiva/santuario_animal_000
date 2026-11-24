@@ -146,6 +146,7 @@ Las reglas críticas se aplican **dos veces**: en el modelo, para dar un mensaje
 | Emails únicos sin distinguir mayúsculas | Índice único `users_email_lower_key` |
 | No se borran especies, animales, planes ni usuarios con historial | Claves foráneas `ON DELETE RESTRICT` |
 | Trabajo diario: los turnos acaban después de empezar; la salida, después de la entrada; una persona no tiene dos veces el mismo turno el mismo día; solo los trabajadores tienen turnos y ausencias; una ausencia acaba el mismo día o después | `CHECK shift_templates_times`, `CHECK shift_assignments_check_out`, `UNIQUE shift_assignments_unique`, triggers `shift_assignments_check_worker` y `absences_check_worker`, `CHECK absences_dates`. Un turno con personas asignadas no se borra (`ON DELETE RESTRICT`) |
+| Cuidados (CU-65 a CU-69): cantidades de la dieta mayores que 0; fin de la dieta y de las pautas igual o posterior al inicio; de 1 a 12 horas por pauta; solo se anota la comida de una tarea de alimentación completada; una tarea sale como mucho de una plantilla, una pauta o una visita; una dosis no se duplica; el registro veterinario de una visita solo si está hecha | `CHECK diet_items.quantity`, `CHECK diet_items_dates_order`, `CHECK medication_plans_dates_order`, `CHECK medication_plans_times_count`, trigger `feeding_logs_check_task`, `CHECK task_instances_one_origin`, índice único `task_instances_medication_due_key`, `CHECK vet_visits_record_only_done` |
 
 Los modelos deben capturar estos errores de PostgreSQL (`23505` por clave duplicada, `23503` por clave foránea y `23514` por `CHECK` o trigger) y convertirlos en errores 409 o 422 con un mensaje en castellano.
 
@@ -304,7 +305,12 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | *(nuevo, trabajo diario)* | `shift_templates`, `shift_zone_requirements` | Plantillas de turno: nombre único (sin distinguir mayúsculas), `start_time` < `end_time` (el mismo día), `weekdays` (1 = lunes … 7 = domingo) y si está activa; y cuántas personas (`min_workers`, 1-20) necesita cada zona (CU-60) |
 | *(nuevo, trabajo diario)* | `shift_assignments`, `shift_assignment_zones` | Una persona en un turno un día (`shift_date`), con sus zonas, `checked_in_at` y `checked_out_at`. `UNIQUE (shift_template_id, shift_date, user_id)`; el trigger `shift_assignments_check_worker` exige un trabajador (CU-61, CU-63) |
 | *(nuevo, trabajo diario)* | `absences` | Ausencias: persona, `start_date`, `end_date`, `type` (`vacation`, `sick_leave`, `personal`, `other`), notas y quién la registró (CU-62) |
-| *(nuevo, trabajo diario)* | `staff_alerts` | Avisos internos ya enviados: `kind` y `ref_key` únicos (para `coverage_gap`, `fecha:turno:zona`), para que cada aviso salga una sola vez (CU-64) |
+| *(nuevo, trabajo diario)* | `staff_alerts` | Avisos internos ya enviados: `kind` y `ref_key` únicos (para `coverage_gap`, `fecha:turno:zona`; para `low_intake`, `animal:primera toma de la racha`; para `medication_missed` y `vet_visit_today`, el id de la dosis o de la visita), para que cada aviso salga una sola vez (CU-64, CU-67 a CU-69) |
+| *(nuevo, trabajo diario)* | `diet_items` | Dieta de cada animal: alimento, `quantity` (`NUMERIC(8,2)`) y `unit` (`g`, `kg`, `units`, `ml`), tomas (texto), notas, `start_date` y `end_date` (terminada). No genera tareas (CU-65) |
+| *(nuevo, trabajo diario)* | `feeding_logs` | Lo que comió cada animal en una tarea de alimentación: `(task_id, animal_id)` e `intake` (`all`, `most`, `little`, `none`). Se borra al deshacer la tarea (CU-66) |
+| *(nuevo, trabajo diario)* | `medication_plans` | Pautas de medicación: medicamento, dosis, vía (`oral`, `injection`, `topical`, `eye_drops`, `other`), horas (`TIME[]`, todos los días), fechas, cualificación necesaria y notas. Sus dosis son tareas con `task_instances.medication_plan_id` (CU-69) |
+| *(nuevo, trabajo diario)* | `vet_visits` | Visitas veterinarias programadas: día, hora, motivo, veterinario, `status` (`scheduled`, `done`, `cancelled`) y el registro del historial creado al hacerla (`vet_record_id`). Su tarea de «Mi día» lleva `task_instances.vet_visit_id` (CU-68) |
+| *(cambio, trabajo diario)* | `work_settings`, `task_instances` | `work_settings.low_intake_meals` (1-10, 2 por defecto): tomas seguidas comiendo poco para avisar (CU-67). `task_instances.medication_plan_id` y `vet_visit_id` |
 
 ### 8.2 Columnas añadidas y por qué
 
@@ -597,7 +603,13 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | GET | `/api/admin/shift-templates` | Cuidador, admin | Plantillas de turno por hora de inicio, con `requirements` y `hasAssignments` | CU-60 |
 | GET | `/api/admin/shifts` | Cuidador, admin | `?from&to` (como mucho 31 días; sin fechas, la semana actual de lunes a domingo). `{ from, to, shifts, assignments, absences, gaps }`; al cuidador, las ausencias ajenas le llegan sin `type` ni `notes` | CU-61, CU-62 |
 | POST | `/api/admin/shift-assignments/:id/check-in`, `/check-out` | La persona del turno | Ficha la entrada o la salida; un turno ajeno es 404. 422 `SHIFT_NOT_TODAY`; 409 `ALREADY_CHECKED_IN`, `NOT_CHECKED_IN`, `ALREADY_CHECKED_OUT` | CU-63 |
-| POST | `/api/admin/tasks/:id/complete` | Cuidador, admin | JSON `{ observations? }` o `multipart/form-data` con `observations` y una foto en `files` (se guarda en WebP en `uploads/tasks/:id/`). 409 `TASK_NOT_PENDING`, 422 `TASK_FUTURE_DAY`, 403 `MISSING_QUALIFICATION` | CU-57 |
+| POST | `/api/admin/tasks/:id/complete` | Cuidador, admin | JSON `{ observations?, intakes? }` o `multipart/form-data` con `observations`, `intakes` (texto JSON) y una foto en `files` (se guarda en WebP en `uploads/tasks/:id/`). `intakes` (`[{ animalId, intake }]`) solo en las de alimentación: lo que falta es `all`; anota `feeding_logs` y avisa si un animal come poco (CU-66, CU-67). 409 `TASK_NOT_PENDING`, 422 `TASK_FUTURE_DAY`, 403 `MISSING_QUALIFICATION`, 409 `VET_VISIT_NEEDS_RECORD` (una visita se completa con su registro) | CU-57 |
+| GET | `/api/admin/animals/:id/care` | Cuidador, admin | Pestaña «Cuidados»: `{ animalId, diet, feedings (14 días), lowIntakeStreak, medicationPlans (con dosesGiven, dosesMissed, hasHistory), vetVisits (programadas y las 5 últimas hechas o canceladas, con taskId) }` | CU-65 a CU-69 |
+| POST / PUT / DELETE | `/api/admin/animals/:id/diet-items`, `/api/admin/diet-items/:id` | Cuidador, admin | Dieta. 422 `CARE_ANIMAL_ARCHIVED` si el animal ya no está | CU-65 |
+| POST / PUT / DELETE | `/api/admin/animals/:id/medication-plans`, `/api/admin/medication-plans/:id` | Cuidador, admin | Pautas: al crearlas o editarlas se (re)generan sus dosis pendientes desde ahora. 422 `ANIMAL_WITHOUT_ZONE`, `CARE_ANIMAL_ARCHIVED`; borrar con dosis resueltas, 409 `MEDICATION_PLAN_HAS_HISTORY` | CU-69 |
+| POST | `/api/admin/medication-plans/:id/end` | Cuidador, admin | Termina hoy y quita las dosis que faltan. 409 `MEDICATION_PLAN_NOT_STARTED`, `MEDICATION_PLAN_ENDED` | CU-69 |
+| POST / PUT | `/api/admin/animals/:id/vet-visits`, `/api/admin/vet-visits/:id` | Cuidador, admin | Programar o cambiar una visita (no en un día pasado); crea o mueve su tarea `health_check`. 409 `VET_VISIT_NOT_SCHEDULED` | CU-68 |
+| POST | `/api/admin/vet-visits/:id/cancel`, `/complete` | Cuidador, admin | Cancelar (quita su tarea) o registrar con el cuerpo de un registro veterinario (crea el registro, marca la visita `done` y completa su tarea). 422 `VET_VISIT_FUTURE_DAY` | CU-68 |
 | POST | `/api/admin/tasks/:id/not-done` | Cuidador, admin | `{ reason }` obligatorio; mismas comprobaciones | CU-57 |
 | POST | `/api/admin/tasks/:id/reopen` | Quien la resolvió (el mismo día), admin | Vuelve a pendiente y borra observaciones y foto; 409 `TASK_IS_PENDING` | CU-57 |
 
@@ -731,8 +743,8 @@ export interface StorageService {
 | `finish-cancelled` | Diaria, 03:45 | Adopciones `active` con `cancel_requested_at` y `end_date < hoy` → `finished` (`user_cancelled`) | CU-45 |
 | `monthly-digest` | Día 1, 09:00 | Email resumen para adoptantes con `monthly_digest` y novedades en el mes anterior | CU-46 |
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
-| `generate-tasks` | Diaria, 00:10 | Trabajo diario: crea las tareas de cada plantilla activa de hoy a 7 días vista (Europe/Madrid, solo las que no han pasado), sin los animales archivados. El índice único `(template_id, due_at)` evita duplicados. Una transacción por plantilla | CU-58 |
-| `task-alerts` | Cada 15 minutos | Pasa a `not_done` (sin persona) las tareas pendientes de días anteriores. En el Bloque C avisará también de la medicación no dada | CU-59 |
+| `generate-tasks` | Diaria, 00:10 | Trabajo diario: crea las tareas de cada plantilla activa y las dosis de cada pauta de medicación de hoy a 7 días vista (Europe/Madrid, solo las que no han pasado), sin los animales archivados. Los índices únicos `(template_id, due_at)` y `(medication_plan_id, due_at)` evitan duplicados. Una transacción por plantilla y por pauta. Devuelve `{ templates, created, medicationTasks }` | CU-58, CU-69 |
+| `task-alerts` | Cada 15 minutos | Avisa en la campana (a los administradores y a quien tiene turno ese día en la zona) de las dosis de ayer y de hoy no dadas (pendientes pasada la hora y el margen, o no realizadas) y de las visitas veterinarias de hoy, una vez cada una (`staff_alerts`). Después pasa a `not_done` (sin persona) las tareas pendientes de días anteriores. Devuelve `{ closed, medicationMissed, vetVisitsToday }` | CU-59, CU-68, CU-69 |
 | `coverage-check` | Cada hora, a los 5 minutos | Avisa en la campana a los administradores en activo de cada zona de un turno sin cubrir de hoy a 6 días vista (sin los turnos ya acabados), una sola vez por hueco (`staff_alerts`). El email llegará con el Bloque D | CU-64 |
 
 Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
@@ -973,8 +985,17 @@ Turnos, tareas, alimentación, limpieza y medicación, en cuatro bloques que se 
 
 - **Bloque A (terminado):** zonas (CU-52), cualificaciones (CU-53), plantillas (CU-54), tareas del día y puntuales (CU-55), «Mi día» (CU-56), completar (CU-57), generación (CU-58), cierre del día (CU-59) y el margen de «atrasada» (CU-73, parte).
 - **Bloque B (terminado):** plantillas de turno (CU-60), calendario semanal con asignar, quitar y copiar la semana anterior (CU-61), ausencias (CU-62), fichar la entrada y la salida (CU-63) y aviso de zonas sin cubrir (CU-64, tarea `coverage-check`). «Mi día» marca como tuyas también las tareas sin asignar de tu turno y zona, y desactivar a un trabajador quita sus turnos futuros sin fichar.
-- **Bloque C:** planes de dieta con registro de lo que come cada animal y aviso si deja de comer; visitas veterinarias programables; pautas de medicación y aviso de medicación no dada (CU-65 a CU-69).
+- **Bloque C (terminado):** dieta de cada animal (CU-65), lo que ha comido cada animal al completar una comida (CU-66), aviso si come poco (CU-67), visitas veterinarias programadas (CU-68) y pautas de medicación con aviso de medicación no dada (CU-69), todo en la pestaña «Cuidados» de la ficha del animal.
 - **Bloque D:** incidencias, notas de relevo, panel «Hoy» del administrador, ajustes de los avisos por email y resumen diario (desactivado por defecto) (CU-70 a CU-74).
+
+Decisiones del Bloque C:
+
+- La dieta es la ficha de qué come cada animal: no crea tareas. La comida se organiza con las plantillas de alimentación.
+- Lo que ha comido se anota con cuatro niveles (`all`, `most`, `little`, `none`), «todo» por defecto. En una comida sin animales cuentan los que viven en su zona. «Come poco» es `little` o `none`; el aviso sale al llegar a `work_settings.low_intake_meals` tomas seguidas (2 por defecto) y una sola vez por racha.
+- Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal. El email llegará con el Bloque D.
+- Las pautas se repiten todos los días a sus horas; sus dosis se generan como las tareas de las plantillas y exigen la cualificación que se elija. Editar una pauta rehace sus dosis pendientes; terminarla la cierra hoy; con dosis resueltas no se borra.
+- Una visita programada tiene su tarea `health_check` en «Mi día». No se completa con «Hecha»: se registra con el formulario del historial veterinario (CU-34), en la misma transacción.
+- Las pautas y las visitas son de la zona del animal: un animal sin zona no las admite (`ANIMAL_WITHOUT_ZONE`). Dieta, pautas y visitas las gestionan cuidadores y administradores, y quedan en el registro de actividad.
 
 Decisiones del Bloque A:
 

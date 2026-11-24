@@ -266,7 +266,15 @@
     "SHIFT_NOT_TODAY": "Solo se puede fichar el día del turno.",
     "ALREADY_CHECKED_IN": "Ya has fichado la entrada de este turno.",
     "NOT_CHECKED_IN": "Primero tienes que fichar la entrada.",
-    "ALREADY_CHECKED_OUT": "Ya has fichado la salida de este turno."
+    "ALREADY_CHECKED_OUT": "Ya has fichado la salida de este turno.",
+    "CARE_ANIMAL_ARCHIVED": "Este animal ya no está en el santuario.",
+    "ANIMAL_WITHOUT_ZONE": "Este animal no tiene zona: asígnale una en «Datos» para que sus tareas salgan en «Mi día».",
+    "MEDICATION_PLAN_HAS_HISTORY": "Esta pauta ya tiene dosis resueltas: termínala en lugar de borrarla.",
+    "MEDICATION_PLAN_NOT_STARTED": "Esta pauta aún no ha empezado: bórrala en lugar de terminarla.",
+    "MEDICATION_PLAN_ENDED": "Esta pauta ya ha terminado.",
+    "VET_VISIT_NOT_SCHEDULED": "Esta visita ya está registrada o cancelada.",
+    "VET_VISIT_FUTURE_DAY": "La visita se podrá registrar el día en que está programada.",
+    "VET_VISIT_NEEDS_RECORD": "Registra la visita con el formulario del historial veterinario."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -743,7 +751,8 @@
       "tabVet": "Veterinario",
       "showInMemorial": "Mostrar en «En memoria»",
       "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar.",
-      "zone": "Zona"
+      "zone": "Zona",
+      "tabCare": "Cuidados"
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -1080,7 +1089,18 @@
         "users": "Usuarios",
         "adoptions": "Adopciones",
         "payments": "Pagos",
-        "donations": "Donaciones"
+        "donations": "Donaciones",
+        "zones": "Zonas",
+        "qualifications": "Cualificaciones",
+        "task_templates": "Plantillas de tareas",
+        "task_instances": "Tareas",
+        "work_settings": "Ajustes del trabajo diario",
+        "shift_templates": "Plantillas de turno",
+        "shift_assignments": "Turnos",
+        "absences": "Ausencias",
+        "diet_items": "Dietas",
+        "medication_plans": "Pautas de medicación",
+        "vet_visits": "Visitas veterinarias"
       },
       "fields": {
         "name": "Nombre",
@@ -1376,7 +1396,9 @@
       "observations": "Observaciones",
       "completeSubmit": "Marcar como hecha",
       "reason": "Motivo",
-      "loadError": "No se han podido cargar las tareas."
+      "loadError": "No se han podido cargar las tareas.",
+      "registerVisit": "Registrar la visita",
+      "intakesLegend": "Lo que ha comido cada animal"
     },
     "tasks": {
       "title": "Tareas del día",
@@ -1473,7 +1495,9 @@
     "settings": {
       "title": "Ajustes del trabajo diario",
       "lateMargin": "Margen para considerar atrasada una tarea (minutos)",
-      "saved": "Ajustes guardados"
+      "saved": "Ajustes guardados",
+      "lowIntakeMeals": "Tomas seguidas comiendo poco para avisar",
+      "lowIntakeMealsHelp": "Cuentan «Menos de la mitad» y «Nada»."
     },
     "absenceTypes": {
       "vacation": "Vacaciones",
@@ -1578,6 +1602,117 @@
       "confirmDeleteText": "Los turnos que se quitaron al registrarla no vuelven: asígnalos de nuevo en «Turnos» si hace falta.",
       "empty": "No hay ausencias de hoy en adelante.",
       "loadError": "No se han podido cargar las ausencias."
+    },
+    "vetVisit": "Visita veterinaria",
+    "intakeOf": "{{name}}: {{intake}}",
+    "care": {
+      "title": "Cuidados de {{name}}",
+      "loadError": "No se han podido cargar los cuidados.",
+      "lowIntakeWarning_one": "Ha comido poco en su última toma.",
+      "lowIntakeWarning_other": "Ha comido poco en sus {{count}} últimas tomas.",
+      "period": "Vigencia",
+      "from": "Desde",
+      "until": "Hasta",
+      "since": "Desde el {{from}}",
+      "fromUntil": "Del {{from}} al {{until}}",
+      "ended": "Terminada",
+      "edit": "Editar",
+      "back": "Volver",
+      "units": {
+        "g": "g",
+        "kg": "kg",
+        "units": "unidades",
+        "ml": "ml"
+      },
+      "intakes": {
+        "all": "Todo",
+        "most": "Más de la mitad",
+        "little": "Menos de la mitad",
+        "none": "Nada"
+      },
+      "routes": {
+        "oral": "Oral",
+        "injection": "Inyectable",
+        "topical": "Tópica",
+        "eye_drops": "Colirio",
+        "other": "Otra"
+      },
+      "diet": {
+        "title": "Dieta",
+        "new": "Nuevo alimento",
+        "editTitle": "Editar el alimento",
+        "food": "Alimento",
+        "quantity": "Cantidad",
+        "unit": "Unidad",
+        "schedule": "Tomas",
+        "scheduleHelp": "Por ejemplo, «Mañana y tarde» o «Lun, Mié y Vie».",
+        "notes": "Notas",
+        "untilHelp": "Si deja de comerlo, ponle fecha de fin en lugar de borrarlo.",
+        "empty": "Todavía no tiene dieta.",
+        "created": "Alimento añadido",
+        "updated": "Alimento guardado",
+        "deleted": "Alimento borrado",
+        "confirmDelete": "¿Borrar «{{name}}» de la dieta?",
+        "deleteHelp": "Si ha dejado de comerlo, mejor ponle fecha de fin: así queda en el historial."
+      },
+      "feedings": {
+        "title": "Comidas de los últimos 14 días",
+        "empty": "No hay comidas anotadas en estos días.",
+        "date": "Día",
+        "time": "Hora",
+        "intake": "Ha comido",
+        "recordedBy": "Anotado por"
+      },
+      "medication": {
+        "title": "Medicación",
+        "new": "Nueva pauta",
+        "editTitle": "Editar la pauta",
+        "editHelp": "Al guardar, las dosis pendientes de ahora en adelante se vuelven a generar.",
+        "medication": "Medicamento",
+        "dose": "Dosis",
+        "route": "Vía",
+        "times": "Horas (HH:MM, separadas por comas)",
+        "qualification": "Cualificación necesaria",
+        "qualificationHelp": "Normalmente, «Administrar medicación».",
+        "noQualification": "Ninguna",
+        "notes": "Notas",
+        "doses": "Dosis dadas: {{given}} · No dadas: {{missed}}",
+        "empty": "No tiene pautas de medicación.",
+        "saved": "Pauta guardada",
+        "end": "Terminar",
+        "confirmEnd": "¿Terminar la pauta de {{name}}?",
+        "confirmEndText": "Termina hoy: se quitan las dosis que faltan desde ahora.",
+        "ended": "Pauta terminada",
+        "confirmDelete": "¿Borrar la pauta de {{name}}?",
+        "deleteText": "Se borran también sus dosis pendientes. No se puede deshacer.",
+        "deleted": "Pauta borrada"
+      },
+      "visits": {
+        "title": "Visitas veterinarias",
+        "new": "Programar visita",
+        "editTitle": "Cambiar la visita",
+        "date": "Día",
+        "time": "Hora",
+        "reason": "Motivo",
+        "veterinarian": "Veterinario",
+        "status": "Estado",
+        "statuses": {
+          "scheduled": "Programada",
+          "done": "Hecha",
+          "cancelled": "Cancelada"
+        },
+        "register": "Registrar",
+        "registerTitle": "Registrar la visita",
+        "registered": "Visita registrada en el historial veterinario",
+        "change": "Cambiar",
+        "cancel": "Cancelar la visita",
+        "confirmCancel": "¿Cancelar la visita del {{date}}?",
+        "confirmCancelText": "Se quita también su tarea de «Mi día».",
+        "cancelled": "Visita cancelada",
+        "created": "Visita programada",
+        "updated": "Visita cambiada",
+        "empty": "No tiene visitas programadas."
+      }
     }
   }
 }

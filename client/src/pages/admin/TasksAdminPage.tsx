@@ -7,6 +7,8 @@ import {
   isWorkerRole,
   oneOffTaskBodySchema,
   workSettingsBodySchema,
+  MAX_LOW_INTAKE_MEALS,
+  type WorkSettingsData,
   type OneOffTaskBody,
   type TaskDto,
   type TaskStatus,
@@ -491,16 +493,18 @@ function Reasignar({ tarea, onClose, onSaved }: { tarea: TaskDto; onClose: () =>
   );
 }
 
-/** CU-73: margen para considerar atrasada una tarea. */
+/** CU-73 y CU-67: margen para considerar atrasada una tarea y tomas comiendo poco para avisar. */
 function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation();
   const ajustes = useWorkSettings();
   const [margen, setMargen] = useState<string | null>(null);
+  const [tomas, setTomas] = useState<string | null>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState<string | null>(null);
   const valor = margen ?? (ajustes.data ? String(ajustes.data.lateMarginMinutes) : '');
+  const valorTomas = tomas ?? (ajustes.data?.lowIntakeMeals !== undefined ? String(ajustes.data.lowIntakeMeals) : '');
   const guardar = useMutation({
-    mutationFn: (lateMarginMinutes: number) => workApi.settings.update({ lateMarginMinutes }),
+    mutationFn: (datos: WorkSettingsData) => workApi.settings.update(datos),
     onSuccess: onSaved,
     onError: (e) => {
       const porCampo = erroresDelServidor(e);
@@ -517,13 +521,16 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
       onClose={onClose}
       onSubmit={() => {
         setError(null);
-        const resultado = workSettingsBodySchema.safeParse({ lateMarginMinutes: valor });
+        const resultado = workSettingsBodySchema.safeParse({
+          lateMarginMinutes: valor,
+          ...(valorTomas !== '' ? { lowIntakeMeals: valorTomas } : {}),
+        });
         if (!resultado.success) {
           setErrores(erroresPorCampo(resultado.error.issues));
           return;
         }
         setErrores({});
-        guardar.mutate(resultado.data.lateMarginMinutes);
+        guardar.mutate(resultado.data);
       }}
     >
       <TextField
@@ -534,6 +541,16 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
         value={valor}
         error={errores.lateMarginMinutes}
         onChange={(e) => setMargen(e.target.value)}
+      />
+      <TextField
+        type="number"
+        min={1}
+        max={MAX_LOW_INTAKE_MEALS}
+        label={t('work.settings.lowIntakeMeals')}
+        help={t('work.settings.lowIntakeMealsHelp')}
+        value={valorTomas}
+        error={errores.lowIntakeMeals}
+        onChange={(e) => setTomas(e.target.value)}
       />
     </VentanaFormulario>
   );

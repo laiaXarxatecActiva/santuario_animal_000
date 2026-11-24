@@ -13,6 +13,7 @@ import { isWorkerRole } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
+import { completarIngestas, esIngestaBaja, type Ingesta } from '../dominio/cuidados.js';
 import type { ArchivoSubido } from '../dominio/fotos.js';
 import { fechaEnZonaSantuario, instanteEnZonaSantuario, type Reloj } from '../dominio/reloj.js';
 import { comprobarResolucion } from '../dominio/tareas.js';
@@ -25,12 +26,15 @@ import {
   TaskIsPendingError,
   TaskNotPendingError,
   ValidationError,
+  VetVisitNeedsRecordError,
 } from '../errors/app-error.js';
+import * as feedingModel from '../models/feeding-log.model.js';
 import * as qualificationModel from '../models/qualification.model.js';
 import * as assignmentModel from '../models/shift-assignment.model.js';
 import * as taskModel from '../models/task.model.js';
 import * as userModel from '../models/user.model.js';
 import * as settingsModel from '../models/work-settings.model.js';
+import { avisarSiComePoco } from './avisos-cuidados.js';
 import type { MediaUploader } from './media-upload.service.js';
 import { resolverZona } from './task-template-admin.service.js';
 
@@ -84,14 +88,36 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
     }
   }
 
+  /**
+   * CU-66 y CU-68: al completarla, lo que ha comido cada animal (solo en las de
+   * alimentación). Una visita veterinaria se completa con su registro.
+   */
+  function ingestasAlCompletar(tarea: TaskDto, anotadas: readonly Ingesta[]): Ingesta[] {
+    if (tarea.vetVisitId) throw new VetVisitNeedsRecordError();
+    if (tarea.type !== 'feeding') {
+      if (anotadas.length > 0) throw enCampo('intakes', 'Esta tarea no es de alimentación.');
+      return [];
+    }
+    const resultado = completarIngestas(tarea.feedingAnimals ?? [], anotadas);
+    if (!resultado.ok) throw enCampo('intakes', 'Este animal no es de esta comida.');
+    return resultado.ingestas;
+  }
+
   /** Completa o marca como no realizada (CU-57). La foto se guarda antes y se borra si algo falla. */
   async function resolver(
     user: SessionUser,
     id: number,
-    datos: { status: 'completed' | 'not_done'; observations: string | null; archivo?: ArchivoSubido },
+    datos: {
+      status: 'completed' | 'not_done';
+      observations: string | null;
+      archivo?: ArchivoSubido;
+      intakes?: readonly Ingesta[];
+    },
   ): Promise<TaskDto> {
     const cualificaciones = await qualificationModel.idsOfUser(db, user.id);
-    lanzarSiBloqueada(bloqueo(await buscar(db, id), cualificaciones));
+    const tarea = await buscar(db, id);
+    lanzarSiBloqueada(bloqueo(tarea, cualificaciones));
+    const ingestas = datos.status === 'completed' ? ingestasAlCompletar(tarea, datos.intakes ?? []) : [];
     let photoUrl: string | null = null;
     if (datos.archivo) {
       const guardada = await media.guardarImagen(`tasks/${id}`, datos.archivo);
@@ -108,6 +134,19 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
           observations: datos.observations,
           photoUrl,
         });
+        if (ingestas.length === 0) return;
+        // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
+        await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
+        const { lowIntakeMeals } = await settingsModel.get(client);
+        for (const animal of tarea.feedingAnimals ?? []) {
+          const ingesta = ingestas.find((i) => i.animalId === animal.id);
+          if (!ingesta || !esIngestaBaja(ingesta.intake)) continue;
+          await avisarSiComePoco(client, animal, {
+            hoy: reloj.hoy(),
+            zoneId: tarea.zone?.id ?? null,
+            umbral: lowIntakeMeals,
+          });
+        }
       });
     } catch (error) {
       if (photoUrl) await media.borrar([photoUrl]);
@@ -149,8 +188,14 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
 
     get: (id: number) => buscar(db, id),
 
-    complete(user: SessionUser, id: number, observations: string | null, archivo?: ArchivoSubido) {
-      return resolver(user, id, { status: 'completed', observations, archivo });
+    complete(
+      user: SessionUser,
+      id: number,
+      observations: string | null,
+      archivo?: ArchivoSubido,
+      intakes: readonly Ingesta[] = [],
+    ) {
+      return resolver(user, id, { status: 'completed', observations, archivo, intakes });
     },
 
     /** A1: el motivo queda en las observaciones. */
