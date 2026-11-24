@@ -52,6 +52,9 @@ BEGIN;
 -- 0. Vaciar todas las tablas y reiniciar los contadores de id
 -- -----------------------------------------------------------------------------
 TRUNCATE TABLE
+    handover_note_reads,
+    handover_notes,
+    incidents,
     feeding_logs,
     diet_items,
     staff_alerts,
@@ -823,6 +826,36 @@ INSERT INTO task_instance_animals (task_id, animal_id)
 SELECT i.id, v.animal_id FROM task_instances i JOIN vet_visits v ON v.id = i.vet_visit_id;
 
 -- -----------------------------------------------------------------------------
+-- 18. Incidencias y notas de relevo (CU-70, CU-71)
+-- -----------------------------------------------------------------------------
+
+-- Ajustes del trabajo diario con sus valores por defecto: el TRUNCATE de
+-- `users` (CASCADE) vacía también esta tabla.
+INSERT INTO work_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+-- Una abierta (media), una en curso (alta, de Pipa) y una resuelta.
+INSERT INTO incidents (id, category, severity, description, zone_id, animal_id, status, reported_by,
+                       resolution, resolved_by, resolved_at, created_at)
+OVERRIDING SYSTEM VALUE VALUES
+(1, 'facilities', 'medium', 'La malla del techo tiene un agujero junto a la plataforma norte.', 2, NULL, 'open', 4,
+    NULL, NULL, NULL, pg_temp.ago_ts('1 day', '10:20')),
+(2, 'health', 'high', 'Pipa cojea de la pata derecha desde esta mañana.', 4, 14, 'in_progress', 3,
+    NULL, NULL, NULL, pg_temp.ago_ts('0 days', '08:40')),
+(3, 'other', 'low', 'Se ha estropeado el termómetro de la cámara frigorífica.', 5, NULL, 'resolved', 5,
+    'Termómetro cambiado por uno nuevo.', 1, pg_temp.ago_ts('2 days', '12:00'), pg_temp.ago_ts('3 days', '18:30'));
+
+-- Notas de relevo. Carmen (tarde) dejó anoche una en la clínica y otra en el
+-- voladero de alimoches, que Nuria ya ha leído; la de Andrés es de hace 2 días
+-- (ya no sale en «Mi día»).
+INSERT INTO handover_notes (id, zone_id, author_id, body, created_at)
+OVERRIDING SYSTEM VALUE VALUES
+(1, 4, 5, 'Carbón ha estado tranquilo; dejad la luz baja en su jaula.', pg_temp.ago_ts('1 day', '21:50')),
+(2, 1, 4, 'Revisad el bebedero del fondo: pierde agua.',              pg_temp.ago_ts('2 days', '14:55')),
+(3, 3, 5, 'Lupe se lo ha comido todo y está activa.',                 pg_temp.ago_ts('1 day', '21:45'));
+
+INSERT INTO handover_note_reads (note_id, user_id, read_at) VALUES (3, 3, pg_temp.ago_ts('0 days', '07:05'));
+
+-- -----------------------------------------------------------------------------
 -- 14. Ajustar los contadores de id tras insertar ids explícitos
 -- -----------------------------------------------------------------------------
 SELECT setval(pg_get_serial_sequence('users', 'id'),          (SELECT MAX(id) FROM users));
@@ -840,5 +873,7 @@ SELECT setval(pg_get_serial_sequence('shift_templates', 'id'), (SELECT MAX(id) F
 SELECT setval(pg_get_serial_sequence('diet_items', 'id'),     (SELECT MAX(id) FROM diet_items));
 SELECT setval(pg_get_serial_sequence('medication_plans', 'id'), (SELECT MAX(id) FROM medication_plans));
 SELECT setval(pg_get_serial_sequence('vet_visits', 'id'),     (SELECT MAX(id) FROM vet_visits));
+SELECT setval(pg_get_serial_sequence('incidents', 'id'),      (SELECT MAX(id) FROM incidents));
+SELECT setval(pg_get_serial_sequence('handover_notes', 'id'), (SELECT MAX(id) FROM handover_notes));
 
 COMMIT;

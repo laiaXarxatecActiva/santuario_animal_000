@@ -1,12 +1,14 @@
 import { NotFoundError } from '../errors/app-error.js';
 import { runBilling } from './billing.job.js';
 import { runCoverageCheck } from './coverage-check.job.js';
+import { runDailySummary } from './daily-summary.job.js';
 import { runExpirePending } from './expire-pending.job.js';
 import { runFinishCancelled } from './finish-cancelled.job.js';
 import { runGenerateTasks } from './generate-tasks.job.js';
 import type { JobDeps, JobResult } from './job.types.js';
 import { runManualPayments } from './manual-payments.job.js';
 import { runMonthlyDigest } from './monthly-digest.job.js';
+import { runStaffEmails } from './staff-emails.job.js';
 import { runTaskAlerts } from './task-alerts.job.js';
 import { runUpdateReminder } from './update-reminder.job.js';
 
@@ -24,6 +26,10 @@ export const JOBS = {
   'task-alerts': { schedule: '*/15 * * * *', run: runTaskAlerts },
   // CU-64: cada hora, a los 5 minutos.
   'coverage-check': { schedule: '5 * * * *', run: runCoverageCheck },
+  // CU-73: envía por email los avisos del personal pendientes.
+  'staff-emails': { schedule: '*/5 * * * *', run: runStaffEmails },
+  // CU-74: comprueba si ya es la hora del resumen diario (sale una vez al día).
+  'daily-summary': { schedule: '*/15 * * * *', run: runDailySummary },
 } as const;
 
 export type JobName = keyof typeof JOBS;

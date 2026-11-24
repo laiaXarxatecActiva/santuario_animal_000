@@ -274,7 +274,10 @@
     "MEDICATION_PLAN_ENDED": "Aquesta pauta ja ha acabat.",
     "VET_VISIT_NOT_SCHEDULED": "Aquesta visita ja està registrada o cancel·lada.",
     "VET_VISIT_FUTURE_DAY": "La visita es podrà registrar el dia que està programada.",
-    "VET_VISIT_NEEDS_RECORD": "Registra la visita amb el formulari de l'historial veterinari."
+    "VET_VISIT_NEEDS_RECORD": "Registra la visita amb el formulari de l'historial veterinari.",
+    "INCIDENT_SAME_STATUS": "La incidència ja està en eixe estat.",
+    "INCIDENT_HAS_TASK": "Esta incidència ja té una tasca.",
+    "INCIDENT_RESOLVED": "Esta incidència ja està resolta."
   },
   "form": {
     "showPassword": "Mostra la contrasenya",
@@ -612,7 +615,10 @@
       "zones": "Zones i qualificacions",
       "shifts": "Torns",
       "shiftTemplates": "Plantilles de torn",
-      "absences": "Absències"
+      "absences": "Absències",
+      "today": "Hui",
+      "incidents": "Incidències",
+      "alertSettings": "Avisos per correu"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -635,7 +641,8 @@
       "quickLinks": "Accessos ràpids",
       "newAnimal": "Animal nou",
       "revenueThisMonth": "este mes",
-      "revenueDetail": "quotes {{fees}} · donacions {{donations}}"
+      "revenueDetail": "quotes {{fees}} · donacions {{donations}}",
+      "todayLink": "Vore el panell «Hui» del santuari"
     },
     "common": {
       "save": "Guarda",
@@ -1100,7 +1107,8 @@
         "absences": "Absències",
         "diet_items": "Dietes",
         "medication_plans": "Pautes de medicació",
-        "vet_visits": "Visites veterinàries"
+        "vet_visits": "Visites veterinàries",
+        "incidents": "Incidències"
       },
       "fields": {
         "name": "Nom",
@@ -1713,6 +1721,125 @@
         "updated": "Visita canviada",
         "empty": "No té visites programades."
       }
+    },
+    "incidents": {
+      "title": "Incidències",
+      "report": "Comunicar una incidència",
+      "send": "Enviar",
+      "sending": "S’està enviant…",
+      "reported_ok": "Incidència comunicada",
+      "category": "Tipus",
+      "severity": "Gravetat",
+      "zone": "Zona",
+      "animal": "Animal",
+      "noAnimal": "Cap",
+      "description": "Què passa",
+      "place": "On",
+      "status": "Estat",
+      "statusFilter": "Estat",
+      "reported": "Comunicada",
+      "reportedBy": "Comunicada per {{name}} el {{date}}",
+      "view": "Vore",
+      "highHelp": "Les incidències de gravetat alta s’avisen al moment a l’administració i a qui té torn a la zona.",
+      "empty": "No hi ha incidències amb estos filtres.",
+      "loadError": "No s’han pogut carregar les incidències.",
+      "categories": {
+        "health": "Salut",
+        "behavior": "Comportament",
+        "facilities": "Instal·lacions",
+        "other": "Una altra"
+      },
+      "severities": {
+        "low": "Baixa",
+        "medium": "Mitjana",
+        "high": "Alta"
+      },
+      "statuses": {
+        "open": "Oberta",
+        "in_progress": "En curs",
+        "resolved": "Resolta"
+      },
+      "filters": {
+        "active": "Obertes i en curs",
+        "open": "Obertes",
+        "in_progress": "En curs",
+        "resolved": "Resoltes",
+        "all": "Totes",
+        "anySeverity": "Qualsevol",
+        "anyZone": "Totes"
+      },
+      "back": "Tornar a les incidències",
+      "notFound": "Esta incidència no existix.",
+      "detailTitle": "Incidència núm. {{id}}",
+      "changeStatus": "Canviar l’estat",
+      "newStatus": "Estat nou",
+      "note": "Nota",
+      "noteHelp": "Explica com s’ha resolt; quedarà a la fitxa.",
+      "statusChanged": "Estat canviat",
+      "createTask": "Crear una tasca",
+      "taskTitle": "Tasca de la incidència núm. {{id}}",
+      "taskCreated": "Tasca creada",
+      "task": "Tasca",
+      "taskLink": "Tasca núm. {{id}}",
+      "resolution": "Resolució",
+      "resolvedBy": "{{name}}, el {{date}}",
+      "photoAlt": "Foto de la incidència"
+    },
+    "handover": {
+      "title": "Notes de relleu",
+      "write": "Deixar una nota",
+      "writeTitle": "Deixar una nota de relleu",
+      "zone": "Zona",
+      "body": "Nota",
+      "bodyHelp": "La voran durant 24 hores els qui tinguen torn en esta zona.",
+      "saved": "Nota guardada",
+      "new": "Nova",
+      "markRead": "Marcar com a llegida",
+      "meta": "{{author}} · {{zone}} · {{date}}",
+      "empty": "No hi ha notes de relleu de les últimes 24 hores.",
+      "loadError": "No s’han pogut carregar les notes de relleu."
+    },
+    "today": {
+      "title": "Hui al santuari",
+      "loadError": "No s’ha pogut carregar el panell de hui.",
+      "none": "Cap.",
+      "tasks": "Tasques de hui",
+      "tasksSummary": "{{completed}} fetes, {{notDone}} no realitzades i {{pending}} pendents de {{total}}",
+      "tasksLink": "Vore les tasques del dia",
+      "late": "Endarrerides",
+      "notDone": "No realitzades",
+      "missedDoses": "Medicació no donada",
+      "incidents": "Incidències",
+      "incidentsSummary": "Obertes: {{open}} · En curs: {{inProgress}}",
+      "incidentsLink": "Vore totes les incidències",
+      "shifts": "Torns de hui",
+      "checkedIn": "entrada a les {{time}}",
+      "missingCheckIn": "Sense fitxar",
+      "shiftsLink": "Vore el calendari de torns",
+      "gaps": "Zones sense cobrir",
+      "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
+      "lowIntake": "Animals que mengen poc",
+      "streak_one": "{{count}} presa menjant poc",
+      "streak_other": "{{count}} preses menjant poc",
+      "vetVisits": "Visites veterinàries de hui"
+    },
+    "alertSettings": {
+      "title": "Avisos per correu",
+      "loadError": "No s’han pogut carregar els ajustos dels avisos.",
+      "saved": "Ajustos guardats",
+      "emailLegend": "Avisos que també s’envien per correu",
+      "emailHelp": "La campana avisa sempre. Els que marques arriben a més per correu a cada persona que rep l’avís.",
+      "types": {
+        "coverage_gap": "Torn sense prou personal",
+        "low_intake": "Animal que menja poc",
+        "medication_missed": "Medicació no donada",
+        "vet_visit_today": "Visita veterinària de hui",
+        "incident_reported": "Incidència greu"
+      },
+      "summaryLegend": "Resum del dia",
+      "summaryHelp": "Un correu a l’administració amb les tasques, la medicació, les incidències i els buits del dia.",
+      "summaryEnabled": "Enviar el resum del dia",
+      "summaryTime": "Hora del resum"
     }
   }
 }

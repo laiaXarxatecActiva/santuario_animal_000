@@ -32,6 +32,9 @@ BEGIN;
 -- 0. Limpieza: se borra todo lo que crea este script
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS
+    handover_note_reads,
+    handover_notes,
+    incidents,
     feeding_logs,
     diet_items,
     staff_alerts,
@@ -569,15 +572,18 @@ CREATE TABLE notifications (
                     'low_intake',          -- aviso interno: un animal come poco varias tomas seguidas (CU-67)
                     'medication_missed',   -- aviso interno: dosis de medicación no dada (CU-69)
                     'vet_visit_today',     -- aviso interno: visita veterinaria programada para hoy (CU-68)
+                    'incident_reported',   -- aviso interno: incidencia de gravedad alta (CU-70)
                     'system'
                 )),
     message     VARCHAR(500) NOT NULL,
     link        VARCHAR(500),                               -- ruta interna, p. ej. /my-animals/3
     is_read     BOOLEAN      NOT NULL DEFAULT FALSE,
+    email_pending BOOLEAN    NOT NULL DEFAULT FALSE,        -- aviso del personal que falta enviar por email (CU-73)
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX notifications_user_idx ON notifications (user_id, is_read, created_at DESC);
+CREATE INDEX notifications_email_pending_idx ON notifications (id) WHERE email_pending;
 
 -- -----------------------------------------------------------------------------
 -- 6. [FASE 3] Historial veterinario y registro de actividad
@@ -916,6 +922,54 @@ CREATE TRIGGER feeding_logs_check_task
     BEFORE INSERT OR UPDATE OF task_id ON feeding_logs
     FOR EACH ROW EXECUTE FUNCTION check_feeding_log_task();
 
+-- Incidencias (CU-70): un problema que comunica el personal sobre un animal o
+-- una zona. Solo el administrador las pasa a «en curso» o «resuelta».
+CREATE TABLE incidents (
+    id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    category     VARCHAR(20)  NOT NULL CHECK (category IN ('health', 'behavior', 'facilities', 'other')),
+    severity     VARCHAR(10)  NOT NULL CHECK (severity IN ('low', 'medium', 'high')),
+    description  TEXT         NOT NULL CHECK (char_length(btrim(description)) BETWEEN 1 AND 2000),
+    zone_id      INTEGER      REFERENCES zones (id) ON DELETE RESTRICT,     -- la elegida o la del animal
+    animal_id    INTEGER      REFERENCES animals (id) ON DELETE CASCADE,
+    photo_url    VARCHAR(500),
+    status       VARCHAR(20)  NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
+    reported_by  INTEGER      NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+    resolution   TEXT         CHECK (char_length(resolution) <= 2000),
+    resolved_by  INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
+    resolved_at  TIMESTAMPTZ,
+    task_id      INTEGER      REFERENCES task_instances (id) ON DELETE SET NULL, -- tarea creada a partir de ella
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT incidents_place CHECK (zone_id IS NOT NULL OR animal_id IS NOT NULL),
+    -- Resuelta ⇔ tiene fecha y explicación de cómo se resolvió.
+    CONSTRAINT incidents_resolution CHECK (
+        (status = 'resolved') = (resolved_at IS NOT NULL AND resolution IS NOT NULL))
+);
+
+CREATE INDEX incidents_status_idx ON incidents (status, created_at DESC);
+
+CREATE TRIGGER incidents_set_updated_at
+    BEFORE UPDATE ON incidents
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Notas de relevo (CU-71): lo que quien sale deja dicho para quien entra en una zona.
+CREATE TABLE handover_notes (
+    id          INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    zone_id     INTEGER      NOT NULL REFERENCES zones (id) ON DELETE CASCADE,
+    author_id   INTEGER      NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
+    body        TEXT         NOT NULL CHECK (char_length(btrim(body)) BETWEEN 1 AND 1000),
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX handover_notes_zone_idx ON handover_notes (zone_id, created_at DESC);
+
+CREATE TABLE handover_note_reads (
+    note_id  INTEGER      NOT NULL REFERENCES handover_notes (id) ON DELETE CASCADE,
+    user_id  INTEGER      NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    read_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (note_id, user_id)
+);
+
 -- Ajustes del trabajo diario (CU-73). Una sola fila, que crea este script.
 CREATE TABLE work_settings (
     id                   SMALLINT    PRIMARY KEY DEFAULT 1 CHECK (id = 1),
@@ -923,6 +977,13 @@ CREATE TABLE work_settings (
                          CHECK (late_margin_minutes BETWEEN 0 AND 240), -- «atrasada» tras la hora + este margen
     low_intake_meals     SMALLINT    NOT NULL DEFAULT 2
                          CHECK (low_intake_meals BETWEEN 1 AND 10),      -- tomas seguidas comiendo poco para avisar (CU-67)
+    -- Avisos del personal que se envían también por email (CU-73).
+    email_alert_types    TEXT[]      NOT NULL
+                         DEFAULT ARRAY['coverage_gap', 'low_intake', 'medication_missed', 'incident_reported']
+                         CHECK (email_alert_types <@ ARRAY['coverage_gap', 'low_intake', 'medication_missed',
+                                                           'vet_visit_today', 'incident_reported']),
+    daily_summary_enabled BOOLEAN    NOT NULL DEFAULT FALSE,                -- resumen diario por email (CU-74)
+    daily_summary_time   TIME        NOT NULL DEFAULT '20:00',              -- hora de Madrid
     updated_by           INTEGER     REFERENCES users (id) ON DELETE RESTRICT,
     updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

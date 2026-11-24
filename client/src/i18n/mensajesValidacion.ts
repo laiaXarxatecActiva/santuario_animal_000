@@ -272,6 +272,20 @@ const FIJOS: Record<string, Traduccion> = {
   'Escribe el medicamento.': { ca: 'Escriu el medicament.', en: 'Enter the medicine.' },
   'Escribe la dosis.': { ca: 'Escriu la dosi.', en: 'Enter the dose.' },
   'Elige la vía.': { ca: 'Tria la via.', en: 'Choose the route.' },
+  // CU-70 a CU-73: incidencias, notas de relevo y avisos por email.
+  'Elige el tipo de incidencia.': { ca: 'Tria el tipus d’incidència.', en: 'Choose the type of incident.' },
+  'Elige la gravedad.': { ca: 'Tria la gravetat.', en: 'Choose the severity.' },
+  'Describe lo que pasa.': { ca: 'Descriu què passa.', en: 'Describe what is happening.' },
+  'Elige una zona o un animal.': { ca: 'Tria una zona o un animal.', en: 'Choose a zone or an animal.' },
+  'Explica cómo se ha resuelto.': { ca: 'Explica com s’ha resolt.', en: 'Explain how it was resolved.' },
+  'Elige el estado.': { ca: 'Tria l’estat.', en: 'Choose the status.' },
+  'Elige la zona.': { ca: 'Tria la zona.', en: 'Choose the zone.' },
+  'Escribe la nota.': { ca: 'Escriu la nota.', en: 'Write the note.' },
+  'No tienes turno hoy en esta zona.': {
+    ca: 'Hui no tens torn en esta zona.',
+    en: 'You have no shift in this zone today.',
+  },
+  'Este aviso no existe.': { ca: 'Este avís no existix.', en: 'This alert does not exist.' },
 };
 
 /** Mensajes con un número (longitudes máximas y mínimas). */

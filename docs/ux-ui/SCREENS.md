@@ -743,6 +743,8 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
 - Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
 - Vacío: `EmptyState` con `list-check` y «No hay tareas para este día.». Avisos `success` tras cada acción («Tarea marcada como hecha»…).
+- **Comunicar incidencia** (CU-70): botón `outline` con `triangle-exclamation` junto al título; abre la misma ventana que en «Incidencias».
+- **Notas de relevo** (CU-71, h2, entre «Tu turno» y las tareas): una tarjeta por nota de las últimas 24 horas con «Carmen Boix Vidal · Clínica y recuperación · 22/11, 21:50», el texto y, si no se ha leído, la insignia «Nueva», borde izquierdo terracota y «Marcar como leída» (`ghost`). «Dejar una nota» (`outline`, `pen-to-square`) solo si tiene turno hoy (el administrador, siempre): ventana «Dejar una nota de relevo» con «Zona» (las de su turno de hoy) y «Nota» (ayuda: «La verán durante 24 horas quienes tengan turno en esta zona.»). Sin notas: «No hay notas de relevo de las últimas 24 horas.».
 
 #### Tareas del día (`/admin/tasks`) — CU-55, CU-73
 
@@ -750,7 +752,7 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - Filtros: «Día» (hoy por defecto), «Zona» y «Estado».
 - Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones, foto) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
 - «Nueva tarea puntual»: ventana con tipo, título, descripción, zona, animales (casillas, solo los que siguen en el santuario), cualificación, día, hora (HH:MM) y persona.
-- «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)» y «Tomas seguidas comiendo poco para avisar» (1-10, con la ayuda «Cuentan «Menos de la mitad» y «Nada».», CU-67). En el Bloque D se convertirá en una pantalla con los avisos por email.
+- «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)» y «Tomas seguidas comiendo poco para avisar» (1-10, con la ayuda «Cuentan «Menos de la mitad» y «Nada».», CU-67). Los avisos por email y el resumen diario están en su propia pantalla, «Avisos por email».
 
 #### Plantillas de tareas (`/admin/task-templates`) — CU-54
 
@@ -801,6 +803,23 @@ Para todo el personal; las acciones de cambio, solo para el administrador.
 - Tabla de las ausencias de hoy en adelante: Persona · Fechas («Del 26 nov 2026 al 27 nov 2026») · Motivo · Notas · borrar.
 - «Registrar ausencia» (`primary`, `plus`): ventana con «Persona», «Primer día», «Último día», «Motivo» (vacaciones, baja médica, asuntos propios, otro) y «Notas (opcional)». Al guardar, aviso `success` «Ausencia registrada.» con, si los hay, «Se han quitado estos turnos, que hay que volver a cubrir:» y «Ya había fichado estos turnos, que se mantienen:» (listas «miércoles, 25 de noviembre · Mañana»).
 - Borrar pide confirmación y recuerda que los turnos quitados no vuelven.
+
+#### Incidencias (`/admin/incidents`, `/admin/incidents/:id`) — CU-70
+
+Para todo el personal. Título «Incidencias» y «Comunicar incidencia» (`primary`, `plus`).
+
+- **Filtros:** «Estado» (Abiertas y en curso por defecto, Abiertas, En curso, Resueltas, Todas), «Gravedad» y «Zona».
+- **Tabla:** qué pasa, tipo, gravedad (insignia), dónde («Pipa · Clínica y recuperación»), estado (insignia), «Comunicada por Nuria Peris Gil el 23/11, 08:40» y «Ver». Paginada. Vacío: «No hay incidencias con estos filtros.».
+- **Ventana «Comunicar incidencia»:** «Tipo» (Salud, Comportamiento, Instalaciones, Otra), «Gravedad» (Media por defecto; con «Alta», la ayuda «Las incidencias de gravedad alta se avisan al momento…»), «Zona», «Animal (opcional)», «Qué pasa» y «Foto (opcional)»; [Cancelar] [■ Enviar]. Aviso `success` «Incidencia comunicada».
+- **Ficha:** «Volver a las incidencias», título «Incidencia n.º 2», las insignias de gravedad y estado, la descripción, una lista con tipo, zona, animal (enlace a sus cuidados), quién la comunicó, la tarea y la resolución, y la foto. El administrador ve «Crear tarea» (`outline`, si no está resuelta ni tiene tarea; abre la ventana de tarea puntual con el tipo, el título, la zona y el animal puestos, titulada «Tarea de la incidencia n.º 2») y «Cambiar el estado» (`primary`: «Nuevo estado» y «Nota», obligatoria al resolver).
+
+#### Hoy (`/admin/today`) — CU-72
+
+Solo el administrador; el escritorio enlaza aquí («Ver el panel «Hoy» del santuario»). Título «Hoy en el santuario» con la fecha. Rejilla de bloques (tarjetas de 320 px mínimo, DESIGN_SYSTEM §8.10), cada uno con su h2: «Tareas de hoy» («7 hechas, 1 no realizadas y 4 pendientes de 12» y «Ver las tareas del día»), «Atrasadas», «No realizadas», «Medicación no dada» (con enlace a los cuidados del animal), «Incidencias» («Abiertas: 1 · En curso: 1», las últimas con su gravedad y «Ver todas las incidencias»), «Turnos de hoy» (cada persona con su turno, la hora de entrada o la insignia «Sin fichar» `warning`), «Zonas sin cubrir» («Gran voladero · Tarde: 1 de 2»), «Animales que comen poco» («2 tomas comiendo poco») y «Visitas veterinarias de hoy» («11:00 · Pipa»). Un bloque sin nada dice «Ninguna.».
+
+#### Avisos por email (`/admin/alert-settings`) — CU-73, CU-74
+
+Solo el administrador. Dos grupos: «Avisos que también se envían por email» (ayuda: «La campana avisa siempre…»; una casilla por aviso: Turno sin personal suficiente, Animal que come poco, Medicación no dada, Visita veterinaria de hoy, Incidencia grave) y «Resumen del día» (casilla «Enviar el resumen del día» y «Hora del resumen», HH:MM). [■ Guardar]; aviso `success` «Ajustes guardados».
 
 #### Pestaña «Cuidados» (`/admin/animals/:id/care`) — CU-65 a CU-69
 

@@ -64,6 +64,7 @@ export const NOTIFICATION_TYPES = [
   'low_intake',
   'medication_missed',
   'vet_visit_today',
+  'incident_reported',
   'system',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

@@ -26,6 +26,7 @@ export const ACTIVITY_TABLES = [
   'diet_items',
   'medication_plans',
   'vet_visits',
+  'incidents',
 ] as const;
 export type ActivityTable = (typeof ACTIVITY_TABLES)[number];
 

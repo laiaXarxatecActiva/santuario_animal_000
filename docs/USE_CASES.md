@@ -64,7 +64,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-24 | Trabajo diario: las tareas recurrentes salen de **plantillas** y se generan cada día con 7 días de antelación, en la hora de Madrid, una sola vez por plantilla y hora (la generación es idempotente). Nunca se generan para animales fallecidos o trasladados, y al archivar un animal se retira de sus tareas pendientes. |
 | RN-25 | Una tarea que exige una **cualificación** solo la puede completar, marcar como no realizada o tener asignada un trabajador que la tenga (también un administrador). Se comprueba en el servidor y en la base de datos. |
 | RN-26 | Una tarea solo se resuelve el mismo día (no antes). Está **atrasada** si sigue pendiente pasada su hora más el margen configurado (30 minutos por defecto); no se guarda, se calcula. Al acabar el día, las pendientes pasan a «no realizada» por el sistema. |
-| RN-27 | Las tareas puntuales solo las crea el administrador; el personal comunica los problemas con incidencias (Bloque D). Las plantillas, zonas y cualificaciones con historial no se borran: se desactivan. |
+| RN-27 | Las tareas puntuales solo las crea el administrador; el personal comunica los problemas con incidencias (CU-70). Las plantillas, zonas y cualificaciones con historial no se borran: se desactivan. |
 | RN-28 | Turnos: una persona no puede estar en dos turnos que se solapen el mismo día ni en un turno un día en que está ausente. Los turnos de días pasados o ya fichados no se quitan. Al desactivar a un trabajador se quitan sus turnos de hoy en adelante sin fichar. |
 | RN-29 | Al registrar una ausencia se quitan los turnos de esos días que la persona no ha fichado, y se dice cuáles; borrar la ausencia no los devuelve. El motivo de una ausencia solo lo ven el administrador y la propia persona; el resto del personal solo ve que está ausente. |
 | RN-30 | Cada persona ficha solo sus turnos y solo el día del turno: primero la entrada y después la salida, una vez cada una. |
@@ -74,6 +74,9 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
 | RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
 | RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
+| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona o animal, descripción y foto opcional) y ve todas. Solo el administrador cambia su estado (abierta → en curso → resuelta, con una nota obligatoria al resolverla) y crea una tarea puntual a partir de ella, que la pasa a «en curso». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona, sin contar a quien la comunica. |
+| RN-38 | Las **notas de relevo** son de una zona: las escribe quien tiene turno hoy en ella (el administrador, en cualquiera) y las ve durante 24 horas quien tiene turno hoy en esa zona y los administradores. Cada persona las marca como leídas; las propias cuentan como leídas. |
+| RN-39 | Los avisos del personal (huecos, come poco, medicación no dada, visita de hoy e incidencia grave) siempre van a la campana; el administrador elige cuáles van **también por email**, para todo el personal (todos menos la visita de hoy, por defecto). El email se envía aparte (`staff-emails`), así que un fallo del correo nunca deshace la operación. El **resumen diario** por email a los administradores está desactivado por defecto (a las 20:00 si se activa) y se envía una vez al día. |
 
 ## 4. Web pública y cuenta
 
@@ -1630,7 +1633,7 @@ Cada día, para cada una de ellas y en su propia transacción:
 
 ## 10. Trabajo diario del personal
 
-Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU-59), turnos y ausencias (Bloque B, CU-60 a CU-64) y dietas, visitas veterinarias y medicación (Bloque C, CU-65 a CU-69). Las incidencias y avisos (Bloque D) se añadirán como CU-70 en adelante.
+Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU-59), turnos y ausencias (Bloque B, CU-60 a CU-64) y dietas, visitas veterinarias y medicación (Bloque C, CU-65 a CU-69). e incidencias, notas de relevo, panel «Hoy» y avisos por email (Bloque D, CU-70 a CU-74).
 
 ### CU-52 — Gestionar zonas
 
@@ -1900,7 +1903,7 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 **Flujos alternativos**
 
-- **2a.** Si el hueco ya se avisó, no se repite aunque siga sin cubrir. El aviso por email llegará con el Bloque D.
+- **2a.** Si el hueco ya se avisó, no se repite aunque siga sin cubrir. Si el administrador lo ha elegido, el aviso llega también por email (CU-73).
 
 **Postcondiciones:** la tarea es idempotente (`staff_alerts` guarda cada aviso por día, turno y zona).
 
@@ -1966,7 +1969,7 @@ Cada día, para cada plantilla activa y en su propia transacción:
 - **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una toma buena la corta y la siguiente racha sí se avisa.
 - **2b.** El administrador cambia el número de tomas en «Tareas del día» → «Ajustes» (de 1 a 10).
 
-**Postcondiciones:** el aviso queda en `staff_alerts`. El email llegará con el Bloque D.
+**Postcondiciones:** el aviso queda en `staff_alerts`; si el administrador lo ha elegido, también sale por email (CU-73).
 
 **Reglas de negocio:** RN-33, RN-34.
 
@@ -2016,3 +2019,95 @@ Cada día, para cada plantilla activa y en su propia transacción:
 **Postcondiciones:** la tarjeta de la pauta muestra las dosis dadas y no dadas; los cambios quedan en el registro de actividad.
 
 **Reglas de negocio:** RN-25, RN-34, RN-35.
+
+### CU-70 — Comunicar y gestionar incidencias
+
+| Actor principal | Fase |
+| --- | --- |
+| Cualquier trabajador (comunicar y ver); administrador (gestionar) | Trabajo diario, Bloque D |
+
+**Flujo principal**
+
+1. Desde «Incidencias» o «Mi día», pulsa «Comunicar incidencia»: tipo (salud, comportamiento, instalaciones u otra), gravedad (baja, media o alta), zona y/o animal, «Qué pasa» y una foto opcional.
+2. El sistema la guarda como «Abierta». Si se eligió un animal sin zona, toma la del animal.
+3. Si la gravedad es alta, avisa al momento en la campana a los administradores en activo y a quien tiene turno hoy en la zona (sin contar a quien la comunica): «Incidencia grave en «Clínica y recuperación»: …».
+4. Todo el personal ve el listado (por defecto, las abiertas y en curso; filtros por estado, gravedad y zona) y la ficha.
+5. El administrador cambia el estado desde la ficha; al resolverla escribe cómo se ha resuelto.
+6. El administrador puede crear una tarea puntual a partir de ella (con el tipo, el título, la zona y el animal ya puestos); la incidencia pasa a «En curso».
+
+**Flujos alternativos**
+
+- **1a.** Sin descripción, o sin zona ni animal: «Describe lo que pasa.» / «Elige una zona o un animal.».
+- **5a.** Mismo estado: «La incidencia ya está en ese estado.». Resolver sin nota: «Explica cómo se ha resuelto.».
+- **6a.** Si ya tiene tarea o está resuelta: «Esta incidencia ya tiene una tarea.» / «Esta incidencia ya está resuelta.».
+
+**Postcondiciones:** el alta, los cambios de estado y la tarea quedan en el registro de actividad (`incidents`).
+
+**Reglas de negocio:** RN-27, RN-37, RN-39.
+
+### CU-71 — Dejar y leer notas de relevo
+
+| Actor principal | Fase |
+| --- | --- |
+| Cuidador o administrador | Trabajo diario, Bloque D |
+
+**Flujo principal**
+
+1. En «Mi día», la sección «Notas de relevo» muestra las notas de las últimas 24 horas de las zonas de su turno de hoy (el administrador, todas), las nuevas marcadas como «Nueva».
+2. Pulsa «Marcar como leída» en las que ha leído.
+3. Pulsa «Dejar una nota», elige una zona de su turno de hoy y escribe la nota (hasta 1000 caracteres). No hace falta fichar la salida para escribirla.
+
+**Flujos alternativos**
+
+- **3a.** Sin turno hoy en esa zona: «No tienes turno hoy en esta zona.». Zona desactivada: «Esta zona no existe o está desactivada.».
+
+**Reglas de negocio:** RN-38.
+
+### CU-72 — Ver el panel «Hoy»
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Trabajo diario, Bloque D |
+
+**Flujo principal**
+
+1. Desde el menú «Trabajo diario» o el enlace del escritorio, abre «Hoy».
+2. Ve en bloques: el recuento de las tareas de hoy, las atrasadas y las no realizadas, la medicación no dada, las incidencias abiertas y en curso (las graves primero), los turnos de hoy con quién no ha fichado, las zonas sin cubrir de los turnos que no han acabado, los animales que comen poco y las visitas veterinarias de hoy. Cada bloque enlaza a su pantalla.
+
+**Reglas de negocio:** RN-18.
+
+### CU-73 — Elegir los avisos por email
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador; sistema (tarea `staff-emails`) | Trabajo diario, Bloques A (margen de «atrasada») y D |
+
+**Flujo principal**
+
+1. En «Avisos por email», marca qué avisos del personal llegan también por email y pulsa «Guardar».
+2. Cada aviso nuevo de esos tipos queda pendiente de email; cada 5 minutos, `staff-emails` envía un email a cada destinatario en activo con el texto del aviso y el botón «Abrir en el panel», en su idioma.
+
+**Flujos alternativos**
+
+- **2a.** Si un envío falla, el aviso sigue en la campana y se cuenta como fallido; no se reintenta.
+
+**Postcondiciones:** el cambio queda en el registro de actividad (`work_settings`).
+
+**Reglas de negocio:** RN-39.
+
+### CU-74 — Recibir el resumen diario
+
+| Actor principal | Fase |
+| --- | --- |
+| Sistema (tarea `daily-summary`); administrador | Trabajo diario, Bloque D |
+
+**Flujo principal**
+
+1. En «Avisos por email», el administrador activa «Enviar el resumen del día» y elige la hora (20:00 por defecto).
+2. Cada 15 minutos, `daily-summary` comprueba si ya es la hora; la primera vez que lo es, envía a cada administrador en activo el «Resumen del día»: tareas, medicación no dada, incidencias, animales que comen poco y zonas sin cubrir.
+
+**Flujos alternativos**
+
+- **2a.** Ya enviado hoy: no se repite (`staff_alerts` con `daily_summary`). Desactivado: no envía nada.
+
+**Reglas de negocio:** RN-39.

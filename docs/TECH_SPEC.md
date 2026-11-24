@@ -311,6 +311,9 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | *(nuevo, trabajo diario)* | `medication_plans` | Pautas de medicación: medicamento, dosis, vía (`oral`, `injection`, `topical`, `eye_drops`, `other`), horas (`TIME[]`, todos los días), fechas, cualificación necesaria y notas. Sus dosis son tareas con `task_instances.medication_plan_id` (CU-69) |
 | *(nuevo, trabajo diario)* | `vet_visits` | Visitas veterinarias programadas: día, hora, motivo, veterinario, `status` (`scheduled`, `done`, `cancelled`) y el registro del historial creado al hacerla (`vet_record_id`). Su tarea de «Mi día» lleva `task_instances.vet_visit_id` (CU-68) |
 | *(cambio, trabajo diario)* | `work_settings`, `task_instances` | `work_settings.low_intake_meals` (1-10, 2 por defecto): tomas seguidas comiendo poco para avisar (CU-67). `task_instances.medication_plan_id` y `vet_visit_id` |
+| *(nuevo, trabajo diario)* | `incidents` | Incidencias: `category` (`health`, `behavior`, `facilities`, `other`), `severity` (`low`, `medium`, `high`), descripción, zona y/o animal (CHECK `incidents_place`), foto, `status` (`open`, `in_progress`, `resolved`), quién la comunicó, la resolución con quién y cuándo (CHECK `incidents_resolution`: resuelta ⇔ con resolución) y la tarea creada a partir de ella (`task_id`, `SET NULL`) (CU-70) |
+| *(nuevo, trabajo diario)* | `handover_notes`, `handover_note_reads` | Notas de relevo de una zona (autor y texto de 1 a 1000 caracteres) y quién las ha leído (PK `note_id, user_id`) (CU-71) |
+| *(cambio, trabajo diario)* | `work_settings`, `notifications` | `work_settings.email_alert_types` (`TEXT[]`, CHECK dentro de los cinco tipos de aviso del personal; todos menos `vet_visit_today` por defecto), `daily_summary_enabled` (falso) y `daily_summary_time` (`TIME`, 20:00) (CU-73, CU-74). `notifications.email_pending` con índice parcial: la bandeja de salida de los emails de aviso; tipo nuevo `incident_reported` |
 
 ### 8.2 Columnas añadidas y por qué
 
@@ -611,6 +614,10 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST / PUT | `/api/admin/animals/:id/vet-visits`, `/api/admin/vet-visits/:id` | Cuidador, admin | Programar o cambiar una visita (no en un día pasado); crea o mueve su tarea `health_check`. 409 `VET_VISIT_NOT_SCHEDULED` | CU-68 |
 | POST | `/api/admin/vet-visits/:id/cancel`, `/complete` | Cuidador, admin | Cancelar (quita su tarea) o registrar con el cuerpo de un registro veterinario (crea el registro, marca la visita `done` y completa su tarea). 422 `VET_VISIT_FUTURE_DAY` | CU-68 |
 | POST | `/api/admin/tasks/:id/not-done` | Cuidador, admin | `{ reason }` obligatorio; mismas comprobaciones | CU-57 |
+| GET / POST | `/api/admin/incidents` | Cuidador, admin | Listado (`?status` = `active` por defecto, `open`, `in_progress`, `resolved` o `all`; `?severity&zoneId&page&pageSize`; las graves primero) y alta (JSON o `multipart/form-data` con una foto en `files`, guardada en `uploads/incidents/`). Las de gravedad alta avisan al momento | CU-70 |
+| GET | `/api/admin/incidents/:id` | Cuidador, admin | Ficha | CU-70 |
+| GET / POST | `/api/admin/handover-notes` | Cuidador, admin | Notas de las últimas 24 h de las zonas del turno de hoy (el administrador, todas), con `isRead` y `mine`; alta `{ zoneId, body }` (error en el campo si no tiene turno hoy en la zona) | CU-71 |
+| PUT | `/api/admin/handover-notes/:id/read` | Cuidador, admin | Marca como leída (404 si no la puede ver) | CU-71 |
 | POST | `/api/admin/tasks/:id/reopen` | Quien la resolvió (el mismo día), admin | Vuelve a pendiente y borra observaciones y foto; 409 `TASK_IS_PENDING` | CU-57 |
 
 ### 10.7 Panel: solo administrador
@@ -650,6 +657,10 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/admin/tasks/:id/assignee` | `{ userId \| null }`: trabajador activo con la cualificación que exige la tarea | CU-55 |
 | DELETE | `/api/admin/tasks/:id` | Solo pendientes (409 `TASK_NOT_PENDING`) | CU-55 |
 | GET / PUT | `/api/admin/work-settings` | `{ lateMarginMinutes }` (0-240, 30 por defecto) | CU-73 |
+| PATCH | `/api/admin/incidents/:id/status` | `{ status, note }` (nota obligatoria al resolver). 409 `INCIDENT_SAME_STATUS` | CU-70 |
+| POST | `/api/admin/incidents/:id/task` | Cuerpo de una tarea puntual; la crea y pasa la incidencia a `in_progress`. 409 `INCIDENT_HAS_TASK`, `INCIDENT_RESOLVED` | CU-70 |
+| GET | `/api/admin/today` | Panel «Hoy»: `{ date, tasks, lateTasks, notDoneTasks, missedDoses, incidents, gaps, shifts (con missingCheckIn), lowIntake, vetVisits }` | CU-72 |
+| GET / PUT | `/api/admin/alert-settings` | `{ emailAlertTypes, dailySummaryEnabled, dailySummaryTime }` | CU-73, CU-74 |
 | POST / PUT / DELETE | `/api/admin/shift-templates`, `/api/admin/shift-templates/:id` | Crear, editar y borrar plantillas de turno; 409 `SHIFT_TEMPLATE_NAME_TAKEN` o `SHIFT_TEMPLATE_IN_USE` | CU-60 |
 | POST | `/api/admin/shift-assignments` | `{ shiftTemplateId, date, userId, zoneIds }` (sin zonas, las del turno). Errores en el campo: persona ausente, turno que se solapa, día pasado, turno que no se hace ese día | CU-61 |
 | DELETE | `/api/admin/shift-assignments/:id` | Quita a la persona; 409 `SHIFT_ALREADY_STARTED` si ya fichó o es de un día pasado | CU-61 |
@@ -745,7 +756,9 @@ export interface StorageService {
 | `update-reminder` | Diaria, 07:00 | Notificación (campana) a cuidadores y administradores por cada animal con adopciones activas que lleva 12 días o más sin actualización | CU-47 |
 | `generate-tasks` | Diaria, 00:10 | Trabajo diario: crea las tareas de cada plantilla activa y las dosis de cada pauta de medicación de hoy a 7 días vista (Europe/Madrid, solo las que no han pasado), sin los animales archivados. Los índices únicos `(template_id, due_at)` y `(medication_plan_id, due_at)` evitan duplicados. Una transacción por plantilla y por pauta. Devuelve `{ templates, created, medicationTasks }` | CU-58, CU-69 |
 | `task-alerts` | Cada 15 minutos | Avisa en la campana (a los administradores y a quien tiene turno ese día en la zona) de las dosis de ayer y de hoy no dadas (pendientes pasada la hora y el margen, o no realizadas) y de las visitas veterinarias de hoy, una vez cada una (`staff_alerts`). Después pasa a `not_done` (sin persona) las tareas pendientes de días anteriores. Devuelve `{ closed, medicationMissed, vetVisitsToday }` | CU-59, CU-68, CU-69 |
-| `coverage-check` | Cada hora, a los 5 minutos | Avisa en la campana a los administradores en activo de cada zona de un turno sin cubrir de hoy a 6 días vista (sin los turnos ya acabados), una sola vez por hueco (`staff_alerts`). El email llegará con el Bloque D | CU-64 |
+| `coverage-check` | Cada hora, a los 5 minutos | Avisa en la campana a los administradores en activo de cada zona de un turno sin cubrir de hoy a 6 días vista (sin los turnos ya acabados), una sola vez por hueco (`staff_alerts`); si el tipo está elegido, también por email (`staff-emails`) | CU-64 |
+| `staff-emails` | Cada 5 minutos | Envía por email los avisos del personal marcados con `notifications.email_pending` (los tipos elegidos en `work_settings.email_alert_types` al crearse), en el idioma de cada persona y solo a las que siguen en activo. Primero los marca como enviados (`FOR UPDATE SKIP LOCKED`), así que un fallo no se reintenta. Devuelve `{ sent, failed }` | CU-73 |
+| `daily-summary` | Cada 15 minutos | Si el resumen está activado y ya es su hora (Madrid), envía el «Resumen del día» a los administradores en activo una sola vez al día (`staff_alerts` con `daily_summary` y la fecha). Devuelve `{ sent }` | CU-74 |
 
 Las sesiones caducadas las borra el store de sesiones cada 15 minutos (`deleteExpired`). Los tokens caducados se borran en la tarea `expire-pending`.
 
@@ -784,6 +797,8 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/admin/my-day` | «Mi día»: tareas del día en tarjetas (inicio del cuidador al entrar) | Cuidador, admin |
 | `/admin/shifts` | Calendario semanal de turnos (`?week=` lunes); el administrador asigna, quita y copia la semana | Cuidador, admin |
 | `/admin/tasks`, `/admin/task-templates`, `/admin/zones`, `/admin/shift-templates`, `/admin/absences` | Tareas del día y puntuales (con los ajustes), plantillas, zonas y cualificaciones, plantillas de turno y ausencias | Admin |
+| `/admin/incidents`, `/admin/incidents/:id` | Incidencias: listado, ficha y «Comunicar incidencia» (estado y tarea, solo el administrador) | Cuidador, admin |
+| `/admin/today`, `/admin/alert-settings` | Panel «Hoy» y avisos por email con el resumen diario | Admin |
 
 Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que redirige a `/login`. Es solo una mejora de la experiencia de uso; la seguridad la garantiza el servidor.
 
@@ -986,13 +1001,21 @@ Turnos, tareas, alimentación, limpieza y medicación, en cuatro bloques que se 
 - **Bloque A (terminado):** zonas (CU-52), cualificaciones (CU-53), plantillas (CU-54), tareas del día y puntuales (CU-55), «Mi día» (CU-56), completar (CU-57), generación (CU-58), cierre del día (CU-59) y el margen de «atrasada» (CU-73, parte).
 - **Bloque B (terminado):** plantillas de turno (CU-60), calendario semanal con asignar, quitar y copiar la semana anterior (CU-61), ausencias (CU-62), fichar la entrada y la salida (CU-63) y aviso de zonas sin cubrir (CU-64, tarea `coverage-check`). «Mi día» marca como tuyas también las tareas sin asignar de tu turno y zona, y desactivar a un trabajador quita sus turnos futuros sin fichar.
 - **Bloque C (terminado):** dieta de cada animal (CU-65), lo que ha comido cada animal al completar una comida (CU-66), aviso si come poco (CU-67), visitas veterinarias programadas (CU-68) y pautas de medicación con aviso de medicación no dada (CU-69), todo en la pestaña «Cuidados» de la ficha del animal.
-- **Bloque D:** incidencias, notas de relevo, panel «Hoy» del administrador, ajustes de los avisos por email y resumen diario (desactivado por defecto) (CU-70 a CU-74).
+- **Bloque D (terminado):** incidencias (CU-70), notas de relevo en «Mi día» (CU-71), panel «Hoy» del administrador (CU-72), avisos por email a elegir (CU-73, tarea `staff-emails`) y resumen diario (CU-74, tarea `daily-summary`, desactivado por defecto).
+
+Decisiones del Bloque D:
+
+- Cualquier trabajador comunica incidencias y las ve todas; solo el administrador cambia su estado y crea una tarea a partir de ella (que la pasa a «en curso»). Solo las de gravedad alta se avisan al momento (campana a los administradores y a quien tiene turno hoy en la zona, sin quien la comunica).
+- Las notas de relevo son por zona, se escriben desde «Mi día» en cualquier momento (no hace falta fichar la salida) y se ven 24 horas. Cada persona las marca como leídas.
+- «Hoy» es una pantalla nueva del menú «Trabajo diario» solo para el administrador; al entrar sigue yendo al escritorio, que enlaza a «Hoy».
+- Los emails de aviso salen de una bandeja de salida (`notifications.email_pending`) que vacía `staff-emails`: crear el aviso nunca depende del correo. La elección de tipos vale para todo el personal.
+- La ventana «Ajustes» de «Tareas del día» se queda como estaba (margen de atrasada y tomas comiendo poco); los avisos por email y el resumen tienen su propia pantalla, `/admin/alert-settings`, para no cambiar `/api/admin/work-settings`.
 
 Decisiones del Bloque C:
 
 - La dieta es la ficha de qué come cada animal: no crea tareas. La comida se organiza con las plantillas de alimentación.
 - Lo que ha comido se anota con cuatro niveles (`all`, `most`, `little`, `none`), «todo» por defecto. En una comida sin animales cuentan los que viven en su zona. «Come poco» es `little` o `none`; el aviso sale al llegar a `work_settings.low_intake_meals` tomas seguidas (2 por defecto) y una sola vez por racha.
-- Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal. El email llegará con el Bloque D.
+- Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal; desde el Bloque D, también por email si el administrador lo elige.
 - Las pautas se repiten todos los días a sus horas; sus dosis se generan como las tareas de las plantillas y exigen la cualificación que se elija. Editar una pauta rehace sus dosis pendientes; terminarla la cierra hoy; con dosis resueltas no se borra.
 - Una visita programada tiene su tarea `health_check` en «Mi día». No se completa con «Hecha»: se registra con el formulario del historial veterinario (CU-34), en la misma transacción.
 - Las pautas y las visitas son de la zona del animal: un animal sin zona no las admite (`ANIMAL_WITHOUT_ZONE`). Dieta, pautas y visitas las gestionan cuidadores y administradores, y quedan en el registro de actividad.

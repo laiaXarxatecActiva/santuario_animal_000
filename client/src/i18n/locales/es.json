@@ -274,7 +274,10 @@
     "MEDICATION_PLAN_ENDED": "Esta pauta ya ha terminado.",
     "VET_VISIT_NOT_SCHEDULED": "Esta visita ya está registrada o cancelada.",
     "VET_VISIT_FUTURE_DAY": "La visita se podrá registrar el día en que está programada.",
-    "VET_VISIT_NEEDS_RECORD": "Registra la visita con el formulario del historial veterinario."
+    "VET_VISIT_NEEDS_RECORD": "Registra la visita con el formulario del historial veterinario.",
+    "INCIDENT_SAME_STATUS": "La incidencia ya está en ese estado.",
+    "INCIDENT_HAS_TASK": "Esta incidencia ya tiene una tarea.",
+    "INCIDENT_RESOLVED": "Esta incidencia ya está resuelta."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -612,7 +615,10 @@
       "zones": "Zonas y cualificaciones",
       "shifts": "Turnos",
       "shiftTemplates": "Plantillas de turno",
-      "absences": "Ausencias"
+      "absences": "Ausencias",
+      "today": "Hoy",
+      "incidents": "Incidencias",
+      "alertSettings": "Avisos por email"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -635,7 +641,8 @@
       "quickLinks": "Accesos rápidos",
       "newAnimal": "Nuevo animal",
       "revenueThisMonth": "este mes",
-      "revenueDetail": "cuotas {{fees}} · donaciones {{donations}}"
+      "revenueDetail": "cuotas {{fees}} · donaciones {{donations}}",
+      "todayLink": "Ver el panel «Hoy» del santuario"
     },
     "common": {
       "save": "Guardar",
@@ -1100,7 +1107,8 @@
         "absences": "Ausencias",
         "diet_items": "Dietas",
         "medication_plans": "Pautas de medicación",
-        "vet_visits": "Visitas veterinarias"
+        "vet_visits": "Visitas veterinarias",
+        "incidents": "Incidencias"
       },
       "fields": {
         "name": "Nombre",
@@ -1713,6 +1721,125 @@
         "updated": "Visita cambiada",
         "empty": "No tiene visitas programadas."
       }
+    },
+    "incidents": {
+      "title": "Incidencias",
+      "report": "Comunicar incidencia",
+      "send": "Enviar",
+      "sending": "Enviando…",
+      "reported_ok": "Incidencia comunicada",
+      "category": "Tipo",
+      "severity": "Gravedad",
+      "zone": "Zona",
+      "animal": "Animal",
+      "noAnimal": "Ninguno",
+      "description": "Qué pasa",
+      "place": "Dónde",
+      "status": "Estado",
+      "statusFilter": "Estado",
+      "reported": "Comunicada",
+      "reportedBy": "Comunicada por {{name}} el {{date}}",
+      "view": "Ver",
+      "highHelp": "Las incidencias de gravedad alta se avisan al momento a la administración y a quien tiene turno en la zona.",
+      "empty": "No hay incidencias con estos filtros.",
+      "loadError": "No se han podido cargar las incidencias.",
+      "categories": {
+        "health": "Salud",
+        "behavior": "Comportamiento",
+        "facilities": "Instalaciones",
+        "other": "Otra"
+      },
+      "severities": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta"
+      },
+      "statuses": {
+        "open": "Abierta",
+        "in_progress": "En curso",
+        "resolved": "Resuelta"
+      },
+      "filters": {
+        "active": "Abiertas y en curso",
+        "open": "Abiertas",
+        "in_progress": "En curso",
+        "resolved": "Resueltas",
+        "all": "Todas",
+        "anySeverity": "Cualquiera",
+        "anyZone": "Todas"
+      },
+      "back": "Volver a las incidencias",
+      "notFound": "Esta incidencia no existe.",
+      "detailTitle": "Incidencia n.º {{id}}",
+      "changeStatus": "Cambiar el estado",
+      "newStatus": "Nuevo estado",
+      "note": "Nota",
+      "noteHelp": "Explica cómo se ha resuelto; quedará en la ficha.",
+      "statusChanged": "Estado cambiado",
+      "createTask": "Crear tarea",
+      "taskTitle": "Tarea de la incidencia n.º {{id}}",
+      "taskCreated": "Tarea creada",
+      "task": "Tarea",
+      "taskLink": "Tarea n.º {{id}}",
+      "resolution": "Resolución",
+      "resolvedBy": "{{name}}, el {{date}}",
+      "photoAlt": "Foto de la incidencia"
+    },
+    "handover": {
+      "title": "Notas de relevo",
+      "write": "Dejar una nota",
+      "writeTitle": "Dejar una nota de relevo",
+      "zone": "Zona",
+      "body": "Nota",
+      "bodyHelp": "La verán durante 24 horas quienes tengan turno en esta zona.",
+      "saved": "Nota guardada",
+      "new": "Nueva",
+      "markRead": "Marcar como leída",
+      "meta": "{{author}} · {{zone}} · {{date}}",
+      "empty": "No hay notas de relevo de las últimas 24 horas.",
+      "loadError": "No se han podido cargar las notas de relevo."
+    },
+    "today": {
+      "title": "Hoy en el santuario",
+      "loadError": "No se ha podido cargar el panel de hoy.",
+      "none": "Ninguna.",
+      "tasks": "Tareas de hoy",
+      "tasksSummary": "{{completed}} hechas, {{notDone}} no realizadas y {{pending}} pendientes de {{total}}",
+      "tasksLink": "Ver las tareas del día",
+      "late": "Atrasadas",
+      "notDone": "No realizadas",
+      "missedDoses": "Medicación no dada",
+      "incidents": "Incidencias",
+      "incidentsSummary": "Abiertas: {{open}} · En curso: {{inProgress}}",
+      "incidentsLink": "Ver todas las incidencias",
+      "shifts": "Turnos de hoy",
+      "checkedIn": "entrada a las {{time}}",
+      "missingCheckIn": "Sin fichar",
+      "shiftsLink": "Ver el calendario de turnos",
+      "gaps": "Zonas sin cubrir",
+      "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
+      "lowIntake": "Animales que comen poco",
+      "streak_one": "{{count}} toma comiendo poco",
+      "streak_other": "{{count}} tomas comiendo poco",
+      "vetVisits": "Visitas veterinarias de hoy"
+    },
+    "alertSettings": {
+      "title": "Avisos por email",
+      "loadError": "No se han podido cargar los ajustes de los avisos.",
+      "saved": "Ajustes guardados",
+      "emailLegend": "Avisos que también se envían por email",
+      "emailHelp": "La campana avisa siempre. Los que marques llegan además por email a cada persona que recibe el aviso.",
+      "types": {
+        "coverage_gap": "Turno sin personal suficiente",
+        "low_intake": "Animal que come poco",
+        "medication_missed": "Medicación no dada",
+        "vet_visit_today": "Visita veterinaria de hoy",
+        "incident_reported": "Incidencia grave"
+      },
+      "summaryLegend": "Resumen del día",
+      "summaryHelp": "Un email a la administración con las tareas, la medicación, las incidencias y los huecos del día.",
+      "summaryEnabled": "Enviar el resumen del día",
+      "summaryTime": "Hora del resumen"
     }
   }
 }

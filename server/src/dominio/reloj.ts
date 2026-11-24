@@ -20,6 +20,18 @@ export function fechaEnZonaSantuario(instante: Date): string {
   return formatoFecha.format(instante);
 }
 
+const formatoHora = new Intl.DateTimeFormat('en-GB', {
+  timeZone: ZONA_HORARIA_SANTUARIO,
+  hourCycle: 'h23',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/** Hora `HH:MM` de Madrid de un instante (CU-74). */
+export function horaEnZonaSantuario(instante: Date): string {
+  return formatoHora.format(instante);
+}
+
 const formatoPartes = new Intl.DateTimeFormat('en-US', {
   timeZone: ZONA_HORARIA_SANTUARIO,
   hourCycle: 'h23',

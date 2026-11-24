@@ -9,6 +9,7 @@ import {
   faNewspaper,
   faPills,
   faStethoscope,
+  faTriangleExclamation,
   faUtensils,
   faReceipt,
   faUserClock,
@@ -30,6 +31,7 @@ const ICONOS: Record<NotificationType, IconDefinition> = {
   low_intake: faUtensils,
   medication_missed: faPills,
   vet_visit_today: faStethoscope,
+  incident_reported: faTriangleExclamation,
   system: faBell,
 };
 

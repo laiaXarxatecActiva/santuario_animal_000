@@ -406,3 +406,13 @@ export async function listActiveAdminIds(db: Queryable): Promise<number[]> {
   );
   return rows.map((r) => r.id);
 }
+
+/** CU-74: los administradores en activo, con lo necesario para escribirles. */
+export async function listActiveAdminsForEmail(
+  db: Queryable,
+): Promise<{ id: number; email: string; firstName: string; language: Language }[]> {
+  const { rows } = await db.query<{ id: number; email: string; first_name: string; preferred_language: Language }>(
+    "SELECT id, email, first_name, preferred_language FROM users WHERE is_active AND role = 'admin' ORDER BY id",
+  );
+  return rows.map((r) => ({ id: r.id, email: r.email, firstName: r.first_name, language: r.preferred_language }));
+}

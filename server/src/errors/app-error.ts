@@ -696,3 +696,22 @@ export class VetVisitNeedsRecordError extends ConflictError {
     super('VET_VISIT_NEEDS_RECORD', 'Registra la visita con el formulario del historial veterinario.');
   }
 }
+
+// Incidencias (CU-70).
+export class IncidentSameStatusError extends ConflictError {
+  constructor() {
+    super('INCIDENT_SAME_STATUS', 'La incidencia ya está en ese estado.');
+  }
+}
+
+export class IncidentHasTaskError extends ConflictError {
+  constructor() {
+    super('INCIDENT_HAS_TASK', 'Esta incidencia ya tiene una tarea.');
+  }
+}
+
+export class IncidentResolvedError extends ConflictError {
+  constructor() {
+    super('INCIDENT_RESOLVED', 'Esta incidencia ya está resuelta.');
+  }
+}

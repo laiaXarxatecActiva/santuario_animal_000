@@ -2,6 +2,9 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import {
   faArrowUpRightFromSquare,
   faCalendarDays,
+  faCalendarDay,
+  faEnvelope,
+  faTriangleExclamation,
   faCalendarXmark,
   faClipboardList,
   faClock,
@@ -71,13 +74,16 @@ const GRUPOS: readonly Grupo[] = [
   {
     key: 'admin.nav.groupWork',
     links: [
+      { to: '/admin/today', key: 'admin.nav.today', icon: faCalendarDay, roles: ['admin'] },
       { to: '/admin/my-day', key: 'admin.nav.myDay', icon: faListCheck },
+      { to: '/admin/incidents', key: 'admin.nav.incidents', icon: faTriangleExclamation },
       { to: '/admin/shifts', key: 'admin.nav.shifts', icon: faCalendarDays },
       { to: '/admin/tasks', key: 'admin.nav.tasks', icon: faClipboardList, roles: ['admin'] },
       { to: '/admin/task-templates', key: 'admin.nav.taskTemplates', icon: faRepeat, roles: ['admin'] },
       { to: '/admin/zones', key: 'admin.nav.zones', icon: faMapLocationDot, roles: ['admin'] },
       { to: '/admin/shift-templates', key: 'admin.nav.shiftTemplates', icon: faClock, roles: ['admin'] },
       { to: '/admin/absences', key: 'admin.nav.absences', icon: faCalendarXmark, roles: ['admin'] },
+      { to: '/admin/alert-settings', key: 'admin.nav.alertSettings', icon: faEnvelope, roles: ['admin'] },
     ],
   },
   {
