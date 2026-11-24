@@ -53,13 +53,13 @@ describe('CU-70 Revisar y resolver incidencias desde el listado', () => {
     ]);
   });
 
-  it('«Empezar» pasa una abierta a «En curso»; la que ya está en curso no lo tiene', async () => {
-    const { enviados } = api();
+  it('no hay «Empezar»: una pendiente solo se resuelve', async () => {
+    api();
     renderRoute('/admin/incidents');
-    expect((await fila(/Pipa cojea/)).queryByRole('button', { name: 'Empezar' })).not.toBeInTheDocument();
-    await userEvent.click((await fila('La malla tiene un agujero.')).getByRole('button', { name: 'Empezar' }));
-    expect(await screen.findByText('Incidencia en curso')).toBeInTheDocument();
-    expect(enviados('/api/admin/incidents/1/status').filter(Boolean)).toEqual([{ status: 'in_progress' }]);
+    const abierta = await fila('La malla tiene un agujero.');
+    expect(abierta.queryByRole('button', { name: 'Empezar' })).not.toBeInTheDocument();
+    expect(abierta.getByRole('button', { name: 'Resolver' })).toBeInTheDocument();
+    expect(abierta.getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/admin/incidents/1');
   });
 
   it('en «Resueltas» se ve cómo y quién la resolvió, y se puede reabrir', async () => {

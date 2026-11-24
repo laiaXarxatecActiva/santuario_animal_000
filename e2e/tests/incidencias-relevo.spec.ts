@@ -66,14 +66,11 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
     await expect(page.getByRole('heading', { level: 1, name: /Incidencia n\.º \d+/ })).toBeVisible();
 
     // La resuelve con una nota.
-    await page.getByRole('button', { name: t('work.incidents.changeStatus') }).click();
-    const estado = page.getByRole('dialog', { name: t('work.incidents.changeStatus') });
-    await estado
-      .getByLabel(t('work.incidents.newStatus'))
-      .selectOption({ label: t('work.incidents.statuses.resolved') });
-    await estado.getByLabel(t('work.incidents.note')).fill('Cerradura cambiada.');
-    await estado.getByRole('button', { name: t('admin.common.save') }).click();
-    await expect(page.getByText(t('work.incidents.statusChanged'))).toBeVisible();
+    await page.getByRole('button', { name: t('work.incidents.resolve'), exact: true }).click();
+    const estado = page.getByRole('dialog', { name: t('work.incidents.resolveTitle') });
+    await estado.getByLabel(t('work.incidents.resolveNote')).fill('Cerradura cambiada.');
+    await estado.getByRole('button', { name: t('work.incidents.resolveSubmit') }).click();
+    await expect(page.getByText(t('work.incidents.resolvedOk'))).toBeVisible();
     await expect(page.getByText('Cerradura cambiada.')).toBeVisible();
 
     // CU-72: el escritorio lleva al panel «Hoy».

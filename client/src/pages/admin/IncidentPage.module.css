@@ -1,0 +1,46 @@
+/* CU-70: ficha de una incidencia (SCREENS §5.7, DESIGN_SYSTEM §8.10). */
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: var(--content-max);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.description {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  white-space: pre-wrap;
+}
+
+/* Datos en dos columnas en escritorio y en una en móvil. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: var(--space-3) var(--space-5);
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.facts dd {
+  margin: var(--space-1) 0 0;
+}
+
+.photo img {
+  max-width: min(100%, 320px);
+  border-radius: var(--radius-md);
+}
