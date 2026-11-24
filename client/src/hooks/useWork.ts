@@ -96,6 +96,15 @@ export const useIncidents = (params: IncidentsParams) =>
     placeholderData: keepPreviousData,
   });
 
+/** CU-70: pendientes (abiertas y en curso), para el número del menú y del filtro. */
+export const useIncidentSummary = (enabled = true) =>
+  useQuery({
+    queryKey: [...INCIDENTS_KEY, 'summary'],
+    queryFn: () => workApi.incidents.summary(),
+    enabled,
+    refetchInterval: 60_000,
+  });
+
 export const useIncident = (id: number) =>
   useQuery({ queryKey: [...INCIDENTS_KEY, id], queryFn: () => workApi.incidents.get(id) });
 

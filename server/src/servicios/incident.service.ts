@@ -1,6 +1,7 @@
 import type {
   IncidentData,
   IncidentDto,
+  IncidentSummaryDto,
   IncidentStatusData,
   IncidentsQuery,
   OneOffTaskData,
@@ -77,6 +78,12 @@ export function createIncidentService({ db, reloj, media, crearTarea }: Incident
   }
 
   return {
+    /** Las pendientes: abiertas y en curso. */
+    async summary(): Promise<IncidentSummaryDto> {
+      const recuento = await incidentModel.countByStatus(db);
+      return { open: recuento.open, inProgress: recuento.in_progress };
+    },
+
     async list(query: IncidentsQuery): Promise<Paginated<IncidentDto>> {
       const { page, pageSize, ...filtros } = query;
       const pagina = paginar({ page, pageSize }, await incidentModel.count(db, filtros));

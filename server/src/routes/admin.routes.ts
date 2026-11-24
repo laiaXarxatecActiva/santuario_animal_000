@@ -408,10 +408,11 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   const diario = createDailyAdminController(deps.daily, deps.activity);
   router.get('/incidents', validate({ query: incidentsQuerySchema }), diario.listIncidents);
   router.post('/incidents', uploadFiles(), validate({ body: incidentBodySchema }), diario.createIncident);
+  router.get('/incidents/summary', diario.incidentSummary);
   router.get('/incidents/:id', conId, diario.getIncident);
+  // Todo el personal cambia el estado (quien arregla el problema suele ser el cuidador).
   router.patch(
     '/incidents/:id/status',
-    soloAdmin,
     validate({ params: idParamsSchema, body: incidentStatusBodySchema }),
     diario.setIncidentStatus,
   );

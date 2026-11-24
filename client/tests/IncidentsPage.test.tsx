@@ -77,13 +77,13 @@ describe('CU-70 Incidencias', () => {
 });
 
 describe('CU-70 Ficha de una incidencia', () => {
-  it('el cuidador la ve, pero no puede cambiar su estado', async () => {
+  it('el cuidador la ve y puede cambiar su estado, pero no crear una tarea', async () => {
     api(caretaker(), { '/api/admin/incidents/2': () => ({ body: incidencia() }) });
     renderRoute('/admin/incidents/2');
     expect(await screen.findByRole('heading', { level: 1, name: 'Incidencia n.º 2' })).toBeInTheDocument();
     expect(screen.getByText('Pipa cojea de la pata derecha desde esta mañana.')).toBeInTheDocument();
     expect(screen.getByText(/Comunicada por Nuria Peris Gil/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Cambiar el estado' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar el estado' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Crear tarea' })).not.toBeInTheDocument();
   });
 

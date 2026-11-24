@@ -618,7 +618,9 @@
       "absences": "Absències",
       "today": "Hui",
       "incidents": "Incidències",
-      "alertSettings": "Avisos per correu"
+      "alertSettings": "Avisos per correu",
+      "pending_one": "{{count}} pendent",
+      "pending_other": "{{count}} pendents"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -1791,13 +1793,14 @@
         "resolved": "Resolta"
       },
       "filters": {
-        "active": "Obertes i en curs",
+        "active": "Pendents",
         "open": "Obertes",
         "in_progress": "En curs",
         "resolved": "Resoltes",
         "all": "Totes",
         "anySeverity": "Qualsevol",
-        "anyZone": "Totes"
+        "anyZone": "Totes",
+        "activeCount": "Pendents ({{count}})"
       },
       "back": "Tornar a les incidències",
       "notFound": "Esta incidència no existix.",
@@ -1814,7 +1817,17 @@
       "taskLink": "Tasca núm. {{id}}",
       "resolution": "Resolució",
       "resolvedBy": "{{name}}, el {{date}}",
-      "photoAlt": "Foto de la incidència"
+      "photoAlt": "Foto de la incidència",
+      "start": "Començar",
+      "resolve": "Resoldre",
+      "reopen": "Reobrir",
+      "resolveTitle": "Resoldre la incidència",
+      "resolveSubmit": "Marcar com a resolta",
+      "resolveNote": "Com s’ha resolt?",
+      "resolvedOk": "Incidència resolta",
+      "startedOk": "Incidència en curs",
+      "reopenedOk": "Incidència reoberta",
+      "resolvedByLine": "Resolta per {{name}} el {{date}}"
     },
     "handover": {
       "title": "Notes de relleu",

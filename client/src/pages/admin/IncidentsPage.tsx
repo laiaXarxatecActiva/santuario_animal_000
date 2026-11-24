@@ -1,16 +1,26 @@
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { INCIDENT_SEVERITIES, INCIDENT_STATUSES, type IncidentSeverity, type IncidentsQuery } from '@sanctuary/shared';
-import { useQueryClient } from '@tanstack/react-query';
+import {
+  INCIDENT_SEVERITIES,
+  INCIDENT_STATUSES,
+  type IncidentDto,
+  type IncidentSeverity,
+  type IncidentStatus,
+  type IncidentsQuery,
+} from '@sanctuary/shared';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { SelectField } from '../../components/FormFields';
 import { Pagination } from '../../components/Pagination';
 import { IncidentStatusBadge, SeverityBadge } from '../../components/work/IncidentBadges';
 import { IncidentFormModal } from '../../components/work/IncidentFormModal';
-import { INCIDENTS_KEY, useIncidents, useZones } from '../../hooks/useWork';
+import { ResolveIncidentModal } from '../../components/work/ResolveIncidentModal';
+import { INCIDENTS_KEY, TODAY_KEY, useIncidentSummary, useIncidents, useZones } from '../../hooks/useWork';
+import { errorMessage } from '../../utils/apiErrors';
 import { formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
@@ -28,7 +38,23 @@ export function IncidentsPage() {
   const [zoneId, setZoneId] = useState('');
   const [pagina, setPagina] = useState(1);
   const [nueva, setNueva] = useState(false);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [aResolver, setAResolver] = useState<IncidentDto | null>(null);
+  const resumen = useIncidentSummary();
+  const pendientes = resumen.data ? resumen.data.open + resumen.data.inProgress : null;
+
+  const refrescar = async (clave: string) => {
+    setAviso({ type: 'success', message: t(clave) });
+    await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
+    await queryClient.invalidateQueries({ queryKey: TODAY_KEY });
+  };
+  // CU-70: «Empezar» y «Reabrir» cambian el estado con un toque.
+  const cambiar = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: IncidentStatus }) => workApi.incidents.setStatus(id, { status }),
+    onSuccess: (_r, { status }) =>
+      refrescar(status === 'in_progress' ? 'work.incidents.startedOk' : 'work.incidents.reopenedOk'),
+    onError: (e) => setAviso({ type: 'error', message: errorMessage(t, e) }),
+  });
   const incidencias = useIncidents({
     status,
     severity: severity || undefined,
@@ -53,8 +79,8 @@ export function IncidentsPage() {
       </div>
       <PageIntro pagina="incidents" />
       {aviso && (
-        <Alert type="success" onClose={() => setAviso(null)}>
-          {aviso}
+        <Alert type={aviso.type} onClose={() => setAviso(null)}>
+          {aviso.message}
         </Alert>
       )}
 
@@ -69,7 +95,9 @@ export function IncidentsPage() {
         >
           {FILTROS_ESTADO.map((f) => (
             <option key={f} value={f}>
-              {t(`work.incidents.filters.${f}`)}
+              {f === 'active' && pendientes !== null
+                ? t('work.incidents.filters.activeCount', { count: pendientes })
+                : t(`work.incidents.filters.${f}`)}
             </option>
           ))}
         </SelectField>
@@ -139,7 +167,25 @@ export function IncidentsPage() {
             <tbody>
               {incidencias.data.data.map((i) => (
                 <tr key={i.id}>
-                  <td className={styles.nameLink}>{i.description}</td>
+                  <td className={styles.nameLink}>
+                    <span>{i.description}</span>
+                    {i.resolution && (
+                      <p className={styles.muted}>
+                        <span>{i.resolution}</span>
+                        {i.resolvedBy && i.resolvedAt && (
+                          <>
+                            {' · '}
+                            <span>
+                              {t('work.incidents.resolvedByLine', {
+                                name: i.resolvedBy.name,
+                                date: formatShortInstant(i.resolvedAt),
+                              })}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </td>
                   <td data-label={t('work.incidents.category')}>{t(`work.incidents.categories.${i.category}`)}</td>
                   <td data-label={t('work.incidents.severity')}>
                     <SeverityBadge severity={i.severity} />
@@ -159,7 +205,43 @@ export function IncidentsPage() {
                     </span>
                   </td>
                   <td>
-                    <Link to={`/admin/incidents/${i.id}`}>{t('work.incidents.view')}</Link>
+                    <div className={styles.rowActions}>
+                      {i.status === 'open' && (
+                        <Button
+                          variant="ghost"
+                          disabled={cambiar.isPending}
+                          onClick={() => {
+                            setAviso(null);
+                            cambiar.mutate({ id: i.id, status: 'in_progress' });
+                          }}
+                        >
+                          {t('work.incidents.start')}
+                        </Button>
+                      )}
+                      {i.status !== 'resolved' ? (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setAviso(null);
+                            setAResolver(i);
+                          }}
+                        >
+                          {t('work.incidents.resolve')}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          disabled={cambiar.isPending}
+                          onClick={() => {
+                            setAviso(null);
+                            cambiar.mutate({ id: i.id, status: 'open' });
+                          }}
+                        >
+                          {t('work.incidents.reopen')}
+                        </Button>
+                      )}
+                      <Link to={`/admin/incidents/${i.id}`}>{t('work.incidents.view')}</Link>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -169,13 +251,22 @@ export function IncidentsPage() {
         </>
       )}
 
+      {aResolver && (
+        <ResolveIncidentModal
+          incidencia={aResolver}
+          onClose={() => setAResolver(null)}
+          onSaved={async () => {
+            setAResolver(null);
+            await refrescar('work.incidents.resolvedOk');
+          }}
+        />
+      )}
       {nueva && (
         <IncidentFormModal
           onClose={() => setNueva(false)}
           onSaved={async () => {
             setNueva(false);
-            setAviso(t('work.incidents.reported_ok'));
-            await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
+            await refrescar('work.incidents.reported_ok');
           }}
         />
       )}

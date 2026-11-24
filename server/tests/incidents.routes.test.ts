@@ -167,10 +167,17 @@ describe('CU-70 Listado de incidencias', () => {
   });
 });
 
-describe('CU-70 El administrador cambia el estado', () => {
-  it('el cuidador no puede', async () => {
-    const res = await nuria.patch('/api/admin/incidents/1/status').send({ status: 'in_progress' });
-    expect(res.status).toBe(403);
+describe('CU-70 El personal cambia el estado', () => {
+  it('el cuidador también puede resolverla, y queda quién lo hizo', async () => {
+    const nueva = await nuria
+      .post('/api/admin/incidents')
+      .send({ category: 'facilities', severity: 'low', description: 'Grifo que gotea.', zoneId: 5 });
+    const id = (nueva.body as IncidentDto).id;
+    const res = await nuria
+      .patch(`/api/admin/incidents/${id}/status`)
+      .send({ status: 'resolved', note: 'Junta cambiada.' });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: 'resolved', resolvedBy: { id: 3, name: 'Nuria Peris Gil' } });
   });
 
   it('pasarla a «en curso», resolverla (con explicación) y reabrirla', async () => {
@@ -243,5 +250,18 @@ describe('CU-70 Crear una tarea a partir de una incidencia', () => {
     const resuelta = await marta.post('/api/admin/incidents/3/task').send(cuerpo);
     expect(resuelta.status).toBe(409);
     expect(resuelta.body.error.code).toBe('INCIDENT_RESOLVED');
+  });
+});
+
+describe('CU-70 Incidencias pendientes', () => {
+  it('cuenta las abiertas y las en curso para todo el personal', async () => {
+    const res = await nuria.get('/api/admin/incidents/summary');
+    expect(res.status).toBe(200);
+    const { open, inProgress } = res.body as { open: number; inProgress: number };
+    expect(open).toBeGreaterThanOrEqual(0);
+    expect(inProgress).toBeGreaterThanOrEqual(0);
+    const pendientes = (await nuria.get('/api/admin/incidents?pageSize=100')).body as Paginated<IncidentDto>;
+    expect(open + inProgress).toBe(pendientes.meta.total);
+    expect((await lucia.get('/api/admin/incidents/summary')).status).toBe(403);
   });
 });

@@ -618,7 +618,9 @@
       "absences": "Absences",
       "today": "Today",
       "incidents": "Incidents",
-      "alertSettings": "Email alerts"
+      "alertSettings": "Email alerts",
+      "pending_one": "{{count}} pending",
+      "pending_other": "{{count}} pending"
     },
     "dashboard": {
       "title": "Hello, {{name}}",
@@ -1791,13 +1793,14 @@
         "resolved": "Resolved"
       },
       "filters": {
-        "active": "Open and in progress",
+        "active": "Pending",
         "open": "Open",
         "in_progress": "In progress",
         "resolved": "Resolved",
         "all": "All",
         "anySeverity": "Any",
-        "anyZone": "All"
+        "anyZone": "All",
+        "activeCount": "Pending ({{count}})"
       },
       "back": "Back to incidents",
       "notFound": "This incident does not exist.",
@@ -1814,7 +1817,17 @@
       "taskLink": "Task no. {{id}}",
       "resolution": "Resolution",
       "resolvedBy": "{{name}}, on {{date}}",
-      "photoAlt": "Photo of the incident"
+      "photoAlt": "Photo of the incident",
+      "start": "Start",
+      "resolve": "Resolve",
+      "reopen": "Reopen",
+      "resolveTitle": "Resolve the incident",
+      "resolveSubmit": "Mark as resolved",
+      "resolveNote": "How was it resolved?",
+      "resolvedOk": "Incident resolved",
+      "startedOk": "Incident in progress",
+      "reopenedOk": "Incident reopened",
+      "resolvedByLine": "Resolved by {{name}} on {{date}}"
     },
     "handover": {
       "title": "Handover notes",
