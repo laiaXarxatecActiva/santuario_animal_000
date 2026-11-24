@@ -283,6 +283,12 @@ export interface AnimalCareDto {
   vetVisits: VetVisitDto[];
 }
 
+/** CU-70: incidencias pendientes (abiertas y en curso), para el número del menú. */
+export interface IncidentSummaryDto {
+  open: number;
+  inProgress: number;
+}
+
 /** CU-70: una incidencia comunicada por el personal. */
 export interface IncidentDto {
   id: number;

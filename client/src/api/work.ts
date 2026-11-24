@@ -6,6 +6,7 @@ import type {
   IncidentBody,
   IncidentDto,
   IncidentStatusBody,
+  IncidentSummaryDto,
   IncidentsQuery,
   Paginated,
   TodayDto,
@@ -161,6 +162,7 @@ export const workApi = {
   // CU-70: incidencias.
   incidents: {
     list: (params: IncidentsParams = {}) => apiGet<Paginated<IncidentDto>>('/api/admin/incidents', params),
+    summary: () => apiGet<IncidentSummaryDto>('/api/admin/incidents/summary'),
     get: (id: number) => apiGet<IncidentDto>(`/api/admin/incidents/${id}`),
     /** Con foto va en multipart (`files`). */
     create: (body: IncidentBody, photo?: File) => {

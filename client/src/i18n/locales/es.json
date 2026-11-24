@@ -618,7 +618,9 @@
       "absences": "Ausencias",
       "today": "Hoy",
       "incidents": "Incidencias",
-      "alertSettings": "Avisos por email"
+      "alertSettings": "Avisos por email",
+      "pending_one": "{{count}} pendiente",
+      "pending_other": "{{count}} pendientes"
     },
     "dashboard": {
       "title": "Hola, {{name}}",
@@ -1791,13 +1793,14 @@
         "resolved": "Resuelta"
       },
       "filters": {
-        "active": "Abiertas y en curso",
+        "active": "Pendientes",
         "open": "Abiertas",
         "in_progress": "En curso",
         "resolved": "Resueltas",
         "all": "Todas",
         "anySeverity": "Cualquiera",
-        "anyZone": "Todas"
+        "anyZone": "Todas",
+        "activeCount": "Pendientes ({{count}})"
       },
       "back": "Volver a las incidencias",
       "notFound": "Esta incidencia no existe.",
@@ -1814,7 +1817,17 @@
       "taskLink": "Tarea n.º {{id}}",
       "resolution": "Resolución",
       "resolvedBy": "{{name}}, el {{date}}",
-      "photoAlt": "Foto de la incidencia"
+      "photoAlt": "Foto de la incidencia",
+      "start": "Empezar",
+      "resolve": "Resolver",
+      "reopen": "Reabrir",
+      "resolveTitle": "Resolver la incidencia",
+      "resolveSubmit": "Marcar como resuelta",
+      "resolveNote": "¿Cómo se ha resuelto?",
+      "resolvedOk": "Incidencia resuelta",
+      "startedOk": "Incidencia en curso",
+      "reopenedOk": "Incidencia reabierta",
+      "resolvedByLine": "Resuelta por {{name}} el {{date}}"
     },
     "handover": {
       "title": "Notas de relevo",

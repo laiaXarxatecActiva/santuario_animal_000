@@ -27,7 +27,7 @@ import {
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { Role } from '@sanctuary/shared';
+import { isWorkerRole, type Role } from '@sanctuary/shared';
 import { useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
@@ -40,6 +40,7 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { UserMenu } from '../components/UserMenu';
 import { useLogout, useSession } from '../hooks/useSession';
 import { useSessionExpiry } from '../hooks/useSessionExpiry';
+import { useIncidentSummary } from '../hooks/useWork';
 import { readFlash } from '../utils/flash';
 import styles from './AdminLayout.module.css';
 
@@ -138,6 +139,9 @@ export function AdminLayout() {
   const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
   const flash = flashCerrado === location.key ? undefined : readFlash(location.state);
   const menuId = useId();
+  // CU-70: incidencias pendientes junto a «Incidencias».
+  const resumen = useIncidentSummary(user !== null && isWorkerRole(user.role));
+  const pendientes = resumen.data ? resumen.data.open + resumen.data.inProgress : 0;
   const [apartados, setApartados] = useState<Record<string, boolean>>(leerApartados);
   const actual = apartadoDe(pathname);
   const estaAbierto = (clave: string) => apartados[clave] ?? clave === actual;
@@ -214,10 +218,25 @@ export function AdminLayout() {
               <ul id={`${menuId}-${i}`} hidden={grupo.key !== undefined && !estaAbierto(grupo.key)}>
                 {grupo.links.map((enlace) => (
                   <li key={enlace.to}>
-                    <NavLink to={enlace.to} end={enlace.end} className={styles.link}>
-                      <FontAwesomeIcon icon={enlace.icon} aria-hidden="true" fixedWidth />
-                      {t(enlace.key)}
-                    </NavLink>
+                    {enlace.to === '/admin/incidents' && pendientes > 0 ? (
+                      <>
+                        <NavLink to={enlace.to} className={styles.link} aria-describedby={`${menuId}-pendientes`}>
+                          <FontAwesomeIcon icon={enlace.icon} aria-hidden="true" fixedWidth />
+                          {t(enlace.key)}
+                          <span className={styles.count} aria-hidden="true">
+                            {pendientes}
+                          </span>
+                        </NavLink>
+                        <span id={`${menuId}-pendientes`} className="visually-hidden">
+                          {t('admin.nav.pending', { count: pendientes })}
+                        </span>
+                      </>
+                    ) : (
+                      <NavLink to={enlace.to} end={enlace.end} className={styles.link}>
+                        <FontAwesomeIcon icon={enlace.icon} aria-hidden="true" fixedWidth />
+                        {t(enlace.key)}
+                      </NavLink>
+                    )}
                   </li>
                 ))}
               </ul>

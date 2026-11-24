@@ -45,6 +45,9 @@ export function createDailyAdminController(s: DailyAdminServices, actividad: Act
     listIncidents: (async (_req, res) => {
       res.json(await s.incidents.list(validated(res, 'query', incidentsQuerySchema)));
     }) satisfies RequestHandler,
+    incidentSummary: (async (_req, res) => {
+      res.json(await s.incidents.summary());
+    }) satisfies RequestHandler,
     getIncident: (async (_req, res) => {
       res.json(await s.incidents.get(id(res)));
     }) satisfies RequestHandler,

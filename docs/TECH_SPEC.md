@@ -615,7 +615,9 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | POST | `/api/admin/vet-visits/:id/cancel`, `/complete` | Cuidador, admin | Cancelar (quita su tarea) o registrar con el cuerpo de un registro veterinario (crea el registro, marca la visita `done` y completa su tarea). 422 `VET_VISIT_FUTURE_DAY` | CU-68 |
 | POST | `/api/admin/tasks/:id/not-done` | Cuidador, admin | `{ reason }` obligatorio; mismas comprobaciones | CU-57 |
 | GET / POST | `/api/admin/incidents` | Cuidador, admin | Listado (`?status` = `active` por defecto, `open`, `in_progress`, `resolved` o `all`; `?severity&zoneId&page&pageSize`; las graves primero) y alta (JSON o `multipart/form-data` con una foto en `files`, guardada en `uploads/incidents/`). Las de gravedad alta avisan al momento | CU-70 |
+| GET | `/api/admin/incidents/summary` | Cuidador, admin | Pendientes: `{ open, inProgress }` (el número del menú y del filtro) | CU-70 |
 | GET | `/api/admin/incidents/:id` | Cuidador, admin | Ficha | CU-70 |
+| PATCH | `/api/admin/incidents/:id/status` | Cuidador, admin | `{ status, note }` (nota obligatoria al resolver; reabrir borra la resolución). Guarda quién la resolvió. 409 `INCIDENT_SAME_STATUS` | CU-70 |
 | GET / POST | `/api/admin/handover-notes` | Cuidador, admin | Notas de las últimas 24 h de las zonas del turno de hoy (el administrador, todas), con `isRead` y `mine`; alta `{ zoneId, body }` (error en el campo si no tiene turno hoy en la zona) | CU-71 |
 | PUT | `/api/admin/handover-notes/:id/read` | Cuidador, admin | Marca como leída (404 si no la puede ver) | CU-71 |
 | POST | `/api/admin/tasks/:id/reopen` | Quien la resolvió (el mismo día), admin | Vuelve a pendiente y borra observaciones y foto; 409 `TASK_IS_PENDING` | CU-57 |
@@ -657,7 +659,6 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/admin/tasks/:id/assignee` | `{ userId \| null }`: trabajador activo con la cualificación que exige la tarea | CU-55 |
 | DELETE | `/api/admin/tasks/:id` | Solo pendientes (409 `TASK_NOT_PENDING`) | CU-55 |
 | GET / PUT | `/api/admin/work-settings` | `{ lateMarginMinutes }` (0-240, 30 por defecto) | CU-73 |
-| PATCH | `/api/admin/incidents/:id/status` | `{ status, note }` (nota obligatoria al resolver). 409 `INCIDENT_SAME_STATUS` | CU-70 |
 | POST | `/api/admin/incidents/:id/task` | Cuerpo de una tarea puntual; la crea y pasa la incidencia a `in_progress`. 409 `INCIDENT_HAS_TASK`, `INCIDENT_RESOLVED` | CU-70 |
 | GET | `/api/admin/today` | Panel «Hoy»: `{ date, tasks, lateTasks, notDoneTasks, missedDoses, incidents, gaps, shifts (con missingCheckIn), lowIntake, vetVisits }` | CU-72 |
 | GET / PUT | `/api/admin/alert-settings` | `{ emailAlertTypes, dailySummaryEnabled, dailySummaryTime }` | CU-73, CU-74 |
@@ -797,7 +798,7 @@ Las rutas del navegador están en inglés; los textos visibles, en castellano.
 | `/admin/my-day` | «Mi día»: tareas del día en tarjetas (inicio del cuidador al entrar) | Cuidador, admin |
 | `/admin/shifts` | Calendario semanal de turnos (`?week=` lunes); el administrador asigna, quita y copia la semana | Cuidador, admin |
 | `/admin/tasks`, `/admin/task-templates`, `/admin/zones`, `/admin/shift-templates`, `/admin/absences` | Tareas del día y puntuales (con los ajustes), plantillas, zonas y cualificaciones, plantillas de turno y ausencias | Admin |
-| `/admin/incidents`, `/admin/incidents/:id` | Incidencias: listado, ficha y «Comunicar incidencia» (estado y tarea, solo el administrador) | Cuidador, admin |
+| `/admin/incidents`, `/admin/incidents/:id` | Incidencias: listado, ficha, «Comunicar incidencia», empezar, resolver y reabrir (la tarea, solo el administrador) | Cuidador, admin |
 | `/admin/today`, `/admin/alert-settings` | Panel «Hoy» y avisos por email con el resumen diario | Admin |
 
 Las rutas protegidas usan un componente `<RequireRole roles={[...]}>` que redirige a `/login`. Es solo una mejora de la experiencia de uso; la seguridad la garantiza el servidor.
@@ -1005,7 +1006,7 @@ Turnos, tareas, alimentación, limpieza y medicación, en cuatro bloques que se 
 
 Decisiones del Bloque D:
 
-- Cualquier trabajador comunica incidencias y las ve todas; solo el administrador cambia su estado y crea una tarea a partir de ella (que la pasa a «en curso»). Solo las de gravedad alta se avisan al momento (campana a los administradores y a quien tiene turno hoy en la zona, sin quien la comunica).
+- Cualquier trabajador comunica incidencias, las ve todas y cambia su estado (las empieza, las resuelve explicando cómo o las reabre); solo el administrador crea una tarea a partir de ella (que la pasa a «en curso»). Solo las de gravedad alta se avisan al momento (campana a los administradores y a quien tiene turno hoy en la zona, sin quien la comunica).
 - Las notas de relevo son por zona, se escriben desde «Mi día» en cualquier momento (no hace falta fichar la salida) y se ven 24 horas. Cada persona las marca como leídas.
 - «Hoy» es una pantalla nueva del menú «Trabajo diario» solo para el administrador; al entrar sigue yendo al escritorio, que enlaza a «Hoy».
 - Los emails de aviso salen de una bandeja de salida (`notifications.email_pending`) que vacía `staff-emails`: crear el aviso nunca depende del correo. La elección de tipos vale para todo el personal.

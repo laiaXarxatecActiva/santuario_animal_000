@@ -74,7 +74,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
 | RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
 | RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
-| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona o animal, descripción y foto opcional) y ve todas. Solo el administrador cambia su estado (abierta → en curso → resuelta, con una nota obligatoria al resolverla) y crea una tarea puntual a partir de ella, que la pasa a «en curso». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona, sin contar a quien la comunica. |
+| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona o animal, descripción y foto opcional) y ve todas. Todo el personal cambia su estado (abierta → en curso → resuelta, con una nota obligatoria al resolverla, y reabrirla si el problema vuelve); queda quién la resolvió, cómo y cuándo, y cada cambio en el registro de actividad. Solo el administrador crea una tarea puntual a partir de ella, que la pasa a «en curso». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona, sin contar a quien la comunica. |
 | RN-38 | Las **notas de relevo** son de una zona: las escribe quien tiene turno hoy en ella (el administrador, en cualquiera) y las ve durante 24 horas quien tiene turno hoy en esa zona y los administradores. Cada persona las marca como leídas; las propias cuentan como leídas. |
 | RN-39 | Los avisos del personal (huecos, come poco, medicación no dada, visita de hoy e incidencia grave) siempre van a la campana; el administrador elige cuáles van **también por email**, para todo el personal (todos menos la visita de hoy, por defecto). El email se envía aparte (`staff-emails`), así que un fallo del correo nunca deshace la operación. El **resumen diario** por email a los administradores está desactivado por defecto (a las 20:00 si se activa) y se envía una vez al día. |
 
@@ -2024,15 +2024,15 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 | Actor principal | Fase |
 | --- | --- |
-| Cualquier trabajador (comunicar y ver); administrador (gestionar) | Trabajo diario, Bloque D |
+| Cualquier trabajador (comunicar, ver y resolver); administrador (crear su tarea) | Trabajo diario, Bloque D |
 
 **Flujo principal**
 
 1. Desde «Incidencias» o «Mi día», pulsa «Comunicar incidencia»: tipo (salud, comportamiento, instalaciones u otra), gravedad (baja, media o alta), zona y/o animal, «Qué pasa» y una foto opcional.
 2. El sistema la guarda como «Abierta». Si se eligió un animal sin zona, toma la del animal.
 3. Si la gravedad es alta, avisa al momento en la campana a los administradores en activo y a quien tiene turno hoy en la zona (sin contar a quien la comunica): «Incidencia grave en «Clínica y recuperación»: …».
-4. Todo el personal ve el listado (por defecto, las abiertas y en curso; filtros por estado, gravedad y zona) y la ficha.
-5. El administrador cambia el estado desde la ficha; al resolverla escribe cómo se ha resuelto.
+4. Todo el personal ve el listado (por defecto, las pendientes: abiertas y en curso; filtros por estado, gravedad y zona) y la ficha. El menú muestra junto a «Incidencias» cuántas quedan pendientes.
+5. Cualquier trabajador la pasa a «En curso» («Empezar») o la resuelve («Resolver», explicando cómo) desde el listado, o cambia el estado desde la ficha. Al resolverla deja de estar entre las pendientes; en «Resueltas» se ve cómo se resolvió, quién y cuándo, y se puede reabrir.
 6. El administrador puede crear una tarea puntual a partir de ella (con el tipo, el título, la zona y el animal ya puestos); la incidencia pasa a «En curso».
 
 **Flujos alternativos**

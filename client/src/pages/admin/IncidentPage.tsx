@@ -20,7 +20,7 @@ import { SelectField, TextAreaField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { IncidentStatusBadge, SeverityBadge } from '../../components/work/IncidentBadges';
 import { useSession } from '../../hooks/useSession';
-import { INCIDENTS_KEY, TASKS_KEY, useIncident } from '../../hooks/useWork';
+import { INCIDENTS_KEY, TASKS_KEY, TODAY_KEY, useIncident } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import { formatShortInstant } from '../../utils/format';
@@ -35,7 +35,7 @@ const TIPO_DE_TAREA: Record<IncidentDto['category'], TaskType> = {
   other: 'maintenance',
 };
 
-// CU-70: ficha de una incidencia (SCREENS §5.7). Solo el administrador la gestiona.
+// CU-70: ficha de una incidencia (SCREENS §5.7). Todo el personal cambia su estado; la tarea, solo el administrador.
 export function IncidentPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -50,6 +50,7 @@ export function IncidentPage() {
     setVentana(null);
     setAviso(t(clave));
     await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
+    await queryClient.invalidateQueries({ queryKey: TODAY_KEY });
   };
 
   const volver = (
@@ -78,16 +79,14 @@ export function IncidentPage() {
       {volver}
       <div className={styles.header}>
         <h1>{t('work.incidents.detailTitle', { id: i.id })}</h1>
-        {esAdmin && (
-          <div className={styles.headerActions}>
-            {i.status !== 'resolved' && i.taskId === null && (
-              <Button variant="outline" onClick={() => setVentana('tarea')}>
-                {t('work.incidents.createTask')}
-              </Button>
-            )}
-            <Button onClick={() => setVentana('estado')}>{t('work.incidents.changeStatus')}</Button>
-          </div>
-        )}
+        <div className={styles.headerActions}>
+          {esAdmin && i.status !== 'resolved' && i.taskId === null && (
+            <Button variant="outline" onClick={() => setVentana('tarea')}>
+              {t('work.incidents.createTask')}
+            </Button>
+          )}
+          <Button onClick={() => setVentana('estado')}>{t('work.incidents.changeStatus')}</Button>
+        </div>
       </div>
       {aviso && (
         <Alert type="success" onClose={() => setAviso(null)}>
