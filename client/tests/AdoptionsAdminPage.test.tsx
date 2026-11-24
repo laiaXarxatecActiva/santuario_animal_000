@@ -21,6 +21,8 @@ describe('CU-37 Gestionar adopciones: listado', () => {
   it('el enlace «Adopciones» del menú solo lo ve el administrador', async () => {
     api();
     const vista = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Adopciones' })).toHaveAttribute('href', '/admin/adoptions');
     vista.unmount();
 

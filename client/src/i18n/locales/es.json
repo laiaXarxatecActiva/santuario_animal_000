@@ -1180,6 +1180,34 @@
       "withoutAdopters": "Animales sin adoptantes",
       "currentNote": "Situación actual (no depende del rango).",
       "allAdopted": "Todos los animales tienen al menos un adoptante."
+    },
+    "intro": {
+      "show": "¿Para qué sirve esta página?",
+      "dismiss": "Entendido",
+      "pages": {
+        "dashboard": "Un resumen de cómo está el santuario: animales, adopciones y los animales que necesitan una actualización.",
+        "animals": "Aquí están todos los animales. Abre uno para editar su ficha, sus fotos, sus novedades, su historial veterinario y sus cuidados.",
+        "updates": "Las novedades publicadas sobre los animales. Los adoptantes las ven en su muro.",
+        "species": "Las especies del santuario. Cada animal pertenece a una.",
+        "vet": "El historial veterinario de todos los animales, solo para el personal.",
+        "today": "Lo más importante de hoy de un vistazo: tareas, medicación, incidencias, turnos y huecos. Cada bloque lleva a su página.",
+        "myDay": "Tus tareas y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
+        "incidents": "Para comunicar problemas del santuario (un animal herido, una avería…) y seguir cómo se resuelven.",
+        "shifts": "Aquí ves quién trabaja cada día de la semana y en qué zonas. Si falta personal en un turno, aparece en amarillo.",
+        "tasks": "Todas las tareas de un día. Puedes crear tareas puntuales, reasignarlas y cambiar los ajustes del trabajo diario.",
+        "taskTemplates": "Las tareas que se repiten (comidas, limpiezas…). Cada plantilla crea sus tareas solas cada día.",
+        "zones": "Las zonas del santuario y las cualificaciones que piden algunas tareas.",
+        "shiftTemplates": "Los turnos que se hacen (mañana, tarde…), su horario y cuántas personas necesita cada zona.",
+        "absences": "Vacaciones, bajas y otras ausencias. Al registrar una, se quitan los turnos de esa persona en esos días.",
+        "alertSettings": "Elige qué avisos del personal llegan también por email y si se envía un resumen del día.",
+        "users": "Las cuentas de adoptantes y del personal. Desde aquí se invita a trabajadores nuevos.",
+        "adoptions": "Todas las adopciones, con sus pagos y notas. Puedes pausarlas, reanudarlas o darlas de alta a mano.",
+        "payments": "Los cobros de las cuotas. Puedes filtrarlos, exportarlos y devolver un pago.",
+        "donations": "Las donaciones recibidas, por lista o por meses. Puedes registrar una a mano o devolverla.",
+        "plans": "Los planes de adopción que pueden elegir los adoptantes y su importe.",
+        "stats": "Gráficos de ingresos y adopciones por mes, y los animales más y menos apadrinados.",
+        "activity": "Quién ha cambiado qué y cuándo en el panel."
+      }
     }
   },
   "viewer": {
@@ -1565,7 +1593,8 @@
       "checkedInAt": "Entrada: {{time}}",
       "checkedOutAt": "Salida: {{time}}",
       "checkInDone": "Entrada fichada",
-      "checkOutDone": "Salida fichada"
+      "checkOutDone": "Salida fichada",
+      "today": "Hoy"
     },
     "shiftTemplates": {
       "title": "Plantillas de turno",

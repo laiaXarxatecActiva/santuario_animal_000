@@ -15,6 +15,7 @@ import { SelectField, TextField } from '../../components/FormFields';
 import { Pagination } from '../../components/Pagination';
 import { useAdminActivityLogs, useWorkers } from '../../hooks/useAdmin';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 const CLAVES = ['userId', 'tableName', 'action', 'from', 'to', 'page'] as const;
@@ -63,6 +64,7 @@ export function ActivityAdminPage() {
       <div className={styles.header}>
         <h1>{t('admin.activity.title')}</h1>
       </div>
+      <PageIntro pagina="activity" />
 
       <search className={styles.filters}>
         <SelectField

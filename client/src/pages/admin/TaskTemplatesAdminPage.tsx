@@ -30,6 +30,7 @@ import { errorMessage } from '../../utils/apiErrors';
 import { todayInSanctuary } from '../../utils/format';
 import { erroresPorCampo } from '../../utils/erroresPorCampo';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 
@@ -84,6 +85,7 @@ export function TaskTemplatesAdminPage() {
           {t('work.templates.new')}
         </Button>
       </div>
+      <PageIntro pagina="taskTemplates" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}

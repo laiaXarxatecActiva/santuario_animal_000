@@ -17,6 +17,7 @@ import { Pagination } from '../../components/Pagination';
 import { useAdminAdoptions, useAdminPlans } from '../../hooks/useAdmin';
 import { formatShortDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL. `animalId` y `userId` llegan desde
@@ -71,6 +72,7 @@ export function AdoptionsAdminPage() {
           {t('admin.adoptions.new')}
         </ButtonLink>
       </div>
+      <PageIntro pagina="adoptions" />
 
       <search className={styles.filters}>
         <form

@@ -17,6 +17,7 @@ import { useAlertSettings, WORK_KEY } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 // CU-73 y CU-74: qué avisos del personal van también por email y el resumen diario (SCREENS §5.7).
 export function AlertSettingsPage() {
@@ -27,6 +28,7 @@ export function AlertSettingsPage() {
       <div className={styles.header}>
         <h1>{t('work.alertSettings.title')}</h1>
       </div>
+      <PageIntro pagina="alertSettings" />
       {ajustes.isError ? (
         <Alert
           type="error"

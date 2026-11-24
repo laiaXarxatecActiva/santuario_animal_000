@@ -23,6 +23,8 @@ describe('CU-40 Gestionar planes de adopción', () => {
   it('el enlace «Planes» del menú solo lo ve el administrador', async () => {
     api();
     const vistaAdmin = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Planes' })).toHaveAttribute('href', '/admin/plans');
     vistaAdmin.unmount();
 

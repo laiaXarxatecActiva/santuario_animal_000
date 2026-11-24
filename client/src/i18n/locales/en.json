@@ -1180,6 +1180,34 @@
       "withoutAdopters": "Animals without adopters",
       "currentNote": "Current situation (does not depend on the range).",
       "allAdopted": "Every animal has at least one adopter."
+    },
+    "intro": {
+      "show": "What is this page for?",
+      "dismiss": "Got it",
+      "pages": {
+        "dashboard": "A summary of how the sanctuary is doing: animals, adoptions and the animals that need an update.",
+        "animals": "All the animals are here. Open one to edit its profile, photos, updates, vet history and care.",
+        "updates": "The updates published about the animals. Adopters see them on their wall.",
+        "species": "The sanctuary’s species. Every animal belongs to one.",
+        "vet": "The vet history of all the animals, for staff only.",
+        "today": "Today’s key points at a glance: tasks, medication, incidents, shifts and gaps. Each block links to its page.",
+        "myDay": "Your tasks and shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
+        "incidents": "To report problems at the sanctuary (an injured animal, a breakdown…) and follow how they are solved.",
+        "shifts": "See who works each day of the week and in which zones. If a shift is short of staff, it shows in yellow.",
+        "tasks": "All the tasks of a day. You can create one-off tasks, reassign them and change the daily work settings.",
+        "taskTemplates": "Recurring tasks (meals, cleaning…). Each template creates its tasks automatically every day.",
+        "zones": "The sanctuary’s zones and the qualifications some tasks require.",
+        "shiftTemplates": "The shifts worked (morning, afternoon…), their hours and how many people each zone needs.",
+        "absences": "Holidays, sick leave and other absences. Recording one removes that person’s shifts on those days.",
+        "alertSettings": "Choose which staff alerts also arrive by email and whether a daily summary is sent.",
+        "users": "Adopter and staff accounts. New workers are invited from here.",
+        "adoptions": "All adoptions, with their payments and notes. You can pause, resume or create them manually.",
+        "payments": "Fee payments. You can filter them, export them and refund a payment.",
+        "donations": "Donations received, as a list or by month. You can record one manually or refund it.",
+        "plans": "The adoption plans adopters can choose and their amount.",
+        "stats": "Charts of income and adoptions by month, and the most and least sponsored animals.",
+        "activity": "Who changed what and when in the panel."
+      }
     }
   },
   "viewer": {
@@ -1565,7 +1593,8 @@
       "checkedInAt": "In: {{time}}",
       "checkedOutAt": "Out: {{time}}",
       "checkInDone": "Checked in",
-      "checkOutDone": "Checked out"
+      "checkOutDone": "Checked out",
+      "today": "Today"
     },
     "shiftTemplates": {
       "title": "Shift templates",

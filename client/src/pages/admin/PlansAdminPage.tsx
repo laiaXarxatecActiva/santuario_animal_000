@@ -22,6 +22,7 @@ import { ADMIN_PLANS_KEY, useAdminPlans } from '../../hooks/useAdmin';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import styles from './AdminPage.module.css';
 import planStyles from './PlansAdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const CAMPOS = ['name', 'monthlyAmount', 'description', 'isDefault', 'isActive'] as const;
 
@@ -55,6 +56,7 @@ export function PlansAdminPage() {
           {t('admin.plans.new')}
         </Button>
       </div>
+      <PageIntro pagina="plans" />
       {aviso && (
         <Alert type="success" onClose={() => setAviso(null)}>
           {aviso}

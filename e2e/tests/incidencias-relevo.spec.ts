@@ -30,7 +30,12 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
     await ventanaNota.getByRole('button', { name: t('admin.common.save') }).click();
     await expect(relevo.getByText('Pipa ha dormido mucho esta mañana.')).toBeVisible();
 
-    // CU-70: incidencia grave desde «Mi día».
+    // CU-70: incidencia grave desde «Incidencias» (el botón ya no está en «Mi día»).
+    await expect(page.getByRole('button', { name: t('work.incidents.report') })).toHaveCount(0);
+    await page
+      .getByRole('navigation', { name: t('admin.nav.label') })
+      .getByRole('link', { name: t('admin.nav.incidents') })
+      .click();
     await page.getByRole('button', { name: t('work.incidents.report') }).click();
     const ventana = page.getByRole('dialog', { name: t('work.incidents.report') });
     await ventana

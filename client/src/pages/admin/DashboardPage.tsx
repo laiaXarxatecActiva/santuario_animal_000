@@ -9,6 +9,7 @@ import { useDashboard } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { formatCurrency } from '../../utils/format';
 import styles from './DashboardPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PLAZO_DIAS = 14;
 
@@ -22,6 +23,7 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <h1>{t('admin.dashboard.title', { name: user?.firstName ?? '' })}</h1>
+      <PageIntro pagina="dashboard" />
       {user?.role === 'admin' && (
         <p>
           <Link to="/admin/today">{t('admin.dashboard.todayLink')}</Link>

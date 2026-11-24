@@ -13,6 +13,7 @@ import { IncidentFormModal } from '../../components/work/IncidentFormModal';
 import { INCIDENTS_KEY, useIncidents, useZones } from '../../hooks/useWork';
 import { formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type FiltroEstado = IncidentsQuery['status'];
 const FILTROS_ESTADO: readonly FiltroEstado[] = ['active', ...INCIDENT_STATUSES, 'all'];
@@ -50,6 +51,7 @@ export function IncidentsPage() {
           {t('work.incidents.report')}
         </Button>
       </div>
+      <PageIntro pagina="incidents" />
       {aviso && (
         <Alert type="success" onClose={() => setAviso(null)}>
           {aviso}

@@ -9,6 +9,7 @@ import { useAdminStats } from '../../hooks/useAdmin';
 import { formatCurrency, formatCurrencyAxis, formatNumber, formatShortMonth } from '../../utils/format';
 import pageStyles from './AdminPage.module.css';
 import styles from './StatsAdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
 const dia = (valor: string | null) => (valor && DIA.test(valor) ? valor : undefined);
@@ -35,6 +36,7 @@ export function StatsAdminPage() {
       <div className={pageStyles.header}>
         <h1>{t('admin.stats.title')}</h1>
       </div>
+      <PageIntro pagina="stats" />
 
       {/* Paso 2: por defecto, los últimos 12 meses. */}
       <search className={pageStyles.filters}>

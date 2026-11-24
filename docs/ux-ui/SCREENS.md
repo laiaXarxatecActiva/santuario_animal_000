@@ -551,6 +551,8 @@ Usa `AdminLayout`: más sobrio y compacto (`DESIGN_SYSTEM.md` §8.10).
 └────────────────┴─────────────────────────────────────────────────────────────┘
 ```
 
+- «Animales», «Trabajo diario» y «Administración» son apartados plegables: su título abre o cierra la lista. Al entrar, se abre el de la página actual (en el escritorio, «Trabajo diario») y el navegador recuerda lo que se abre o cierra.
+- Cada página del menú lleva bajo el título una explicación breve de para qué sirve (`PageIntro`), que se oculta con «Entendido» y se recupera con «¿Para qué sirve esta página?».
 - La sección «Administración» solo aparece para el administrador. En «Trabajo diario», el cuidador solo ve «Mi día»; «Tareas del día», «Plantillas de tareas» y «Zonas y cualificaciones» son del administrador.
 - Las secciones de la Fase 3 (Veterinario, Estadísticas, Actividad) aparecen cuando estén implementadas.
 - **Móvil y tablet:** el menú lateral se oculta. La cabecera muestra ☰ · «Panel» · · , y la hamburguesa despliega el mismo menú a todo el ancho.
@@ -743,7 +745,6 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
 - Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
 - Vacío: `EmptyState` con `list-check` y «No hay tareas para este día.». Avisos `success` tras cada acción («Tarea marcada como hecha»…).
-- **Comunicar incidencia** (CU-70): botón `outline` con `triangle-exclamation` junto al título; abre la misma ventana que en «Incidencias».
 - **Notas de relevo** (CU-71, h2, entre «Tu turno» y las tareas): una tarjeta por nota de las últimas 24 horas con «Carmen Boix Vidal · Clínica y recuperación · 22/11, 21:50», el texto y, si no se ha leído, la insignia «Nueva», borde izquierdo terracota y «Marcar como leída» (`ghost`). «Dejar una nota» (`outline`, `pen-to-square`) solo si tiene turno hoy (el administrador, siempre): ventana «Dejar una nota de relevo» con «Zona» (las de su turno de hoy) y «Nota» (ayuda: «La verán durante 24 horas quienes tengan turno en esta zona.»). Sin notas: «No hay notas de relevo de las últimas 24 horas.».
 
 #### Tareas del día (`/admin/tasks`) — CU-55, CU-73
@@ -788,8 +789,8 @@ Para todo el personal; las acciones de cambio, solo para el administrador.
 ```
 
 - Navegación de semanas como la de días de «Mi día»: «Semana anterior», «Semana siguiente» y, fuera de la actual, «Esta semana» (`outline`). La semana va en la dirección (`?week=` con el lunes), y los avisos de la campana (CU-64) abren la del hueco.
-- Si hay huecos, aviso `warning` arriba con el número. Un bloque por día (h2 con el día de la semana y la fecha) en una rejilla de 280 px mínimo; dentro, una tarjeta de turno por cada turno activo que se hace ese día o que tiene a alguien (DESIGN_SYSTEM §8.9).
-- Cada persona con sus zonas e insignia «Ha fichado» (`success`). Debajo, cada zona sin cubrir: «Falta personal en Gran voladero: 0 de 1» sobre fondo de aviso. Al final del día, «Ausente: …»; el administrador ve también el motivo entre paréntesis.
+- Si hay huecos, aviso `warning` arriba con el número. Un bloque por día (h2 con el día de la semana y la fecha; hoy, con borde terracota y la insignia «Hoy») en una rejilla de 280 px mínimo; bajo la fecha, las ausencias del día como insignias («Ausente: …»; el administrador ve también el motivo entre paréntesis); y una tarjeta de turno por cada turno activo que se hace ese día o que tiene a alguien (DESIGN_SYSTEM §8.9).
+- En cada tarjeta, arriba el nombre y el horario con «Asignar» a la derecha; luego una fila por persona (nombre, «Ha fichado» y sus zonas en letra pequeña); y al final, juntas, las zonas sin cubrir: «Falta personal en Gran voladero: 0 de 1» sobre fondo de aviso.
 - **Administrador:** «Asignar» (`ghost`, `user-plus`) en cada turno activo abre la ventana «Asignar al turno de Tarde» con el día, «Persona» (trabajadores activos) y «Zonas» (casillas; vienen marcadas las del turno); los errores del servidor van a su campo y los del día o el turno, en un aviso `error`. «✕» (`xmark`, «Quitar a … del turno de …») pide confirmación. «Copiar la semana anterior» (`outline`, `copy`) pide confirmación y muestra «Se han copiado 12 turnos.» y, si se ha saltado alguno, «No se han copiado:» con «Nuria Peris Gil · Mañana · martes, 24 de noviembre: está ausente».
 
 #### Plantillas de turno (`/admin/shift-templates`) — CU-60

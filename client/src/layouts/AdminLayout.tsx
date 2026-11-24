@@ -14,6 +14,7 @@ import {
   faChartColumn,
   faClockRotateLeft,
   faBars,
+  faChevronDown,
   faFeather,
   faGauge,
   faHandHoldingHeart,
@@ -101,6 +102,26 @@ const GRUPOS: readonly Grupo[] = [
   },
 ];
 
+const CLAVE_APARTADOS = 'panel-menu';
+/** En el escritorio, que no es de ningún apartado, se abre el más usado. */
+const APARTADO_DEL_ESCRITORIO = 'admin.nav.groupWork';
+
+/** Apartados abiertos o cerrados por la persona (se recuerdan en este navegador). */
+function leerApartados(): Record<string, boolean> {
+  try {
+    const guardado: unknown = JSON.parse(localStorage.getItem(CLAVE_APARTADOS) ?? '{}');
+    return guardado !== null && typeof guardado === 'object' ? (guardado as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** El apartado al que pertenece una ruta, si es de alguno. */
+function apartadoDe(pathname: string): string | undefined {
+  const grupo = GRUPOS.find((g) => g.key && g.links.some((e) => pathname === e.to || pathname.startsWith(`${e.to}/`)));
+  return grupo?.key ?? (pathname === '/admin' ? APARTADO_DEL_ESCRITORIO : undefined);
+}
+
 const MENU_USUARIO = [{ to: '/profile', key: 'nav.profile' }] as const;
 
 // Plantilla del panel de gestión (DESIGN_SYSTEM §8.10). Solo oculta interfaz:
@@ -117,6 +138,18 @@ export function AdminLayout() {
   const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
   const flash = flashCerrado === location.key ? undefined : readFlash(location.state);
   const menuId = useId();
+  const [apartados, setApartados] = useState<Record<string, boolean>>(leerApartados);
+  const actual = apartadoDe(pathname);
+  const estaAbierto = (clave: string) => apartados[clave] ?? clave === actual;
+  const alternar = (clave: string) => {
+    const nuevos = { ...apartados, [clave]: !estaAbierto(clave) };
+    setApartados(nuevos);
+    localStorage.setItem(CLAVE_APARTADOS, JSON.stringify(nuevos));
+  };
+  // Al llegar a una página de un apartado cerrado, se abre para que se vea dónde se está.
+  useEffect(() => {
+    if (pathname !== '/admin' && actual) setApartados((a) => (a[actual] === false ? { ...a, [actual]: true } : a));
+  }, [pathname, actual]);
 
   useEffect(() => setAbierto(false), [pathname]);
   useEffect(() => {
@@ -166,8 +199,19 @@ export function AdminLayout() {
         <nav aria-label={t('admin.nav.label')}>
           {grupos.map((grupo, i) => (
             <div key={grupo.key ?? i} className={styles.group}>
-              {grupo.key && <p className={styles.groupTitle}>{t(grupo.key)}</p>}
-              <ul>
+              {grupo.key && (
+                <button
+                  type="button"
+                  className={styles.groupTitle}
+                  aria-expanded={estaAbierto(grupo.key)}
+                  aria-controls={`${menuId}-${i}`}
+                  onClick={() => grupo.key && alternar(grupo.key)}
+                >
+                  {t(grupo.key)}
+                  <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" className={styles.groupIcon} />
+                </button>
+              )}
+              <ul id={`${menuId}-${i}`} hidden={grupo.key !== undefined && !estaAbierto(grupo.key)}>
                 {grupo.links.map((enlace) => (
                   <li key={enlace.to}>
                     <NavLink to={enlace.to} end={enlace.end} className={styles.link}>

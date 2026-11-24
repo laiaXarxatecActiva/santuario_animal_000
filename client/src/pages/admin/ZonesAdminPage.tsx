@@ -25,6 +25,7 @@ import { Switch } from '../../components/Switch';
 import { useQualifications, useZones, WORK_KEY } from '../../hooks/useWork';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 type Elemento = { id: number; name: string };
@@ -90,6 +91,7 @@ export function ZonesAdminPage() {
   return (
     <div className={styles.page}>
       <h1>{t('work.zones.title')}</h1>
+      <PageIntro pagina="zones" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}

@@ -46,6 +46,8 @@ describe('CU-42 Consultar el registro de actividad', () => {
   it('el enlace «Actividad» del menú solo lo ve el administrador', async () => {
     api();
     const vista = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Actividad' })).toHaveAttribute('href', '/admin/activity');
     vista.unmount();
 

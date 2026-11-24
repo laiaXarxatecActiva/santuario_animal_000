@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { UpdatesList } from '../../components/admin/UpdatesList';
 import { ButtonLink } from '../../components/Button';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 // CU-31 y CU-32: «Actualizaciones» del panel (SCREENS §5.3).
 export function UpdatesAdminPage() {
@@ -15,6 +16,7 @@ export function UpdatesAdminPage() {
           {t('admin.updates.new')}
         </ButtonLink>
       </div>
+      <PageIntro pagina="updates" />
       <UpdatesList />
     </div>
   );

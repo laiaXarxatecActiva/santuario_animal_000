@@ -1,4 +1,4 @@
-import { faChevronLeft, faChevronRight, faListCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import {
   INTAKE_LEVELS,
   taskNotDoneBodySchema,
@@ -18,15 +18,15 @@ import { EmptyState } from '../../components/EmptyState';
 import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { HandoverNotes } from '../../components/work/HandoverNotes';
-import { IncidentFormModal } from '../../components/work/IncidentFormModal';
 import { TaskCard } from '../../components/work/TaskCard';
 import { useSession } from '../../hooks/useSession';
-import { CARE_KEY, INCIDENTS_KEY, TASKS_KEY, useMyDay, useZones } from '../../hooks/useWork';
+import { CARE_KEY, TASKS_KEY, useMyDay, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { addDays, formatTime, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import diaStyles from './MyDayPage.module.css';
 import turnoStyles from './ShiftsPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 type Ventana = { tipo: 'completar' | 'noRealizada' | 'visita'; tarea: MyDayTaskDto };
@@ -45,7 +45,6 @@ export function MyDayPage() {
   const dia = useMyDay(fecha);
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [ventana, setVentana] = useState<Ventana | null>(null);
-  const [incidencia, setIncidencia] = useState(false);
   const zonas = useZones();
 
   const alTerminar = (clave: string) => async () => {
@@ -155,9 +154,6 @@ export function MyDayPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1>{t('work.myDay.title')}</h1>
-        <Button variant="outline" icon={faTriangleExclamation} onClick={() => setIncidencia(true)}>
-          {t('work.incidents.report')}
-        </Button>
         {fechaActual && (
           <div className={diaStyles.dayNav}>
             <Button
@@ -185,6 +181,7 @@ export function MyDayPage() {
           </div>
         )}
       </div>
+      <PageIntro pagina="myDay" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}
@@ -252,16 +249,6 @@ export function MyDayPage() {
           onSaved={async () => {
             await queryClient.invalidateQueries({ queryKey: CARE_KEY });
             await alTerminar('work.care.visits.registered')();
-          }}
-        />
-      )}
-      {incidencia && (
-        <IncidentFormModal
-          onClose={() => setIncidencia(false)}
-          onSaved={async () => {
-            setIncidencia(false);
-            setAviso({ type: 'success', message: t('work.incidents.reported_ok') });
-            await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
           }}
         />
       )}

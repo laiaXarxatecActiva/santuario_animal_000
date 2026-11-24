@@ -32,6 +32,7 @@ import { useAdminTasks, useQualifications, useWorkSettings, useZones, WORK_KEY }
 import { errorMessage } from '../../utils/apiErrors';
 import { todayInSanctuary } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 type Errores = Record<string, string>;
@@ -109,6 +110,7 @@ export function TasksAdminPage() {
           </Button>
         </div>
       </div>
+      <PageIntro pagina="tasks" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}

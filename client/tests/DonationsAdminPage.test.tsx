@@ -33,6 +33,8 @@ describe('CU-39 Gestionar donaciones', () => {
   it('el enlace «Donaciones» del menú solo lo ve el administrador', async () => {
     api();
     const vista = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Donaciones' })).toHaveAttribute('href', '/admin/donations');
     vista.unmount();
 

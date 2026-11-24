@@ -1,4 +1,12 @@
-import { faChevronLeft, faChevronRight, faCopy, faUserPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCalendarXmark,
+  faChevronLeft,
+  faChevronRight,
+  faCopy,
+  faTriangleExclamation,
+  faUserPlus,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   isWorkerRole,
@@ -26,9 +34,10 @@ import { useSession } from '../../hooks/useSession';
 import { SHIFTS_KEY, TASKS_KEY, useShiftCalendar, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
-import { addDays, formatShortDate, formatWeekdayDate } from '../../utils/format';
+import { addDays, formatShortDate, formatWeekdayDate, todayInSanctuary } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import turnoStyles from './ShiftsPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string; copia?: CopyWeekResultDto };
 type Hueco = { shift: ShiftTemplateDto; date: string };
@@ -102,6 +111,7 @@ export function ShiftsPage() {
           </Button>
         )}
       </div>
+      <PageIntro pagina="shifts" />
 
       {datos && (
         <div className={turnoStyles.weekNav}>
@@ -270,11 +280,28 @@ function Dia({
   );
   const ausentes = datos.absences.filter((a) => a.startDate <= fecha && fecha <= a.endDate);
   const id = `dia-${fecha}`;
+  const esHoy = fecha === todayInSanctuary();
   return (
-    <section aria-labelledby={id} className={turnoStyles.day}>
-      <h2 id={id} className={turnoStyles.dayTitle}>
-        {formatWeekdayDate(fecha)}
-      </h2>
+    <section aria-labelledby={id} className={esHoy ? `${turnoStyles.day} ${turnoStyles.today}` : turnoStyles.day}>
+      <div className={turnoStyles.dayHeader}>
+        <h2 id={id} className={turnoStyles.dayTitle}>
+          {formatWeekdayDate(fecha)}
+        </h2>
+        {esHoy && <Badge tone="primary">{t('work.shifts.today')}</Badge>}
+      </div>
+      {ausentes.length > 0 && (
+        <ul className={turnoStyles.absences}>
+          {ausentes.map((a) => (
+            <li key={a.id}>
+              <Badge icon={faCalendarXmark}>
+                {a.type
+                  ? t('work.shifts.absentWithType', { name: a.user.name, type: t(`work.absenceTypes.${a.type}`) })
+                  : t('work.shifts.absent', { name: a.user.name })}
+              </Badge>
+            </li>
+          ))}
+        </ul>
+      )}
       {turnos.length === 0 && <p className={styles.muted}>{t('work.shifts.noShifts')}</p>}
       {turnos.map((turno) => {
         const personas = delDia.filter((a) => a.shift.id === turno.id);
@@ -286,10 +313,22 @@ function Dia({
             aria-label={t('work.shifts.shiftLabel', { name: turno.name, start: turno.startTime, end: turno.endTime })}
           >
             <div className={turnoStyles.shiftHeader}>
-              <h3>{turno.name}</h3>
-              <span className={styles.muted}>
-                {turno.startTime}–{turno.endTime}
-              </span>
+              <div>
+                <h3>{turno.name}</h3>
+                <span className={turnoStyles.hours}>
+                  {turno.startTime}–{turno.endTime}
+                </span>
+              </div>
+              {esAdmin && turno.isActive && (
+                <Button
+                  variant="ghost"
+                  icon={faUserPlus}
+                  aria-label={t('work.shifts.assignLabel', { shift: turno.name })}
+                  onClick={() => onAsignar(turno)}
+                >
+                  {t('work.shifts.assign')}
+                </Button>
+              )}
             </div>
             {personas.length === 0 ? (
               <p className={styles.muted}>{t('work.shifts.nobody')}</p>
@@ -297,10 +336,14 @@ function Dia({
               <ul className={turnoStyles.people}>
                 {personas.map((a) => (
                   <li key={a.id} className={turnoStyles.person}>
-                    <div>
-                      <span className={turnoStyles.personName}>{a.user.name}</span>
-                      {a.checkedInAt && <Badge tone="success">{t('work.shifts.checkedIn')}</Badge>}
-                      {a.zones.length > 0 && <p className={styles.muted}>{a.zones.map((z) => z.name).join(', ')}</p>}
+                    <div className={turnoStyles.personInfo}>
+                      <div className={turnoStyles.personLine}>
+                        <span className={turnoStyles.personName}>{a.user.name}</span>
+                        {a.checkedInAt && <Badge tone="success">{t('work.shifts.checkedIn')}</Badge>}
+                      </div>
+                      {a.zones.length > 0 && (
+                        <p className={turnoStyles.zones}>{a.zones.map((z) => z.name).join(', ')}</p>
+                      )}
                     </div>
                     {esAdmin && (
                       <button
@@ -316,31 +359,21 @@ function Dia({
                 ))}
               </ul>
             )}
-            {huecos.map((g) => (
-              <p key={g.zone.id} className={turnoStyles.gap}>
-                {t('work.shifts.gap', { zone: g.zone.name, assigned: g.assigned, required: g.required })}
-              </p>
-            ))}
-            {esAdmin && turno.isActive && (
-              <Button
-                variant="ghost"
-                icon={faUserPlus}
-                aria-label={t('work.shifts.assignLabel', { shift: turno.name })}
-                onClick={() => onAsignar(turno)}
-              >
-                {t('work.shifts.assign')}
-              </Button>
+            {huecos.length > 0 && (
+              <ul className={turnoStyles.gaps}>
+                {huecos.map((g) => (
+                  <li key={g.zone.id}>
+                    <FontAwesomeIcon icon={faTriangleExclamation} aria-hidden="true" />
+                    <span>
+                      {t('work.shifts.gap', { zone: g.zone.name, assigned: g.assigned, required: g.required })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             )}
           </article>
         );
       })}
-      {ausentes.map((a) => (
-        <p key={a.id} className={styles.muted}>
-          {a.type
-            ? t('work.shifts.absentWithType', { name: a.user.name, type: t(`work.absenceTypes.${a.type}`) })
-            : t('work.shifts.absent', { name: a.user.name })}
-        </p>
-      ))}
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { admin, adminUsers, caretaker, page } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { asignacion, ausencia, calendarioSemana, zonas } from './helpers/work-fixtures';
@@ -173,5 +173,19 @@ describe('Menú del trabajo diario: turnos', () => {
     const menu = within(await screen.findByRole('navigation', { name: 'Menú del panel' }));
     expect(menu.getByRole('link', { name: 'Plantillas de turno' })).toHaveAttribute('href', '/admin/shift-templates');
     expect(menu.getByRole('link', { name: 'Ausencias' })).toHaveAttribute('href', '/admin/absences');
+  });
+});
+
+describe('Calendario de turnos más claro', () => {
+  afterEach(() => vi.useRealTimers());
+
+  it('marca el día de hoy', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-25T10:00:00Z'));
+    api();
+    renderRoute('/admin/shifts');
+    const miercoles = await dia(/miércoles, 25/);
+    expect(within(miercoles).getByText('Hoy')).toBeInTheDocument();
+    expect(within(await dia(/lunes, 23/)).queryByText('Hoy')).not.toBeInTheDocument();
   });
 });
