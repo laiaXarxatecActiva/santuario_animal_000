@@ -50,10 +50,6 @@ export type IncidentService = ReturnType<typeof createIncidentService>;
 const enCampo = (field: string, message: string) => new ValidationError([{ field, message }]);
 const noExiste = () => new NotFoundError('Esta incidencia no existe.');
 
-/** Largo máximo de la descripción en el aviso de la campana (el mensaje admite 500). */
-const MAX_EN_AVISO = 300;
-const recortar = (texto: string) => (texto.length > MAX_EN_AVISO ? `${texto.slice(0, MAX_EN_AVISO - 1)}…` : texto);
-
 // CU-70: incidencias. Las comunica y las ve todo el personal; el estado y la
 // tarea son cosa del administrador (lo exige la ruta).
 export function createIncidentService({ db, reloj, media, crearTarea }: IncidentServiceDeps) {
@@ -121,10 +117,7 @@ export function createIncidentService({ db, reloj, media, crearTarea }: Incident
               sitio.zoneId === null ? [] : await assignmentModel.listUserIdsInZone(client, reloj.hoy(), sitio.zoneId);
             await avisarAlPersonal(client, destinatariosDeLaIncidencia(admins, deTurno, autorId), {
               type: 'incident_reported',
-              message: avisos.incidenciaGrave(
-                incidencia.zone?.name ?? incidencia.animal?.name ?? '',
-                recortar(datos.description),
-              ),
+              message: avisos.incidenciaGrave(incidencia.zone?.name ?? incidencia.animal?.name ?? '', datos.title),
               link: `/admin/incidents/${nuevo}`,
             });
           }

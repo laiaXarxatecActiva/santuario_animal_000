@@ -276,6 +276,7 @@ const FIJOS: Record<string, Traduccion> = {
   'Elige el tipo de incidencia.': { ca: 'Tria el tipus d’incidència.', en: 'Choose the type of incident.' },
   'Elige la gravedad.': { ca: 'Tria la gravetat.', en: 'Choose the severity.' },
   'Describe lo que pasa.': { ca: 'Descriu què passa.', en: 'Describe what is happening.' },
+  'Escribe un título corto.': { ca: 'Escriu un títol curt.', en: 'Write a short title.' },
   'Elige una zona o un animal.': { ca: 'Tria una zona o un animal.', en: 'Choose a zone or an animal.' },
   'Explica cómo se ha resuelto.': { ca: 'Explica com s’ha resolt.', en: 'Explain how it was resolved.' },
   'Elige el estado.': { ca: 'Tria l’estat.', en: 'Choose the status.' },
@@ -309,6 +310,13 @@ const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
   [
     /^Como máximo (\d+) horas al día\.$/,
     (n) => ({ ca: `Com a màxim ${n} hores al dia.`, en: `At most ${n} times a day.` }),
+  ],
+  [
+    /^El título no puede pasar de (\d+) caracteres\.$/,
+    (n) => ({
+      ca: `El títol no pot passar de ${n} caràcters.`,
+      en: `The title cannot be longer than ${n} characters.`,
+    }),
   ],
   [
     /^No puede tener más de (\d+) caracteres\.$/,

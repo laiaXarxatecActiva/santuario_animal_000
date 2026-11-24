@@ -834,14 +834,14 @@ SELECT i.id, v.animal_id FROM task_instances i JOIN vet_visits v ON v.id = i.vet
 INSERT INTO work_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 -- Una abierta (media), una en curso (alta, de Pipa) y una resuelta.
-INSERT INTO incidents (id, category, severity, description, zone_id, animal_id, status, reported_by,
+INSERT INTO incidents (id, category, severity, title, description, zone_id, animal_id, status, reported_by,
                        resolution, resolved_by, resolved_at, created_at)
 OVERRIDING SYSTEM VALUE VALUES
-(1, 'facilities', 'medium', 'La malla del techo tiene un agujero junto a la plataforma norte.', 2, NULL, 'open', 4,
+(1, 'facilities', 'medium', 'Agujero en la malla del techo', 'La malla del techo tiene un agujero junto a la plataforma norte.', 2, NULL, 'open', 4,
     NULL, NULL, NULL, pg_temp.ago_ts('1 day', '10:20')),
-(2, 'health', 'high', 'Pipa cojea de la pata derecha desde esta mañana.', 4, 14, 'in_progress', 3,
+(2, 'health', 'high', 'Pipa cojea', 'Pipa cojea de la pata derecha desde esta mañana.', 4, 14, 'in_progress', 3,
     NULL, NULL, NULL, pg_temp.ago_ts('0 days', '08:40')),
-(3, 'other', 'low', 'Se ha estropeado el termómetro de la cámara frigorífica.', 5, NULL, 'resolved', 5,
+(3, 'other', 'low', 'Termómetro de la cámara estropeado', 'Se ha estropeado el termómetro de la cámara frigorífica.', 5, NULL, 'resolved', 5,
     'Termómetro cambiado por uno nuevo.', 1, pg_temp.ago_ts('2 days', '12:00'), pg_temp.ago_ts('3 days', '18:30'));
 
 -- Notas de relevo. Carmen (tarde) dejó anoche una en la clínica y otra en el

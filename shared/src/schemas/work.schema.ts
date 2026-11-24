@@ -4,6 +4,7 @@ import {
   FOOD_UNITS,
   INCIDENT_CATEGORIES,
   INCIDENT_SEVERITIES,
+  INCIDENT_TITLE_MAX,
   INCIDENT_STATUSES,
   INTAKE_LEVELS,
   MAX_LOW_INTAKE_MEALS,
@@ -397,6 +398,12 @@ export const incidentBodySchema = z
   .object({
     category: z.enum(INCIDENT_CATEGORIES, { error: 'Elige el tipo de incidencia.' }),
     severity: z.enum(INCIDENT_SEVERITIES, { error: 'Elige la gravedad.' }),
+    // Resumen corto que se ve en el listado, en «Hoy» y en los avisos.
+    title: z
+      .string({ error: 'Escribe un título corto.' })
+      .trim()
+      .min(3, { error: 'Escribe un título corto.' })
+      .max(INCIDENT_TITLE_MAX, { error: `El título no puede pasar de ${INCIDENT_TITLE_MAX} caracteres.` }),
     description: textoObligatorio(2000, 'Describe lo que pasa.'),
     zoneId: idOpcional,
     animalId: idOpcional,

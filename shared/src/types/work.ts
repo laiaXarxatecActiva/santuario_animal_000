@@ -294,6 +294,7 @@ export interface IncidentDto {
   id: number;
   category: IncidentCategory;
   severity: IncidentSeverity;
+  title: string;
   description: string;
   /** La zona elegida o, si se eligió un animal, la suya. */
   zone: NamedRef | null;

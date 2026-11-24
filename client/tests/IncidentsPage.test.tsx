@@ -42,6 +42,7 @@ describe('CU-70 Incidencias', () => {
     expect(within(fila).getByText('Alta')).toBeInTheDocument();
     expect(within(fila).getByText('Abierta')).toBeInTheDocument();
     expect(within(fila).getByText('Salud')).toBeInTheDocument();
+    expect(within(fila).getByText('Cojera de Pipa')).toBeInTheDocument();
     expect(within(fila).getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/admin/incidents/2');
     await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Resueltas');
     await waitFor(() => expect(pedidas('/api/admin/incidents').at(-1)?.searchParams.get('status')).toBe('resolved'));
@@ -54,12 +55,14 @@ describe('CU-70 Incidencias', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
     const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
     await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
-    expect(await within(ventana).findByText('Describe lo que pasa.')).toBeInTheDocument();
+    expect(await within(ventana).findByText('Escribe un título corto.')).toBeInTheDocument();
+    expect(within(ventana).getByText('Describe lo que pasa.')).toBeInTheDocument();
     expect(within(ventana).getByText('Elige una zona o un animal.')).toBeInTheDocument();
 
     await userEvent.selectOptions(within(ventana).getByLabelText('Tipo'), 'Instalaciones');
     await userEvent.selectOptions(within(ventana).getByLabelText('Gravedad'), 'Alta');
     await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Gran voladero');
+    await userEvent.type(within(ventana).getByLabelText('Título'), 'Puerta rota');
     await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'La puerta no cierra.');
     expect(within(ventana).getByText(/se avisan al momento/)).toBeInTheDocument();
     await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
@@ -68,6 +71,7 @@ describe('CU-70 Incidencias', () => {
       {
         category: 'facilities',
         severity: 'high',
+        title: 'Puerta rota',
         description: 'La puerta no cierra.',
         zoneId: 1,
         animalId: null,
@@ -83,6 +87,7 @@ describe('CU-70 Foto de la incidencia', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
     const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
     await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Gran voladero');
+    await userEvent.type(within(ventana).getByLabelText('Título'), 'Malla rota');
     await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'La malla está rota.');
     const archivo = new File([new Uint8Array(10)], 'malla.jpg', { type: 'image/jpeg' });
     await userEvent.upload(within(ventana).getByLabelText('Elegir foto'), archivo);
@@ -151,7 +156,7 @@ describe('CU-70 Ficha de una incidencia', () => {
     renderRoute('/admin/incidents/2');
     await userEvent.click(await screen.findByRole('button', { name: 'Crear tarea' }));
     const ventana = screen.getByRole('dialog', { name: 'Tarea de la incidencia n.º 2' });
-    expect(within(ventana).getByLabelText('Título')).toHaveValue('Pipa cojea de la pata derecha desde esta mañana.');
+    expect(within(ventana).getByLabelText('Título')).toHaveValue('Cojera de Pipa');
     await userEvent.type(within(ventana).getByLabelText('Hora'), '16:00');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Tarea creada')).toBeInTheDocument();
@@ -185,6 +190,7 @@ describe('CU-70 Ficha de una incidencia', () => {
   it('muestra la descripción bajo «Qué pasa»', async () => {
     api(caretaker(), { '/api/admin/incidents/2': () => ({ body: incidencia() }) });
     renderRoute('/admin/incidents/2');
+    expect(await screen.findByRole('heading', { level: 2, name: 'Cojera de Pipa' })).toBeInTheDocument();
     const descripcion = within(await screen.findByRole('region', { name: 'Qué pasa' }));
     expect(descripcion.getByText('Pipa cojea de la pata derecha desde esta mañana.')).toBeInTheDocument();
   });

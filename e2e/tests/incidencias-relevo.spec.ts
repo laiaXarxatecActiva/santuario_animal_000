@@ -11,8 +11,9 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
   test('la cuidadora lee el relevo y comunica una incidencia grave; la administradora la recibe y la resuelve', async ({
     page,
   }) => {
-    // Descripción única para no confundirla con correos de otras ejecuciones.
-    const descripcion = `La puerta de la cuarentena no cierra (${Date.now()}).`;
+    // Título único para no confundirlo con correos de otras ejecuciones.
+    const titulo = `Puerta de la cuarentena rota ${Date.now()}`;
+    const descripcion = 'La puerta de la cuarentena no cierra.';
 
     // CU-71: la nota de Carmen aparece como nueva y se marca como leída.
     await iniciarSesion(page, NURIA);
@@ -43,6 +44,7 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
       .selectOption({ label: t('work.incidents.categories.facilities') });
     await ventana.getByLabel(t('work.incidents.severity')).selectOption({ label: t('work.incidents.severities.high') });
     await ventana.getByLabel(t('work.incidents.zone'), { exact: true }).selectOption({ label: CLINICA });
+    await ventana.getByLabel(t('work.incidents.titleField')).fill(titulo);
     await ventana.getByLabel(t('work.incidents.description')).fill(descripcion);
     await ventana.getByRole('button', { name: t('work.incidents.send') }).click();
     await expect(page.getByText(t('work.incidents.reported_ok'))).toBeVisible();
@@ -55,13 +57,13 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
     });
     expect(respuesta.ok()).toBe(true);
-    const correo = await esperarCorreo(MARTA.email, { contiene: descripcion });
+    const correo = await esperarCorreo(MARTA.email, { contiene: titulo });
     expect(correo.Subject).toContain('Incidencia grave');
 
     await page.goto('/notifications');
     await page
       .getByRole('main')
-      .getByRole('link', { name: new RegExp(descripcion.replace(/[().]/g, '\\$&')) })
+      .getByRole('link', { name: new RegExp(titulo) })
       .click();
     await expect(page.getByRole('heading', { level: 1, name: /Incidencia n\.º \d+/ })).toBeVisible();
 

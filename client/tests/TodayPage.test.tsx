@@ -80,7 +80,7 @@ describe('CU-72 Panel «Hoy»', () => {
     expect(dosis.getByRole('link', { name: 'Carbón' })).toHaveAttribute('href', '/admin/animals/10/care');
     const incidencias = await region('Incidencias');
     expect(incidencias.getByText('Abiertas: 1 · En curso: 1')).toBeInTheDocument();
-    expect(incidencias.getByRole('link', { name: /Pipa cojea/ })).toHaveAttribute('href', '/admin/incidents/2');
+    expect(incidencias.getByRole('link', { name: 'Cojera de Pipa' })).toHaveAttribute('href', '/admin/incidents/2');
     const turnos = await region('Turnos de hoy');
     expect(within(turnos.getByText('Nuria Peris Gil').closest('li')!).getByText('Sin fichar')).toBeInTheDocument();
     expect(within(turnos.getByText('Andrés Climent Mas').closest('li')!).queryByText('Sin fichar')).toBeNull();

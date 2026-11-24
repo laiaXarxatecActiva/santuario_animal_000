@@ -111,7 +111,7 @@ function Contenido({ datos }: { datos: TodayDto }) {
           items={datos.incidents.latest}
           render={(i) => (
             <li key={i.id}>
-              <SeverityBadge severity={i.severity} /> <Link to={`/admin/incidents/${i.id}`}>{i.description}</Link>
+              <SeverityBadge severity={i.severity} /> <Link to={`/admin/incidents/${i.id}`}>{i.title}</Link>
             </li>
           )}
         />

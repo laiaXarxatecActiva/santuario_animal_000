@@ -35,8 +35,18 @@
   width: 100%;
 }
 
-.description {
+.title {
   font-weight: 600;
+}
+
+/* La descripción, en dos líneas como mucho; entera en la ficha. */
+.description {
+  display: -webkit-box;
+  margin: var(--space-1) 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .meta {

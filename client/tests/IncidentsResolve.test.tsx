@@ -43,6 +43,7 @@ describe('CU-70 Revisar y resolver incidencias desde el listado', () => {
     renderRoute('/admin/incidents');
     await userEvent.click((await fila(/Pipa cojea/)).getByRole('button', { name: 'Resolver' }));
     const ventana = screen.getByRole('dialog', { name: 'Resolver la incidencia' });
+    expect(within(ventana).getByText('Cojera de Pipa')).toBeInTheDocument();
     await userEvent.click(within(ventana).getByRole('button', { name: 'Marcar como resuelta' }));
     expect(await within(ventana).findByText('Explica cómo se ha resuelto.')).toBeInTheDocument();
     await userEvent.type(within(ventana).getByLabelText('¿Cómo se ha resuelto?'), 'La ha visto la veterinaria.');
