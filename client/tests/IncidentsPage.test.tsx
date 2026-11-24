@@ -76,6 +76,28 @@ describe('CU-70 Incidencias', () => {
   });
 });
 
+describe('CU-70 Foto de la incidencia', () => {
+  it('la foto elegida se envía con la incidencia', async () => {
+    const { fetchMock } = api();
+    renderRoute('/admin/incidents');
+    await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
+    const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
+    await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Gran voladero');
+    await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'La malla está rota.');
+    const archivo = new File([new Uint8Array(10)], 'malla.jpg', { type: 'image/jpeg' });
+    await userEvent.upload(within(ventana).getByLabelText('Elegir foto'), archivo);
+    expect(within(ventana).getByText('malla.jpg')).toBeInTheDocument();
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
+    expect(await screen.findByText('Incidencia comunicada')).toBeInTheDocument();
+    const envio = fetchMock.mock.calls.find(
+      ([url, init]) => String(url) === '/api/admin/incidents' && init?.method === 'POST',
+    );
+    const cuerpo = envio?.[1]?.body;
+    expect(cuerpo).toBeInstanceOf(FormData);
+    expect((cuerpo as FormData).get('files')).toBe(archivo);
+  });
+});
+
 describe('CU-70 Ficha de una incidencia', () => {
   it('el cuidador la ve y puede resolverla, pero no crear una tarea', async () => {
     api(caretaker(), { '/api/admin/incidents/2': () => ({ body: incidencia() }) });
@@ -158,6 +180,13 @@ describe('CU-70 Ficha de una incidencia', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Reabrir' }));
     expect(await screen.findByText('Incidencia reabierta')).toBeInTheDocument();
     expect(enviados('/api/admin/incidents/2/status').filter(Boolean)).toEqual([{ status: 'open' }]);
+  });
+
+  it('muestra la descripción bajo «Qué pasa»', async () => {
+    api(caretaker(), { '/api/admin/incidents/2': () => ({ body: incidencia() }) });
+    renderRoute('/admin/incidents/2');
+    const descripcion = within(await screen.findByRole('region', { name: 'Qué pasa' }));
+    expect(descripcion.getByText('Pipa cojea de la pata derecha desde esta mañana.')).toBeInTheDocument();
   });
 
   it('una que no existe', async () => {

@@ -19,7 +19,8 @@ import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import { Alert } from '../Alert';
 import { Button } from '../Button';
-import { SelectField, TextAreaField, TextField } from '../FormFields';
+import { SelectField, TextAreaField } from '../FormFields';
+import { PhotoPicker } from '../PhotoPicker';
 import { Modal } from '../Modal';
 import styles from '../../pages/admin/AdminPage.module.css';
 
@@ -160,12 +161,7 @@ export function IncidentFormModal({
           error={errores.description}
           onChange={(e) => cambiar('description', e.target.value)}
         />
-        <TextField
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          label={t('form.optional', { label: t('work.photo') })}
-          onChange={(e) => setFoto(e.target.files?.[0])}
-        />
+        <PhotoPicker label={t('form.optional', { label: t('work.photo') })} value={foto} onChange={setFoto} />
       </form>
     </Modal>
   );

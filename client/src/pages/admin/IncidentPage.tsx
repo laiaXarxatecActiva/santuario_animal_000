@@ -120,8 +120,13 @@ export function IncidentPage() {
         </Alert>
       )}
 
-      <div className={ficha.card}>
-        <p className={ficha.description}>{i.description}</p>
+      <section className={ficha.card} aria-labelledby="incidencia-descripcion">
+        <div>
+          <h2 id="incidencia-descripcion" className={ficha.sectionTitle}>
+            {t('work.incidents.description')}
+          </h2>
+          <p className={ficha.description}>{i.description}</p>
+        </div>
         <dl className={ficha.facts}>
           <div>
             <dt>{t('work.incidents.category')}</dt>
@@ -157,11 +162,14 @@ export function IncidentPage() {
           )}
         </dl>
         {i.photoUrl && (
-          <a href={i.photoUrl} target="_blank" rel="noreferrer" className={ficha.photo}>
-            <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} />
-          </a>
+          <div>
+            <h2 className={ficha.sectionTitle}>{t('work.photo')}</h2>
+            <a href={i.photoUrl} target="_blank" rel="noreferrer" className={ficha.photo}>
+              <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} />
+            </a>
+          </div>
         )}
-      </div>
+      </section>
 
       <IncidentResolution incidencia={i} conTitulo />
 
