@@ -15,7 +15,8 @@ import { Alert } from '../../components/Alert';
 import { VetRecordForm } from '../../components/admin/VetRecords';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
-import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { SelectField, TextAreaField } from '../../components/FormFields';
+import { PhotoPicker } from '../../components/PhotoPicker';
 import { Modal } from '../../components/Modal';
 import { HandoverNotes } from '../../components/work/HandoverNotes';
 import { TaskCard } from '../../components/work/TaskCard';
@@ -406,12 +407,7 @@ function VentanaCompletar({
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
         />
-        <TextField
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          label={t('form.optional', { label: t('work.photo') })}
-          onChange={(e) => setFoto(e.target.files?.[0])}
-        />
+        <PhotoPicker label={t('form.optional', { label: t('work.photo') })} value={foto} onChange={setFoto} />
       </form>
     </Modal>
   );

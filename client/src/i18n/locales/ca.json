@@ -1880,5 +1880,16 @@
       "summaryEnabled": "Enviar el resum del dia",
       "summaryTime": "Hora del resum"
     }
+  },
+  "photoPicker": {
+    "dropHere": "Arrossega ací una foto o",
+    "choose": "Triar foto",
+    "change": "Canviar la foto",
+    "remove": "Llevar la foto",
+    "help": "JPG, PNG o WebP de fins a 5 MB.",
+    "wrongType": "Tria una foto JPG, PNG o WebP.",
+    "tooBig": "La foto ocupa més de 5 MB.",
+    "kb": "{{size}} KB",
+    "mb": "{{size}} MB"
   }
 }

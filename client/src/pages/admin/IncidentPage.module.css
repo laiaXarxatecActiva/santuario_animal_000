@@ -16,6 +16,14 @@
   background: var(--color-surface);
 }
 
+.sectionTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
 .description {
   margin: 0;
   font-size: var(--font-size-lg);
@@ -40,7 +48,12 @@
   margin: var(--space-1) 0 0;
 }
 
+.photo {
+  display: inline-block;
+}
+
 .photo img {
+  display: block;
   max-width: min(100%, 320px);
   border-radius: var(--radius-md);
 }

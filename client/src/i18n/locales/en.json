@@ -1880,5 +1880,16 @@
       "summaryEnabled": "Send the daily summary",
       "summaryTime": "Summary time"
     }
+  },
+  "photoPicker": {
+    "dropHere": "Drag a photo here or",
+    "choose": "Choose photo",
+    "change": "Change photo",
+    "remove": "Remove photo",
+    "help": "JPG, PNG or WebP up to 5 MB.",
+    "wrongType": "Choose a JPG, PNG or WebP photo.",
+    "tooBig": "The photo is larger than 5 MB.",
+    "kb": "{{size}} KB",
+    "mb": "{{size}} MB"
   }
 }

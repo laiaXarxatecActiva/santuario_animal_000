@@ -1,0 +1,126 @@
+/* Selector de una foto (DESIGN_SYSTEM §8.9): zona de subida reducida a un solo archivo. */
+.picker {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-weight: 600;
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-5) var(--space-4);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.over .zone {
+  border-color: var(--color-primary);
+  background: var(--color-surface-alt);
+}
+
+.icon {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-h2);
+}
+
+.drop {
+  margin: 0;
+}
+
+.choose {
+  cursor: pointer;
+}
+
+/* El campo de archivo está oculto: el foco se ve en su etiqueta con forma de botón. */
+.picker:has(input:focus-visible) .choose {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Foto elegida: miniatura, nombre y tamaño, y los botones. */
+.file {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.thumb {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.size,
+.help {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.help {
+  margin: 0;
+}
+
+.actions {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+}
+
+/* Con sitio, los dos botones van uno al lado del otro. */
+@container (min-width: 340px) {
+  .actions {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+}
+
+/* Si el selector es ancho (fuera de una ventana), los botones van a la derecha de la foto. */
+@container (min-width: 640px) {
+  .file {
+    grid-template-columns: 72px 1fr auto;
+  }
+
+  .actions {
+    grid-column: auto;
+  }
+}
