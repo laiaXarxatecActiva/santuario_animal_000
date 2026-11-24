@@ -77,13 +77,13 @@ describe('CU-70 Incidencias', () => {
 });
 
 describe('CU-70 Ficha de una incidencia', () => {
-  it('el cuidador la ve y puede cambiar su estado, pero no crear una tarea', async () => {
+  it('el cuidador la ve y puede resolverla, pero no crear una tarea', async () => {
     api(caretaker(), { '/api/admin/incidents/2': () => ({ body: incidencia() }) });
     renderRoute('/admin/incidents/2');
     expect(await screen.findByRole('heading', { level: 1, name: 'Incidencia n.º 2' })).toBeInTheDocument();
     expect(screen.getByText('Pipa cojea de la pata derecha desde esta mañana.')).toBeInTheDocument();
     expect(screen.getByText(/Comunicada por Nuria Peris Gil/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cambiar el estado' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resolver' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Crear tarea' })).not.toBeInTheDocument();
   });
 
@@ -100,15 +100,17 @@ describe('CU-70 Ficha de una incidencia', () => {
       }),
     });
     renderRoute('/admin/incidents/2');
-    await userEvent.click(await screen.findByRole('button', { name: 'Cambiar el estado' }));
-    const ventana = screen.getByRole('dialog', { name: 'Cambiar el estado' });
-    await userEvent.selectOptions(within(ventana).getByLabelText('Nuevo estado'), 'Resuelta');
-    await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Resolver' }));
+    const ventana = screen.getByRole('dialog', { name: 'Resolver la incidencia' });
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Marcar como resuelta' }));
     expect(await within(ventana).findByText('Explica cómo se ha resuelto.')).toBeInTheDocument();
-    await userEvent.type(within(ventana).getByLabelText('Nota'), 'La ha visto la veterinaria: un golpe.');
-    await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
-    expect(await screen.findByText('Estado cambiado')).toBeInTheDocument();
-    expect(enviados('/api/admin/incidents/2/status')).toEqual([
+    await userEvent.type(
+      within(ventana).getByLabelText('¿Cómo se ha resuelto?'),
+      'La ha visto la veterinaria: un golpe.',
+    );
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Marcar como resuelta' }));
+    expect(await screen.findByText('Incidencia resuelta')).toBeInTheDocument();
+    expect(enviados('/api/admin/incidents/2/status').filter(Boolean)).toEqual([
       { status: 'resolved', note: 'La ha visto la veterinaria: un golpe.' },
     ]);
   });
@@ -134,6 +136,28 @@ describe('CU-70 Ficha de una incidencia', () => {
     expect(enviados('/api/admin/incidents/2/task')).toEqual([
       expect.objectContaining({ zoneId: 4, animalIds: [14], dueTime: '16:00', type: 'health_check' }),
     ]);
+  });
+
+  it('una resuelta muestra cómo se resolvió y se puede reabrir; ya no hay «Cambiar el estado»', async () => {
+    const resuelta = incidencia({
+      status: 'resolved',
+      resolution: 'Vendaje y reposo.',
+      resolvedBy: { id: 1, name: 'Marta Soler Ferrer' },
+      resolvedAt: '2026-11-23T12:00:00.000Z',
+    });
+    const { enviados } = api(caretaker(), {
+      '/api/admin/incidents/2': () => ({ body: resuelta }),
+      '/api/admin/incidents/2/status': () => ({ body: incidencia() }),
+    });
+    renderRoute('/admin/incidents/2');
+    const resolucion = within(await screen.findByRole('region', { name: 'Resolución' }));
+    expect(resolucion.getByText('Vendaje y reposo.')).toBeInTheDocument();
+    expect(resolucion.getByText(/Resuelta por Marta Soler Ferrer/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resolver' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cambiar el estado' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Reabrir' }));
+    expect(await screen.findByText('Incidencia reabierta')).toBeInTheDocument();
+    expect(enviados('/api/admin/incidents/2/status').filter(Boolean)).toEqual([{ status: 'open' }]);
   });
 
   it('una que no existe', async () => {

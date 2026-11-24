@@ -1,13 +1,6 @@
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  INCIDENT_STATUSES,
-  incidentStatusBodySchema,
-  type IncidentDto,
-  type IncidentStatus,
-  type IncidentStatusBody,
-  type TaskType,
-} from '@sanctuary/shared';
+import type { IncidentDto, TaskType } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -16,15 +9,15 @@ import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { SelectField, TextAreaField } from '../../components/FormFields';
-import { Modal } from '../../components/Modal';
 import { IncidentStatusBadge, SeverityBadge } from '../../components/work/IncidentBadges';
+import { IncidentResolution } from '../../components/work/IncidentResolution';
+import { ResolveIncidentModal } from '../../components/work/ResolveIncidentModal';
 import { useSession } from '../../hooks/useSession';
 import { INCIDENTS_KEY, TASKS_KEY, TODAY_KEY, useIncident } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
-import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import { formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import ficha from './IncidentPage.module.css';
 import { NuevaTarea } from './TasksAdminPage';
 
 /** Tipo de tarea que se propone según la incidencia. */
@@ -35,7 +28,7 @@ const TIPO_DE_TAREA: Record<IncidentDto['category'], TaskType> = {
   other: 'maintenance',
 };
 
-// CU-70: ficha de una incidencia (SCREENS §5.7). Todo el personal cambia su estado; la tarea, solo el administrador.
+// CU-70: ficha de una incidencia (SCREENS §5.7). Todo el personal la resuelve o la reabre; la tarea, solo el administrador.
 export function IncidentPage() {
   const { t } = useTranslation();
   const { id } = useParams();
@@ -43,15 +36,20 @@ export function IncidentPage() {
   const esAdmin = user?.role === 'admin';
   const queryClient = useQueryClient();
   const incidencia = useIncident(Number(id));
-  const [ventana, setVentana] = useState<'estado' | 'tarea' | null>(null);
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [ventana, setVentana] = useState<'resolver' | 'tarea' | null>(null);
+  const [aviso, setAviso] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const refrescar = async (clave: string) => {
     setVentana(null);
-    setAviso(t(clave));
+    setAviso({ type: 'success', message: t(clave) });
     await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
     await queryClient.invalidateQueries({ queryKey: TODAY_KEY });
   };
+  const reabrir = useMutation({
+    mutationFn: (incidenciaId: number) => workApi.incidents.setStatus(incidenciaId, { status: 'open' }),
+    onSuccess: () => refrescar('work.incidents.reopenedOk'),
+    onError: (e) => setAviso({ type: 'error', message: errorMessage(t, e) }),
+  });
 
   const volver = (
     <Link to="/admin/incidents">
@@ -73,85 +71,105 @@ export function IncidentPage() {
   }
   if (!incidencia.data) return <p aria-busy="true">{t('common.loading')}</p>;
   const i = incidencia.data;
+  const resuelta = i.status === 'resolved';
 
   return (
     <div className={styles.page}>
       {volver}
       <div className={styles.header}>
-        <h1>{t('work.incidents.detailTitle', { id: i.id })}</h1>
+        <div className={ficha.titleBlock}>
+          <h1>{t('work.incidents.detailTitle', { id: i.id })}</h1>
+          <div className={styles.badges}>
+            <SeverityBadge severity={i.severity} />
+            <IncidentStatusBadge status={i.status} />
+          </div>
+        </div>
         <div className={styles.headerActions}>
-          {esAdmin && i.status !== 'resolved' && i.taskId === null && (
+          {esAdmin && !resuelta && i.taskId === null && (
             <Button variant="outline" onClick={() => setVentana('tarea')}>
               {t('work.incidents.createTask')}
             </Button>
           )}
-          <Button onClick={() => setVentana('estado')}>{t('work.incidents.changeStatus')}</Button>
+          {resuelta ? (
+            <Button
+              variant="outline"
+              icon={faRotateLeft}
+              disabled={reabrir.isPending}
+              onClick={() => {
+                setAviso(null);
+                reabrir.mutate(i.id);
+              }}
+            >
+              {t('work.incidents.reopen')}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setAviso(null);
+                setVentana('resolver');
+              }}
+            >
+              {t('work.incidents.resolve')}
+            </Button>
+          )}
         </div>
       </div>
       {aviso && (
-        <Alert type="success" onClose={() => setAviso(null)}>
-          {aviso}
+        <Alert type={aviso.type} onClose={() => setAviso(null)}>
+          {aviso.message}
         </Alert>
       )}
-      <div className={styles.badges}>
-        <SeverityBadge severity={i.severity} />
-        <IncidentStatusBadge status={i.status} />
-      </div>
-      <p className={styles.preWrap}>{i.description}</p>
-      <dl className={styles.details}>
-        <dt>{t('work.incidents.category')}</dt>
-        <dd>{t(`work.incidents.categories.${i.category}`)}</dd>
-        {i.zone && (
-          <>
-            <dt>{t('work.incidents.zone')}</dt>
-            <dd>{i.zone.name}</dd>
-          </>
-        )}
-        {i.animal && (
-          <>
-            <dt>{t('work.incidents.animal')}</dt>
-            <dd>
-              <Link to={`/admin/animals/${i.animal.id}/care`}>{i.animal.name}</Link>
-            </dd>
-          </>
-        )}
-        <dt>{t('work.incidents.reported')}</dt>
-        <dd>{t('work.incidents.reportedBy', { name: i.reportedBy.name, date: formatShortInstant(i.createdAt) })}</dd>
-        {i.taskId !== null && (
-          <>
-            <dt>{t('work.incidents.task')}</dt>
-            <dd>
-              <Link to="/admin/tasks">{t('work.incidents.taskLink', { id: i.taskId })}</Link>
-            </dd>
-          </>
-        )}
-        {i.resolution && (
-          <>
-            <dt>{t('work.incidents.resolution')}</dt>
-            <dd className={styles.preWrap}>
-              {i.resolution}
-              {i.resolvedBy && i.resolvedAt && (
-                <span className={styles.muted}>
-                  {' '}
-                  ({t('work.incidents.resolvedBy', { name: i.resolvedBy.name, date: formatShortInstant(i.resolvedAt) })}
-                  )
-                </span>
-              )}
-            </dd>
-          </>
-        )}
-      </dl>
-      {i.photoUrl && (
-        <a href={i.photoUrl} target="_blank" rel="noreferrer">
-          <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} className={styles.thumb} />
-        </a>
-      )}
 
-      {ventana === 'estado' && (
-        <CambiarEstado
+      <div className={ficha.card}>
+        <p className={ficha.description}>{i.description}</p>
+        <dl className={ficha.facts}>
+          <div>
+            <dt>{t('work.incidents.category')}</dt>
+            <dd>{t(`work.incidents.categories.${i.category}`)}</dd>
+          </div>
+          {i.zone && (
+            <div>
+              <dt>{t('work.incidents.zone')}</dt>
+              <dd>{i.zone.name}</dd>
+            </div>
+          )}
+          {i.animal && (
+            <div>
+              <dt>{t('work.incidents.animal')}</dt>
+              <dd>
+                <Link to={`/admin/animals/${i.animal.id}/care`}>{i.animal.name}</Link>
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>{t('work.incidents.reported')}</dt>
+            <dd>
+              {t('work.incidents.reportedBy', { name: i.reportedBy.name, date: formatShortInstant(i.createdAt) })}
+            </dd>
+          </div>
+          {i.taskId !== null && (
+            <div>
+              <dt>{t('work.incidents.task')}</dt>
+              <dd>
+                <Link to="/admin/tasks">{t('work.incidents.taskLink', { id: i.taskId })}</Link>
+              </dd>
+            </div>
+          )}
+        </dl>
+        {i.photoUrl && (
+          <a href={i.photoUrl} target="_blank" rel="noreferrer" className={ficha.photo}>
+            <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} />
+          </a>
+        )}
+      </div>
+
+      <IncidentResolution incidencia={i} conTitulo />
+
+      {ventana === 'resolver' && (
+        <ResolveIncidentModal
           incidencia={i}
           onClose={() => setVentana(null)}
-          onSaved={() => refrescar('work.incidents.statusChanged')}
+          onSaved={() => refrescar('work.incidents.resolvedOk')}
         />
       )}
       {ventana === 'tarea' && (
@@ -172,90 +190,5 @@ export function IncidentPage() {
         />
       )}
     </div>
-  );
-}
-
-function CambiarEstado({
-  incidencia,
-  onClose,
-  onSaved,
-}: {
-  incidencia: IncidentDto;
-  onClose: () => void;
-  onSaved: () => Promise<void>;
-}) {
-  const { t } = useTranslation();
-  const [status, setStatus] = useState<IncidentStatus>(incidencia.status);
-  const [nota, setNota] = useState('');
-  const [errores, setErrores] = useState<Record<string, string>>({});
-  const [error, setError] = useState<string | null>(null);
-  const guardar = useMutation({
-    mutationFn: (datos: IncidentStatusBody) => workApi.incidents.setStatus(incidencia.id, datos),
-    onSuccess: onSaved,
-    onError: (e) => {
-      if (e instanceof ApiError && e.details.length > 0) setErrores(erroresDeApi(e.details));
-      else setError(errorMessage(t, e));
-    },
-  });
-  const formId = 'estado-incidencia';
-  return (
-    <Modal
-      open
-      title={t('work.incidents.changeStatus')}
-      onClose={onClose}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>
-            {t('admin.common.cancel')}
-          </Button>
-          <Button type="submit" form={formId} disabled={guardar.isPending}>
-            {guardar.isPending ? t('admin.common.saving') : t('admin.common.save')}
-          </Button>
-        </>
-      }
-    >
-      <form
-        id={formId}
-        noValidate
-        className={styles.modalForm}
-        onSubmit={(e) => {
-          e.preventDefault();
-          setError(null);
-          const datos: IncidentStatusBody = { status, note: nota };
-          const resultado = incidentStatusBodySchema.safeParse(datos);
-          if (!resultado.success) {
-            setErrores(erroresPorCampo(resultado.error.issues));
-            return;
-          }
-          setErrores({});
-          guardar.mutate(datos);
-        }}
-      >
-        {error && <Alert type="error">{error}</Alert>}
-        <SelectField
-          label={t('work.incidents.newStatus')}
-          value={status}
-          error={errores.status}
-          onChange={(e) => setStatus(e.target.value as IncidentStatus)}
-        >
-          {INCIDENT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {t(`work.incidents.statuses.${s}`)}
-            </option>
-          ))}
-        </SelectField>
-        <TextAreaField
-          label={
-            status === 'resolved' ? t('work.incidents.note') : t('form.optional', { label: t('work.incidents.note') })
-          }
-          rows={3}
-          maxLength={2000}
-          value={nota}
-          error={errores.note}
-          help={status === 'resolved' ? t('work.incidents.noteHelp') : undefined}
-          onChange={(e) => setNota(e.target.value)}
-        />
-      </form>
-    </Modal>
   );
 }

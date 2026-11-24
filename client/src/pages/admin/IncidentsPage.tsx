@@ -1,28 +1,28 @@
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import {
   INCIDENT_SEVERITIES,
   INCIDENT_STATUSES,
   type IncidentDto,
   type IncidentSeverity,
-  type IncidentStatus,
   type IncidentsQuery,
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
-import { Button } from '../../components/Button';
+import { Button, ButtonLink } from '../../components/Button';
 import { SelectField } from '../../components/FormFields';
 import { Pagination } from '../../components/Pagination';
 import { IncidentStatusBadge, SeverityBadge } from '../../components/work/IncidentBadges';
 import { IncidentFormModal } from '../../components/work/IncidentFormModal';
+import { IncidentResolution } from '../../components/work/IncidentResolution';
 import { ResolveIncidentModal } from '../../components/work/ResolveIncidentModal';
 import { INCIDENTS_KEY, TODAY_KEY, useIncidentSummary, useIncidents, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import lista from './IncidentsPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
 
 type FiltroEstado = IncidentsQuery['status'];
@@ -48,11 +48,10 @@ export function IncidentsPage() {
     await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
     await queryClient.invalidateQueries({ queryKey: TODAY_KEY });
   };
-  // CU-70: «Empezar» y «Reabrir» cambian el estado con un toque.
-  const cambiar = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: IncidentStatus }) => workApi.incidents.setStatus(id, { status }),
-    onSuccess: (_r, { status }) =>
-      refrescar(status === 'in_progress' ? 'work.incidents.startedOk' : 'work.incidents.reopenedOk'),
+  // CU-70: una resuelta se reabre con un toque si el problema vuelve.
+  const reabrir = useMutation({
+    mutationFn: (id: number) => workApi.incidents.setStatus(id, { status: 'open' }),
+    onSuccess: () => refrescar('work.incidents.reopenedOk'),
     onError: (e) => setAviso({ type: 'error', message: errorMessage(t, e) }),
   });
   const incidencias = useIncidents({
@@ -150,15 +149,12 @@ export function IncidentsPage() {
         <p>{t('work.incidents.empty')}</p>
       ) : (
         <>
-          <table className={styles.table}>
+          <table className={lista.table}>
             <thead>
               <tr>
-                <th scope="col">{t('work.incidents.description')}</th>
-                <th scope="col">{t('work.incidents.category')}</th>
+                <th scope="col">{t('work.incidents.incident')}</th>
                 <th scope="col">{t('work.incidents.severity')}</th>
-                <th scope="col">{t('work.incidents.place')}</th>
                 <th scope="col">{t('work.incidents.status')}</th>
-                <th scope="col">{t('work.incidents.reported')}</th>
                 <th scope="col">
                   <span className="visually-hidden">{t('admin.common.actions')}</span>
                 </th>
@@ -166,61 +162,33 @@ export function IncidentsPage() {
             </thead>
             <tbody>
               {incidencias.data.data.map((i) => (
-                <tr key={i.id}>
-                  <td className={styles.nameLink}>
-                    <span>{i.description}</span>
-                    {i.resolution && (
-                      <p className={styles.muted}>
-                        <span>{i.resolution}</span>
-                        {i.resolvedBy && i.resolvedAt && (
-                          <>
-                            {' · '}
-                            <span>
-                              {t('work.incidents.resolvedByLine', {
-                                name: i.resolvedBy.name,
-                                date: formatShortInstant(i.resolvedAt),
-                              })}
-                            </span>
-                          </>
-                        )}
-                      </p>
-                    )}
+                <tr key={i.id} className={i.severity === 'high' && i.status !== 'resolved' ? lista.high : undefined}>
+                  <td className={lista.main}>
+                    <span className={lista.description}>{i.description}</span>
+                    <p className={lista.meta}>
+                      <span>{t(`work.incidents.categories.${i.category}`)}</span>
+                      {(i.animal || i.zone) && (
+                        <span>{[i.animal?.name, i.zone?.name].filter(Boolean).join(' · ')}</span>
+                      )}
+                      <span>
+                        {t('work.incidents.reportedShort', {
+                          name: i.reportedBy.name,
+                          date: formatShortInstant(i.createdAt),
+                        })}
+                      </span>
+                    </p>
+                    <IncidentResolution incidencia={i} />
                   </td>
-                  <td data-label={t('work.incidents.category')}>{t(`work.incidents.categories.${i.category}`)}</td>
-                  <td data-label={t('work.incidents.severity')}>
+                  <td className={lista.severity}>
                     <SeverityBadge severity={i.severity} />
                   </td>
-                  <td data-label={t('work.incidents.place')}>
-                    {[i.animal?.name, i.zone?.name].filter(Boolean).join(' · ')}
-                  </td>
-                  <td data-label={t('work.incidents.status')}>
+                  <td className={lista.status}>
                     <IncidentStatusBadge status={i.status} />
                   </td>
-                  <td data-label={t('work.incidents.reported')}>
-                    <span className={styles.muted}>
-                      {t('work.incidents.reportedBy', {
-                        name: i.reportedBy.name,
-                        date: formatShortInstant(i.createdAt),
-                      })}
-                    </span>
-                  </td>
-                  <td>
-                    <div className={styles.rowActions}>
-                      {i.status === 'open' && (
-                        <Button
-                          variant="ghost"
-                          disabled={cambiar.isPending}
-                          onClick={() => {
-                            setAviso(null);
-                            cambiar.mutate({ id: i.id, status: 'in_progress' });
-                          }}
-                        >
-                          {t('work.incidents.start')}
-                        </Button>
-                      )}
+                  <td className={lista.actions}>
+                    <div>
                       {i.status !== 'resolved' ? (
                         <Button
-                          variant="outline"
                           onClick={() => {
                             setAviso(null);
                             setAResolver(i);
@@ -231,16 +199,19 @@ export function IncidentsPage() {
                       ) : (
                         <Button
                           variant="ghost"
-                          disabled={cambiar.isPending}
+                          icon={faRotateLeft}
+                          disabled={reabrir.isPending}
                           onClick={() => {
                             setAviso(null);
-                            cambiar.mutate({ id: i.id, status: 'open' });
+                            reabrir.mutate(i.id);
                           }}
                         >
                           {t('work.incidents.reopen')}
                         </Button>
                       )}
-                      <Link to={`/admin/incidents/${i.id}`}>{t('work.incidents.view')}</Link>
+                      <ButtonLink variant="outline" to={`/admin/incidents/${i.id}`}>
+                        {t('work.incidents.view')}
+                      </ButtonLink>
                     </div>
                   </td>
                 </tr>
