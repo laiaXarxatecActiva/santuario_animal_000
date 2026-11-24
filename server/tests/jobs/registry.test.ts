@@ -17,6 +17,8 @@ describe('Tareas programadas (TECH_SPEC §11.4)', () => {
       'generate-tasks',
       'task-alerts',
       'coverage-check',
+      'staff-emails',
+      'daily-summary',
     ]);
     expect(Object.fromEntries(JOB_NAMES.map((n) => [n, JOBS[n].schedule]))).toEqual({
       billing: '0 3 * * *',
@@ -28,6 +30,8 @@ describe('Tareas programadas (TECH_SPEC §11.4)', () => {
       'generate-tasks': '10 0 * * *',
       'task-alerts': '*/15 * * * *',
       'coverage-check': '5 * * * *',
+      'staff-emails': '*/5 * * * *',
+      'daily-summary': '*/15 * * * *',
     });
     for (const nombre of JOB_NAMES) expect(cron.validate(JOBS[nombre].schedule)).toBe(true);
   });

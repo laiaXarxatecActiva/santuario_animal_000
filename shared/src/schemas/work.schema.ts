@@ -2,16 +2,21 @@ import { z } from 'zod';
 import {
   ABSENCE_TYPES,
   FOOD_UNITS,
+  INCIDENT_CATEGORIES,
+  INCIDENT_SEVERITIES,
+  INCIDENT_STATUSES,
   INTAKE_LEVELS,
   MAX_LOW_INTAKE_MEALS,
   MAX_SHIFT_RANGE_DAYS,
   MEDICATION_ROUTES,
   MAX_TEMPLATE_TIMES,
+  STAFF_EMAIL_ALERT_TYPES,
   TASK_RECURRENCES,
   TASK_STATUSES,
   TASK_TYPES,
 } from '../constants/work.js';
 import { textoObligatorio, textoOpcional } from './fields.js';
+import { paginationQuerySchema } from './pagination.schema.js';
 
 // Trabajo diario del personal (CU-52 a CU-58).
 
@@ -386,3 +391,59 @@ export const medicationPlanBodySchema = z
   .superRefine(finNoAnterior);
 export type MedicationPlanBody = z.input<typeof medicationPlanBodySchema>;
 export type MedicationPlanData = z.output<typeof medicationPlanBodySchema>;
+
+// CU-70: comunicar una incidencia (JSON o multipart con una foto en `files`).
+export const incidentBodySchema = z
+  .object({
+    category: z.enum(INCIDENT_CATEGORIES, { error: 'Elige el tipo de incidencia.' }),
+    severity: z.enum(INCIDENT_SEVERITIES, { error: 'Elige la gravedad.' }),
+    description: textoObligatorio(2000, 'Describe lo que pasa.'),
+    zoneId: idOpcional,
+    animalId: idOpcional,
+  })
+  .refine((i) => i.zoneId !== null || i.animalId !== null, {
+    path: ['zoneId'],
+    message: 'Elige una zona o un animal.',
+  });
+export type IncidentBody = z.input<typeof incidentBodySchema>;
+export type IncidentData = z.output<typeof incidentBodySchema>;
+
+// CU-70: listado; sin estado, las abiertas y en curso.
+export const incidentsQuerySchema = paginationQuerySchema.extend({
+  status: z.enum([...INCIDENT_STATUSES, 'active', 'all']).default('active'),
+  severity: z.enum(INCIDENT_SEVERITIES).optional(),
+  zoneId: z.coerce.number().int().positive().optional(),
+});
+export type IncidentsQuery = z.infer<typeof incidentsQuerySchema>;
+
+// CU-70: el administrador cambia el estado; resolverla pide cómo se resolvió.
+export const incidentStatusBodySchema = z
+  .object({
+    status: z.enum(INCIDENT_STATUSES, { error: 'Elige el estado.' }),
+    note: textoONulo(2000),
+  })
+  .refine((b) => b.status !== 'resolved' || b.note !== null, {
+    path: ['note'],
+    message: 'Explica cómo se ha resuelto.',
+  });
+export type IncidentStatusBody = z.input<typeof incidentStatusBodySchema>;
+export type IncidentStatusData = z.output<typeof incidentStatusBodySchema>;
+
+// CU-71: nota de relevo para quien venga después a una zona.
+export const handoverNoteBodySchema = z.object({
+  zoneId: z.coerce.number({ error: 'Elige la zona.' }).int().positive({ error: 'Elige la zona.' }),
+  body: textoObligatorio(1000, 'Escribe la nota.'),
+});
+export type HandoverNoteBody = z.input<typeof handoverNoteBodySchema>;
+export type HandoverNoteData = z.output<typeof handoverNoteBodySchema>;
+
+// CU-73 y CU-74: avisos por email y resumen diario.
+export const alertSettingsBodySchema = z.object({
+  emailAlertTypes: z
+    .array(z.enum(STAFF_EMAIL_ALERT_TYPES, { error: 'Este aviso no existe.' }))
+    .transform((tipos) => STAFF_EMAIL_ALERT_TYPES.filter((t) => tipos.includes(t))),
+  dailySummaryEnabled: z.boolean(),
+  dailySummaryTime: hora,
+});
+export type AlertSettingsBody = z.input<typeof alertSettingsBodySchema>;
+export type AlertSettingsData = z.output<typeof alertSettingsBodySchema>;

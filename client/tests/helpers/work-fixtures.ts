@@ -1,5 +1,7 @@
 import type {
   AbsenceDto,
+  HandoverNoteDto,
+  IncidentDto,
   MyDayTaskDto,
   QualificationDto,
   ShiftAssignmentDto,
@@ -169,6 +171,41 @@ export function calendarioSemana(overrides: Partial<ShiftsCalendarDto> = {}): Sh
       { date: '2026-11-26', shift: ref(turnoTarde), zone: clinica, required: 1, assigned: 0 },
       { date: '2026-11-26', shift: ref(turnoTarde), zone: granVoladero, required: 1, assigned: 0 },
     ],
+    ...overrides,
+  };
+}
+
+/** CU-70: una incidencia. */
+export function incidencia(overrides: Partial<IncidentDto> = {}): IncidentDto {
+  return {
+    id: 2,
+    category: 'health',
+    severity: 'high',
+    description: 'Pipa cojea de la pata derecha desde esta mañana.',
+    zone: clinica,
+    animal: { id: 14, name: 'Pipa' },
+    photoUrl: null,
+    status: 'open',
+    reportedBy: { id: 3, name: 'Nuria Peris Gil' },
+    createdAt: '2026-11-23T07:40:00.000Z',
+    resolution: null,
+    resolvedBy: null,
+    resolvedAt: null,
+    taskId: null,
+    ...overrides,
+  };
+}
+
+/** CU-71: una nota de relevo. */
+export function notaDeRelevo(overrides: Partial<HandoverNoteDto> = {}): HandoverNoteDto {
+  return {
+    id: 1,
+    zone: clinica,
+    author: { id: 5, name: 'Carmen Boix Vidal' },
+    body: 'Carbón ha estado tranquilo; dejad la luz baja en su jaula.',
+    createdAt: '2026-11-22T20:50:00.000Z',
+    isRead: false,
+    mine: false,
     ...overrides,
   };
 }

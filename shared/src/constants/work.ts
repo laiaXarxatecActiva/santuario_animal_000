@@ -75,3 +75,44 @@ export type VetVisitStatus = (typeof VET_VISIT_STATUSES)[number];
 /** CU-69: vía de administración de un medicamento. */
 export const MEDICATION_ROUTES = ['oral', 'injection', 'topical', 'eye_drops', 'other'] as const;
 export type MedicationRoute = (typeof MEDICATION_ROUTES)[number];
+
+// Incidencias, relevo, panel «Hoy» y avisos por email (CU-70 a CU-74).
+
+/** CU-70: tipo de una incidencia. */
+export const INCIDENT_CATEGORIES = ['health', 'behavior', 'facilities', 'other'] as const;
+export type IncidentCategory = (typeof INCIDENT_CATEGORIES)[number];
+
+/** CU-70: gravedad, de menos a más. Solo las de gravedad alta se avisan al momento. */
+export const INCIDENT_SEVERITIES = ['low', 'medium', 'high'] as const;
+export type IncidentSeverity = (typeof INCIDENT_SEVERITIES)[number];
+
+/** CU-70: estados de una incidencia. */
+export const INCIDENT_STATUSES = ['open', 'in_progress', 'resolved'] as const;
+export type IncidentStatus = (typeof INCIDENT_STATUSES)[number];
+
+/** CU-70: las que siguen abiertas o en curso. */
+export const ACTIVE_INCIDENT_STATUSES = ['open', 'in_progress'] as const satisfies readonly IncidentStatus[];
+
+/** CU-71: horas que se ven las notas de relevo en «Mi día». */
+export const HANDOVER_HOURS = 24;
+
+/** CU-73: avisos del personal que se pueden enviar también por email. */
+export const STAFF_EMAIL_ALERT_TYPES = [
+  'coverage_gap',
+  'low_intake',
+  'medication_missed',
+  'vet_visit_today',
+  'incident_reported',
+] as const;
+export type StaffEmailAlertType = (typeof STAFF_EMAIL_ALERT_TYPES)[number];
+
+/** CU-73: los que van por email al principio (la visita de hoy, solo en la campana). */
+export const DEFAULT_EMAIL_ALERT_TYPES = [
+  'coverage_gap',
+  'low_intake',
+  'medication_missed',
+  'incident_reported',
+] as const satisfies readonly StaffEmailAlertType[];
+
+/** CU-74: hora del resumen diario por defecto (desactivado por defecto). */
+export const DEFAULT_DAILY_SUMMARY_TIME = '20:00';

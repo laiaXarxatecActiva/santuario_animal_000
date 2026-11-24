@@ -37,6 +37,12 @@ export const avisos = {
     ca: `Hui a les ${hora}, visita veterinària de ${a}: ${motivo}`,
     en: `Today at ${hora}, vet visit for ${a}: ${motivo}`,
   }),
+  /** CU-70: `lugar` es la zona o, si se eligió, el animal. */
+  incidenciaGrave: (lugar: string, descripcion: string): Textos => ({
+    es: `Incidencia grave en «${lugar}»: ${descripcion}`,
+    ca: `Incidència greu a «${lugar}»: ${descripcion}`,
+    en: `Serious incident in "${lugar}": ${descripcion}`,
+  }),
   adopcionActiva: (a: string): Textos => ({
     es: `¡Ya adoptas a ${a}! Gracias por tu apoyo.`,
     ca: `Ja adoptes ${a}! Gràcies pel teu suport.`,

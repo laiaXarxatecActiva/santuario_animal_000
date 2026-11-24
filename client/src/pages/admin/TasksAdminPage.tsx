@@ -291,8 +291,23 @@ function VentanaFormulario({
   );
 }
 
-/** CU-55 pasos 1-2: tarea puntual. */
-function NuevaTarea({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
+/**
+ * CU-55 paso 4: alta de una tarea puntual. CU-70 la usa también para crear la
+ * tarea de una incidencia, con otro título, otros valores iniciales y otro envío.
+ */
+export function NuevaTarea({
+  onClose,
+  onSaved,
+  titulo,
+  inicial = {},
+  enviar: enviarTarea = (datos) => workApi.tasks.create(datos),
+}: {
+  onClose: () => void;
+  onSaved: () => Promise<void>;
+  titulo?: string;
+  inicial?: Partial<{ type: TaskType; title: string; description: string; zoneId: string; animalIds: number[] }>;
+  enviar?: (datos: OneOffTaskBody) => Promise<unknown>;
+}) {
   const { t } = useTranslation();
   const zonas = useZones();
   const cualificaciones = useQualifications();
@@ -308,6 +323,7 @@ function NuevaTarea({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
     dueDate: todayInSanctuary(),
     dueTime: '',
     assignedTo: '',
+    ...inicial,
   });
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState<string | null>(null);
@@ -318,7 +334,7 @@ function NuevaTarea({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
     .map((a) => ({ value: a.id, label: a.name }));
 
   const crear = useMutation({
-    mutationFn: (datos: OneOffTaskBody) => workApi.tasks.create(datos),
+    mutationFn: enviarTarea,
     onSuccess: onSaved,
     onError: (e) => {
       const porCampo = erroresDelServidor(e);
@@ -348,7 +364,7 @@ function NuevaTarea({ onClose, onSaved }: { onClose: () => void; onSaved: () => 
   return (
     <VentanaFormulario
       id="nueva-tarea"
-      titulo={t('work.tasks.new')}
+      titulo={titulo ?? t('work.tasks.new')}
       pendiente={crear.isPending}
       error={error}
       onClose={onClose}

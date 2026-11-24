@@ -1,5 +1,10 @@
 import {
   absenceBodySchema,
+  alertSettingsBodySchema,
+  handoverNoteBodySchema,
+  incidentBodySchema,
+  incidentStatusBodySchema,
+  incidentsQuerySchema,
   absencesQuerySchema,
   copyWeekBodySchema,
   shiftAssignmentBodySchema,
@@ -96,6 +101,7 @@ import type { ShiftService } from '../servicios/shift.service.js';
 import type { TaskService } from '../servicios/task.service.js';
 import type { CareService } from '../servicios/care.service.js';
 import { createCareAdminController } from '../controllers/care-admin.controller.js';
+import { createDailyAdminController, type DailyAdminServices } from '../controllers/daily-admin.controller.js';
 import type { ZoneAdminService } from '../servicios/zone-admin.service.js';
 
 export interface AdminRoutesDeps {
@@ -121,6 +127,8 @@ export interface AdminRoutesDeps {
   tasks: TaskService;
   shifts: ShiftService;
   care: CareService;
+  /** CU-70 a CU-74: incidencias, relevo, panel «Hoy» y avisos por email. */
+  daily: DailyAdminServices;
 }
 
 // Panel del personal (TECH_SPEC §10.6), montado en /api/admin. Todo exige ser
@@ -395,6 +403,30 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     validate({ params: idParamsSchema, body: vetRecordBodySchema }),
     cuidados.completeVisit,
   );
+
+  // CU-70 a CU-74: incidencias, notas de relevo, panel «Hoy» y avisos por email.
+  const diario = createDailyAdminController(deps.daily, deps.activity);
+  router.get('/incidents', validate({ query: incidentsQuerySchema }), diario.listIncidents);
+  router.post('/incidents', uploadFiles(), validate({ body: incidentBodySchema }), diario.createIncident);
+  router.get('/incidents/:id', conId, diario.getIncident);
+  router.patch(
+    '/incidents/:id/status',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: incidentStatusBodySchema }),
+    diario.setIncidentStatus,
+  );
+  router.post(
+    '/incidents/:id/task',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: oneOffTaskBodySchema }),
+    diario.createIncidentTask,
+  );
+  router.get('/handover-notes', diario.listNotes);
+  router.post('/handover-notes', validate({ body: handoverNoteBodySchema }), diario.createNote);
+  router.put('/handover-notes/:id/read', conId, diario.readNote);
+  router.get('/today', soloAdmin, diario.today);
+  router.get('/alert-settings', soloAdmin, diario.alertSettings);
+  router.put('/alert-settings', soloAdmin, validate({ body: alertSettingsBodySchema }), diario.updateAlertSettings);
 
   // CU-43 a CU-47: tareas programadas lanzadas a mano, solo administradores.
   router.post('/jobs/:jobName/run', soloAdmin, createJobController(deps.jobs).run);

@@ -29,7 +29,10 @@ test.describe('CU-63, CU-61 Turnos', () => {
     await iniciarSesion(page, MARTA);
     await page.goto('/admin/shifts');
     await expect(page.getByRole('heading', { level: 1, name: t('work.shifts.title') })).toBeVisible();
+    // Solo el día de hoy: los turnos de los días anteriores de la semana también están fichados.
+    const hoy = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Madrid' });
     const deNuria = page
+      .locator('section', { has: page.locator(`[id="dia-${hoy}"]`) })
       .getByRole('article', { name: MANANA })
       .getByRole('listitem')
       .filter({ hasText: 'Nuria Peris Gil' })

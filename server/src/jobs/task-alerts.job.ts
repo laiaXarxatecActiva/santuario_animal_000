@@ -1,6 +1,5 @@
 import { withTransaction } from '../db/transaction.js';
 import { sumarDias } from '../dominio/tareas.js';
-import * as notificationModel from '../models/notification.model.js';
 import * as staffAlertModel from '../models/staff-alert.model.js';
 import * as taskModel from '../models/task.model.js';
 import * as vetVisitModel from '../models/vet-visit.model.js';
@@ -8,6 +7,7 @@ import * as settingsModel from '../models/work-settings.model.js';
 import { destinatarios, enlaceCuidados } from '../servicios/avisos-cuidados.js';
 import { avisos } from '../servicios/textos-avisos.js';
 import type { JobDeps } from './job.types.js';
+import { avisarAlPersonal } from '../servicios/avisos-personal.js';
 
 export interface TaskAlertsResult {
   /** Tareas de días pasados cerradas como «no realizadas». */
@@ -40,7 +40,7 @@ export async function runTaskAlerts({ db, reloj }: JobDeps): Promise<TaskAlertsR
   for (const d of dosis) {
     const nuevo = await withTransaction(db, async (client) => {
       if (!(await staffAlertModel.registerIfNew(client, 'medication_missed', String(d.id)))) return false;
-      await notificationModel.createForUsers(client, await destinatarios(client, d.dueDate, d.zoneId), {
+      await avisarAlPersonal(client, await destinatarios(client, d.dueDate, d.zoneId), {
         type: 'medication_missed',
         message: avisos.medicacionNoDada(d.animal?.name ?? '', d.dueTime, d.title),
         link: d.animal ? enlaceCuidados(d.animal.id) : '/admin/my-day',
@@ -54,7 +54,7 @@ export async function runTaskAlerts({ db, reloj }: JobDeps): Promise<TaskAlertsR
   for (const v of await vetVisitModel.listScheduledOn(db, hoy)) {
     const nuevo = await withTransaction(db, async (client) => {
       if (!(await staffAlertModel.registerIfNew(client, 'vet_visit_today', String(v.id)))) return false;
-      await notificationModel.createForUsers(client, await destinatarios(client, hoy, v.zoneId), {
+      await avisarAlPersonal(client, await destinatarios(client, hoy, v.zoneId), {
         type: 'vet_visit_today',
         message: avisos.visitaHoy(v.animalName, v.time, v.reason),
         link: enlaceCuidados(v.animalId),

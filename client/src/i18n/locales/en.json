@@ -274,7 +274,10 @@
     "MEDICATION_PLAN_ENDED": "This plan has already ended.",
     "VET_VISIT_NOT_SCHEDULED": "This visit has already been recorded or cancelled.",
     "VET_VISIT_FUTURE_DAY": "The visit can be recorded on the day it is scheduled.",
-    "VET_VISIT_NEEDS_RECORD": "Record the visit with the vet history form."
+    "VET_VISIT_NEEDS_RECORD": "Record the visit with the vet history form.",
+    "INCIDENT_SAME_STATUS": "The incident already has that status.",
+    "INCIDENT_HAS_TASK": "This incident already has a task.",
+    "INCIDENT_RESOLVED": "This incident is already resolved."
   },
   "form": {
     "showPassword": "Show password",
@@ -612,7 +615,10 @@
       "zones": "Areas and qualifications",
       "shifts": "Shifts",
       "shiftTemplates": "Shift templates",
-      "absences": "Absences"
+      "absences": "Absences",
+      "today": "Today",
+      "incidents": "Incidents",
+      "alertSettings": "Email alerts"
     },
     "dashboard": {
       "title": "Hello, {{name}}",
@@ -635,7 +641,8 @@
       "quickLinks": "Quick links",
       "newAnimal": "New animal",
       "revenueThisMonth": "this month",
-      "revenueDetail": "fees {{fees}} · donations {{donations}}"
+      "revenueDetail": "fees {{fees}} · donations {{donations}}",
+      "todayLink": "See the sanctuary’s «Today» panel"
     },
     "common": {
       "save": "Save",
@@ -1100,7 +1107,8 @@
         "absences": "Absences",
         "diet_items": "Diets",
         "medication_plans": "Medication plans",
-        "vet_visits": "Vet visits"
+        "vet_visits": "Vet visits",
+        "incidents": "Incidents"
       },
       "fields": {
         "name": "Name",
@@ -1713,6 +1721,125 @@
         "updated": "Visit changed",
         "empty": "It has no scheduled visits."
       }
+    },
+    "incidents": {
+      "title": "Incidents",
+      "report": "Report an incident",
+      "send": "Send",
+      "sending": "Sending…",
+      "reported_ok": "Incident reported",
+      "category": "Type",
+      "severity": "Severity",
+      "zone": "Zone",
+      "animal": "Animal",
+      "noAnimal": "None",
+      "description": "What is happening",
+      "place": "Where",
+      "status": "Status",
+      "statusFilter": "Status",
+      "reported": "Reported",
+      "reportedBy": "Reported by {{name}} on {{date}}",
+      "view": "View",
+      "highHelp": "High-severity incidents are alerted straight away to the admins and to whoever is on shift in the zone.",
+      "empty": "There are no incidents with these filters.",
+      "loadError": "The incidents could not be loaded.",
+      "categories": {
+        "health": "Health",
+        "behavior": "Behaviour",
+        "facilities": "Facilities",
+        "other": "Other"
+      },
+      "severities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "statuses": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "resolved": "Resolved"
+      },
+      "filters": {
+        "active": "Open and in progress",
+        "open": "Open",
+        "in_progress": "In progress",
+        "resolved": "Resolved",
+        "all": "All",
+        "anySeverity": "Any",
+        "anyZone": "All"
+      },
+      "back": "Back to incidents",
+      "notFound": "This incident does not exist.",
+      "detailTitle": "Incident no. {{id}}",
+      "changeStatus": "Change status",
+      "newStatus": "New status",
+      "note": "Note",
+      "noteHelp": "Explain how it was resolved; it will stay on the record.",
+      "statusChanged": "Status changed",
+      "createTask": "Create task",
+      "taskTitle": "Task for incident no. {{id}}",
+      "taskCreated": "Task created",
+      "task": "Task",
+      "taskLink": "Task no. {{id}}",
+      "resolution": "Resolution",
+      "resolvedBy": "{{name}}, on {{date}}",
+      "photoAlt": "Photo of the incident"
+    },
+    "handover": {
+      "title": "Handover notes",
+      "write": "Leave a note",
+      "writeTitle": "Leave a handover note",
+      "zone": "Zone",
+      "body": "Note",
+      "bodyHelp": "Whoever is on shift in this zone will see it for 24 hours.",
+      "saved": "Note saved",
+      "new": "New",
+      "markRead": "Mark as read",
+      "meta": "{{author}} · {{zone}} · {{date}}",
+      "empty": "There are no handover notes from the last 24 hours.",
+      "loadError": "The handover notes could not be loaded."
+    },
+    "today": {
+      "title": "Today at the sanctuary",
+      "loadError": "Today’s panel could not be loaded.",
+      "none": "None.",
+      "tasks": "Today’s tasks",
+      "tasksSummary": "{{completed}} done, {{notDone}} not done and {{pending}} pending out of {{total}}",
+      "tasksLink": "See today’s tasks",
+      "late": "Late",
+      "notDone": "Not done",
+      "missedDoses": "Missed medication",
+      "incidents": "Incidents",
+      "incidentsSummary": "Open: {{open}} · In progress: {{inProgress}}",
+      "incidentsLink": "See all incidents",
+      "shifts": "Today’s shifts",
+      "checkedIn": "checked in at {{time}}",
+      "missingCheckIn": "Not checked in",
+      "shiftsLink": "See the shift calendar",
+      "gaps": "Uncovered zones",
+      "gap": "{{zone}} · {{shift}}: {{assigned}} of {{required}}",
+      "lowIntake": "Animals eating little",
+      "streak_one": "{{count}} meal eating little",
+      "streak_other": "{{count}} meals eating little",
+      "vetVisits": "Today’s vet visits"
+    },
+    "alertSettings": {
+      "title": "Email alerts",
+      "loadError": "The alert settings could not be loaded.",
+      "saved": "Settings saved",
+      "emailLegend": "Alerts that are also sent by email",
+      "emailHelp": "The bell always alerts. The ones you tick also arrive by email to everyone who gets the alert.",
+      "types": {
+        "coverage_gap": "Shift without enough staff",
+        "low_intake": "Animal eating little",
+        "medication_missed": "Missed medication",
+        "vet_visit_today": "Vet visit today",
+        "incident_reported": "Serious incident"
+      },
+      "summaryLegend": "Daily summary",
+      "summaryHelp": "An email to the admins with the day’s tasks, medication, incidents and gaps.",
+      "summaryEnabled": "Send the daily summary",
+      "summaryTime": "Summary time"
     }
   }
 }

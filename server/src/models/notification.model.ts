@@ -101,14 +101,63 @@ export async function remove(db: Queryable, userId: number, id: number): Promise
 export async function createForUsers(
   db: Queryable,
   userIds: readonly number[],
-  datos: { type: NotificationType; message: MensajeAviso; link: string | null },
+  datos: { type: NotificationType; message: MensajeAviso; link: string | null; emailPending?: boolean },
 ): Promise<void> {
   if (userIds.length === 0) return;
   await db.query(
-    `INSERT INTO notifications (user_id, type, message, link)
-     SELECT u.id, $2, ${SEGUN_IDIOMA(4)}, $3 FROM users u WHERE u.id = ANY($1::int[]) ORDER BY u.id`,
-    [userIds, datos.type, datos.link, ...textos(datos.message)],
+    `INSERT INTO notifications (user_id, type, message, link, email_pending)
+     SELECT u.id, $2, ${SEGUN_IDIOMA(5)}, $3, $4 FROM users u WHERE u.id = ANY($1::int[]) ORDER BY u.id`,
+    [userIds, datos.type, datos.link, datos.emailPending ?? false, ...textos(datos.message)],
   );
+}
+
+/** CU-73: un aviso del personal que falta enviar por email, con los datos de su destinatario. */
+export interface AvisoPorEmail {
+  id: number;
+  type: NotificationType;
+  message: string;
+  link: string | null;
+  email: string;
+  firstName: string;
+  language: Language;
+  /** La persona sigue activa (a las desactivadas no se les envía). */
+  isActive: boolean;
+}
+
+/**
+ * CU-73: toma los avisos pendientes de enviar por email y los marca como
+ * enviados en la misma sentencia, para que cada uno salga una sola vez.
+ */
+export async function claimPendingEmails(db: Queryable, limite: number): Promise<AvisoPorEmail[]> {
+  const { rows } = await db.query<{
+    id: number;
+    type: NotificationType;
+    message: string;
+    link: string | null;
+    email: string;
+    first_name: string;
+    preferred_language: Language;
+    is_active: boolean;
+  }>(
+    `WITH tomados AS (
+       UPDATE notifications SET email_pending = FALSE
+        WHERE id IN (SELECT id FROM notifications WHERE email_pending ORDER BY id LIMIT $1 FOR UPDATE SKIP LOCKED)
+        RETURNING id, user_id, type, message, link)
+     SELECT t.id, t.type, t.message, t.link, u.email, u.first_name, u.preferred_language, u.is_active
+       FROM tomados t JOIN users u ON u.id = t.user_id
+      ORDER BY t.id`,
+    [limite],
+  );
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type,
+    message: r.message,
+    link: r.link,
+    email: r.email,
+    firstName: r.first_name,
+    language: r.preferred_language,
+    isActive: r.is_active,
+  }));
 }
 
 /**

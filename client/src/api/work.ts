@@ -1,4 +1,14 @@
 import type {
+  AlertSettingsBody,
+  AlertSettingsDto,
+  HandoverNoteBody,
+  HandoverNoteDto,
+  IncidentBody,
+  IncidentDto,
+  IncidentStatusBody,
+  IncidentsQuery,
+  Paginated,
+  TodayDto,
   AnimalCareDto,
   DietItemBody,
   DietItemDto,
@@ -35,6 +45,7 @@ import type {
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from './client';
 
 export type AdminTasksParams = Partial<AdminTasksQuery>;
+export type IncidentsParams = Partial<IncidentsQuery>;
 
 // Trabajo diario del personal (CU-52 en adelante), dentro del panel.
 export const workApi = {
@@ -145,5 +156,41 @@ export const workApi = {
   settings: {
     get: () => apiGet<WorkSettingsDto>('/api/admin/work-settings'),
     update: (body: WorkSettingsBody) => apiPut<WorkSettingsDto>('/api/admin/work-settings', body),
+  },
+
+  // CU-70: incidencias.
+  incidents: {
+    list: (params: IncidentsParams = {}) => apiGet<Paginated<IncidentDto>>('/api/admin/incidents', params),
+    get: (id: number) => apiGet<IncidentDto>(`/api/admin/incidents/${id}`),
+    /** Con foto va en multipart (`files`). */
+    create: (body: IncidentBody, photo?: File) => {
+      if (!photo) return apiPost<IncidentDto>('/api/admin/incidents', body);
+      const form = new FormData();
+      for (const [clave, valor] of Object.entries(body)) {
+        if (valor !== null && valor !== undefined && valor !== '') form.append(clave, String(valor));
+      }
+      form.append('files', photo);
+      return apiUpload<IncidentDto>('/api/admin/incidents', form);
+    },
+    setStatus: (id: number, body: IncidentStatusBody) =>
+      apiPatch<IncidentDto>(`/api/admin/incidents/${id}/status`, body),
+    createTask: (id: number, body: OneOffTaskBody) =>
+      apiPost<{ incident: IncidentDto; task: TaskDto }>(`/api/admin/incidents/${id}/task`, body),
+  },
+
+  // CU-71: notas de relevo.
+  handover: {
+    list: () => apiGet<{ data: HandoverNoteDto[] }>('/api/admin/handover-notes'),
+    create: (body: HandoverNoteBody) => apiPost<HandoverNoteDto>('/api/admin/handover-notes', body),
+    markRead: (id: number) => apiPut<HandoverNoteDto>(`/api/admin/handover-notes/${id}/read`, {}),
+  },
+
+  // CU-72: panel «Hoy».
+  today: () => apiGet<TodayDto>('/api/admin/today'),
+
+  // CU-73 y CU-74: avisos por email y resumen diario.
+  alertSettings: {
+    get: () => apiGet<AlertSettingsDto>('/api/admin/alert-settings'),
+    update: (body: AlertSettingsBody) => apiPut<AlertSettingsDto>('/api/admin/alert-settings', body),
   },
 };

@@ -63,3 +63,17 @@ export async function listOfAnimal(db: Queryable, animalId: number, desde: strin
     recordedBy: r.recorded_by === null ? null : { id: r.recorded_by, name: r.recorded_name ?? '' },
   }));
 }
+
+/** CU-72: los animales del santuario con alguna comida anotada desde un día, por nombre. */
+export async function animalsWithLogsSince(db: Queryable, desde: string): Promise<{ id: number; name: string }[]> {
+  const { rows } = await db.query<{ id: number; name: string }>(
+    `SELECT DISTINCT a.id, a.name
+       FROM feeding_logs f
+       JOIN task_instances i ON i.id = f.task_id
+       JOIN animals a ON a.id = f.animal_id
+      WHERE i.due_date >= $1 AND a.status NOT IN ('deceased', 'transferred')
+      ORDER BY a.name, a.id`,
+    [desde],
+  );
+  return rows;
+}

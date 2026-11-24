@@ -2,6 +2,7 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import type { DashboardDto, UpdateAlertDto } from '@sanctuary/shared';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router';
 import { Alert } from '../../components/Alert';
 import { Button, ButtonLink } from '../../components/Button';
 import { useDashboard } from '../../hooks/useAdmin';
@@ -21,6 +22,11 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <h1>{t('admin.dashboard.title', { name: user?.firstName ?? '' })}</h1>
+      {user?.role === 'admin' && (
+        <p>
+          <Link to="/admin/today">{t('admin.dashboard.todayLink')}</Link>
+        </p>
+      )}
       {escritorio.isError ? (
         <Alert
           type="error"

@@ -30,6 +30,7 @@ describe('constantes de pagos y notificaciones', () => {
       'low_intake',
       'medication_missed',
       'vet_visit_today',
+      'incident_reported',
       'system',
     ]);
     expect(SIMULATED_OUTCOMES).toEqual(['success', 'failure']);

@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { workApi, type AdminTasksParams } from '../api/work';
+import { workApi, type AdminTasksParams, type IncidentsParams } from '../api/work';
 import { ADMIN_KEY } from './useAdmin';
 
 // Trabajo diario del personal (CU-52 en adelante).
@@ -10,6 +10,9 @@ export const TEMPLATES_KEY = [...WORK_KEY, 'templates'] as const;
 export const TASKS_KEY = [...WORK_KEY, 'tasks'] as const;
 export const SHIFTS_KEY = [...WORK_KEY, 'shifts'] as const;
 export const CARE_KEY = [...WORK_KEY, 'care'] as const;
+export const INCIDENTS_KEY = [...WORK_KEY, 'incidents'] as const;
+export const HANDOVER_KEY = [...WORK_KEY, 'handover'] as const;
+export const TODAY_KEY = [...WORK_KEY, 'today'] as const;
 
 /** CU-52: zonas (también para los formularios). */
 export const useZones = () =>
@@ -84,3 +87,25 @@ export const animalCareKey = (animalId: number) => [...CARE_KEY, animalId] as co
 /** CU-65 a CU-69: la pestaña «Cuidados» de un animal. */
 export const useAnimalCare = (animalId: number) =>
   useQuery({ queryKey: animalCareKey(animalId), queryFn: () => workApi.care.get(animalId) });
+
+/** CU-70: listado de incidencias. */
+export const useIncidents = (params: IncidentsParams) =>
+  useQuery({
+    queryKey: [...INCIDENTS_KEY, 'list', params],
+    queryFn: () => workApi.incidents.list(params),
+    placeholderData: keepPreviousData,
+  });
+
+export const useIncident = (id: number) =>
+  useQuery({ queryKey: [...INCIDENTS_KEY, id], queryFn: () => workApi.incidents.get(id) });
+
+/** CU-71: notas de relevo de mis zonas. */
+export const useHandoverNotes = () =>
+  useQuery({ queryKey: HANDOVER_KEY, queryFn: () => workApi.handover.list().then((r) => r.data) });
+
+/** CU-72: panel «Hoy». */
+export const useToday = () => useQuery({ queryKey: TODAY_KEY, queryFn: () => workApi.today() });
+
+/** CU-73 y CU-74. */
+export const useAlertSettings = () =>
+  useQuery({ queryKey: [...WORK_KEY, 'alert-settings'], queryFn: () => workApi.alertSettings.get() });

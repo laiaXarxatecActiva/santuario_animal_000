@@ -1,11 +1,11 @@
 import type { Queryable } from '../db/pool.js';
 import { claveAvisoComePoco, destinatariosDelAviso, rachaDeComerPoco } from '../dominio/cuidados.js';
 import * as feedingModel from '../models/feeding-log.model.js';
-import * as notificationModel from '../models/notification.model.js';
 import * as assignmentModel from '../models/shift-assignment.model.js';
 import * as staffAlertModel from '../models/staff-alert.model.js';
 import * as userModel from '../models/user.model.js';
 import { avisos } from './textos-avisos.js';
+import { avisarAlPersonal } from './avisos-personal.js';
 
 // CU-67 a CU-69: avisos de la campana sobre los cuidados de los animales.
 
@@ -33,7 +33,7 @@ export async function avisarSiComePoco(
   const racha = rachaDeComerPoco(await feedingModel.recentOfAnimal(q, animal.id, TOMAS_REVISADAS));
   if (racha.longitud < datos.umbral) return false;
   if (!(await staffAlertModel.registerIfNew(q, 'low_intake', claveAvisoComePoco(animal.id, racha)))) return false;
-  await notificationModel.createForUsers(q, await destinatarios(q, datos.hoy, datos.zoneId), {
+  await avisarAlPersonal(q, await destinatarios(q, datos.hoy, datos.zoneId), {
     type: 'low_intake',
     message: avisos.comePoco(animal.name, racha.longitud),
     link: enlaceCuidados(animal.id),

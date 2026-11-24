@@ -1,4 +1,4 @@
-import { faChevronLeft, faChevronRight, faListCheck } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faListCheck, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import {
   INTAKE_LEVELS,
   taskNotDoneBodySchema,
@@ -17,9 +17,11 @@ import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
+import { HandoverNotes } from '../../components/work/HandoverNotes';
+import { IncidentFormModal } from '../../components/work/IncidentFormModal';
 import { TaskCard } from '../../components/work/TaskCard';
 import { useSession } from '../../hooks/useSession';
-import { CARE_KEY, TASKS_KEY, useMyDay } from '../../hooks/useWork';
+import { CARE_KEY, INCIDENTS_KEY, TASKS_KEY, useMyDay, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { addDays, formatTime, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
@@ -43,6 +45,8 @@ export function MyDayPage() {
   const dia = useMyDay(fecha);
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [ventana, setVentana] = useState<Ventana | null>(null);
+  const [incidencia, setIncidencia] = useState(false);
+  const zonas = useZones();
 
   const alTerminar = (clave: string) => async () => {
     setVentana(null);
@@ -139,11 +143,21 @@ export function MyDayPage() {
   const mias = tareas.filter((tarea) => tarea.mine);
   const resto = tareas.filter((tarea) => !tarea.mine);
   const fechaActual = dia.data?.date;
+  // CU-71: se escribe en las zonas del turno de hoy; el administrador, en cualquiera.
+  const zonasDelRelevo =
+    user?.role === 'admin'
+      ? (zonas.data ?? []).filter((z) => z.isActive).map((z) => ({ id: z.id, name: z.name }))
+      : fecha === undefined
+        ? [...new Map((dia.data?.shifts ?? []).flatMap((s) => s.zones).map((z) => [z.id, z])).values()]
+        : [];
 
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1>{t('work.myDay.title')}</h1>
+        <Button variant="outline" icon={faTriangleExclamation} onClick={() => setIncidencia(true)}>
+          {t('work.incidents.report')}
+        </Button>
         {fechaActual && (
           <div className={diaStyles.dayNav}>
             <Button
@@ -195,6 +209,8 @@ export function MyDayPage() {
         </section>
       )}
 
+      <HandoverNotes zonas={zonasDelRelevo} />
+
       {dia.isError ? (
         <Alert
           type="error"
@@ -236,6 +252,16 @@ export function MyDayPage() {
           onSaved={async () => {
             await queryClient.invalidateQueries({ queryKey: CARE_KEY });
             await alTerminar('work.care.visits.registered')();
+          }}
+        />
+      )}
+      {incidencia && (
+        <IncidentFormModal
+          onClose={() => setIncidencia(false)}
+          onSaved={async () => {
+            setIncidencia(false);
+            setAviso({ type: 'success', message: t('work.incidents.reported_ok') });
+            await queryClient.invalidateQueries({ queryKey: INCIDENTS_KEY });
           }}
         />
       )}

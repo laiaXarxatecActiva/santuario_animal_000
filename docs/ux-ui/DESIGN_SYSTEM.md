@@ -282,6 +282,10 @@ Escala basada en múltiplos de 4 px. **Solo** se usan estos valores para márgen
 | Aviso de un animal que come poco (campana) | `utensils` |
 | Aviso de medicación no dada (campana) | `pills` |
 | Aviso de visita veterinaria de hoy (campana) | `stethoscope` |
+| Incidencias (menú), «Comunicar incidencia» y aviso de incidencia grave (campana) | `triangle-exclamation` |
+| Hoy (menú, panel del administrador) | `calendar-day` |
+| Avisos por email (menú) | `envelope` |
+| Dejar una nota de relevo | `pen-to-square` |
 | Día anterior / siguiente | `chevron-left` / `chevron-right` |
 
 ### 6.2 Logo provisional
@@ -492,6 +496,10 @@ Píldoras pequeñas (`--font-size-sm` 600, relleno 4 × 10 px, `--radius-pill`) 
 | Lo que ha comido un animal (trabajo diario) | `success` / neutro / `warning` / `error` | Todo / Más de la mitad / Menos de la mitad / Nada |
 | Visita veterinaria (estado) | `primary` / `success` / neutro | Programada / Hecha / Cancelada |
 | Dieta o pauta terminada | Neutro | Terminada |
+| Gravedad de una incidencia | Neutro / `warning` / `error` (con `triangle-exclamation`) | Baja / Media / Alta |
+| Estado de una incidencia | `warning` / `info` / `success` | Abierta / En curso / Resuelta |
+| Nota de relevo no leída | Nuevo | Nueva |
+| Turno sin fichar (panel «Hoy») | `warning` | Sin fichar |
 | Tarea `completed` / `not_done` | `success` / `warning` | Hecha / No realizada |
 | Zona, plantilla desactivada | Neutro | Desactivada |
 
@@ -560,6 +568,7 @@ Usa **la misma paleta y los mismos componentes**, pero con un estilo **más sobr
 - **Fichas de datos** (`<dl>` de una adopción, un usuario…): etiqueta en `--color-text-muted` 600 y valor en dos columnas, con 12 px entre filas y 24 px entre columnas. Por debajo de `md`, la etiqueta va encima de su valor (4 px) y cada dato se separa 16 px del siguiente.
 - **Separaciones del panel:** 24 px entre los bloques de una página; 16 px más antes de cada sección de una ficha («Pagos», «Notas internas»); 12 px entre los botones del título y entre el buscador y su botón; 16 px entre los filtros; 24 px entre pestañas; 8 px entre el título de una ficha y sus etiquetas de estado.
 - **Escritorio del panel:** tarjetas de resumen con una cifra grande (Fraunces, `--font-size-h1`), su etiqueta y, si procede, un enlace. Las alertas de actualización usan avisos `warning` (12–13 días) y `error` (14 días o más).
+- **Panel «Hoy» y notas de relevo (trabajo diario):** los bloques de «Hoy» son tarjetas como las del escritorio (`--color-surface`, borde `--color-border`, `--radius-lg`, relleno 16×20 px) en una rejilla de 320 px mínimo, con su h2 en `--font-size-h3` y 8 px entre líneas. Cada nota de relevo es una tarjeta con `--radius-md` y relleno 12×16 px; si no se ha leído, lleva un borde izquierdo de 4 px `--color-primary`.
 
 ## 9. Movimiento
 

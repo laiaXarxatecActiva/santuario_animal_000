@@ -54,6 +54,10 @@ import { createTaskTemplateAdminService } from './servicios/task-template-admin.
 import { createShiftService } from './servicios/shift.service.js';
 import { createTaskService } from './servicios/task.service.js';
 import { createCareService } from './servicios/care.service.js';
+import { createAlertSettingsService } from './servicios/alert-settings.service.js';
+import { createHandoverService } from './servicios/handover.service.js';
+import { createIncidentService } from './servicios/incident.service.js';
+import { createTodayService } from './servicios/today.service.js';
 import { createZoneAdminService } from './servicios/zone-admin.service.js';
 
 export interface AppOptions {
@@ -121,6 +125,8 @@ export function createApp(options: AppOptions): Express {
     storage,
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
+
+  const tasks = createTaskService({ db, reloj, media });
 
   const jobs =
     options.jobs ??
@@ -255,9 +261,20 @@ export function createApp(options: AppOptions): Express {
       stats: createStatsAdminService({ db, reloj }),
       zones: createZoneAdminService({ db }),
       taskTemplates: createTaskTemplateAdminService({ db, reloj }),
-      tasks: createTaskService({ db, reloj, media }),
+      tasks,
       shifts: createShiftService({ db, reloj }),
       care: createCareService({ db, reloj }),
+      daily: {
+        incidents: createIncidentService({
+          db,
+          reloj,
+          media,
+          crearTarea: (datos, autorId) => tasks.createOneOff(datos, autorId),
+        }),
+        handover: createHandoverService({ db, reloj }),
+        today: createTodayService({ db, reloj }),
+        alertSettings: createAlertSettingsService({ db }),
+      },
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

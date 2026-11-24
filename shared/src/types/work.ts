@@ -2,7 +2,11 @@ import type {
   AbsenceType,
   CopySkipReason,
   FoodUnit,
+  IncidentCategory,
+  IncidentSeverity,
+  IncidentStatus,
   IntakeLevel,
+  StaffEmailAlertType,
   MedicationRoute,
   VetVisitStatus,
   TaskBlockReason,
@@ -277,4 +281,71 @@ export interface AnimalCareDto {
   medicationPlans: MedicationPlanDto[];
   /** Programadas (también las pasadas sin registrar) y las últimas hechas o canceladas. */
   vetVisits: VetVisitDto[];
+}
+
+/** CU-70: una incidencia comunicada por el personal. */
+export interface IncidentDto {
+  id: number;
+  category: IncidentCategory;
+  severity: IncidentSeverity;
+  description: string;
+  /** La zona elegida o, si se eligió un animal, la suya. */
+  zone: NamedRef | null;
+  animal: NamedRef | null;
+  photoUrl: string | null;
+  status: IncidentStatus;
+  reportedBy: AdminPersonRef;
+  createdAt: string;
+  /** Cómo se resolvió (solo si está resuelta). */
+  resolution: string | null;
+  resolvedBy: AdminPersonRef | null;
+  resolvedAt: string | null;
+  /** La tarea puntual creada a partir de ella. */
+  taskId: number | null;
+}
+
+/** CU-71: nota de relevo de una zona. */
+export interface HandoverNoteDto {
+  id: number;
+  zone: NamedRef;
+  author: AdminPersonRef;
+  body: string;
+  createdAt: string;
+  /** La ha leído quien consulta (las propias cuentan como leídas). */
+  isRead: boolean;
+  mine: boolean;
+}
+
+/** CU-73 y CU-74: avisos por email y resumen diario. */
+export interface AlertSettingsDto {
+  emailAlertTypes: StaffEmailAlertType[];
+  dailySummaryEnabled: boolean;
+  /** `HH:MM` de Madrid. */
+  dailySummaryTime: string;
+}
+
+/** CU-72: un turno de hoy y si la persona ha fichado. */
+export interface TodayShiftDto {
+  assignment: ShiftAssignmentDto;
+  /** Ya ha empezado y la persona no ha fichado la entrada. */
+  missingCheckIn: boolean;
+}
+
+/** CU-72: panel «Hoy» del administrador. */
+export interface TodayDto {
+  date: string;
+  /** Recuento de las tareas de hoy. */
+  tasks: { total: number; completed: number; notDone: number; pending: number; late: number };
+  lateTasks: TaskDto[];
+  notDoneTasks: TaskDto[];
+  /** Dosis de ayer y de hoy no dadas (CU-69). */
+  missedDoses: TaskDto[];
+  incidents: { open: number; inProgress: number; latest: IncidentDto[] };
+  /** Zonas sin cubrir de los turnos de hoy que no han acabado. */
+  gaps: CoverageGapDto[];
+  shifts: TodayShiftDto[];
+  /** Animales que llevan las tomas del aviso (o más) comiendo poco (CU-67). */
+  lowIntake: { animal: NamedRef; streak: number }[];
+  /** Visitas veterinarias programadas para hoy (CU-68). */
+  vetVisits: (VetVisitDto & { animal: NamedRef })[];
 }
