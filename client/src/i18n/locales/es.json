@@ -1311,7 +1311,9 @@
       "untilDeleted": "Hasta que la borres",
       "localStorage": "Almacenamiento local",
       "deleteTitle": "Cómo borrarlas",
-      "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión."
+      "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión.",
+      "panelMenuPurpose": "Solo en el panel del personal: qué apartados del menú tienes abiertos.",
+      "pageIntroPurpose": "Solo en el panel del personal: en qué páginas has ocultado la explicación."
     }
   },
   "notifications": {

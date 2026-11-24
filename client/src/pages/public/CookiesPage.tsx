@@ -9,6 +9,8 @@ const COOKIES = [
   { name: 'sid', purpose: 'sidPurpose', duration: 'sidDuration', type: 'sidType' },
   { name: 'theme', purpose: 'themePurpose', duration: 'untilDeleted', type: 'localStorage' },
   { name: 'cookie-notice', purpose: 'noticePurpose', duration: 'untilDeleted', type: 'localStorage' },
+  { name: 'panel-menu', purpose: 'panelMenuPurpose', duration: 'untilDeleted', type: 'localStorage' },
+  { name: 'page-intro:…', purpose: 'pageIntroPurpose', duration: 'untilDeleted', type: 'localStorage' },
 ] as const;
 const COLUMNAS = ['purpose', 'duration', 'type'] as const;
 
