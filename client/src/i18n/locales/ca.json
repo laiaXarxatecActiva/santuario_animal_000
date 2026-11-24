@@ -1311,7 +1311,9 @@
       "untilDeleted": "Fins que l'esborres",
       "localStorage": "Emmagatzematge local",
       "deleteTitle": "Com esborrar-les",
-      "deleteText": "Pots esborrar-les quan vulgues des de la configuració del teu navegador, a l'apartat de privadesa o de dades de llocs. Si esborres la galeta de sessió, hauràs de tornar a iniciar la sessió."
+      "deleteText": "Pots esborrar-les quan vulgues des de la configuració del teu navegador, a l'apartat de privadesa o de dades de llocs. Si esborres la galeta de sessió, hauràs de tornar a iniciar la sessió.",
+      "panelMenuPurpose": "Només al panell del personal: quins apartats del menú tens oberts.",
+      "pageIntroPurpose": "Només al panell del personal: en quines pàgines has amagat l’explicació."
     }
   },
   "notifications": {

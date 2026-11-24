@@ -148,7 +148,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
 | Caducidad | 7 días, igual que la sesión en el servidor (se configura con `maxAge`; el navegador recibe la fecha en `Expires`) |
 
 - La cookie se configura solo en `middlewares/session.ts` (`sessionCookieName`, `cookieOptions`), también para borrarla.
-- El token de sesión nunca está al alcance de JavaScript. No se guarda en `localStorage`, `sessionStorage` ni variables, y no aparece en respuestas JSON, URLs, logs ni mensajes de error.
+- El token de sesión nunca está al alcance de JavaScript. No se guarda en `localStorage`, `sessionStorage` ni variables, y no aparece en respuestas JSON, URLs, logs ni mensajes de error. `localStorage` solo guarda preferencias que no son secretas: el tema, el idioma, el aviso de cookies y, en el panel, los apartados abiertos del menú y las explicaciones ocultas; `scripts/check-auth.sh` rechaza cualquier otro uso.
 
 ### 6.3 Tokens de un solo uso
 

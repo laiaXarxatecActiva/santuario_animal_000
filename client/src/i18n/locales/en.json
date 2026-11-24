@@ -1311,7 +1311,9 @@
       "untilDeleted": "Until you delete it",
       "localStorage": "Local storage",
       "deleteTitle": "How to delete them",
-      "deleteText": "You can delete them whenever you like from your browser settings, in the privacy or site data section. If you delete the session cookie, you will have to log in again."
+      "deleteText": "You can delete them whenever you like from your browser settings, in the privacy or site data section. If you delete the session cookie, you will have to log in again.",
+      "panelMenuPurpose": "Staff panel only: which menu groups you have open.",
+      "pageIntroPurpose": "Staff panel only: on which pages you have hidden the explanation."
     }
   },
   "notifications": {

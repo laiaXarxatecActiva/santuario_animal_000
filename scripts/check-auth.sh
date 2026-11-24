@@ -12,9 +12,10 @@ cd "$(dirname "$0")/.." || exit 2
 FORBIDDEN="localStorage|sessionStorage|Math\.random|jsonwebtoken|['\"]jose['\"]|console\.(log|info|debug)\(.*(password|token)"
 
 # Usos permitidos, que no guardan ni generan secretos:
-# - localStorage: tema, idioma y aviso de cookies (CookiesPage los enumera).
+# - localStorage: tema, idioma, aviso de cookies, apartados del menú del panel y
+#   explicaciones de página ocultas (CookiesPage los enumera).
 # - Math.random: resultado del pago simulado.
-PERMITIDOS='^client/src/(components/ThemeToggle\.tsx|components/CookieNotice\.tsx|i18n/idioma\.ts|pages/public/CookiesPage\.tsx):.*localStorage|^server/src/services/payment/simulated\.gateway\.ts:.*Math\.random'
+PERMITIDOS='^client/src/(components/ThemeToggle\.tsx|components/CookieNotice\.tsx|i18n/idioma\.ts|pages/public/CookiesPage\.tsx|layouts/AdminLayout\.tsx|components/admin/PageIntro\.tsx):.*localStorage|^server/src/services/payment/simulated\.gateway\.ts:.*Math\.random'
 
 encontrados=$(grep -rnE --include='*.ts' --include='*.tsx' "$FORBIDDEN" server/src client/src shared/src | grep -vE "$PERMITIDOS")
 if [ -n "$encontrados" ]; then
