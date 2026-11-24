@@ -181,6 +181,7 @@ export function incidencia(overrides: Partial<IncidentDto> = {}): IncidentDto {
     id: 2,
     category: 'health',
     severity: 'high',
+    title: 'Cojera de Pipa',
     description: 'Pipa cojea de la pata derecha desde esta mañana.',
     zone: clinica,
     animal: { id: 14, name: 'Pipa' },

@@ -42,6 +42,7 @@ describe('CU-70 Comunicar una incidencia', () => {
     const res = await andres.post('/api/admin/incidents').send({
       category: 'behavior',
       severity: 'medium',
+      title: 'Olmo, nervioso por la obra',
       description: 'Olmo está muy nervioso con la obra de al lado.',
       animalId: 4,
     });
@@ -50,6 +51,7 @@ describe('CU-70 Comunicar una incidencia', () => {
     expect(incidencia).toMatchObject({
       category: 'behavior',
       severity: 'medium',
+      title: 'Olmo, nervioso por la obra',
       description: 'Olmo está muy nervioso con la obra de al lado.',
       animal: { id: 4, name: 'Olmo' },
       zone: { id: 4, name: 'Clínica y recuperación' },
@@ -68,6 +70,7 @@ describe('CU-70 Comunicar una incidencia', () => {
     const res = await nuria.post('/api/admin/incidents').send({
       category: 'facilities',
       severity: 'high',
+      title: 'Puerta de la cuarentena rota',
       description: 'La puerta de la cuarentena no cierra.',
       zoneId: 4,
     });
@@ -77,7 +80,7 @@ describe('CU-70 Comunicar una incidencia', () => {
     expect(await avisos()).toEqual(
       [1, 2, 5].map((userId) => ({
         user_id: userId,
-        message: 'Incidencia grave en «Clínica y recuperación»: La puerta de la cuarentena no cierra.',
+        message: 'Incidencia grave en «Clínica y recuperación»: Puerta de la cuarentena rota',
         link: `/admin/incidents/${id}`,
       })),
     );
@@ -89,6 +92,7 @@ describe('CU-70 Comunicar una incidencia', () => {
       .set('X-Requested-With', 'XMLHttpRequest')
       .field('category', 'health')
       .field('severity', 'low')
+      .field('title', 'Pluma rota')
       .field('description', 'Carbón tiene una pluma rota.')
       .field('animalId', '10')
       .attach('files', await jpeg(), 'pluma.jpg');
@@ -99,7 +103,7 @@ describe('CU-70 Comunicar una incidencia', () => {
   it('valida los campos: hace falta una zona o un animal', async () => {
     const sinLugar = await nuria
       .post('/api/admin/incidents')
-      .send({ category: 'other', severity: 'low', description: 'Algo raro.' });
+      .send({ category: 'other', severity: 'low', title: 'Algo raro', description: 'Algo raro.' });
     expect(sinLugar.status).toBe(400);
     expect(sinLugar.body.error.details).toEqual([{ field: 'zoneId', message: 'Elige una zona o un animal.' }]);
 
@@ -109,20 +113,33 @@ describe('CU-70 Comunicar una incidencia', () => {
       'category',
       'description',
       'severity',
+      'title',
     ]);
 
     const animalQueNoEsta = await nuria
       .post('/api/admin/incidents')
-      .send({ category: 'health', severity: 'low', description: 'Prueba.', animalId: 13 });
+      .send({ category: 'health', severity: 'low', title: 'Prueba', description: 'Prueba.', animalId: 13 });
     expect(animalQueNoEsta.status).toBe(422);
     expect(animalQueNoEsta.body.error.code).toBe('CARE_ANIMAL_ARCHIVED');
 
     const zonaQueNoExiste = await nuria
       .post('/api/admin/incidents')
-      .send({ category: 'other', severity: 'low', description: 'Prueba.', zoneId: 999 });
+      .send({ category: 'other', severity: 'low', title: 'Prueba', description: 'Prueba.', zoneId: 999 });
     expect(zonaQueNoExiste.status).toBe(400);
     expect(zonaQueNoExiste.body.error.details).toEqual([
       { field: 'zoneId', message: 'Esta zona no existe o está desactivada.' },
+    ]);
+  });
+
+  it('el título es obligatorio y corto (de 3 a 80 caracteres)', async () => {
+    const base = { category: 'other', severity: 'low', description: 'Prueba.', zoneId: 5 };
+    const sinTitulo = await nuria.post('/api/admin/incidents').send({ ...base, title: '  ' });
+    expect(sinTitulo.status).toBe(400);
+    expect(sinTitulo.body.error.details).toEqual([{ field: 'title', message: 'Escribe un título corto.' }]);
+    const largo = await nuria.post('/api/admin/incidents').send({ ...base, title: 'x'.repeat(81) });
+    expect(largo.status).toBe(400);
+    expect(largo.body.error.details).toEqual([
+      { field: 'title', message: 'El título no puede pasar de 80 caracteres.' },
     ]);
   });
 
@@ -165,13 +182,26 @@ describe('CU-70 Listado de incidencias', () => {
     expect((await nuria.get('/api/admin/incidents/999')).status).toBe(404);
     expect((await nuria.get('/api/admin/incidents/1')).body).toMatchObject({ id: 1, status: 'open' });
   });
+
+  it('cada incidencia tiene su título y su descripción', async () => {
+    expect((await nuria.get('/api/admin/incidents/2')).body).toMatchObject({
+      title: 'Pipa cojea',
+      description: 'Pipa cojea de la pata derecha desde esta mañana.',
+    });
+  });
 });
 
 describe('CU-70 El personal cambia el estado', () => {
   it('el cuidador también puede resolverla, y queda quién lo hizo', async () => {
     const nueva = await nuria
       .post('/api/admin/incidents')
-      .send({ category: 'facilities', severity: 'low', description: 'Grifo que gotea.', zoneId: 5 });
+      .send({
+        category: 'facilities',
+        severity: 'low',
+        title: 'Grifo que gotea',
+        description: 'Grifo que gotea.',
+        zoneId: 5,
+      });
     const id = (nueva.body as IncidentDto).id;
     const res = await nuria
       .patch(`/api/admin/incidents/${id}/status`)

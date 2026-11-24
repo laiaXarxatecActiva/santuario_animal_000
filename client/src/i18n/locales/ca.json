@@ -1822,7 +1822,9 @@
       "reopenedOk": "Incidència reoberta",
       "resolvedByLine": "Resolta per {{name}} el {{date}}",
       "incident": "Incidència",
-      "reportedShort": "{{name}}, {{date}}"
+      "reportedShort": "{{name}}, {{date}}",
+      "titleField": "Títol",
+      "titleHelp": "Resumeix en poques paraules què passa. Queden {{count}} caràcters."
     },
     "handover": {
       "title": "Notes de relleu",

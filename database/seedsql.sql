@@ -928,6 +928,7 @@ CREATE TABLE incidents (
     id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     category     VARCHAR(20)  NOT NULL CHECK (category IN ('health', 'behavior', 'facilities', 'other')),
     severity     VARCHAR(10)  NOT NULL CHECK (severity IN ('low', 'medium', 'high')),
+    title        VARCHAR(80)  NOT NULL CHECK (char_length(btrim(title)) BETWEEN 3 AND 80), -- resumen corto
     description  TEXT         NOT NULL CHECK (char_length(btrim(description)) BETWEEN 1 AND 2000),
     zone_id      INTEGER      REFERENCES zones (id) ON DELETE RESTRICT,     -- la elegida o la del animal
     animal_id    INTEGER      REFERENCES animals (id) ON DELETE CASCADE,

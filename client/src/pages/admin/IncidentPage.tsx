@@ -121,10 +121,11 @@ export function IncidentPage() {
       )}
 
       <section className={ficha.card} aria-labelledby="incidencia-descripcion">
+        <h2 className={ficha.title}>{i.title}</h2>
         <div>
-          <h2 id="incidencia-descripcion" className={ficha.sectionTitle}>
+          <h3 id="incidencia-descripcion" className={ficha.sectionTitle}>
             {t('work.incidents.description')}
-          </h2>
+          </h3>
           <p className={ficha.description}>{i.description}</p>
         </div>
         <dl className={ficha.facts}>
@@ -163,7 +164,7 @@ export function IncidentPage() {
         </dl>
         {i.photoUrl && (
           <div>
-            <h2 className={ficha.sectionTitle}>{t('work.photo')}</h2>
+            <h3 className={ficha.sectionTitle}>{t('work.photo')}</h3>
             <a href={i.photoUrl} target="_blank" rel="noreferrer" className={ficha.photo}>
               <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} />
             </a>
@@ -185,7 +186,7 @@ export function IncidentPage() {
           titulo={t('work.incidents.taskTitle', { id: i.id })}
           inicial={{
             type: TIPO_DE_TAREA[i.category],
-            title: i.description.slice(0, 150),
+            title: i.title,
             zoneId: i.zone ? String(i.zone.id) : '',
             animalIds: i.animal ? [i.animal.id] : [],
           }}

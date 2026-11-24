@@ -1822,7 +1822,9 @@
       "reopenedOk": "Incident reopened",
       "resolvedByLine": "Resolved by {{name}} on {{date}}",
       "incident": "Incident",
-      "reportedShort": "{{name}}, {{date}}"
+      "reportedShort": "{{name}}, {{date}}",
+      "titleField": "Title",
+      "titleHelp": "Sum up what is happening in a few words. {{count}} characters left."
     },
     "handover": {
       "title": "Handover notes",

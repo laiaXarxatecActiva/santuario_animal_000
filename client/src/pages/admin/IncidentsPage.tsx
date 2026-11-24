@@ -164,7 +164,8 @@ export function IncidentsPage() {
               {incidencias.data.data.map((i) => (
                 <tr key={i.id} className={i.severity === 'high' && i.status !== 'resolved' ? lista.high : undefined}>
                   <td className={lista.main}>
-                    <span className={lista.description}>{i.description}</span>
+                    <span className={lista.title}>{i.title}</span>
+                    <p className={lista.description}>{i.description}</p>
                     <p className={lista.meta}>
                       <span>{t(`work.incidents.categories.${i.category}`)}</span>
                       {(i.animal || i.zone) && (

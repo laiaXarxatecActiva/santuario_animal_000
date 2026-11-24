@@ -69,6 +69,9 @@ export function ResolveIncidentModal({
         }}
       >
         {error && <Alert type="error">{error}</Alert>}
+        <p>
+          <strong>{incidencia.title}</strong>
+        </p>
         <p className={styles.preWrap}>{incidencia.description}</p>
         <TextAreaField
           label={t('work.incidents.resolveNote')}

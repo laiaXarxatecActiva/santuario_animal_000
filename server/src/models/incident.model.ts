@@ -14,6 +14,7 @@ interface IncidentRow {
   id: number;
   category: IncidentCategory;
   severity: IncidentSeverity;
+  title: string;
   description: string;
   zone_id: number | null;
   zone_name: string | null;
@@ -36,6 +37,7 @@ function mapRow(r: IncidentRow): IncidentDto {
     id: r.id,
     category: r.category,
     severity: r.severity,
+    title: r.title,
     description: r.description,
     zone: r.zone_id === null ? null : { id: r.zone_id, name: r.zone_name ?? '' },
     animal: r.animal_id === null ? null : { id: r.animal_id, name: r.animal_name ?? '' },
@@ -51,7 +53,7 @@ function mapRow(r: IncidentRow): IncidentDto {
 }
 
 const SELECT = `
-  SELECT i.id, i.category, i.severity, i.description, i.zone_id, z.name AS zone_name,
+  SELECT i.id, i.category, i.severity, i.title, i.description, i.zone_id, z.name AS zone_name,
          i.animal_id, a.name AS animal_name, i.photo_url, i.status,
          i.reported_by, ur.first_name || ' ' || ur.last_name AS reported_name, i.created_at,
          i.resolution, i.resolved_by, uv.first_name || ' ' || uv.last_name AS resolved_name, i.resolved_at,
@@ -131,6 +133,7 @@ export async function create(
   datos: {
     category: IncidentCategory;
     severity: IncidentSeverity;
+    title: string;
     description: string;
     zoneId: number | null;
     animalId: number | null;
@@ -140,11 +143,12 @@ export async function create(
   },
 ): Promise<number> {
   const { rows } = await db.query<{ id: number }>(
-    `INSERT INTO incidents (category, severity, description, zone_id, animal_id, photo_url, reported_by, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+    `INSERT INTO incidents (category, severity, title, description, zone_id, animal_id, photo_url, reported_by, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
     [
       datos.category,
       datos.severity,
+      datos.title,
       datos.description,
       datos.zoneId,
       datos.animalId,

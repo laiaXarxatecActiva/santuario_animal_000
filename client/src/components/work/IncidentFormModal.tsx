@@ -2,6 +2,7 @@ import {
   ARCHIVED_ANIMAL_STATUSES,
   INCIDENT_CATEGORIES,
   INCIDENT_SEVERITIES,
+  INCIDENT_TITLE_MAX,
   incidentBodySchema,
   type IncidentBody,
   type IncidentCategory,
@@ -19,7 +20,7 @@ import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import { Alert } from '../Alert';
 import { Button } from '../Button';
-import { SelectField, TextAreaField } from '../FormFields';
+import { SelectField, TextAreaField, TextField } from '../FormFields';
 import { PhotoPicker } from '../PhotoPicker';
 import { Modal } from '../Modal';
 import styles from '../../pages/admin/AdminPage.module.css';
@@ -38,6 +39,7 @@ export function IncidentFormModal({
   const [campos, setCampos] = useState({
     category: INCIDENT_CATEGORIES[0] as IncidentCategory,
     severity: 'medium' as IncidentSeverity,
+    title: '',
     description: '',
     zoneId: '',
     animalId: '',
@@ -84,6 +86,7 @@ export function IncidentFormModal({
           const datos: IncidentBody = {
             category: campos.category,
             severity: campos.severity,
+            title: campos.title,
             description: campos.description,
             zoneId: campos.zoneId ? Number(campos.zoneId) : null,
             animalId: campos.animalId ? Number(campos.animalId) : null,
@@ -153,6 +156,14 @@ export function IncidentFormModal({
               </option>
             ))}
         </SelectField>
+        <TextField
+          label={t('work.incidents.titleField')}
+          maxLength={INCIDENT_TITLE_MAX}
+          value={campos.title}
+          error={errores.title}
+          help={t('work.incidents.titleHelp', { count: INCIDENT_TITLE_MAX - campos.title.length })}
+          onChange={(e) => cambiar('title', e.target.value)}
+        />
         <TextAreaField
           label={t('work.incidents.description')}
           rows={4}

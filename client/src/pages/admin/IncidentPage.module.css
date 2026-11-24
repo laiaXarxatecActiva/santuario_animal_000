@@ -16,6 +16,11 @@
   background: var(--color-surface);
 }
 
+.title {
+  margin: 0;
+  font-size: var(--font-size-h3);
+}
+
 .sectionTitle {
   margin: 0 0 var(--space-1);
   color: var(--color-text-muted);
