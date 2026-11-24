@@ -22,6 +22,7 @@ import { ADMIN_DONATIONS_KEY, useAdminDonationMonthlyTotals, useAdminDonations }
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatMonth, formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL. La exportación usa los mismos, sin la página.
@@ -118,6 +119,7 @@ export function DonationsAdminPage() {
           </ButtonLink>
         </div>
       </div>
+      <PageIntro pagina="donations" />
 
       <search className={styles.filters}>
         <form

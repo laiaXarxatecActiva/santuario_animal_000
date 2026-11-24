@@ -1180,6 +1180,34 @@
       "withoutAdopters": "Animals sense adoptants",
       "currentNote": "Situació actual (no depén de l'interval).",
       "allAdopted": "Tots els animals tenen almenys un adoptant."
+    },
+    "intro": {
+      "show": "Per a què servix esta pàgina?",
+      "dismiss": "Entesos",
+      "pages": {
+        "dashboard": "Un resum de com està el santuari: animals, adopcions i els animals que necessiten una actualització.",
+        "animals": "Ací estan tots els animals. Obri’n un per a editar la fitxa, les fotos, les novetats, l’historial veterinari i les cures.",
+        "updates": "Les novetats publicades sobre els animals. Els adoptants les veuen al seu mur.",
+        "species": "Les espècies del santuari. Cada animal pertany a una.",
+        "vet": "L’historial veterinari de tots els animals, només per al personal.",
+        "today": "El més important de hui d’un colp d’ull: tasques, medicació, incidències, torns i buits. Cada bloc porta a la seua pàgina.",
+        "myDay": "Les teues tasques i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
+        "incidents": "Per a comunicar problemes del santuari (un animal ferit, una avaria…) i seguir com es resolen.",
+        "shifts": "Ací veus qui treballa cada dia de la setmana i en quines zones. Si falta personal en un torn, apareix en groc.",
+        "tasks": "Totes les tasques d’un dia. Pots crear tasques puntuals, reassignar-les i canviar els ajustos del treball diari.",
+        "taskTemplates": "Les tasques que es repetixen (menjars, neteges…). Cada plantilla crea les seues tasques soles cada dia.",
+        "zones": "Les zones del santuari i les qualificacions que demanen algunes tasques.",
+        "shiftTemplates": "Els torns que es fan (matí, vesprada…), el seu horari i quantes persones necessita cada zona.",
+        "absences": "Vacances, baixes i altres absències. En registrar-ne una, es lleven els torns d’eixa persona en eixos dies.",
+        "alertSettings": "Tria quins avisos del personal arriben també per correu i si s’envia un resum del dia.",
+        "users": "Els comptes d’adoptants i del personal. Des d’ací es convida treballadors nous.",
+        "adoptions": "Totes les adopcions, amb els pagaments i les notes. Pots pausar-les, reprendre-les o donar-les d’alta a mà.",
+        "payments": "Els cobraments de les quotes. Pots filtrar-los, exportar-los i tornar un pagament.",
+        "donations": "Les donacions rebudes, per llista o per mesos. Pots registrar-ne una a mà o tornar-la.",
+        "plans": "Els plans d’adopció que poden triar els adoptants i el seu import.",
+        "stats": "Gràfics d’ingressos i adopcions per mes, i els animals més i menys apadrinats.",
+        "activity": "Qui ha canviat què i quan al panell."
+      }
     }
   },
   "viewer": {
@@ -1565,7 +1593,8 @@
       "checkedInAt": "Entrada: {{time}}",
       "checkedOutAt": "Eixida: {{time}}",
       "checkInDone": "Entrada fitxada",
-      "checkOutDone": "Eixida fitxada"
+      "checkOutDone": "Eixida fitxada",
+      "today": "Hui"
     },
     "shiftTemplates": {
       "title": "Plantilles de torn",

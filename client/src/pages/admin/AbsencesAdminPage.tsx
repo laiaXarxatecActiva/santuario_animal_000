@@ -26,6 +26,7 @@ import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import { formatShortDate, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string; creada?: AbsenceCreatedDto };
 
@@ -75,6 +76,7 @@ export function AbsencesAdminPage() {
           {t('work.absences.new')}
         </Button>
       </div>
+      <PageIntro pagina="absences" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           <p>{aviso.message}</p>

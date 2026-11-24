@@ -115,6 +115,8 @@ describe('CU-34 Gestionar el historial veterinario', () => {
       },
     });
     renderRoute('/admin');
+    // El apartado «Animales» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Animales' }));
     await userEvent.click(await screen.findByRole('link', { name: 'Veterinario' }));
     await userEvent.selectOptions(await screen.findByLabelText('Animal'), 'Rufo');
     expect(await screen.findByText('Revisión rutinaria.')).toBeInTheDocument();

@@ -18,6 +18,7 @@ import { SHIFTS_KEY, useShiftTemplates, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 const DIAS = [1, 2, 3, 4, 5, 6, 7] as const;
@@ -69,6 +70,7 @@ export function ShiftTemplatesAdminPage() {
           {t('work.shiftTemplates.new')}
         </Button>
       </div>
+      <PageIntro pagina="shiftTemplates" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}

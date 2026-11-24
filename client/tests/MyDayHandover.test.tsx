@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { caretaker, page } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
-import { asignacion, incidencia, notaDeRelevo, zonas } from './helpers/work-fixtures';
+import { asignacion, notaDeRelevo, zonas } from './helpers/work-fixtures';
 
 function api(extra: Record<string, (u: URL, p: Peticion) => { status?: number; body?: unknown }> = {}) {
   return mockApi({
@@ -90,20 +90,11 @@ describe('CU-71 Notas de relevo en «Mi día»', () => {
   });
 });
 
-describe('CU-70 Comunicar una incidencia desde «Mi día»', () => {
-  it('el botón abre la misma ventana que en «Incidencias»', async () => {
-    const { enviados } = api({
-      '/api/admin/incidents': () => ({ status: 201, body: incidencia({ id: 9 }) }),
-    });
+describe('CU-70 «Comunicar incidencia» solo está en «Incidencias»', () => {
+  it('«Mi día» no tiene el botón', async () => {
+    api();
     renderRoute('/admin/my-day');
-    await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
-    const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
-    await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Clínica y recuperación');
-    await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'Gotera en la cuarentena.');
-    await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
-    expect(await screen.findByText('Incidencia comunicada')).toBeInTheDocument();
-    expect(enviados('/api/admin/incidents').filter(Boolean)).toEqual([
-      expect.objectContaining({ zoneId: 4, description: 'Gotera en la cuarentena.', severity: 'medium' }),
-    ]);
+    await relevo();
+    expect(screen.queryByRole('button', { name: 'Comunicar incidencia' })).not.toBeInTheDocument();
   });
 });

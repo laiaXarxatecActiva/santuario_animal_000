@@ -17,6 +17,7 @@ import { ADMIN_KEY, useAdminSpecies } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 const CAMPOS = ['name', 'scientificName', 'description'] as const;
@@ -66,6 +67,7 @@ export function SpeciesAdminPage() {
           {t('admin.species.new')}
         </Button>
       </div>
+      <PageIntro pagina="species" />
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}

@@ -22,6 +22,7 @@ import { ADMIN_ADOPTIONS_KEY, ADMIN_PAYMENTS_KEY, useAdminPayments } from '../..
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatShortDate, formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL. La exportación usa los mismos, sin la página.
@@ -104,6 +105,7 @@ export function PaymentsAdminPage() {
           {t('admin.payments.export')}
         </ButtonLink>
       </div>
+      <PageIntro pagina="payments" />
 
       <search className={styles.filters}>
         <form

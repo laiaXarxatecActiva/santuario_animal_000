@@ -14,6 +14,7 @@ import iconStyles from '../../components/IconButton.module.css';
 import { Pagination } from '../../components/Pagination';
 import { useAdminAnimals, useAdminSpecies } from '../../hooks/useAdmin';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL.
@@ -78,6 +79,7 @@ export function AnimalsAdminPage() {
           {t('admin.animals.new')}
         </ButtonLink>
       </div>
+      <PageIntro pagina="animals" />
 
       <search className={styles.filters}>
         <form

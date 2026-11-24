@@ -19,6 +19,7 @@ import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL.
@@ -67,6 +68,7 @@ export function UsersAdminPage() {
           {t('admin.users.newWorker')}
         </ButtonLink>
       </div>
+      <PageIntro pagina="users" />
 
       <search className={styles.filters}>
         <form

@@ -10,6 +10,7 @@ import { useToday } from '../../hooks/useWork';
 import { formatTime, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import hoyStyles from './TodayPage.module.css';
+import { PageIntro } from '../../components/admin/PageIntro';
 
 // CU-72: panel «Hoy» del administrador (SCREENS §5.7). Solo lee; cada bloque lleva a su pantalla.
 export function TodayPage() {
@@ -21,6 +22,7 @@ export function TodayPage() {
         <h1>{t('work.today.title')}</h1>
         {hoy.data && <span className={styles.muted}>{formatWeekdayDate(hoy.data.date)}</span>}
       </div>
+      <PageIntro pagina="today" />
       {hoy.isError ? (
         <Alert
           type="error"

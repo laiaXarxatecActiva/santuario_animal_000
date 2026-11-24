@@ -20,6 +20,8 @@ describe('CU-35 Gestionar usuarios: listado', () => {
   it('el enlace «Usuarios» del menú solo lo ve el administrador', async () => {
     api();
     const vistaAdmin = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/admin/users');
     vistaAdmin.unmount();
 

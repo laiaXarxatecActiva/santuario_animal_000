@@ -44,6 +44,8 @@ describe('CU-41 Consultar estadísticas', () => {
   it('el enlace «Estadísticas» del menú solo lo ve el administrador', async () => {
     api();
     const vista = renderRoute('/admin');
+    // El apartado «Administración» empieza cerrado en el escritorio.
+    await userEvent.click(await screen.findByRole('button', { name: 'Administración' }));
     expect(await screen.findByRole('link', { name: 'Estadísticas' })).toHaveAttribute('href', '/admin/stats');
     vista.unmount();
 
