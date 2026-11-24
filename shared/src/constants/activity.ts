@@ -23,6 +23,9 @@ export const ACTIVITY_TABLES = [
   'shift_templates',
   'shift_assignments',
   'absences',
+  'diet_items',
+  'medication_plans',
+  'vet_visits',
 ] as const;
 export type ActivityTable = (typeof ACTIVITY_TABLES)[number];
 

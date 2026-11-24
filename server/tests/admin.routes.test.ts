@@ -109,6 +109,18 @@ const RUTAS: Ruta[] = [
   { metodo: 'get', patron: '/absences', soloAdmin: true },
   { metodo: 'post', patron: '/absences', soloAdmin: true },
   { metodo: 'delete', patron: '/absences/:id', soloAdmin: true },
+  { metodo: 'get', patron: '/animals/:id/care' },
+  { metodo: 'post', patron: '/animals/:id/diet-items' },
+  { metodo: 'put', patron: '/diet-items/:id' },
+  { metodo: 'delete', patron: '/diet-items/:id' },
+  { metodo: 'post', patron: '/animals/:id/medication-plans' },
+  { metodo: 'put', patron: '/medication-plans/:id' },
+  { metodo: 'post', patron: '/medication-plans/:id/end' },
+  { metodo: 'delete', patron: '/medication-plans/:id' },
+  { metodo: 'post', patron: '/animals/:id/vet-visits' },
+  { metodo: 'put', patron: '/vet-visits/:id' },
+  { metodo: 'post', patron: '/vet-visits/:id/cancel' },
+  { metodo: 'post', patron: '/vet-visits/:id/complete' },
 ];
 
 const url = (r: Ruta) => `/api/admin${r.patron.replace(':id', '1')}`;

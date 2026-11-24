@@ -19,6 +19,24 @@ export const avisos = {
         en: `“${zona}” is short-staffed on the ${turno} shift on ${dia}: ${hay} of ${hacen}.`,
       }[idioma];
     }),
+  /** CU-67: un animal lleva varias tomas seguidas comiendo poco. */
+  comePoco: (a: string, tomas: number): Textos => ({
+    es: `${a} ha comido poco en sus ${tomas} últimas tomas.`,
+    ca: `${a} ha menjat poc en les ${tomas} últimes preses.`,
+    en: `${a} has eaten little at the last ${tomas} meals.`,
+  }),
+  /** CU-69: una dosis de medicación no dada. */
+  medicacionNoDada: (a: string, hora: string, dosis: string): Textos => ({
+    es: `${a} no ha recibido la dosis de las ${hora}: ${dosis}.`,
+    ca: `${a} no ha rebut la dosi de les ${hora}: ${dosis}.`,
+    en: `${a} has not received the ${hora} dose: ${dosis}.`,
+  }),
+  /** CU-68: visita veterinaria programada para hoy. */
+  visitaHoy: (a: string, hora: string, motivo: string): Textos => ({
+    es: `Hoy a las ${hora}, visita veterinaria de ${a}: ${motivo}`,
+    ca: `Hui a les ${hora}, visita veterinària de ${a}: ${motivo}`,
+    en: `Today at ${hora}, vet visit for ${a}: ${motivo}`,
+  }),
   adopcionActiva: (a: string): Textos => ({
     es: `¡Ya adoptas a ${a}! Gracias por tu apoyo.`,
     ca: `Ja adoptes ${a}! Gràcies pel teu suport.`,

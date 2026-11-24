@@ -650,6 +650,7 @@ Encabezado con el nombre, las insignias de estado y las acciones [Ver en la web 
 | **Fotos** | Zona de subida (arrastrar o [Elegir archivos]) y cuadrícula de miniaturas reordenables. Cada miniatura muestra la visibilidad, una estrella para la portada y los botones de editar y borrar. En móvil, el orden se cambia con los botones ↑ ↓ en lugar de arrastrar. |
 | **Actualizaciones** | Lista de las actualizaciones del animal + [■ Nueva actualización] |
 | **Veterinario** (Fase 3) | Tabla de registros + gráfico de peso + [■ Nuevo registro] |
+| **Cuidados** (trabajo diario, CU-65 a CU-69) | Ver «Pestaña «Cuidados»» en §5.7 |
 | **Adoptantes** (admin) | Adopciones del animal con su estado |
 
 **Cambiar estado → Fallecido o Trasladado** abre una ventana emergente (CU-33):
@@ -735,6 +736,9 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - **Tu turno** (CU-63, h2, solo si tiene turno ese día): una tarjeta de turno (DESIGN_SYSTEM §8.9) por turno, con el horario, las zonas y, si ya ha fichado, «Entrada: 06:58» y «Salida: 15:05». Hoy ofrece «Fichar entrada» (`primary`) y, después, «Fichar salida» (`outline`); con la salida fichada, ninguno. En otros días no hay botones. Avisos `success` «Entrada fichada» y «Salida fichada»; los errores del servidor, en un aviso `error`.
 - Cada tarjeta de tarea es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» (las asignadas a la persona y las sin asignar de una zona de su turno a una hora del turno) y «Tareas del día» (h2), ordenadas por hora.
 - **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota o foto» (`outline`: ventana con «Observaciones (opcional)», «Foto (opcional)» y [Cancelar] [■ Marcar como hecha]) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
+- **Comidas** (CU-66): en una tarea de alimentación, «Hecha» abre siempre la ventana, con el grupo «Lo que ha comido cada animal»: un desplegable por animal (su nombre como etiqueta) con «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada», y debajo las observaciones y la foto. No hay botón «Con nota o foto». Resuelta, muestra «Carbón: Nada» por cada animal.
+- **Visitas veterinarias** (CU-68): insignia «Visita veterinaria» (`info`). En lugar de «Hecha», «Registrar la visita» (`primary`), que abre el formulario del historial veterinario (CU-34) con la descripción ya puesta; al guardar, aviso «Visita registrada en el historial veterinario».
+- **Dosis de medicación** (CU-69): título «Doxiciclina · 100 mg», tipo «Medicación» y la cualificación que pida la pauta; se completan como cualquier tarea.
 - **Sin la cualificación:** texto en cursiva «Necesitas la cualificación «…».» y sin botones. **Otro día:** «Se podrá marcar ese mismo día.»
 - **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
 - Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
@@ -746,7 +750,7 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 - Filtros: «Día» (hoy por defecto), «Zona» y «Estado».
 - Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones, foto) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
 - «Nueva tarea puntual»: ventana con tipo, título, descripción, zona, animales (casillas, solo los que siguen en el santuario), cualificación, día, hora (HH:MM) y persona.
-- «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)». En el Bloque D se convertirá en una pantalla con los avisos por email.
+- «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)» y «Tomas seguidas comiendo poco para avisar» (1-10, con la ayuda «Cuentan «Menos de la mitad» y «Nada».», CU-67). En el Bloque D se convertirá en una pantalla con los avisos por email.
 
 #### Plantillas de tareas (`/admin/task-templates`) — CU-54
 
@@ -797,6 +801,15 @@ Para todo el personal; las acciones de cambio, solo para el administrador.
 - Tabla de las ausencias de hoy en adelante: Persona · Fechas («Del 26 nov 2026 al 27 nov 2026») · Motivo · Notas · borrar.
 - «Registrar ausencia» (`primary`, `plus`): ventana con «Persona», «Primer día», «Último día», «Motivo» (vacaciones, baja médica, asuntos propios, otro) y «Notas (opcional)». Al guardar, aviso `success` «Ausencia registrada.» con, si los hay, «Se han quitado estos turnos, que hay que volver a cubrir:» y «Ya había fichado estos turnos, que se mantienen:» (listas «miércoles, 25 de noviembre · Mañana»).
 - Borrar pide confirmación y recuerda que los turnos quitados no vuelven.
+
+#### Pestaña «Cuidados» (`/admin/animals/:id/care`) — CU-65 a CU-69
+
+Pestaña de la ficha del animal en el panel, para cuidadores y administradores. Título «Cuidados de Carbón» y, si come poco, aviso `warning` «Ha comido poco en sus 2 últimas tomas.». Cuatro secciones (h3), cada una con su botón `primary` con `plus` a la derecha (salvo en los animales archivados, que solo se consultan):
+
+- **Dieta** [■ Nuevo alimento]: tabla con alimento (insignia «Terminada» si ya no lo come), cantidad («400 g»), tomas, notas, vigencia («Desde el 10/11/2026» o «Del … al …») y los botones de editar y borrar. Ventana con «Alimento», «Cantidad», «Unidad» (g, kg, unidades, ml), «Tomas (opcional)», «Notas (opcional)», «Desde» y «Hasta (opcional)» (con la ayuda de ponerle fin en lugar de borrarlo).
+- **Comidas de los últimos 14 días**: tabla con día, hora, lo que ha comido (insignia de color) y quién lo anotó.
+- **Medicación** [■ Nueva pauta]: una tarjeta (`TaskCard`) por pauta: medicamento, «100 mg · Oral · 10:00», vigencia, «Exige: Administrar medicación», notas y «Dosis dadas: 2 · No dadas: 1». Botones «Editar», «Terminar» (si ha empezado y no ha terminado; ventana de confirmación) y «Borrar» (solo sin dosis resueltas). Ventana con «Medicamento», «Dosis», «Vía», «Horas (HH:MM, separadas por comas)», «Desde», «Hasta (opcional)», «Cualificación necesaria» y «Notas (opcional)»; al editar, aviso de que se rehacen las dosis pendientes.
+- **Visitas veterinarias** [■ Programar visita]: tabla con día y hora, motivo, veterinario y estado («Programada», «Hecha», «Cancelada»). En las programadas: «Registrar» (`outline`, desde su día; abre el formulario del historial veterinario), «Cambiar» y «Cancelar la visita» (con confirmación). Ventana con «Día», «Hora», «Motivo» y «Veterinario (opcional)».
 
 ## 6. Estados generales
 

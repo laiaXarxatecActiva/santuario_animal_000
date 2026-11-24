@@ -53,6 +53,7 @@ import { createVetRecordAdminService } from './servicios/vet-record-admin.servic
 import { createTaskTemplateAdminService } from './servicios/task-template-admin.service.js';
 import { createShiftService } from './servicios/shift.service.js';
 import { createTaskService } from './servicios/task.service.js';
+import { createCareService } from './servicios/care.service.js';
 import { createZoneAdminService } from './servicios/zone-admin.service.js';
 
 export interface AppOptions {
@@ -256,6 +257,7 @@ export function createApp(options: AppOptions): Express {
       taskTemplates: createTaskTemplateAdminService({ db, reloj }),
       tasks: createTaskService({ db, reloj, media }),
       shifts: createShiftService({ db, reloj }),
+      care: createCareService({ db, reloj }),
     }),
   );
   app.use('/api', createPublicRoutes(createPublicCatalogService({ db, reloj })));

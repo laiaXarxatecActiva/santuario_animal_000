@@ -121,3 +121,17 @@ export async function removeFutureOfUser(db: Queryable, userId: number, hoy: str
   );
   return rowCount ?? 0;
 }
+
+/** CU-67 a CU-69: quién tiene turno un día en una zona (para los avisos de cuidados). */
+export async function listUserIdsInZone(db: Queryable, fecha: string, zoneId: number): Promise<number[]> {
+  const { rows } = await db.query<{ user_id: number }>(
+    `SELECT DISTINCT a.user_id
+       FROM shift_assignments a
+       JOIN shift_assignment_zones z ON z.assignment_id = a.id
+       JOIN users u ON u.id = a.user_id
+      WHERE a.shift_date = $1 AND z.zone_id = $2 AND u.is_active
+      ORDER BY a.user_id`,
+    [fecha, zoneId],
+  );
+  return rows.map((r) => r.user_id);
+}

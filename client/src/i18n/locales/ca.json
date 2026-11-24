@@ -266,7 +266,15 @@
     "SHIFT_NOT_TODAY": "Només es pot fitxar el dia del torn.",
     "ALREADY_CHECKED_IN": "Ja has fitxat l’entrada d’aquest torn.",
     "NOT_CHECKED_IN": "Primer has de fitxar l’entrada.",
-    "ALREADY_CHECKED_OUT": "Ja has fitxat l’eixida d’aquest torn."
+    "ALREADY_CHECKED_OUT": "Ja has fitxat l’eixida d’aquest torn.",
+    "CARE_ANIMAL_ARCHIVED": "Aquest animal ja no és al santuari.",
+    "ANIMAL_WITHOUT_ZONE": "Aquest animal no té zona: assigna-li’n una a «Dades» perquè les seues tasques isquen a «El meu dia».",
+    "MEDICATION_PLAN_HAS_HISTORY": "Aquesta pauta ja té dosis resoltes: acaba-la en lloc d’esborrar-la.",
+    "MEDICATION_PLAN_NOT_STARTED": "Aquesta pauta encara no ha començat: esborra-la en lloc d’acabar-la.",
+    "MEDICATION_PLAN_ENDED": "Aquesta pauta ja ha acabat.",
+    "VET_VISIT_NOT_SCHEDULED": "Aquesta visita ja està registrada o cancel·lada.",
+    "VET_VISIT_FUTURE_DAY": "La visita es podrà registrar el dia que està programada.",
+    "VET_VISIT_NEEDS_RECORD": "Registra la visita amb el formulari de l'historial veterinari."
   },
   "form": {
     "showPassword": "Mostra la contrasenya",
@@ -743,7 +751,8 @@
       "tabVet": "Veterinari",
       "showInMemorial": "Mostra a «En memòria»",
       "showInMemorialHelp": "La seua fitxa apareixerà a la secció pública «En memòria», sense opció d'adoptar.",
-      "zone": "Zona"
+      "zone": "Zona",
+      "tabCare": "Cures"
     },
     "media": {
       "dropHere": "Arrossega ací les fotos o els vídeos",
@@ -1080,7 +1089,18 @@
         "users": "Usuaris",
         "adoptions": "Adopcions",
         "payments": "Pagaments",
-        "donations": "Donacions"
+        "donations": "Donacions",
+        "zones": "Zones",
+        "qualifications": "Qualificacions",
+        "task_templates": "Plantilles de tasques",
+        "task_instances": "Tasques",
+        "work_settings": "Ajustos del treball diari",
+        "shift_templates": "Plantilles de torn",
+        "shift_assignments": "Torns",
+        "absences": "Absències",
+        "diet_items": "Dietes",
+        "medication_plans": "Pautes de medicació",
+        "vet_visits": "Visites veterinàries"
       },
       "fields": {
         "name": "Nom",
@@ -1376,7 +1396,9 @@
       "observations": "Observacions",
       "completeSubmit": "Marcar com a feta",
       "reason": "Motiu",
-      "loadError": "No s’han pogut carregar les tasques."
+      "loadError": "No s’han pogut carregar les tasques.",
+      "registerVisit": "Registrar la visita",
+      "intakesLegend": "El que ha menjat cada animal"
     },
     "tasks": {
       "title": "Tasques del dia",
@@ -1473,7 +1495,9 @@
     "settings": {
       "title": "Configuració del treball diari",
       "lateMargin": "Marge per a considerar endarrerida una tasca (minuts)",
-      "saved": "Configuració guardada"
+      "saved": "Configuració guardada",
+      "lowIntakeMeals": "Preses seguides menjant poc per a avisar",
+      "lowIntakeMealsHelp": "Compten «Menys de la meitat» i «Res»."
     },
     "absenceTypes": {
       "vacation": "Vacances",
@@ -1578,6 +1602,117 @@
       "confirmDeleteText": "Els torns que es van llevar en registrar-la no tornen: assigna’ls de nou a «Torns» si cal.",
       "empty": "No hi ha absències d’avui endavant.",
       "loadError": "No s’han pogut carregar les absències."
+    },
+    "vetVisit": "Visita veterinària",
+    "intakeOf": "{{name}}: {{intake}}",
+    "care": {
+      "title": "Cures de {{name}}",
+      "loadError": "No s'han pogut carregar les cures.",
+      "lowIntakeWarning_one": "Ha menjat poc en la seua última presa.",
+      "lowIntakeWarning_other": "Ha menjat poc en les seues {{count}} últimes preses.",
+      "period": "Vigència",
+      "from": "Des de",
+      "until": "Fins a",
+      "since": "Des del {{from}}",
+      "fromUntil": "Del {{from}} al {{until}}",
+      "ended": "Acabada",
+      "edit": "Editar",
+      "back": "Tornar",
+      "units": {
+        "g": "g",
+        "kg": "kg",
+        "units": "unitats",
+        "ml": "ml"
+      },
+      "intakes": {
+        "all": "Tot",
+        "most": "Més de la meitat",
+        "little": "Menys de la meitat",
+        "none": "Res"
+      },
+      "routes": {
+        "oral": "Oral",
+        "injection": "Injectable",
+        "topical": "Tòpica",
+        "eye_drops": "Col·liri",
+        "other": "Altra"
+      },
+      "diet": {
+        "title": "Dieta",
+        "new": "Nou aliment",
+        "editTitle": "Editar l'aliment",
+        "food": "Aliment",
+        "quantity": "Quantitat",
+        "unit": "Unitat",
+        "schedule": "Preses",
+        "scheduleHelp": "Per exemple, «Matí i vesprada» o «Dl, Dc i Dv».",
+        "notes": "Notes",
+        "untilHelp": "Si deixa de menjar-lo, posa-li data de fi en lloc d'esborrar-lo.",
+        "empty": "Encara no té dieta.",
+        "created": "Aliment afegit",
+        "updated": "Aliment desat",
+        "deleted": "Aliment esborrat",
+        "confirmDelete": "Vols esborrar «{{name}}» de la dieta?",
+        "deleteHelp": "Si ha deixat de menjar-lo, millor posa-li data de fi: així queda en l’historial."
+      },
+      "feedings": {
+        "title": "Menjars dels últims 14 dies",
+        "empty": "No hi ha menjars anotats en aquests dies.",
+        "date": "Dia",
+        "time": "Hora",
+        "intake": "Ha menjat",
+        "recordedBy": "Anotat per"
+      },
+      "medication": {
+        "title": "Medicació",
+        "new": "Nova pauta",
+        "editTitle": "Editar la pauta",
+        "editHelp": "En desar, les dosis pendents d’ara endavant es tornen a generar.",
+        "medication": "Medicament",
+        "dose": "Dosi",
+        "route": "Via",
+        "times": "Hores (HH:MM, separades per comes)",
+        "qualification": "Qualificació necessària",
+        "qualificationHelp": "Normalment, «Administrar medicació».",
+        "noQualification": "Cap",
+        "notes": "Notes",
+        "doses": "Dosis donades: {{given}} · No donades: {{missed}}",
+        "empty": "No té pautes de medicació.",
+        "saved": "Pauta desada",
+        "end": "Acabar",
+        "confirmEnd": "Vols acabar la pauta de {{name}}?",
+        "confirmEndText": "Acaba hui: es lleven les dosis que falten des d’ara.",
+        "ended": "Pauta acabada",
+        "confirmDelete": "Vols esborrar la pauta de {{name}}?",
+        "deleteText": "També s’esborren les seues dosis pendents. No es pot desfer.",
+        "deleted": "Pauta esborrada"
+      },
+      "visits": {
+        "title": "Visites veterinàries",
+        "new": "Programar visita",
+        "editTitle": "Canviar la visita",
+        "date": "Dia",
+        "time": "Hora",
+        "reason": "Motiu",
+        "veterinarian": "Veterinari",
+        "status": "Estat",
+        "statuses": {
+          "scheduled": "Programada",
+          "done": "Feta",
+          "cancelled": "Cancel·lada"
+        },
+        "register": "Registrar",
+        "registerTitle": "Registrar la visita",
+        "registered": "Visita registrada en l'historial veterinari",
+        "change": "Canviar",
+        "cancel": "Cancel·lar la visita",
+        "confirmCancel": "Vols cancel·lar la visita del {{date}}?",
+        "confirmCancelText": "També es lleva la seua tasca de «El meu dia».",
+        "cancelled": "Visita cancel·lada",
+        "created": "Visita programada",
+        "updated": "Visita canviada",
+        "empty": "No té visites programades."
+      }
     }
   }
 }

@@ -227,18 +227,58 @@ function FormularioRegistro({
   onSaved: (mensaje: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  return (
+    <VetRecordForm
+      titulo={t(registro ? 'admin.vet.editTitle' : 'admin.vet.new')}
+      valores={
+        registro
+          ? {
+              recordDate: registro.recordDate,
+              type: registro.type,
+              description: registro.description,
+              weightKg: registro.weightKg ?? '',
+              veterinarian: registro.veterinarian ?? '',
+            }
+          : {}
+      }
+      enviar={(datos) =>
+        registro ? adminApi.vetRecords.update(registro.id, datos) : adminApi.vetRecords.create(animalId, datos)
+      }
+      onClose={onClose}
+      onSaved={() => onSaved(t(registro ? 'admin.vet.updated' : 'admin.vet.created'))}
+    />
+  );
+}
+
+/**
+ * Formulario de un registro veterinario (CU-34). También registra una visita
+ * programada (CU-68), con el motivo y el veterinario ya puestos.
+ */
+export function VetRecordForm({
+  titulo,
+  valores,
+  enviar,
+  onClose,
+  onSaved,
+}: {
+  titulo: string;
+  valores: Partial<VetRecordBody>;
+  enviar: (datos: VetRecordBody) => Promise<unknown>;
+  onClose: () => void;
+  onSaved: () => Promise<void> | void;
+}) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const form = useForm<VetRecordBody>({
     resolver: zodResolver(vetRecordBodySchema, undefined, { raw: true }),
-    defaultValues: registro
-      ? {
-          recordDate: registro.recordDate,
-          type: registro.type,
-          description: registro.description,
-          weightKg: registro.weightKg ?? '',
-          veterinarian: registro.veterinarian ?? '',
-        }
-      : { recordDate: hoyLocal(), type: 'checkup', description: '', weightKg: '', veterinarian: '' },
+    defaultValues: {
+      recordDate: hoyLocal(),
+      type: 'checkup',
+      description: '',
+      weightKg: '',
+      veterinarian: '',
+      ...valores,
+    },
   });
   const {
     register,
@@ -247,9 +287,8 @@ function FormularioRegistro({
   } = form;
 
   const guardar = useMutation({
-    mutationFn: (datos: VetRecordBody) =>
-      registro ? adminApi.vetRecords.update(registro.id, datos) : adminApi.vetRecords.create(animalId, datos),
-    onSuccess: () => onSaved(t(registro ? 'admin.vet.updated' : 'admin.vet.created')),
+    mutationFn: enviar,
+    onSuccess: () => onSaved(),
     onError: (e) => {
       if (e instanceof ApiError && e.details.length > 0) applyFieldErrors(e, form.setError, CAMPOS);
       else setError(errorMessage(t, e));
@@ -260,7 +299,7 @@ function FormularioRegistro({
   return (
     <Modal
       open
-      title={t(registro ? 'admin.vet.editTitle' : 'admin.vet.new')}
+      title={titulo}
       onClose={onClose}
       footer={
         <>

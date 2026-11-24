@@ -3,7 +3,10 @@ import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
 import { estaArchivado } from '../dominio/animal.js';
+import { ocurrenciasDeLaPauta, tituloDeLaDosis } from '../dominio/cuidados.js';
 import { ocurrencias, sumarDias, zonaComun } from '../dominio/tareas.js';
+import * as planModel from '../models/medication-plan.model.js';
+import type { PautaParaGenerar } from '../models/medication-plan.model.js';
 import * as taskModel from '../models/task.model.js';
 import * as templateModel from '../models/task-template.model.js';
 import type { PlantillaParaGenerar } from '../models/task-template.model.js';
@@ -87,4 +90,66 @@ export async function generarTodas(
     }
   }
   return { templates: plantillas.length, created };
+}
+
+/**
+ * CU-69: las dosis de una pauta entre dos fechas, desde `ahora`, en la zona
+ * de su animal. Idempotente. Si el animal ya no está o no tiene zona, nada.
+ */
+export async function generarDePauta(
+  q: Queryable,
+  pauta: PautaParaGenerar,
+  rango: { desde: string; hasta: string },
+  ahora: Date,
+): Promise<number> {
+  if (estaArchivado(pauta.animal.status) || pauta.animal.zoneId === null) return 0;
+  let creadas = 0;
+  for (const o of ocurrenciasDeLaPauta(pauta, rango.desde, rango.hasta, ahora)) {
+    const id = await taskModel.insert(q, {
+      templateId: null,
+      medicationPlanId: pauta.id,
+      type: 'medication',
+      title: tituloDeLaDosis(pauta.medication, pauta.dose),
+      description: pauta.notes,
+      zoneId: pauta.animal.zoneId,
+      qualificationId: pauta.qualificationId,
+      dueDate: o.fecha,
+      dueTime: o.hora,
+      dueAt: o.instante,
+      assignedTo: null,
+      createdBy: null,
+      animalIds: [pauta.animal.id],
+    });
+    if (id !== null) creadas += 1;
+  }
+  return creadas;
+}
+
+/** Las dosis de una sola pauta (al crearla o editarla), dentro de la transacción en curso. */
+export async function generarParaPauta(q: Queryable, pautaId: number, hoy: string, ahora: Date): Promise<number> {
+  const rango = rangoDeGeneracion(hoy);
+  const [pauta] = await planModel.listForGeneration(q, { ...rango, id: pautaId });
+  return pauta ? generarDePauta(q, pauta, rango, ahora) : 0;
+}
+
+/** La tarea programada: todas las pautas con días en el rango, cada una en su transacción. */
+export async function generarTodasLasPautas(
+  db: Pool,
+  hoy: string,
+  ahora: Date,
+  logError: (error: unknown, contexto: string) => void = () => {},
+): Promise<number> {
+  const rango = rangoDeGeneracion(hoy);
+  let creadas = 0;
+  for (const pauta of await planModel.listForGeneration(db, rango)) {
+    try {
+      creadas += await withTransaction(db, async (client) => {
+        await planModel.lock(client, pauta.id);
+        return generarDePauta(client, pauta, rango, ahora);
+      });
+    } catch (error) {
+      logError(error, `No se han podido generar las dosis de la pauta ${pauta.id}`);
+    }
+  }
+  return creadas;
 }

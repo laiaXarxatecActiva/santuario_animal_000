@@ -47,3 +47,31 @@ export const COPY_SKIP_REASONS = [
   'NOT_THAT_WEEKDAY',
 ] as const;
 export type CopySkipReason = (typeof COPY_SKIP_REASONS)[number];
+
+// Alimentación, visitas veterinarias y medicación (CU-65 a CU-69).
+
+/** CU-65: unidades de la cantidad de un alimento de la dieta. */
+export const FOOD_UNITS = ['g', 'kg', 'units', 'ml'] as const;
+export type FoodUnit = (typeof FOOD_UNITS)[number];
+
+/** CU-66: lo que ha comido un animal en una toma, de más a menos. */
+export const INTAKE_LEVELS = ['all', 'most', 'little', 'none'] as const;
+export type IntakeLevel = (typeof INTAKE_LEVELS)[number];
+
+/** CU-67: niveles que cuentan como «come poco». */
+export const LOW_INTAKE_LEVELS = ['little', 'none'] as const satisfies readonly IntakeLevel[];
+
+/** CU-67: tomas seguidas comiendo poco para avisar (por defecto y límites de los ajustes). */
+export const DEFAULT_LOW_INTAKE_MEALS = 2;
+export const MAX_LOW_INTAKE_MEALS = 10;
+
+/** CU-66 y la pestaña «Cuidados»: días de comidas que se muestran. */
+export const FEEDING_HISTORY_DAYS = 14;
+
+/** CU-68: estados de una visita veterinaria programada. */
+export const VET_VISIT_STATUSES = ['scheduled', 'done', 'cancelled'] as const;
+export type VetVisitStatus = (typeof VET_VISIT_STATUSES)[number];
+
+/** CU-69: vía de administración de un medicamento. */
+export const MEDICATION_ROUTES = ['oral', 'injection', 'topical', 'eye_drops', 'other'] as const;
+export type MedicationRoute = (typeof MEDICATION_ROUTES)[number];

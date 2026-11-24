@@ -644,3 +644,55 @@ export class AlreadyCheckedOutError extends ConflictError {
     super('ALREADY_CHECKED_OUT', 'Ya has fichado la salida de este turno.');
   }
 }
+
+// Alimentación, visitas veterinarias y medicación (CU-65 a CU-69).
+export class CareAnimalArchivedError extends BusinessRuleError {
+  constructor() {
+    super('CARE_ANIMAL_ARCHIVED', 'Este animal ya no está en el santuario.');
+  }
+}
+
+export class AnimalWithoutZoneError extends BusinessRuleError {
+  constructor() {
+    super(
+      'ANIMAL_WITHOUT_ZONE',
+      'Este animal no tiene zona: asígnale una en «Datos» para que sus tareas salgan en «Mi día».',
+    );
+  }
+}
+
+export class MedicationPlanHasHistoryError extends ConflictError {
+  constructor() {
+    super('MEDICATION_PLAN_HAS_HISTORY', 'Esta pauta ya tiene dosis resueltas: termínala en lugar de borrarla.');
+  }
+}
+
+export class MedicationPlanNotStartedError extends ConflictError {
+  constructor() {
+    super('MEDICATION_PLAN_NOT_STARTED', 'Esta pauta aún no ha empezado: bórrala en lugar de terminarla.');
+  }
+}
+
+export class MedicationPlanEndedError extends ConflictError {
+  constructor() {
+    super('MEDICATION_PLAN_ENDED', 'Esta pauta ya ha terminado.');
+  }
+}
+
+export class VetVisitNotScheduledError extends ConflictError {
+  constructor() {
+    super('VET_VISIT_NOT_SCHEDULED', 'Esta visita ya está registrada o cancelada.');
+  }
+}
+
+export class VetVisitFutureDayError extends BusinessRuleError {
+  constructor() {
+    super('VET_VISIT_FUTURE_DAY', 'La visita se podrá registrar el día en que está programada.');
+  }
+}
+
+export class VetVisitNeedsRecordError extends ConflictError {
+  constructor() {
+    super('VET_VISIT_NEEDS_RECORD', 'Registra la visita con el formulario del historial veterinario.');
+  }
+}

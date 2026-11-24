@@ -266,7 +266,15 @@
     "SHIFT_NOT_TODAY": "You can only check in on the day of the shift.",
     "ALREADY_CHECKED_IN": "You have already checked in to this shift.",
     "NOT_CHECKED_IN": "You have to check in first.",
-    "ALREADY_CHECKED_OUT": "You have already checked out of this shift."
+    "ALREADY_CHECKED_OUT": "You have already checked out of this shift.",
+    "CARE_ANIMAL_ARCHIVED": "This animal is no longer at the sanctuary.",
+    "ANIMAL_WITHOUT_ZONE": "This animal has no zone: assign one in \"Details\" so its tasks appear in \"My day\".",
+    "MEDICATION_PLAN_HAS_HISTORY": "This plan already has resolved doses: end it instead of deleting it.",
+    "MEDICATION_PLAN_NOT_STARTED": "This plan has not started yet: delete it instead of ending it.",
+    "MEDICATION_PLAN_ENDED": "This plan has already ended.",
+    "VET_VISIT_NOT_SCHEDULED": "This visit has already been recorded or cancelled.",
+    "VET_VISIT_FUTURE_DAY": "The visit can be recorded on the day it is scheduled.",
+    "VET_VISIT_NEEDS_RECORD": "Record the visit with the vet history form."
   },
   "form": {
     "showPassword": "Show password",
@@ -743,7 +751,8 @@
       "tabVet": "Veterinary",
       "showInMemorial": "Show in \"In memory\"",
       "showInMemorialHelp": "Their profile will appear in the public \"In memory\" section, with no option to adopt.",
-      "zone": "Area"
+      "zone": "Area",
+      "tabCare": "Care"
     },
     "media": {
       "dropHere": "Drag photos or videos here",
@@ -1080,7 +1089,18 @@
         "users": "Users",
         "adoptions": "Adoptions",
         "payments": "Payments",
-        "donations": "Donations"
+        "donations": "Donations",
+        "zones": "Zones",
+        "qualifications": "Qualifications",
+        "task_templates": "Task templates",
+        "task_instances": "Tasks",
+        "work_settings": "Daily work settings",
+        "shift_templates": "Shift templates",
+        "shift_assignments": "Shifts",
+        "absences": "Absences",
+        "diet_items": "Diets",
+        "medication_plans": "Medication plans",
+        "vet_visits": "Vet visits"
       },
       "fields": {
         "name": "Name",
@@ -1376,7 +1396,9 @@
       "observations": "Notes",
       "completeSubmit": "Mark as done",
       "reason": "Reason",
-      "loadError": "The tasks could not be loaded."
+      "loadError": "The tasks could not be loaded.",
+      "registerVisit": "Record the visit",
+      "intakesLegend": "What each animal ate"
     },
     "tasks": {
       "title": "Today's tasks",
@@ -1473,7 +1495,9 @@
     "settings": {
       "title": "Daily work settings",
       "lateMargin": "Margin before a task counts as late (minutes)",
-      "saved": "Settings saved"
+      "saved": "Settings saved",
+      "lowIntakeMeals": "Meals in a row eating little before warning",
+      "lowIntakeMealsHelp": "\"Less than half\" and \"Nothing\" count."
     },
     "absenceTypes": {
       "vacation": "Holiday",
@@ -1578,6 +1602,117 @@
       "confirmDeleteText": "The shifts removed when it was recorded do not come back: assign them again in “Shifts” if needed.",
       "empty": "There are no absences from today on.",
       "loadError": "The absences could not be loaded."
+    },
+    "vetVisit": "Vet visit",
+    "intakeOf": "{{name}}: {{intake}}",
+    "care": {
+      "title": "Care of {{name}}",
+      "loadError": "The care details could not be loaded.",
+      "lowIntakeWarning_one": "It ate little at its last meal.",
+      "lowIntakeWarning_other": "It ate little at its last {{count}} meals.",
+      "period": "Period",
+      "from": "From",
+      "until": "Until",
+      "since": "Since {{from}}",
+      "fromUntil": "From {{from}} to {{until}}",
+      "ended": "Ended",
+      "edit": "Edit",
+      "back": "Back",
+      "units": {
+        "g": "g",
+        "kg": "kg",
+        "units": "units",
+        "ml": "ml"
+      },
+      "intakes": {
+        "all": "All",
+        "most": "More than half",
+        "little": "Less than half",
+        "none": "Nothing"
+      },
+      "routes": {
+        "oral": "Oral",
+        "injection": "Injection",
+        "topical": "Topical",
+        "eye_drops": "Eye drops",
+        "other": "Other"
+      },
+      "diet": {
+        "title": "Diet",
+        "new": "New food",
+        "editTitle": "Edit the food",
+        "food": "Food",
+        "quantity": "Quantity",
+        "unit": "Unit",
+        "schedule": "Meals",
+        "scheduleHelp": "For example, \"Morning and afternoon\" or \"Mon, Wed and Fri\".",
+        "notes": "Notes",
+        "untilHelp": "If it stops eating it, set an end date instead of deleting it.",
+        "empty": "It has no diet yet.",
+        "created": "Food added",
+        "updated": "Food saved",
+        "deleted": "Food deleted",
+        "confirmDelete": "Delete \"{{name}}\" from the diet?",
+        "deleteHelp": "If it has stopped eating it, better set an end date: that way it stays in the history."
+      },
+      "feedings": {
+        "title": "Meals in the last 14 days",
+        "empty": "No meals recorded in these days.",
+        "date": "Day",
+        "time": "Time",
+        "intake": "Ate",
+        "recordedBy": "Recorded by"
+      },
+      "medication": {
+        "title": "Medication",
+        "new": "New plan",
+        "editTitle": "Edit the plan",
+        "editHelp": "When you save, the pending doses from now on are generated again.",
+        "medication": "Medicine",
+        "dose": "Dose",
+        "route": "Route",
+        "times": "Times (HH:MM, separated by commas)",
+        "qualification": "Required qualification",
+        "qualificationHelp": "Usually, \"Give medication\".",
+        "noQualification": "None",
+        "notes": "Notes",
+        "doses": "Doses given: {{given}} · Not given: {{missed}}",
+        "empty": "It has no medication plans.",
+        "saved": "Plan saved",
+        "end": "End",
+        "confirmEnd": "End the {{name}} plan?",
+        "confirmEndText": "It ends today: the remaining doses from now on are removed.",
+        "ended": "Plan ended",
+        "confirmDelete": "Delete the {{name}} plan?",
+        "deleteText": "Its pending doses are deleted too. This cannot be undone.",
+        "deleted": "Plan deleted"
+      },
+      "visits": {
+        "title": "Vet visits",
+        "new": "Schedule a visit",
+        "editTitle": "Change the visit",
+        "date": "Day",
+        "time": "Time",
+        "reason": "Reason",
+        "veterinarian": "Vet",
+        "status": "Status",
+        "statuses": {
+          "scheduled": "Scheduled",
+          "done": "Done",
+          "cancelled": "Cancelled"
+        },
+        "register": "Record",
+        "registerTitle": "Record the visit",
+        "registered": "Visit recorded in the vet history",
+        "change": "Change",
+        "cancel": "Cancel the visit",
+        "confirmCancel": "Cancel the visit on {{date}}?",
+        "confirmCancelText": "Its task in \"My day\" is removed too.",
+        "cancelled": "Visit cancelled",
+        "created": "Visit scheduled",
+        "updated": "Visit changed",
+        "empty": "It has no scheduled visits."
+      }
     }
   }
 }

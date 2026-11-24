@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import {
   ABSENCE_TYPES,
+  FOOD_UNITS,
+  INTAKE_LEVELS,
+  MAX_LOW_INTAKE_MEALS,
   MAX_SHIFT_RANGE_DAYS,
+  MEDICATION_ROUTES,
   MAX_TEMPLATE_TIMES,
   TASK_RECURRENCES,
   TASK_STATUSES,
@@ -138,9 +142,36 @@ export const taskAssigneeBodySchema = z.object({
 });
 export type TaskAssigneeBody = z.infer<typeof taskAssigneeBodySchema>;
 
+/**
+ * CU-66: lo que ha comido cada animal en una tarea de alimentación. En
+ * multipart llega como texto JSON. Los animales que no aparecen, «todo».
+ */
+const ingestas = z
+  .preprocess(
+    (valor) => {
+      if (typeof valor !== 'string') return valor;
+      try {
+        return JSON.parse(valor) as unknown;
+      } catch {
+        return valor;
+      }
+    },
+    z
+      .array(
+        z.object({
+          animalId: z.coerce.number().int().positive(),
+          intake: z.enum(INTAKE_LEVELS, { error: 'Elige cuánto ha comido.' }),
+        }),
+      )
+      .max(100),
+  )
+  .optional()
+  .transform((v) => v ?? []);
+
 // CU-57: completar (observaciones y foto opcionales) o marcar como no realizada (motivo obligatorio).
 export const taskCompleteBodySchema = z.object({
   observations: textoOpcional(1000),
+  intakes: ingestas,
 });
 export type TaskCompleteBody = z.input<typeof taskCompleteBodySchema>;
 
@@ -162,6 +193,13 @@ export const workSettingsBodySchema = z.object({
     .int({ error: 'Indica los minutos.' })
     .min(0, { error: 'Entre 0 y 240 minutos.' })
     .max(240, { error: 'Entre 0 y 240 minutos.' }),
+  /** CU-67: tomas seguidas comiendo poco para avisar. Si falta, no cambia. */
+  lowIntakeMeals: z.coerce
+    .number({ error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
+    .int({ error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
+    .min(1, { error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
+    .max(MAX_LOW_INTAKE_MEALS, { error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
+    .optional(),
 });
 export type WorkSettingsBody = z.input<typeof workSettingsBodySchema>;
 export type WorkSettingsData = z.output<typeof workSettingsBodySchema>;
@@ -269,3 +307,82 @@ export const absencesQuerySchema = z.object({
   to: fecha('La fecha no es válida.').optional(),
 });
 export type AbsencesQuery = z.infer<typeof absencesQuerySchema>;
+
+// CU-65 a CU-69: alimentación, visitas veterinarias y medicación.
+
+const fechaFinOpcional = z
+  .union([z.literal('').transform(() => null), fecha('La fecha no es válida.'), z.null()])
+  .optional()
+  .transform((v) => v ?? null);
+
+/** Texto opcional que se guarda como `null` si falta. */
+const textoONulo = (max: number) => textoOpcional(max).transform((v) => v ?? null);
+
+const finNoAnterior = <T extends { startDate: string; endDate: string | null }>(p: T, ctx: z.RefinementCtx) => {
+  if (p.endDate !== null && p.endDate < p.startDate) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['endDate'],
+      message: 'La fecha de fin no puede ser anterior a la de inicio.',
+    });
+  }
+};
+
+/** Cantidad con coma o punto y dos decimales como máximo (NUMERIC(8,2)), mayor que 0. */
+const CANTIDAD_RE = /^(\d{1,6})(?:[.,](\d{1,2}))?$/;
+const cantidad = z.union([z.number().transform(String), z.string()]).pipe(
+  z
+    .string()
+    .trim()
+    .regex(CANTIDAD_RE, { error: 'Escribe la cantidad con dos decimales como máximo.' })
+    .refine((v) => /[1-9]/.test(v), { error: 'La cantidad debe ser mayor que 0.' })
+    .transform((v) => {
+      const [, enteros = '0', decimales = ''] = CANTIDAD_RE.exec(v) ?? [];
+      return `${enteros.replace(/^0+(?=\d)/, '')}.${decimales.padEnd(2, '0')}`;
+    }),
+);
+
+// CU-65: un alimento de la dieta de un animal.
+export const dietItemBodySchema = z
+  .object({
+    food: textoObligatorio(150, 'Escribe el alimento.'),
+    quantity: cantidad,
+    unit: z.enum(FOOD_UNITS, { error: 'Elige la unidad.' }),
+    schedule: textoONulo(100),
+    notes: textoONulo(1000),
+    startDate: fecha('Elige la fecha de inicio.'),
+    endDate: fechaFinOpcional,
+  })
+  .superRefine(finNoAnterior);
+export type DietItemBody = z.input<typeof dietItemBodySchema>;
+export type DietItemData = z.output<typeof dietItemBodySchema>;
+
+// CU-68: programar (o cambiar) una visita veterinaria.
+export const vetVisitBodySchema = z.object({
+  date: fecha('Elige el día.'),
+  time: hora,
+  reason: textoObligatorio(500, 'Escribe el motivo de la visita.'),
+  veterinarian: textoONulo(150),
+});
+export type VetVisitBody = z.input<typeof vetVisitBodySchema>;
+export type VetVisitData = z.output<typeof vetVisitBodySchema>;
+
+// CU-69: pauta de medicación (todos los días, a las horas indicadas).
+export const medicationPlanBodySchema = z
+  .object({
+    medication: textoObligatorio(150, 'Escribe el medicamento.'),
+    dose: textoObligatorio(100, 'Escribe la dosis.'),
+    route: z.enum(MEDICATION_ROUTES, { error: 'Elige la vía.' }),
+    times: z
+      .array(hora)
+      .min(1, { error: 'Añade al menos una hora.' })
+      .max(MAX_TEMPLATE_TIMES, { error: `Como máximo ${MAX_TEMPLATE_TIMES} horas al día.` })
+      .transform((horas) => [...new Set(horas)].sort()),
+    startDate: fecha('Elige la fecha de inicio.'),
+    endDate: fechaFinOpcional,
+    qualificationId: idOpcional,
+    notes: textoONulo(1000),
+  })
+  .superRefine(finNoAnterior);
+export type MedicationPlanBody = z.input<typeof medicationPlanBodySchema>;
+export type MedicationPlanData = z.output<typeof medicationPlanBodySchema>;

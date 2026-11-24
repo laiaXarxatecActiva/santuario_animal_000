@@ -47,7 +47,11 @@ export function TaskCard({ tarea, acciones }: { tarea: MyDayTaskDto; acciones: R
 }
 
 /** Quién la resolvió y cuándo, con las observaciones y la foto. */
-export function Resolucion({ tarea }: { tarea: Pick<MyDayTaskDto, 'resolvedBy' | 'resolvedAt' | 'observations' | 'photoUrl'> }) {
+export function Resolucion({
+  tarea,
+}: {
+  tarea: Pick<MyDayTaskDto, 'resolvedBy' | 'resolvedAt' | 'observations' | 'photoUrl' | 'intakes'>;
+}) {
   const { t } = useTranslation();
   return (
     <div className={styles.resolution}>
@@ -56,6 +60,15 @@ export function Resolucion({ tarea }: { tarea: Pick<MyDayTaskDto, 'resolvedBy' |
           ? t('work.resolvedBy', { name: tarea.resolvedBy.name, time: formatTime(tarea.resolvedAt) })
           : t('work.resolvedBySystem')}
       </p>
+      {tarea.intakes && tarea.intakes.length > 0 && (
+        <p className={styles.meta}>
+          {tarea.intakes.map((i) => (
+            <span key={i.animal.id}>
+              {t('work.intakeOf', { name: i.animal.name, intake: t(`work.care.intakes.${i.intake}`) })}
+            </span>
+          ))}
+        </p>
+      )}
       {tarea.observations && <p>{tarea.observations}</p>}
       {tarea.photoUrl && (
         <a href={tarea.photoUrl} target="_blank" rel="noreferrer">

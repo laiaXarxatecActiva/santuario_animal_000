@@ -52,6 +52,8 @@ BEGIN;
 -- 0. Vaciar todas las tablas y reiniciar los contadores de id
 -- -----------------------------------------------------------------------------
 TRUNCATE TABLE
+    feeding_logs,
+    diet_items,
     staff_alerts,
     absences,
     shift_assignment_zones,
@@ -62,6 +64,8 @@ TRUNCATE TABLE
     task_instances,
     task_template_animals,
     task_templates,
+    medication_plans,
+    vet_visits,
     user_qualifications,
     qualifications,
     activity_logs,
@@ -738,6 +742,87 @@ UPDATE shift_assignments a
  WHERE t.id = a.shift_template_id AND a.shift_date < CURRENT_DATE;
 
 -- -----------------------------------------------------------------------------
+-- 17. Alimentación, visitas veterinarias y medicación (CU-65 a CU-69)
+-- -----------------------------------------------------------------------------
+
+-- Dietas (CU-65). La papilla de Carbón ya terminó.
+INSERT INTO diet_items (id, animal_id, food, quantity, unit, schedule, notes, start_date, end_date, created_by)
+OVERRIDING SYSTEM VALUE VALUES
+(1, 1,  'Carne de pollo troceada', 600, 'g', 'Lun, Mié y Vie', NULL,                                   pg_temp.ago('1 year'),   NULL, 3),
+(2, 2,  'Carne de conejo',         700, 'g', 'Lun, Mié y Vie', 'Ofrecer siempre por el lado derecho.', pg_temp.ago('1 year'),   NULL, 3),
+(3, 4,  'Carne de conejo',         600, 'g', 'Mañana y tarde', NULL,                                   pg_temp.ago('6 months'), NULL, 4),
+(4, 10, 'Papilla de carne picada', 200, 'g', 'Mañana y tarde', 'Mientras le costaba tragar.',          pg_temp.ago('3 months'), pg_temp.ago('20 days'), 5),
+(5, 10, 'Carne de pollo sin hueso', 400, 'g', 'Mañana y tarde', 'La doxiciclina va en la toma de la mañana.', pg_temp.ago('19 days'), NULL, 5),
+(6, 11, 'Carne troceada y huevo',  150, 'g', 'Cada día',       NULL,                                   pg_temp.ago('1 year'),   NULL, 3),
+(7, 12, 'Carne troceada y huevo',  120, 'g', 'Cada día',       'Raciones muy pequeñas por la edad.',   pg_temp.ago('1 year'),   NULL, 3),
+(8, 14, 'Carne picada con suero',  300, 'g', 'Mañana y tarde', 'Raciones pequeñas mientras se recupera.', pg_temp.ago('10 days'), NULL, 3);
+
+-- Lo que comió cada animal (CU-66): en las comidas hechas, los animales de la
+-- zona; todo, salvo Pipa ayer por la tarde (más de la mitad) y Carbón hoy por
+-- la mañana (menos de la mitad: una toma más comiendo poco y se avisará).
+INSERT INTO feeding_logs (task_id, animal_id, intake, recorded_by, recorded_at)
+SELECT i.id, a.id, 'all', i.resolved_by, i.resolved_at
+  FROM task_instances i
+  JOIN animals a ON a.zone_id = i.zone_id AND a.status IN ('in_sanctuary', 'in_treatment')
+ WHERE i.type = 'feeding' AND i.status = 'completed'
+   AND NOT EXISTS (SELECT 1 FROM task_instance_animals x WHERE x.task_id = i.id);
+
+UPDATE feeding_logs f SET intake = 'most'
+  FROM task_instances i
+ WHERE i.id = f.task_id AND f.animal_id = 14 AND i.template_id = 4
+   AND i.due_date = CURRENT_DATE - 1 AND i.due_time = '17:00';
+UPDATE feeding_logs f SET intake = 'little'
+  FROM task_instances i
+ WHERE i.id = f.task_id AND f.animal_id = 10 AND i.template_id = 4
+   AND i.due_date = CURRENT_DATE AND i.due_time = '09:00';
+
+-- Pauta de medicación de Carbón (CU-69): doxiciclina a las 10:00, de hace 3
+-- días a dentro de 4. Ayer no se la tomó (ya avisado); la de hoy sigue pendiente.
+INSERT INTO medication_plans (id, animal_id, medication, dose, route, times, start_date, end_date,
+                              qualification_id, notes, created_by)
+OVERRIDING SYSTEM VALUE VALUES
+(1, 10, 'Doxiciclina', '100 mg', 'oral', ARRAY['10:00']::TIME[], CURRENT_DATE - 3, CURRENT_DATE + 4,
+    1, 'Dentro de un trozo de carne.', 5);
+
+INSERT INTO task_instances (medication_plan_id, type, title, description, zone_id, qualification_id,
+                            due_date, due_time, due_at)
+SELECT p.id, 'medication', p.medication || ' · ' || p.dose, p.notes, 4, p.qualification_id, d::date, h,
+       (d::date + h) AT TIME ZONE 'Europe/Madrid'
+  FROM medication_plans p
+ CROSS JOIN generate_series(p.start_date, p.end_date, INTERVAL '1 day') AS d
+ CROSS JOIN unnest(p.times) AS h
+ ORDER BY d, h;
+
+INSERT INTO task_instance_animals (task_id, animal_id)
+SELECT id, 10 FROM task_instances WHERE medication_plan_id = 1;
+
+UPDATE task_instances
+   SET status = 'completed', resolved_by = 3, resolved_at = due_at + INTERVAL '15 minutes'
+ WHERE medication_plan_id = 1 AND due_date < CURRENT_DATE - 1;
+UPDATE task_instances
+   SET status = 'not_done', resolved_by = 3, resolved_at = due_at + INTERVAL '20 minutes',
+       observations = 'No ha querido la carne con la pastilla.'
+ WHERE medication_plan_id = 1 AND due_date = CURRENT_DATE - 1;
+
+INSERT INTO staff_alerts (kind, ref_key)
+SELECT 'medication_missed', id::text FROM task_instances WHERE medication_plan_id = 1 AND due_date = CURRENT_DATE - 1;
+
+-- Visitas veterinarias programadas (CU-68), cada una con su tarea en «Mi día».
+INSERT INTO vet_visits (id, animal_id, visit_date, visit_time, reason, veterinarian, created_by, created_at)
+OVERRIDING SYSTEM VALUE VALUES
+(1, 14, CURRENT_DATE + 1, '11:00', 'Revisión de la cuarentena y análisis de sangre.', 'Dr. Víctor Albiol', 3, pg_temp.ago_ts('4 days')),
+(2, 10, CURRENT_DATE + 5, '10:30', 'Control de la infección respiratoria.',          'Dra. Paula Sendra', 5, pg_temp.ago_ts('4 days'));
+
+INSERT INTO task_instances (vet_visit_id, type, title, description, zone_id, due_date, due_time, due_at, created_by)
+SELECT v.id, 'health_check', v.reason, v.veterinarian, 4, v.visit_date, v.visit_time,
+       (v.visit_date + v.visit_time) AT TIME ZONE 'Europe/Madrid', v.created_by
+  FROM vet_visits v
+ ORDER BY v.id;
+
+INSERT INTO task_instance_animals (task_id, animal_id)
+SELECT i.id, v.animal_id FROM task_instances i JOIN vet_visits v ON v.id = i.vet_visit_id;
+
+-- -----------------------------------------------------------------------------
 -- 14. Ajustar los contadores de id tras insertar ids explícitos
 -- -----------------------------------------------------------------------------
 SELECT setval(pg_get_serial_sequence('users', 'id'),          (SELECT MAX(id) FROM users));
@@ -752,5 +837,8 @@ SELECT setval(pg_get_serial_sequence('zones', 'id'),          (SELECT MAX(id) FR
 SELECT setval(pg_get_serial_sequence('qualifications', 'id'), (SELECT MAX(id) FROM qualifications));
 SELECT setval(pg_get_serial_sequence('task_templates', 'id'), (SELECT MAX(id) FROM task_templates));
 SELECT setval(pg_get_serial_sequence('shift_templates', 'id'), (SELECT MAX(id) FROM shift_templates));
+SELECT setval(pg_get_serial_sequence('diet_items', 'id'),     (SELECT MAX(id) FROM diet_items));
+SELECT setval(pg_get_serial_sequence('medication_plans', 'id'), (SELECT MAX(id) FROM medication_plans));
+SELECT setval(pg_get_serial_sequence('vet_visits', 'id'),     (SELECT MAX(id) FROM vet_visits));
 
 COMMIT;

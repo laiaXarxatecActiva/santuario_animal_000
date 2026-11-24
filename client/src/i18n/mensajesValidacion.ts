@@ -247,10 +247,36 @@ const FIJOS: Record<string, Traduccion> = {
   },
   'Elige a un trabajador.': { ca: 'Tria un treballador.', en: 'Choose a worker.' },
   'Elige la fecha de fin.': { ca: 'Tria la data de fi.', en: 'Choose the end date.' },
+  // Alimentación, visitas veterinarias y medicación (CU-65 a CU-69).
+  'Escribe el alimento.': { ca: 'Escriu l’aliment.', en: 'Enter the food.' },
+  'Escribe la cantidad con dos decimales como máximo.': {
+    ca: 'Escriu la quantitat amb dos decimals com a màxim.',
+    en: 'Enter the quantity with at most two decimals.',
+  },
+  'La cantidad debe ser mayor que 0.': {
+    ca: 'La quantitat ha de ser més gran que 0.',
+    en: 'The quantity must be greater than 0.',
+  },
+  'Elige la unidad.': { ca: 'Tria la unitat.', en: 'Choose the unit.' },
+  'Elige cuánto ha comido.': { ca: 'Tria quant ha menjat.', en: 'Choose how much it ate.' },
+  'Esta tarea no es de alimentación.': { ca: 'Aquesta tasca no és d’alimentació.', en: 'This is not a feeding task.' },
+  'Este animal no es de esta comida.': {
+    ca: 'Aquest animal no és d’aquest menjar.',
+    en: 'This animal is not part of this meal.',
+  },
+  'Escribe el motivo de la visita.': { ca: 'Escriu el motiu de la visita.', en: 'Enter the reason for the visit.' },
+  'No se puede programar una visita en un día pasado.': {
+    ca: 'No es pot programar una visita en un dia passat.',
+    en: 'A visit cannot be scheduled on a past day.',
+  },
+  'Escribe el medicamento.': { ca: 'Escriu el medicament.', en: 'Enter the medicine.' },
+  'Escribe la dosis.': { ca: 'Escriu la dosi.', en: 'Enter the dose.' },
+  'Elige la vía.': { ca: 'Tria la via.', en: 'Choose the route.' },
 };
 
 /** Mensajes con un número (longitudes máximas y mínimas). */
 const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
+  [/^De 1 a (\d+) tomas\.$/, (n) => ({ ca: `D’1 a ${n} preses.`, en: `From 1 to ${n} meals.` })],
   [/^Como máximo (\d+) días\.$/, (n) => ({ ca: `Com a màxim ${n} dies.`, en: `At most ${n} days.` })],
   [
     /^La contraseña debe tener al menos (\d+) caracteres\.$/,

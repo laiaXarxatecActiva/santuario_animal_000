@@ -1,6 +1,10 @@
 import type {
   AbsenceType,
   CopySkipReason,
+  FoodUnit,
+  IntakeLevel,
+  MedicationRoute,
+  VetVisitStatus,
   TaskBlockReason,
   TaskRecurrence,
   TaskStatus,
@@ -87,8 +91,19 @@ export interface TaskDto {
   resolvedAt: string | null;
   observations: string | null;
   photoUrl: string | null;
-  /** Puntual: creada a mano, sin plantilla. */
+  /** Puntual: creada a mano, sin plantilla, pauta ni visita. */
   isOneOff: boolean;
+  /** CU-69: la pauta de medicación de la que sale. */
+  medicationPlanId?: number | null;
+  /** CU-68: la visita veterinaria de la que sale. */
+  vetVisitId?: number | null;
+  /**
+   * CU-66: en las de alimentación, los animales cuya comida se anota (los de la
+   * tarea o, si no tiene, los que viven en su zona). Vacío en las demás.
+   */
+  feedingAnimals?: NamedRef[];
+  /** CU-66: lo anotado al completarla. */
+  intakes?: { animal: NamedRef; intake: IntakeLevel }[];
 }
 
 /** CU-56: una tarea en «Mi día», con lo que puede hacer quien la ve. */
@@ -109,6 +124,8 @@ export interface MyDayDto {
 /** CU-73. */
 export interface WorkSettingsDto {
   lateMarginMinutes: number;
+  /** CU-67: tomas seguidas comiendo poco para avisar. */
+  lowIntakeMeals?: number;
 }
 
 /** CU-60. */
@@ -185,4 +202,79 @@ export interface ShiftsCalendarDto {
 export interface CopyWeekResultDto {
   created: number;
   skipped: { date: string; user: AdminPersonRef; shift: ShiftRef; reason: CopySkipReason }[];
+}
+
+/** CU-65: un alimento de la dieta. */
+export interface DietItemDto {
+  id: number;
+  animalId: number;
+  food: string;
+  /** `NUMERIC` como string. */
+  quantity: string;
+  unit: FoodUnit;
+  /** En qué tomas («Lun, Mié y Vie», «Mañana y tarde»). */
+  schedule: string | null;
+  notes: string | null;
+  startDate: string;
+  endDate: string | null;
+  /** Vigente hoy. */
+  isCurrent: boolean;
+}
+
+/** CU-66: lo que comió un animal en una toma. */
+export interface FeedingLogDto {
+  taskId: number;
+  date: string;
+  time: string;
+  intake: IntakeLevel;
+  recordedBy: AdminPersonRef | null;
+}
+
+/** CU-68. */
+export interface VetVisitDto {
+  id: number;
+  animalId: number;
+  date: string;
+  time: string;
+  reason: string;
+  veterinarian: string | null;
+  status: VetVisitStatus;
+  /** El registro del historial creado al hacerla. */
+  vetRecordId: number | null;
+  /** La tarea pendiente de «Mi día», si la hay. */
+  taskId: number | null;
+}
+
+/** CU-69. */
+export interface MedicationPlanDto {
+  id: number;
+  animalId: number;
+  medication: string;
+  dose: string;
+  route: MedicationRoute;
+  times: string[];
+  startDate: string;
+  endDate: string | null;
+  qualification: NamedRef | null;
+  notes: string | null;
+  /** Vigente hoy (o empieza más adelante). */
+  isActive: boolean;
+  dosesGiven: number;
+  /** No dadas: marcadas como no realizadas o cerradas por el sistema. */
+  dosesMissed: number;
+  /** Tiene dosis resueltas: no se puede borrar, solo terminar. */
+  hasHistory: boolean;
+}
+
+/** Pestaña «Cuidados» de la ficha del animal (CU-65 a CU-69). */
+export interface AnimalCareDto {
+  animalId: number;
+  diet: DietItemDto[];
+  /** Las de los últimos días, de la más reciente a la más antigua. */
+  feedings: FeedingLogDto[];
+  /** Tomas seguidas comiendo poco (de la última hacia atrás). */
+  lowIntakeStreak: number;
+  medicationPlans: MedicationPlanDto[];
+  /** Programadas (también las pasadas sin registrar) y las últimas hechas o canceladas. */
+  vetVisits: VetVisitDto[];
 }
