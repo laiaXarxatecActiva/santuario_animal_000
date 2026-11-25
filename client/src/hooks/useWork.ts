@@ -78,6 +78,14 @@ export const useShiftCalendar = (from?: string, to?: string) =>
     placeholderData: keepPreviousData,
   });
 
+/** CU-63: «Mis fichajes»; sin fechas, las últimas 4 semanas. */
+export const useMyShifts = (from?: string, to?: string) =>
+  useQuery({
+    queryKey: [...SHIFTS_KEY, 'mine', from ?? '', to ?? ''],
+    queryFn: () => workApi.shifts.mine(from, to),
+    placeholderData: keepPreviousData,
+  });
+
 /** CU-62: ausencias de hoy en adelante. */
 export const useAbsences = () =>
   useQuery({ queryKey: [...SHIFTS_KEY, 'absences'], queryFn: () => workApi.absences.list().then((r) => r.data) });

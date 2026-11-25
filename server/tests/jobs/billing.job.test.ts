@@ -71,7 +71,9 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
     expect(await notificaciones(7, 'payment_completed')).toEqual([
       { message: 'Hemos cobrado la cuota de Greta. ¡Gracias!', link: '/my-animals/2' },
     ]);
-    expect(t.mailer.outbox.map((m) => [m.to, m.subject])).toEqual([['pablo.garcia@correo.test', 'Cuota cobrada: Greta']]);
+    expect(t.mailer.outbox.map((m) => [m.to, m.subject])).toEqual([
+      ['pablo.garcia@correo.test', 'Cuota cobrada: Greta'],
+    ]);
     expect(t.mailer.outbox[0]?.text).toContain('12,00');
   });
 
@@ -102,7 +104,9 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
 
   it('3a: un cobro fallido guarda el pago fallido, pausa la adopción, avisa y envía el enlace para regularizar', async () => {
     await vencerHoy(6);
-    const deps = depsDePrueba(t, { payments: createSimulatedGateway({ mode: 'always_fail', reloj: relojFijo(t.hoy) }) });
+    const deps = depsDePrueba(t, {
+      payments: createSimulatedGateway({ mode: 'always_fail', reloj: relojFijo(t.hoy) }),
+    });
     expect(await runBilling(deps)).toEqual({ charged: 0, failed: 1, alreadyPaid: 0, errors: 0 });
 
     expect(await adopcion(6)).toMatchObject({ status: 'paused', next_billing_date: t.hoy });
@@ -112,7 +116,8 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
       failure_reason: expect.any(String),
     });
     expect(await notificaciones(8, 'payment_failed')).toContainEqual({
-      message: 'No hemos podido cobrar la cuota de tu adopción de Greta. La adopción está pausada hasta que se regularice el pago.',
+      message:
+        'No hemos podido cobrar la cuota de tu adopción de Greta. La adopción está pausada hasta que se regularice el pago.',
       link: '/my-animals/2',
     });
     const email = t.mailer.outbox[0];

@@ -11,6 +11,7 @@ export function createNotificationRoutes(service: NotificationService): Router {
   const router = Router();
 
   router.get('/me/notifications', requireAuth, validate({ query: notificationsQuerySchema }), c.list);
+  router.delete('/me/notifications', requireAuth, c.removeAll);
   router.post('/me/notifications/read-all', requireAuth, c.readAll);
   router.patch(
     '/me/notifications/:id',

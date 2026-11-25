@@ -47,8 +47,7 @@
   "animal": {
     "sex": {
       "male": "Macho",
-      "female": "Hembra",
-      "unknown": "Sexo desconocido"
+      "female": "Hembra"
     },
     "inTreatment": "En tratamiento",
     "notAdoptable": "No disponible para adoptar",
@@ -87,8 +86,7 @@
     "anySex": "Cualquier sexo",
     "sexOptions": {
       "male": "Macho",
-      "female": "Hembra",
-      "unknown": "Desconocido"
+      "female": "Hembra"
     },
     "age": "Edad",
     "anyAge": "Cualquier edad",
@@ -215,7 +213,8 @@
     "SPECIES_ALREADY_EXISTS": "Esta especie ya existe.",
     "ANIMAL_HAS_ADOPTIONS": "Este animal tiene historial de adopciones; archívalo cambiando su estado.",
     "ARCHIVED_ANIMAL_NOT_ADOPTABLE": "Un animal fallecido o trasladado no puede admitir adopciones.",
-    "ANIMAL_ARCHIVED": "Este animal está archivado (fallecido o trasladado) y su estado ya no se puede cambiar.",
+    "ARCHIVED_STATUS_ADMIN_ONLY": "Solo un administrador puede cambiar el estado de un animal fallecido o trasladado.",
+    "ANIMAL_ARCHIVED_READ_ONLY": "Este animal ya no está en el santuario: su información solo se puede consultar.",
     "ARRIVAL_IN_FUTURE": "La fecha de llegada no puede ser futura.",
     "DATE_IN_FUTURE": "La fecha no puede ser futura.",
     "SPECIES_NOT_FOUND": "Esta especie no existe.",
@@ -610,6 +609,7 @@
       "stats": "Estadísticas",
       "groupWork": "Trabajo diario",
       "myDay": "Mi día",
+      "myShifts": "Mis fichajes",
       "tasks": "Tareas del día",
       "taskTemplates": "Plantillas de tareas",
       "zones": "Zonas y cualificaciones",
@@ -724,7 +724,6 @@
       "isPublishedHelp": "Aparece en el catálogo de la web.",
       "isAdoptable": "Admite adopciones",
       "isAdoptableHelp": "Se puede adoptar desde la web.",
-      "archivedHelp": "Un animal fallecido o trasladado no puede admitir adopciones.",
       "nameRequired": "Escribe el nombre del animal.",
       "speciesRequired": "Elige la especie.",
       "arrivalRequired": "Indica la fecha de llegada.",
@@ -754,14 +753,18 @@
       "confirmDeleteText": "Se borrarán también sus fotos y actualizaciones. Esta acción no se puede deshacer.",
       "deleted": "{{name}} se ha borrado",
       "statusSince": "Desde el {{date}}",
-      "sexUnknown": "Desconocido",
       "tabPhotos": "Fotos",
       "tabUpdates": "Actualizaciones",
       "tabVet": "Veterinario",
       "showInMemorial": "Mostrar en «En memoria»",
       "showInMemorialHelp": "Su ficha aparecerá en la sección pública «En memoria», sin opción de adoptar.",
       "zone": "Zona",
-      "tabCare": "Cuidados"
+      "tabCare": "Cuidados",
+      "readOnly": "Este animal ya no está en el santuario: solo se puede consultar su información.",
+      "readOnlyAdmin": "Si es un error, cambia su estado.",
+      "confirmRestore": "¿Devolver a {{name}} a «{{status}}»?",
+      "restoreText": "Sus adopciones cerradas no se reabren: quien quiera tendrá que adoptarlo de nuevo. No admitirá adopciones hasta que lo actives en «Datos».",
+      "restoreMemorial": "También dejará de aparecer en «En memoria»."
     },
     "media": {
       "dropHere": "Arrastra aquí las fotos o vídeos",
@@ -1194,6 +1197,7 @@
         "vet": "El historial veterinario de todos los animales, solo para el personal.",
         "today": "Lo más importante de hoy de un vistazo: tareas, medicación, incidencias, turnos y huecos. Cada bloque lleva a su página.",
         "myDay": "Tus tareas y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
+        "myShifts": "Cuándo has fichado la entrada y la salida de cada turno y cuántas horas has trabajado. Sin fechas, las últimas 4 semanas.",
         "incidents": "Para comunicar problemas del santuario (un animal herido, una avería…) y seguir cómo se resuelven.",
         "shifts": "Aquí ves quién trabaja cada día de la semana y en qué zonas. Si falta personal en un turno, aparece en amarillo.",
         "tasks": "Todas las tareas de un día. Puedes crear tareas puntuales, reasignarlas y cambiar los ajustes del trabajo diario.",
@@ -1327,7 +1331,13 @@
     "seeAll": "Ver todas",
     "readAll": "Marcar todas como leídas",
     "delete": "Borrar: {{message}}",
-    "errorLoading": "No hemos podido cargar tus notificaciones"
+    "errorLoading": "No hemos podido cargar tus notificaciones",
+    "clearAll": "Limpiar notificaciones",
+    "clearConfirmTitle": "¿Borrar todas tus notificaciones?",
+    "clearConfirmText": "Se borrarán todas, también las que no has leído. No se puede deshacer.",
+    "clearConfirm": "Borrar todas",
+    "clearing": "Borrando…",
+    "clearError": "No hemos podido borrar tus notificaciones. Inténtalo de nuevo."
   },
   "charts": {
     "empty": "No hay datos en este rango",
@@ -1395,7 +1405,6 @@
     "assignedTo": "Asignada a {{name}}",
     "requires": "Exige: {{name}}",
     "photo": "Foto",
-    "viewPhoto": "Ver la foto",
     "blocked": {
       "MISSING_QUALIFICATION": "Necesitas la cualificación «{{name}}».",
       "FUTURE_DAY": "Se podrá marcar ese mismo día."
@@ -1427,7 +1436,7 @@
       "nextDay": "Día siguiente",
       "today": "Hoy",
       "done": "Hecha",
-      "withNote": "Con nota o foto",
+      "withNote": "Con nota",
       "notDone": "No se ha podido hacer",
       "undo": "Deshacer",
       "markedDone": "Tarea marcada como hecha",
@@ -1591,11 +1600,8 @@
       },
       "noShifts": "Sin turnos este día.",
       "loadError": "No se han podido cargar los turnos.",
-      "yourShift": "Tu turno",
       "checkIn": "Fichar entrada",
       "checkOut": "Fichar salida",
-      "checkedInAt": "Entrada: {{time}}",
-      "checkedOutAt": "Salida: {{time}}",
       "checkInDone": "Entrada fichada",
       "checkOutDone": "Salida fichada",
       "today": "Hoy"
@@ -1881,6 +1887,34 @@
       "summaryHelp": "Un email a la administración con las tareas, la medicación, las incidencias y los huecos del día.",
       "summaryEnabled": "Enviar el resumen del día",
       "summaryTime": "Hora del resumen"
+    },
+    "clock": {
+      "title": "Fichaje",
+      "history": "Ver mis fichajes",
+      "historyTitle": "Mis fichajes",
+      "noShiftToday": "Hoy no tienes turno",
+      "states": {
+        "pending": "Sin fichar",
+        "working": "Trabajando",
+        "done": "Terminado"
+      },
+      "notYet": "Aún no has fichado la entrada",
+      "notClocked": "No se fichó la entrada",
+      "workingSince": "Trabajando desde las {{time}}",
+      "noExit": "Entrada a las {{time}}, sin fichar la salida",
+      "finished": "Turno terminado: de {{from}} a {{to}}",
+      "confirmOutTitle": "¿Fichar la salida?",
+      "confirmOutText": "Se guardará la hora de ahora como fin de tu turno. Después no se puede cambiar: si te equivocas, díselo a quien organiza los turnos.",
+      "duration": "{{hours}} h {{minutes}} min",
+      "total": "Total: {{duration}}",
+      "range": "Del {{from}} al {{to}}",
+      "historyEmpty": "No tienes turnos en estas fechas.",
+      "loadError": "No hemos podido cargar tus fichajes.",
+      "day": "Día",
+      "shift": "Turno",
+      "in": "Entrada",
+      "out": "Salida",
+      "worked": "Horas"
     }
   },
   "photoPicker": {

@@ -5,6 +5,7 @@ import { SelectField } from '../../components/FormFields';
 import { useAdminAnimals } from '../../hooks/useAdmin';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
+import { esArchivado } from '../../utils/animal';
 
 // CU-34 desde el menú «Veterinario» (SCREENS §5.1): se elige el animal y se
 // muestra el mismo historial que en la pestaña de su ficha.
@@ -35,7 +36,11 @@ export function VetRecordsAdminPage() {
           ))}
         </SelectField>
       </div>
-      {animal ? <VetRecords animalId={animal.id} animalName={animal.name} /> : <p>{t('admin.vet.pickAnimal')}</p>}
+      {animal ? (
+        <VetRecords animalId={animal.id} animalName={animal.name} soloLectura={esArchivado(animal.status)} />
+      ) : (
+        <p>{t('admin.vet.pickAnimal')}</p>
+      )}
     </div>
   );
 }

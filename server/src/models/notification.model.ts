@@ -97,6 +97,11 @@ export async function remove(db: Queryable, userId: number, id: number): Promise
   return (rowCount ?? 0) > 0;
 }
 
+/** Borra todas las notificaciones propias («Limpiar notificaciones», CU-18 paso 4). */
+export async function removeAll(db: Queryable, userId: number): Promise<void> {
+  await db.query('DELETE FROM notifications WHERE user_id = $1', [userId]);
+}
+
 /** La misma notificación para varios usuarios (CU-31 paso 4.1, CU-33 paso 6). */
 export async function createForUsers(
   db: Queryable,

@@ -48,6 +48,10 @@ const FIJOS: Record<string, Traduccion> = {
   'Elige el rol.': { ca: 'Tria el rol.', en: 'Choose the role.' },
   'Elige la forma de pago.': { ca: 'Tria la forma de pagament.', en: 'Choose the payment method.' },
   'Elige el sexo.': { ca: 'Tria el sexe.', en: 'Choose the sex.' },
+  'Indica si se muestra en «En memoria».': {
+    ca: 'Indica si es mostra a «En memòria».',
+    en: 'Say whether it is shown in “In memory”.',
+  },
   'Elige el tipo.': { ca: 'Tria el tipus.', en: 'Choose the type.' },
   'Elige la adopción.': { ca: 'Tria l’adopció.', en: 'Choose the adoption.' },
   'Elige la especie.': { ca: 'Tria l’espècie.', en: 'Choose the species.' },

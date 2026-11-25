@@ -48,6 +48,10 @@ export function createNotificationService({ db }: NotificationServiceDeps) {
     async remove(userId: number, id: number): Promise<void> {
       if (!(await notificationModel.remove(db, userId, id))) throw new NotFoundError();
     },
+
+    async removeAll(userId: number): Promise<void> {
+      await notificationModel.removeAll(db, userId);
+    },
   };
 }
 

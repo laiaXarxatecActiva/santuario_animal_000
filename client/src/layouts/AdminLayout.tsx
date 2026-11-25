@@ -9,6 +9,7 @@ import {
   faClipboardList,
   faClock,
   faListCheck,
+  faUserClock,
   faMapLocationDot,
   faRepeat,
   faChartColumn,
@@ -78,6 +79,7 @@ const GRUPOS: readonly Grupo[] = [
     links: [
       { to: '/admin/today', key: 'admin.nav.today', icon: faCalendarDay, roles: ['admin'] },
       { to: '/admin/my-day', key: 'admin.nav.myDay', icon: faListCheck },
+      { to: '/admin/my-shifts', key: 'admin.nav.myShifts', icon: faUserClock },
       { to: '/admin/incidents', key: 'admin.nav.incidents', icon: faTriangleExclamation },
       { to: '/admin/shifts', key: 'admin.nav.shifts', icon: faCalendarDays },
       { to: '/admin/tasks', key: 'admin.nav.tasks', icon: faClipboardList, roles: ['admin'] },

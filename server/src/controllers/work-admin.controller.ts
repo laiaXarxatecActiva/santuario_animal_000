@@ -5,6 +5,7 @@ import {
   copyWeekBodySchema,
   shiftAssignmentBodySchema,
   shiftsQuerySchema,
+  myShiftsQuerySchema,
   shiftTemplateBodySchema,
   idParamsSchema,
   myDayQuerySchema,
@@ -20,8 +21,6 @@ import {
 } from '@sanctuary/shared';
 import type { RequestHandler } from 'express';
 import { diferencias } from '../dominio/actividad.js';
-import { ValidationError } from '../errors/app-error.js';
-import { archivosSubidos } from '../middlewares/upload.js';
 import { validated } from '../middlewares/validate.js';
 import { sinRegistro, type ActivityLogService } from '../services/activity-log.service.js';
 import type { ShiftService } from '../servicios/shift.service.js';
@@ -135,10 +134,8 @@ export function createTaskController(service: TaskService, actividad: ActivityLo
       res.json(await service.list(validated(res, 'query', adminTasksQuerySchema)));
     }) satisfies RequestHandler,
     complete: (async (req, res) => {
-      const archivos = archivosSubidos(req);
-      if (archivos.length > 1) throw new ValidationError([{ field: 'files', message: 'Adjunta una sola foto.' }]);
       const { observations, intakes } = validated(res, 'body', taskCompleteBodySchema);
-      res.json(await service.complete(req.user!, id(res), observations ?? null, archivos[0], intakes));
+      res.json(await service.complete(req.user!, id(res), observations ?? null, intakes));
     }) satisfies RequestHandler,
     notDone: (async (req, res) => {
       res.json(await service.notDone(req.user!, id(res), validated(res, 'body', taskNotDoneBodySchema).reason));
@@ -234,6 +231,9 @@ export function createShiftController(service: ShiftService, actividad: Activity
         await actividad.log(req.user!.id, 'create', 'shift_assignments', nueva, { copyWeek: weekStart });
       }
       res.json(resultado);
+    }) satisfies RequestHandler,
+    mine: (async (req, res) => {
+      res.json(await service.mine(req.user!, validated(res, 'query', myShiftsQuerySchema)));
     }) satisfies RequestHandler,
     checkIn: (async (req, res) => {
       res.json(await service.checkIn(req.user!, id(res)));

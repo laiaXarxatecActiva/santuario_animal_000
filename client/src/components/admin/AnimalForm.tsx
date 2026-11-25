@@ -27,7 +27,6 @@ export const ANIMAL_FIELDS = [
   'healthSummary',
   'isAdoptable',
   'isPublished',
-  'showInMemorial',
   'zoneId',
 ] as const;
 
@@ -42,7 +41,7 @@ interface AnimalFormProps {
 const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
   name: a?.name ?? '',
   speciesId: a?.species.id ?? '',
-  sex: a?.sex ?? 'unknown',
+  sex: a?.sex ?? '',
   approxBirthDate: a?.approxBirthDate ?? '',
   arrivalDate: a?.arrivalDate ?? '',
   rescueStory: a?.rescueStory ?? '',
@@ -52,18 +51,16 @@ const valoresIniciales = (a?: AdminAnimalDto): AnimalBody => ({
   isAdoptable: a?.isAdoptable ?? true,
   isPublished: a?.isPublished ?? false,
   zoneId: a?.zone?.id ?? '',
-  // CU-12: solo un fallecido puede aparecer en «En memoria» (RN-22).
-  ...(a?.status === 'deceased' ? { showInMemorial: a.showInMemorial } : {}),
 });
 
 // Formulario de alta y edición de un animal (CU-28, SCREENS §5.4 pestaña «Datos»).
+// Un animal fallecido o trasladado no lo usa: sus datos solo se consultan (RN-22).
 export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSubmit }: AnimalFormProps) {
   const { t } = useTranslation();
   const especies = useAdminSpecies();
   const zonas = useZones();
   // CU-52: las zonas activas y, si está en una desactivada, también esa.
   const opcionesZona = (zonas.data ?? []).filter((z) => z.isActive || z.id === animal?.zone?.id);
-  const archivado = animal?.status === 'deceased' || animal?.status === 'transferred';
   const {
     register,
     control,
@@ -99,9 +96,10 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
             ))}
           </SelectField>
           <SelectField label={t('admin.animal.sex')} error={errors.sex?.message} {...register('sex')}>
+            <option value="">{t('form.choose')}</option>
             {ANIMAL_SEXES.map((s) => (
               <option key={s} value={s}>
-                {t(s === 'unknown' ? 'admin.animal.sexUnknown' : `animal.sex.${s}`)}
+                {t(`animal.sex.${s}`)}
               </option>
             ))}
           </SelectField>
@@ -140,10 +138,9 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
             render={({ field }) => (
               <Switch
                 label={t('admin.animal.isAdoptable')}
-                help={archivado ? t('admin.animal.archivedHelp') : t('admin.animal.isAdoptableHelp')}
+                help={t('admin.animal.isAdoptableHelp')}
                 name={field.name}
                 ref={field.ref}
-                disabled={archivado}
                 checked={Boolean(field.value)}
                 onChange={(e) => field.onChange(e.target.checked)}
               />
@@ -153,22 +150,6 @@ export function AnimalForm({ animal, submitLabel, submittingLabel, pending, onSu
             <p className={styles.error} role="alert">
               {errors.isAdoptable.message}
             </p>
-          )}
-          {animal?.status === 'deceased' && (
-            <Controller
-              control={control}
-              name="showInMemorial"
-              render={({ field }) => (
-                <Switch
-                  label={t('admin.animal.showInMemorial')}
-                  help={t('admin.animal.showInMemorialHelp')}
-                  name={field.name}
-                  ref={field.ref}
-                  checked={Boolean(field.value)}
-                  onChange={(e) => field.onChange(e.target.checked)}
-                />
-              )}
-            />
           )}
         </fieldset>
       </div>

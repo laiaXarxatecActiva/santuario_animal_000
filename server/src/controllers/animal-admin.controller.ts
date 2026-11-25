@@ -1,6 +1,7 @@
 import {
   adminAnimalsQuerySchema,
   animalBodySchema,
+  animalMemorialBodySchema,
   animalStatusBodySchema,
   ARCHIVED_ANIMAL_STATUSES,
   idParamsSchema,
@@ -35,12 +36,19 @@ export function createAnimalAdminController(service: AnimalAdminService, activid
   const changeStatus: RequestHandler = async (req, res) => {
     const datos = validated(res, 'body', animalStatusBodySchema);
     const antes = await service.get(id(res));
-    const animal = await service.changeStatus(id(res), datos, req.user!.id);
+    const animal = await service.changeStatus(id(res), datos, req.user!);
     const archivado = (ARCHIVED_ANIMAL_STATUSES as readonly string[]).includes(animal.status);
     await actividad.log(req.user!.id, archivado ? 'archive' : 'update', 'animals', animal.id, {
       status: cambio(antes.status, animal.status),
       date: datos.date,
     });
+    res.json(animal);
+  };
+  const setMemorial: RequestHandler = async (req, res) => {
+    const { showInMemorial } = validated(res, 'body', animalMemorialBodySchema);
+    const antes = await service.get(id(res));
+    const animal = await service.setMemorial(id(res), showInMemorial);
+    await actividad.log(req.user!.id, 'update', 'animals', animal.id, diferencias(antes, animal));
     res.json(animal);
   };
   const remove: RequestHandler = async (req, res) => {
@@ -49,5 +57,5 @@ export function createAnimalAdminController(service: AnimalAdminService, activid
     await actividad.log(req.user!.id, 'delete', 'animals', antes.id, { name: antes.name });
     res.status(204).end();
   };
-  return { list, get, create, update, changeStatus, remove };
+  return { list, get, create, update, changeStatus, setMemorial, remove };
 }

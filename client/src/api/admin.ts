@@ -128,6 +128,9 @@ export const adminApi = {
     update: (id: number, body: AnimalBody) => apiPut<AdminAnimalDto>(`/api/admin/animals/${id}`, body),
     changeStatus: (id: number, body: AnimalStatusBody) =>
       apiPatch<AdminAnimalDto>(`/api/admin/animals/${id}/status`, body),
+    /** CU-12: mostrar u ocultar a un fallecido en «En memoria». */
+    setMemorial: (id: number, showInMemorial: boolean) =>
+      apiPatch<AdminAnimalDto>(`/api/admin/animals/${id}/memorial`, { showInMemorial }),
     remove: (id: number) => apiDelete(`/api/admin/animals/${id}`),
   },
 

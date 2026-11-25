@@ -22,6 +22,7 @@ import { SelectField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { ADMIN_ANIMALS_KEY, adminAnimalKey, adminPhotosKey, useAdminPhotos } from '../../hooks/useAdmin';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
+import { esArchivado } from '../../utils/animal';
 import { useAnimalTab } from './AnimalAdminPage';
 import styles from './AnimalPhotosTab.module.css';
 import pageStyles from './AdminPage.module.css';
@@ -49,6 +50,8 @@ export function AnimalPhotosTab() {
   const { t } = useTranslation();
   const { animal } = useAnimalTab();
   const fotos = useAdminPhotos(animal.id);
+  // RN-22: la de un fallecido o trasladado solo se consulta.
+  const soloLectura = esArchivado(animal.status);
   const queryClient = useQueryClient();
   const [pendientes, setPendientes] = useState<PendingMedia[]>([]);
   const [avisos, setAvisos] = useState<Aviso[]>([]);
@@ -154,15 +157,17 @@ export function AnimalPhotosTab() {
         </Alert>
       ))}
 
-      <section className={styles.section} aria-labelledby="subir-fotos">
-        <h2 id="subir-fotos">{t('admin.photos.uploadTitle')}</h2>
-        <MediaUploader items={pendientes} onChange={setPendientes} disabled={subir.isPending} />
-        <div>
-          <Button icon={faUpload} disabled={pendientes.length === 0 || subir.isPending} onClick={enviar}>
-            {subir.isPending ? t('admin.photos.uploading') : t('admin.photos.upload', { count: pendientes.length })}
-          </Button>
-        </div>
-      </section>
+      {!soloLectura && (
+        <section className={styles.section} aria-labelledby="subir-fotos">
+          <h2 id="subir-fotos">{t('admin.photos.uploadTitle')}</h2>
+          <MediaUploader items={pendientes} onChange={setPendientes} disabled={subir.isPending} />
+          <div>
+            <Button icon={faUpload} disabled={pendientes.length === 0 || subir.isPending} onClick={enviar}>
+              {subir.isPending ? t('admin.photos.uploading') : t('admin.photos.upload', { count: pendientes.length })}
+            </Button>
+          </div>
+        </section>
+      )}
 
       <section className={styles.section} aria-labelledby="galeria">
         <h2 id="galeria">{t('admin.photos.gallery')}</h2>
@@ -189,6 +194,7 @@ export function AnimalPhotosTab() {
             onSetCover={(foto) => portada.mutate(foto)}
             onEdit={setEditando}
             onDelete={setABorrar}
+            readOnly={soloLectura}
           />
         )}
       </section>

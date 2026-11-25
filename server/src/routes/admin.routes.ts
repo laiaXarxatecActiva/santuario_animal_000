@@ -9,6 +9,7 @@ import {
   copyWeekBodySchema,
   shiftAssignmentBodySchema,
   shiftsQuerySchema,
+  myShiftsQuerySchema,
   shiftTemplateBodySchema,
   adminActivityLogsQuerySchema,
   adminStatsQuerySchema,
@@ -28,6 +29,7 @@ import {
   adminUserPatchSchema,
   adminUsersQuerySchema,
   animalBodySchema,
+  animalMemorialBodySchema,
   animalStatusBodySchema,
   coverBodySchema,
   idParamsSchema,
@@ -79,6 +81,7 @@ import {
   createZoneAdminController,
 } from '../controllers/work-admin.controller.js';
 import { requireRole } from '../middlewares/auth.js';
+import { soloJson } from '../middlewares/require-json.js';
 import { uploadFiles } from '../middlewares/upload.js';
 import { validate } from '../middlewares/validate.js';
 import type { JobRunner } from '../jobs/registry.js';
@@ -156,6 +159,11 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     '/animals/:id/status',
     validate({ params: idParamsSchema, body: animalStatusBodySchema }),
     animales.changeStatus,
+  );
+  router.patch(
+    '/animals/:id/memorial',
+    validate({ params: idParamsSchema, body: animalMemorialBodySchema }),
+    animales.setMemorial,
   );
   router.delete('/animals/:id', soloAdmin, conId, animales.remove);
 
@@ -332,7 +340,7 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.post(
     '/tasks/:id/complete',
     conId,
-    uploadFiles(),
+    soloJson,
     validate({ params: idParamsSchema, body: taskCompleteBodySchema }),
     tareas.complete,
   );
@@ -356,6 +364,7 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   );
   router.delete('/shift-templates/:id', soloAdmin, conId, turnos.removeTemplate);
   router.get('/shifts', validate({ query: shiftsQuerySchema }), turnos.calendar);
+  router.get('/my-shifts', validate({ query: myShiftsQuerySchema }), turnos.mine);
   router.post('/shift-assignments', soloAdmin, validate({ body: shiftAssignmentBodySchema }), turnos.createAssignment);
   router.post('/shift-assignments/copy-week', soloAdmin, validate({ body: copyWeekBodySchema }), turnos.copyWeek);
   router.delete('/shift-assignments/:id', soloAdmin, conId, turnos.removeAssignment);

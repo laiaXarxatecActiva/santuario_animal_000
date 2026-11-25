@@ -1,8 +1,9 @@
 import type { VetRecordData, VetRecordDto } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import type { Reloj } from '../dominio/reloj.js';
+import { fichaModificable } from '../dominio/animal.js';
 import { comprobarFechaRegistro, MENSAJE_FECHA_REGISTRO } from '../dominio/veterinario.js';
-import { NotFoundError, ValidationError } from '../errors/app-error.js';
+import { AnimalReadOnlyError, NotFoundError, ValidationError } from '../errors/app-error.js';
 import * as animalModel from '../models/animal-admin.model.js';
 import * as vetModel from '../models/vet-record.model.js';
 
@@ -25,6 +26,20 @@ export function createVetRecordAdminService({ db, reloj }: VetRecordAdminService
     if (problema) throw new ValidationError([{ field: 'recordDate', message: MENSAJE_FECHA_REGISTRO[problema] }]);
   }
 
+  /** RN-22: el historial de un animal fallecido o trasladado solo se consulta. */
+  async function animalModificable(animalId: number): Promise<void> {
+    const status = await animalModel.findStatus(db, animalId);
+    if (status === null) throw animalNoExiste();
+    if (!fichaModificable(status)) throw new AnimalReadOnlyError();
+  }
+
+  /** El registro existe y su animal sigue en el santuario. */
+  async function registroModificable(id: number): Promise<void> {
+    const registro = await vetModel.findById(db, id);
+    if (!registro) throw registroNoExiste();
+    await animalModificable(registro.animalId);
+  }
+
   return {
     /** Paso 2: del más reciente al más antiguo. */
     async list(animalId: number): Promise<{ data: VetRecordDto[] }> {
@@ -41,7 +56,7 @@ export function createVetRecordAdminService({ db, reloj }: VetRecordAdminService
     /** Pasos 3-4. */
     async create(animalId: number, datos: VetRecordData, autorId: number): Promise<VetRecordDto> {
       comprobarFecha(datos);
-      if (!(await animalModel.exists(db, animalId))) throw animalNoExiste();
+      await animalModificable(animalId);
       const id = await vetModel.create(db, animalId, datos, autorId);
       return (await vetModel.findById(db, id))!;
     },
@@ -49,12 +64,14 @@ export function createVetRecordAdminService({ db, reloj }: VetRecordAdminService
     /** A1: cuidador o administrador. */
     async update(id: number, datos: VetRecordData): Promise<VetRecordDto> {
       comprobarFecha(datos);
+      await registroModificable(id);
       if (!(await vetModel.update(db, id, datos))) throw registroNoExiste();
       return (await vetModel.findById(db, id))!;
     },
 
     /** A2: solo el administrador (lo comprueba la ruta). */
     async remove(id: number): Promise<void> {
+      await registroModificable(id);
       if (!(await vetModel.remove(db, id))) throw registroNoExiste();
     },
   };

@@ -118,4 +118,27 @@ describe('CU-18 Consultar las notificaciones', () => {
     const res = await listar(adrian);
     expect(res).toEqual({ data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0, unreadCount: 0 } });
   });
+
+  it('4: sin sesión no se pueden limpiar las notificaciones (401)', async () => {
+    expect((await request(t.app).delete('/api/me/notifications').send({})).status).toBe(401);
+  });
+
+  it('4: limpia todas las notificaciones propias sin tocar las de otras personas', async () => {
+    const otras = async () => {
+      const { rows } = await t.pool.query<{ n: number }>(
+        'SELECT count(*)::int AS n FROM notifications WHERE user_id <> 6',
+      );
+      return rows[0]?.n ?? 0;
+    };
+    const antes = await otras();
+    expect(antes).toBeGreaterThan(0);
+    expect((await lucia.delete('/api/me/notifications').send({})).status).toBe(204);
+    expect(await listar(lucia)).toEqual({
+      data: [],
+      meta: { page: 1, pageSize: 20, total: 0, totalPages: 0, unreadCount: 0 },
+    });
+    expect(await otras()).toBe(antes);
+    // Sin ninguna que borrar, también responde 204.
+    expect((await lucia.delete('/api/me/notifications').send({})).status).toBe(204);
+  });
 });

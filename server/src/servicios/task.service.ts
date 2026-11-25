@@ -14,7 +14,6 @@ import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
 import { completarIngestas, esIngestaBaja, type Ingesta } from '../dominio/cuidados.js';
-import type { ArchivoSubido } from '../dominio/fotos.js';
 import { fechaEnZonaSantuario, instanteEnZonaSantuario, type Reloj } from '../dominio/reloj.js';
 import { comprobarResolucion } from '../dominio/tareas.js';
 import { esDeMiTurno } from '../dominio/turnos.js';
@@ -35,13 +34,11 @@ import * as taskModel from '../models/task.model.js';
 import * as userModel from '../models/user.model.js';
 import * as settingsModel from '../models/work-settings.model.js';
 import { avisarSiComePoco } from './avisos-cuidados.js';
-import type { MediaUploader } from './media-upload.service.js';
 import { resolverZona } from './task-template-admin.service.js';
 
 export interface TaskServiceDeps {
   db: Pool;
   reloj: Reloj;
-  media: MediaUploader;
 }
 
 export type TaskService = ReturnType<typeof createTaskService>;
@@ -57,7 +54,7 @@ function lanzarSiBloqueada(motivo: TaskBlockReason | null): void {
 }
 
 // CU-55 a CU-57 y CU-73: tareas del día, «Mi día» y ajustes.
-export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
+export function createTaskService({ db, reloj }: TaskServiceDeps) {
   async function contexto(): Promise<taskModel.Contexto> {
     const ajustes = await settingsModel.get(db);
     return { ahora: reloj.ahora(), margenMinutos: ajustes.lateMarginMinutes };
@@ -103,14 +100,13 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
     return resultado.ingestas;
   }
 
-  /** Completa o marca como no realizada (CU-57). La foto se guarda antes y se borra si algo falla. */
+  /** Completa o marca como no realizada (CU-57). */
   async function resolver(
     user: SessionUser,
     id: number,
     datos: {
       status: 'completed' | 'not_done';
       observations: string | null;
-      archivo?: ArchivoSubido;
       intakes?: readonly Ingesta[];
     },
   ): Promise<TaskDto> {
@@ -118,40 +114,28 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
     const tarea = await buscar(db, id);
     lanzarSiBloqueada(bloqueo(tarea, cualificaciones));
     const ingestas = datos.status === 'completed' ? ingestasAlCompletar(tarea, datos.intakes ?? []) : [];
-    let photoUrl: string | null = null;
-    if (datos.archivo) {
-      const guardada = await media.guardarImagen(`tasks/${id}`, datos.archivo);
-      if ('code' in guardada) throw enCampo('files', guardada.message);
-      photoUrl = guardada.url;
-    }
-    try {
-      await withTransaction(db, async (client) => {
-        lanzarSiBloqueada(bloqueo(await buscar(client, id, true), cualificaciones));
-        await taskModel.resolve(client, id, {
-          status: datos.status,
-          resolvedBy: user.id,
-          resolvedAt: reloj.ahora(),
-          observations: datos.observations,
-          photoUrl,
-        });
-        if (ingestas.length === 0) return;
-        // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
-        await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
-        const { lowIntakeMeals } = await settingsModel.get(client);
-        for (const animal of tarea.feedingAnimals ?? []) {
-          const ingesta = ingestas.find((i) => i.animalId === animal.id);
-          if (!ingesta || !esIngestaBaja(ingesta.intake)) continue;
-          await avisarSiComePoco(client, animal, {
-            hoy: reloj.hoy(),
-            zoneId: tarea.zone?.id ?? null,
-            umbral: lowIntakeMeals,
-          });
-        }
+    await withTransaction(db, async (client) => {
+      lanzarSiBloqueada(bloqueo(await buscar(client, id, true), cualificaciones));
+      await taskModel.resolve(client, id, {
+        status: datos.status,
+        resolvedBy: user.id,
+        resolvedAt: reloj.ahora(),
+        observations: datos.observations,
       });
-    } catch (error) {
-      if (photoUrl) await media.borrar([photoUrl]);
-      throw error;
-    }
+      if (ingestas.length === 0) return;
+      // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
+      await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
+      const { lowIntakeMeals } = await settingsModel.get(client);
+      for (const animal of tarea.feedingAnimals ?? []) {
+        const ingesta = ingestas.find((i) => i.animalId === animal.id);
+        if (!ingesta || !esIngestaBaja(ingesta.intake)) continue;
+        await avisarSiComePoco(client, animal, {
+          hoy: reloj.hoy(),
+          zoneId: tarea.zone?.id ?? null,
+          umbral: lowIntakeMeals,
+        });
+      }
+    });
     return buscar(db, id);
   }
 
@@ -188,14 +172,8 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
 
     get: (id: number) => buscar(db, id),
 
-    complete(
-      user: SessionUser,
-      id: number,
-      observations: string | null,
-      archivo?: ArchivoSubido,
-      intakes: readonly Ingesta[] = [],
-    ) {
-      return resolver(user, id, { status: 'completed', observations, archivo, intakes });
+    complete(user: SessionUser, id: number, observations: string | null, intakes: readonly Ingesta[] = []) {
+      return resolver(user, id, { status: 'completed', observations, intakes });
     },
 
     /** A1: el motivo queda en las observaciones. */
@@ -205,7 +183,7 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
 
     /** A2: quien la resolvió, el mismo día; un administrador, siempre. */
     async reopen(user: SessionUser, id: number): Promise<TaskDto> {
-      const foto = await withTransaction(db, async (client) => {
+      await withTransaction(db, async (client) => {
         const tarea = await buscar(client, id, true);
         if (tarea.status === 'pending') throw new TaskIsPendingError();
         const esSuya =
@@ -213,9 +191,8 @@ export function createTaskService({ db, reloj, media }: TaskServiceDeps) {
           tarea.resolvedAt !== null &&
           fechaEnZonaSantuario(new Date(tarea.resolvedAt)) === reloj.hoy();
         if (user.role !== 'admin' && !esSuya) throw new ForbiddenError('Solo quien la resolvió puede deshacerlo.');
-        return taskModel.reopen(client, id);
+        await taskModel.reopen(client, id);
       });
-      if (foto) await media.borrar([foto]);
       return buscar(db, id);
     },
 

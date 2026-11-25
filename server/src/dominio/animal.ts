@@ -1,4 +1,4 @@
-import { ARCHIVED_ANIMAL_STATUSES, type AdoptionEndReason, type AnimalStatus } from '@sanctuary/shared';
+import { ARCHIVED_ANIMAL_STATUSES, type AdoptionEndReason, type AnimalStatus, type Role } from '@sanctuary/shared';
 
 /** RN-22: fallecido o trasladado. */
 export function estaArchivado(status: AnimalStatus): boolean {
@@ -10,9 +10,14 @@ export function puedeSerAdoptable(status: AnimalStatus, isAdoptable: boolean): b
   return !isAdoptable || !estaArchivado(status);
 }
 
-/** CU-33 precondición: solo cambia de estado un animal que no está archivado. */
-export function puedeCambiarDeEstado(actual: AnimalStatus): boolean {
-  return !estaArchivado(actual);
+/** CU-33: el estado de un archivado solo lo cambia el administrador (para corregir un error). */
+export function puedeCambiarDeEstado(actual: AnimalStatus, rol: Role): boolean {
+  return !estaArchivado(actual) || rol === 'admin';
+}
+
+/** RN-22: la información de un fallecido o trasladado (datos, fotos, actualizaciones e historial) solo se consulta. */
+export function fichaModificable(status: AnimalStatus): boolean {
+  return !estaArchivado(status);
 }
 
 /** CU-33 5.2: motivo con el que se cierran las adopciones abiertas, o `null` si no se cierran. */

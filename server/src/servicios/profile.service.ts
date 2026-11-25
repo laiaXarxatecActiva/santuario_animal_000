@@ -1,5 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import type { ChangePasswordInput, DeleteAccountInput, ProfileDto, SessionUser, UpdateProfileInput } from '@sanctuary/shared';
+import type {
+  ChangePasswordInput,
+  DeleteAccountInput,
+  ProfileDto,
+  SessionUser,
+  UpdateProfileInput,
+} from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import { withTransaction } from '../db/transaction.js';
 import type { Reloj } from '../dominio/reloj.js';
@@ -78,7 +84,11 @@ export function createProfileService({ db, reloj }: ProfileServiceDeps) {
     const passwordHash = await hashPassword(randomBytes(32).toString('base64url'));
     await withTransaction(db, async (client) => {
       await adoptionModel.closeOpenForUser(client, userId, reloj.hoy());
-      await userModel.anonymize(client, userId, { ...datosAnonimizados(userId), passwordHash, instante: reloj.ahora() });
+      await userModel.anonymize(client, userId, {
+        ...datosAnonimizados(userId),
+        passwordHash,
+        instante: reloj.ahora(),
+      });
       await donationModel.clearDonorData(client, userId);
       await userModel.deletePersonalRecords(client, userId);
       await sessionModel.deleteByUserId(client, userId);

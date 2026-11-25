@@ -31,5 +31,10 @@ export function createNotificationController(service: NotificationService) {
     res.status(204).end();
   };
 
-  return { list, update, readAll, remove };
+  const removeAll: RequestHandler = async (req, res) => {
+    await service.removeAll(usuarioId(req));
+    res.status(204).end();
+  };
+
+  return { list, update, readAll, remove, removeAll };
 }

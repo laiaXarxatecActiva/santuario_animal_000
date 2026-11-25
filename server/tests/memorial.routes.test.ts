@@ -18,25 +18,6 @@ const memorial = async (): Promise<MemorialAnimalDto[]> => {
   return res.body.data;
 };
 
-/** Cuerpo completo del PUT de un animal a partir de su ficha en el panel. */
-async function edicion(id: number, cambios: Record<string, unknown>) {
-  const { body } = await nuria.get(`/api/admin/animals/${id}`);
-  return {
-    name: body.name,
-    speciesId: body.species.id,
-    sex: body.sex,
-    approxBirthDate: body.approxBirthDate,
-    arrivalDate: body.arrivalDate,
-    rescueStory: body.rescueStory,
-    temperament: body.temperament,
-    specialNeeds: body.specialNeeds,
-    healthSummary: body.healthSummary,
-    isAdoptable: body.isAdoptable,
-    isPublished: body.isPublished,
-    ...cambios,
-  };
-}
-
 describe('CU-12 Consultar la sección «En memoria»', () => {
   it('2: es pública y muestra los fallecidos marcados con foto, especie, llegada, fallecimiento e historia', async () => {
     const lista = await memorial();
@@ -75,21 +56,19 @@ describe('CU-12 Consultar la sección «En memoria»', () => {
     expect((await memorial()).map((a) => a.name)).toContain('Roca');
   });
 
-  it('panel: un fallecido se puede quitar y volver a poner con la edición', async () => {
-    const quitar = await nuria.put('/api/admin/animals/15').send(await edicion(15, { showInMemorial: false }));
+  it('panel: un fallecido se puede quitar y volver a poner con su interruptor', async () => {
+    const quitar = await nuria.patch('/api/admin/animals/15/memorial').send({ showInMemorial: false });
     expect(quitar.status).toBe(200);
     expect(quitar.body.showInMemorial).toBe(false);
     expect((await memorial()).map((a) => a.name)).not.toContain('Roca');
 
-    const poner = await nuria.put('/api/admin/animals/15').send(await edicion(15, { showInMemorial: true }));
+    const poner = await nuria.patch('/api/admin/animals/15/memorial').send({ showInMemorial: true });
     expect(poner.body.showInMemorial).toBe(true);
-    // Sin el campo, no cambia.
-    const sinCampo = await nuria.put('/api/admin/animals/15').send(await edicion(15, {}));
-    expect(sinCampo.body.showInMemorial).toBe(true);
+    expect((await nuria.patch('/api/admin/animals/15/memorial').send({})).status).toBe(400);
   });
 
   it('RN-22: solo un fallecido puede estar en «En memoria»', async () => {
-    const vivo = await nuria.put('/api/admin/animals/1').send(await edicion(1, { showInMemorial: true }));
+    const vivo = await nuria.patch('/api/admin/animals/1/memorial').send({ showInMemorial: true });
     expect(vivo.status).toBe(422);
     expect(vivo.body.error.code).toBe('MEMORIAL_ONLY_DECEASED');
 

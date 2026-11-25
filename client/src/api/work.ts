@@ -27,6 +27,7 @@ import type {
   ShiftAssignmentBody,
   ShiftAssignmentDto,
   ShiftsCalendarDto,
+  MyShiftsDto,
   ShiftTemplateBody,
   ShiftTemplateDto,
   MyDayDto,
@@ -85,22 +86,13 @@ export const workApi = {
     create: (body: OneOffTaskBody) => apiPost<TaskDto>('/api/admin/tasks', body),
     setAssignee: (id: number, body: TaskAssigneeBody) => apiPatch<TaskDto>(`/api/admin/tasks/${id}/assignee`, body),
     remove: (id: number) => apiDelete(`/api/admin/tasks/${id}`),
-    /**
-     * Con un toque (JSON) o con observaciones y foto (multipart). En las comidas,
-     * lo que ha comido cada animal (CU-66).
-     */
+    /** Con un toque o con observaciones. En las comidas, lo que ha comido cada animal (CU-66). */
     complete: (
       id: number,
-      datos: { observations?: string; photo?: File; intakes?: { animalId: number; intake: IntakeLevel }[] } = {},
+      datos: { observations?: string; intakes?: { animalId: number; intake: IntakeLevel }[] } = {},
     ) => {
       const intakes = datos.intakes && datos.intakes.length > 0 ? datos.intakes : undefined;
-      if (!datos.photo)
-        return apiPost<TaskDto>(`/api/admin/tasks/${id}/complete`, { observations: datos.observations, intakes });
-      const form = new FormData();
-      if (datos.observations) form.append('observations', datos.observations);
-      if (intakes) form.append('intakes', JSON.stringify(intakes));
-      form.append('files', datos.photo);
-      return apiUpload<TaskDto>(`/api/admin/tasks/${id}/complete`, form);
+      return apiPost<TaskDto>(`/api/admin/tasks/${id}/complete`, { observations: datos.observations, intakes });
     },
     notDone: (id: number, reason: string) => apiPost<TaskDto>(`/api/admin/tasks/${id}/not-done`, { reason }),
     reopen: (id: number) => apiPost<TaskDto>(`/api/admin/tasks/${id}/reopen`),
@@ -117,6 +109,8 @@ export const workApi = {
   // CU-61 y CU-63. Sin `from`, la semana actual.
   shifts: {
     calendar: (from?: string, to?: string) => apiGet<ShiftsCalendarDto>('/api/admin/shifts', { from, to }),
+    /** CU-63: «Mis fichajes». */
+    mine: (from?: string, to?: string) => apiGet<MyShiftsDto>('/api/admin/my-shifts', { from, to }),
     assign: (body: ShiftAssignmentBody) => apiPost<ShiftAssignmentDto>('/api/admin/shift-assignments', body),
     unassign: (id: number) => apiDelete(`/api/admin/shift-assignments/${id}`),
     copyWeek: (weekStart: string) =>

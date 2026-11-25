@@ -126,7 +126,7 @@ export function createApp(options: AppOptions): Express {
     logger ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo subido') : undefined,
   );
 
-  const tasks = createTaskService({ db, reloj, media });
+  const tasks = createTaskService({ db, reloj });
 
   const jobs =
     options.jobs ??

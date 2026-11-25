@@ -1,4 +1,4 @@
-import { faBell } from '@fortawesome/free-solid-svg-icons';
+import { faBell, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { NotificationDto } from '@sanctuary/shared';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -19,7 +19,7 @@ export function NotificationBell() {
   const boton = useRef<HTMLButtonElement>(null);
   const { pathname } = useLocation();
   const ultimas = useNotifications({ pageSize: BELL_SIZE });
-  const { setRead } = useNotificationActions();
+  const { setRead, remove } = useNotificationActions();
   const sinLeer = ultimas.data?.meta.unreadCount ?? 0;
   const notificaciones = ultimas.data?.data ?? [];
 
@@ -83,6 +83,15 @@ export function NotificationBell() {
                     <NotificationContent notification={n} />
                   </button>
                 )}
+                <button
+                  type="button"
+                  className={`${iconStyles.iconButton} ${styles.delete}`}
+                  aria-label={t('notifications.delete', { message: n.message })}
+                  disabled={remove.isPending}
+                  onClick={() => remove.mutate(n.id)}
+                >
+                  <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+                </button>
               </NotificationRow>
             ))}
           </ul>

@@ -8,6 +8,7 @@ import {
   INCIDENT_STATUSES,
   INTAKE_LEVELS,
   MAX_LOW_INTAKE_MEALS,
+  MAX_MY_SHIFTS_RANGE_DAYS,
   MAX_SHIFT_RANGE_DAYS,
   MEDICATION_ROUTES,
   MAX_TEMPLATE_TIMES,
@@ -148,33 +149,19 @@ export const taskAssigneeBodySchema = z.object({
 });
 export type TaskAssigneeBody = z.infer<typeof taskAssigneeBodySchema>;
 
-/**
- * CU-66: lo que ha comido cada animal en una tarea de alimentación. En
- * multipart llega como texto JSON. Los animales que no aparecen, «todo».
- */
+/** CU-66: lo que ha comido cada animal en una tarea de alimentación. Los animales que no aparecen, «todo». */
 const ingestas = z
-  .preprocess(
-    (valor) => {
-      if (typeof valor !== 'string') return valor;
-      try {
-        return JSON.parse(valor) as unknown;
-      } catch {
-        return valor;
-      }
-    },
-    z
-      .array(
-        z.object({
-          animalId: z.coerce.number().int().positive(),
-          intake: z.enum(INTAKE_LEVELS, { error: 'Elige cuánto ha comido.' }),
-        }),
-      )
-      .max(100),
+  .array(
+    z.object({
+      animalId: z.coerce.number().int().positive(),
+      intake: z.enum(INTAKE_LEVELS, { error: 'Elige cuánto ha comido.' }),
+    }),
   )
+  .max(100)
   .optional()
   .transform((v) => v ?? []);
 
-// CU-57: completar (observaciones y foto opcionales) o marcar como no realizada (motivo obligatorio).
+// CU-57: completar (observaciones opcionales; sin fotos) o marcar como no realizada (motivo obligatorio).
 export const taskCompleteBodySchema = z.object({
   observations: textoOpcional(1000),
   intakes: ingestas,
@@ -274,6 +261,23 @@ export const shiftsQuerySchema = z
     }
   });
 export type ShiftsQuery = z.infer<typeof shiftsQuerySchema>;
+
+// CU-63: «Mis fichajes». Sin fechas, las últimas 4 semanas hasta hoy.
+export const myShiftsQuerySchema = z
+  .object({
+    from: fecha('La fecha no es válida.').optional(),
+    to: fecha('La fecha no es válida.').optional(),
+  })
+  .superRefine((q, ctx) => {
+    if (q.from === undefined || q.to === undefined) return;
+    const dias = diasEntre(q.from, q.to);
+    if (dias < 0) {
+      ctx.addIssue({ code: 'custom', path: ['to'], message: 'La fecha de fin no puede ser anterior a la de inicio.' });
+    } else if (dias >= MAX_MY_SHIFTS_RANGE_DAYS) {
+      ctx.addIssue({ code: 'custom', path: ['to'], message: `Como máximo ${MAX_MY_SHIFTS_RANGE_DAYS} días.` });
+    }
+  });
+export type MyShiftsQuery = z.infer<typeof myShiftsQuerySchema>;
 
 export const shiftAssignmentBodySchema = z.object({
   shiftTemplateId: z.coerce.number({ error: 'Elige el turno.' }).int().positive({ error: 'Elige el turno.' }),

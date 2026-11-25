@@ -242,7 +242,7 @@ export const animalBodySchema = z
   .object({
     name: textoObligatorio(100, 'Escribe el nombre del animal.'),
     speciesId: z.coerce.number({ error: 'Elige la especie.' }).int().positive({ error: 'Elige la especie.' }),
-    sex: z.enum(ANIMAL_SEXES, { error: 'Elige el sexo.' }),
+    sex: z.string({ error: 'Elige el sexo.' }).pipe(z.enum(ANIMAL_SEXES, { error: 'Elige el sexo.' })),
     approxBirthDate: z
       .union([z.literal(''), fecha('La fecha no es válida.')])
       .nullish()
@@ -254,8 +254,6 @@ export const animalBodySchema = z
     healthSummary: textoOpcional(2000),
     isAdoptable: z.boolean(),
     isPublished: z.boolean(),
-    /** CU-12: solo para fallecidos (RN-22). Sin el campo, no cambia. */
-    showInMemorial: z.boolean().optional(),
     /** CU-52: zona donde vive; `null` la quita. Sin el campo, no cambia. */
     zoneId: z.union([z.literal('').transform(() => null), z.coerce.number().int().positive(), z.null()]).optional(),
   })
@@ -277,6 +275,12 @@ export const animalStatusBodySchema = z.object({
 });
 export type AnimalStatusBody = z.input<typeof animalStatusBodySchema>;
 export type AnimalStatusData = z.infer<typeof animalStatusBodySchema>;
+
+// CU-12: mostrar u ocultar en «En memoria» a un fallecido (su ficha ya solo se consulta, RN-22).
+export const animalMemorialBodySchema = z.object({
+  showInMemorial: z.boolean({ error: 'Indica si se muestra en «En memoria».' }),
+});
+export type AnimalMemorialBody = z.infer<typeof animalMemorialBodySchema>;
 
 // CU-29: fotos y vídeos de la galería de un animal.
 const FALTAN_DATOS_ARCHIVOS = 'Faltan los datos de los archivos.';

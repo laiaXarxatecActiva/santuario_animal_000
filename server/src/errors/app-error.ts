@@ -268,10 +268,21 @@ export class ArchivedAnimalNotAdoptableError extends FieldRuleError {
   }
 }
 
-// CU-33 (precondición): un animal fallecido o trasladado ya no cambia de estado.
-export class AnimalArchivedError extends BusinessRuleError {
+// CU-33: el estado de un animal fallecido o trasladado solo lo corrige el administrador.
+export class ArchivedStatusAdminOnlyError extends ForbiddenError {
+  override readonly code = 'ARCHIVED_STATUS_ADMIN_ONLY';
   constructor() {
-    super('ANIMAL_ARCHIVED', 'Este animal está archivado (fallecido o trasladado) y su estado ya no se puede cambiar.');
+    super('Solo un administrador puede cambiar el estado de un animal fallecido o trasladado.');
+  }
+}
+
+// RN-22: la información de un animal fallecido o trasladado solo se consulta.
+export class AnimalReadOnlyError extends BusinessRuleError {
+  constructor() {
+    super(
+      'ANIMAL_ARCHIVED_READ_ONLY',
+      'Este animal ya no está en el santuario: su información solo se puede consultar.',
+    );
   }
 }
 

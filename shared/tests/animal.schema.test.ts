@@ -10,7 +10,7 @@ describe('CU-02 catalogQuerySchema', () => {
     expect(
       catalogQuerySchema.parse({
         speciesId: '2',
-        sex: 'unknown',
+        sex: 'female',
         minAge: '5',
         maxAge: '15',
         adoptable: 'true',
@@ -22,12 +22,16 @@ describe('CU-02 catalogQuerySchema', () => {
       pageSize: 20,
       sort: 'adopterCount',
       speciesId: 2,
-      sex: 'unknown',
+      sex: 'female',
       minAge: 5,
       maxAge: 15,
       adoptable: true,
       q: 'rufo',
     });
+  });
+
+  it('el sexo solo puede ser macho o hembra', () => {
+    expect(catalogQuerySchema.safeParse({ sex: 'unknown' }).success).toBe(false);
   });
 
   it('ignora una búsqueda vacía', () => {

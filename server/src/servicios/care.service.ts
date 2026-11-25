@@ -283,7 +283,6 @@ export function createCareService({ db, reloj }: CareServiceDeps) {
             resolvedBy: user.id,
             resolvedAt: reloj.ahora(),
             observations: null,
-            photoUrl: null,
           });
         }
         return buscarVisita(client, id);

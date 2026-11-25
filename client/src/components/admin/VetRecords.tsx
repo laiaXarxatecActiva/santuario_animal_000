@@ -28,7 +28,16 @@ const hoyLocal = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
 
 // CU-34: historial veterinario de un animal (pestaña «Veterinario» de su ficha).
 // Es interno: los adoptantes solo ven el resumen de salud (CU-28).
-export function VetRecords({ animalId, animalName }: { animalId: number; animalName: string }) {
+export function VetRecords({
+  animalId,
+  animalName,
+  soloLectura = false,
+}: {
+  animalId: number;
+  animalName: string;
+  /** RN-22: el historial de un animal fallecido o trasladado solo se consulta. */
+  soloLectura?: boolean;
+}) {
   const { t } = useTranslation();
   const { user } = useSession();
   const queryClient = useQueryClient();
@@ -70,15 +79,17 @@ export function VetRecords({ animalId, animalName }: { animalId: number; animalN
     <div className={pageStyles.page}>
       <div className={pageStyles.header}>
         <h2>{t('admin.vet.title', { name: animalName })}</h2>
-        <Button
-          icon={faPlus}
-          onClick={() => {
-            setAviso(null);
-            setEditando('nuevo');
-          }}
-        >
-          {t('admin.vet.new')}
-        </Button>
+        {!soloLectura && (
+          <Button
+            icon={faPlus}
+            onClick={() => {
+              setAviso(null);
+              setEditando('nuevo');
+            }}
+          >
+            {t('admin.vet.new')}
+          </Button>
+        )}
       </div>
       <p className={pageStyles.muted}>{t('admin.vet.internal')}</p>
 
@@ -123,7 +134,7 @@ export function VetRecords({ animalId, animalName }: { animalId: number; animalN
                   {t('admin.vet.weight')}
                 </th>
                 <th scope="col">{t('admin.vet.veterinarian')}</th>
-                <th scope="col">{t('admin.common.actions')}</th>
+                {!soloLectura && <th scope="col">{t('admin.common.actions')}</th>}
               </tr>
             </thead>
             <tbody>
@@ -140,35 +151,37 @@ export function VetRecords({ animalId, animalName }: { animalId: number; animalN
                       {r.weightKg === null ? '—' : t('admin.vet.kg', { value: formatDecimal(r.weightKg) })}
                     </td>
                     <td data-label={t('admin.vet.veterinarian')}>{r.veterinarian ?? '—'}</td>
-                    <td>
-                      <div className={pageStyles.rowActions}>
-                        <button
-                          type="button"
-                          className={iconStyles.iconButton}
-                          aria-label={t('admin.common.edit', { name: nombre })}
-                          onClick={() => {
-                            setAviso(null);
-                            setEditando(r);
-                          }}
-                        >
-                          <FontAwesomeIcon icon={faPen} aria-hidden="true" />
-                        </button>
-                        {/* A2: borrar, solo el administrador (el servidor también lo comprueba). */}
-                        {user?.role === 'admin' && (
+                    {!soloLectura && (
+                      <td>
+                        <div className={pageStyles.rowActions}>
                           <button
                             type="button"
                             className={iconStyles.iconButton}
-                            aria-label={t('admin.common.deleteNamed', { name: nombre })}
+                            aria-label={t('admin.common.edit', { name: nombre })}
                             onClick={() => {
                               setAviso(null);
-                              setABorrar(r);
+                              setEditando(r);
                             }}
                           >
-                            <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+                            <FontAwesomeIcon icon={faPen} aria-hidden="true" />
                           </button>
-                        )}
-                      </div>
-                    </td>
+                          {/* A2: borrar, solo el administrador (el servidor también lo comprueba). */}
+                          {user?.role === 'admin' && (
+                            <button
+                              type="button"
+                              className={iconStyles.iconButton}
+                              aria-label={t('admin.common.deleteNamed', { name: nombre })}
+                              onClick={() => {
+                                setAviso(null);
+                                setABorrar(r);
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

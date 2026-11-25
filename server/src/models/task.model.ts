@@ -25,7 +25,6 @@ interface TaskRow {
   resolved_name: string | null;
   resolved_at: Date | null;
   observations: string | null;
-  photo_url: string | null;
   medication_plan_id: number | null;
   vet_visit_id: number | null;
   animals: NamedRef[];
@@ -62,7 +61,6 @@ export function mapRow(row: TaskRow, contexto: Contexto): TaskDto {
     resolvedBy: ref(row.resolved_by, row.resolved_name),
     resolvedAt: row.resolved_at?.toISOString() ?? null,
     observations: row.observations,
-    photoUrl: row.photo_url,
     isOneOff: row.template_id === null && row.medication_plan_id === null && row.vet_visit_id === null,
     medicationPlanId: row.medication_plan_id,
     vetVisitId: row.vet_visit_id,
@@ -76,7 +74,7 @@ const SELECT = `
          i.qualification_id, q.name AS qualification_name, i.due_date, to_char(i.due_time, 'HH24:MI') AS due_time,
          i.due_at, i.status, i.assigned_to, ua.first_name || ' ' || ua.last_name AS assigned_name,
          i.resolved_by, ur.first_name || ' ' || ur.last_name AS resolved_name, i.resolved_at,
-         i.observations, i.photo_url, i.medication_plan_id, i.vet_visit_id,
+         i.observations, i.medication_plan_id, i.vet_visit_id,
          COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name) ORDER BY a.name, a.id)
                      FROM task_instance_animals ta JOIN animals a ON a.id = ta.animal_id
                     WHERE ta.task_id = i.id), '[]'::json) AS animals,
@@ -132,29 +130,25 @@ export async function resolve(
     resolvedBy: number | null;
     resolvedAt: Date;
     observations: string | null;
-    photoUrl: string | null;
   },
 ): Promise<void> {
   await db.query(
     `UPDATE task_instances
-        SET status = $2, resolved_by = $3, resolved_at = $4, observations = $5, photo_url = $6
+        SET status = $2, resolved_by = $3, resolved_at = $4, observations = $5
       WHERE id = $1`,
-    [id, datos.status, datos.resolvedBy, datos.resolvedAt, datos.observations, datos.photoUrl],
+    [id, datos.status, datos.resolvedBy, datos.resolvedAt, datos.observations],
   );
 }
 
-/** CU-57 A2: vuelve a pendiente (sin lo anotado de la comida, CU-66). Devuelve la foto que tenía, para borrarla. */
-export async function reopen(db: Queryable, id: number): Promise<string | null> {
+/** CU-57 A2: vuelve a pendiente (sin lo anotado de la comida, CU-66). */
+export async function reopen(db: Queryable, id: number): Promise<void> {
   await db.query('DELETE FROM feeding_logs WHERE task_id = $1', [id]);
-  const { rows } = await db.query<{ photo_url: string | null }>(
-    `UPDATE task_instances i
-        SET status = 'pending', resolved_by = NULL, resolved_at = NULL, observations = NULL, photo_url = NULL
-       FROM task_instances antes
-      WHERE i.id = $1 AND antes.id = i.id
-      RETURNING antes.photo_url`,
+  await db.query(
+    `UPDATE task_instances
+        SET status = 'pending', resolved_by = NULL, resolved_at = NULL, observations = NULL
+      WHERE id = $1`,
     [id],
   );
-  return rows[0]?.photo_url ?? null;
 }
 
 export async function setAssignee(db: Queryable, id: number, userId: number | null): Promise<void> {

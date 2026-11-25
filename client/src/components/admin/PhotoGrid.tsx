@@ -17,6 +17,8 @@ interface PhotoGridProps {
   onEdit: (photo: AdminPhotoDto) => void;
   onDelete: (photo: AdminPhotoDto) => void;
   disabled?: boolean;
+  /** RN-22: la galería de un animal fallecido o trasladado solo se consulta. */
+  readOnly?: boolean;
 }
 
 /** Mueve el elemento de `desde` a la posición `hasta`. */
@@ -57,7 +59,15 @@ function Accion({
 // Cuadrícula de fotos del panel (DESIGN_SYSTEM §8.9, CU-29 pasos 5-6, A1 y
 // A2). Se ordena arrastrando o con los botones subir y bajar (móvil y teclado).
 // Solo oculta interfaz: el servidor comprueba qué puede ser portada.
-export function PhotoGrid({ photos, onReorder, onSetCover, onEdit, onDelete, disabled = false }: PhotoGridProps) {
+export function PhotoGrid({
+  photos,
+  onReorder,
+  onSetCover,
+  onEdit,
+  onDelete,
+  disabled = false,
+  readOnly = false,
+}: PhotoGridProps) {
   const { t } = useTranslation();
   const [arrastrada, setArrastrada] = useState<number | null>(null);
   const ids = photos.map((p) => p.id);
@@ -76,7 +86,7 @@ export function PhotoGrid({ photos, onReorder, onSetCover, onEdit, onDelete, dis
           <li
             key={photo.id}
             className={`${styles.item} ${arrastrada === i ? styles.dragging : ''}`}
-            draggable={!disabled}
+            draggable={!disabled && !readOnly}
             onDragStart={() => setArrastrada(i)}
             onDragEnd={() => setArrastrada(null)}
             onDragOver={(e) => e.preventDefault()}
@@ -98,43 +108,45 @@ export function PhotoGrid({ photos, onReorder, onSetCover, onEdit, onDelete, dis
                 </Badge>
               )}
             </div>
-            <div className={styles.actions}>
-              <Accion
-                icon={faStar}
-                label={
-                  photo.isCover
-                    ? t('admin.photos.isCover', { name: nombre })
-                    : t('admin.photos.setCover', { name: nombre })
-                }
-                pressed={photo.isCover}
-                disabled={disabled || photo.isCover || !puedeSerPortada}
-                onClick={() => onSetCover(photo)}
-              />
-              <Accion
-                icon={faArrowUp}
-                label={t('admin.photos.moveUp', { name: nombre })}
-                disabled={disabled || i === 0}
-                onClick={() => reordenar(i, i - 1)}
-              />
-              <Accion
-                icon={faArrowDown}
-                label={t('admin.photos.moveDown', { name: nombre })}
-                disabled={disabled || i === photos.length - 1}
-                onClick={() => reordenar(i, i + 1)}
-              />
-              <Accion
-                icon={faPen}
-                label={t('admin.common.edit', { name: nombre })}
-                disabled={disabled}
-                onClick={() => onEdit(photo)}
-              />
-              <Accion
-                icon={faTrashCan}
-                label={t('admin.common.deleteNamed', { name: nombre })}
-                disabled={disabled}
-                onClick={() => onDelete(photo)}
-              />
-            </div>
+            {!readOnly && (
+              <div className={styles.actions}>
+                <Accion
+                  icon={faStar}
+                  label={
+                    photo.isCover
+                      ? t('admin.photos.isCover', { name: nombre })
+                      : t('admin.photos.setCover', { name: nombre })
+                  }
+                  pressed={photo.isCover}
+                  disabled={disabled || photo.isCover || !puedeSerPortada}
+                  onClick={() => onSetCover(photo)}
+                />
+                <Accion
+                  icon={faArrowUp}
+                  label={t('admin.photos.moveUp', { name: nombre })}
+                  disabled={disabled || i === 0}
+                  onClick={() => reordenar(i, i - 1)}
+                />
+                <Accion
+                  icon={faArrowDown}
+                  label={t('admin.photos.moveDown', { name: nombre })}
+                  disabled={disabled || i === photos.length - 1}
+                  onClick={() => reordenar(i, i + 1)}
+                />
+                <Accion
+                  icon={faPen}
+                  label={t('admin.common.edit', { name: nombre })}
+                  disabled={disabled}
+                  onClick={() => onEdit(photo)}
+                />
+                <Accion
+                  icon={faTrashCan}
+                  label={t('admin.common.deleteNamed', { name: nombre })}
+                  disabled={disabled}
+                  onClick={() => onDelete(photo)}
+                />
+              </div>
+            )}
           </li>
         );
       })}

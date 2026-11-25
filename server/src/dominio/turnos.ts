@@ -1,4 +1,4 @@
-import type { CopySkipReason } from '@sanctuary/shared';
+import { MY_SHIFTS_DEFAULT_DAYS, type CopySkipReason } from '@sanctuary/shared';
 import { diaDeLaSemana, sumarDias } from './tareas.js';
 
 // Reglas de los turnos y las ausencias (CU-60 a CU-64). Sin dependencias
@@ -148,4 +148,16 @@ export function planificarCopia(
     }
   }
   return { crear, saltar };
+}
+
+/** CU-63: minutos enteros entre la entrada y la salida; sin las dos, ninguno. */
+export function minutosTrabajados(a: { checkedInAt: string | null; checkedOutAt: string | null }): number | null {
+  if (a.checkedInAt === null || a.checkedOutAt === null) return null;
+  return Math.floor((Date.parse(a.checkedOutAt) - Date.parse(a.checkedInAt)) / 60_000);
+}
+
+/** CU-63: el rango de «Mis fichajes». Sin fin, hoy; sin inicio, las 4 semanas anteriores al fin. */
+export function rangoDeFichajes(q: { from?: string; to?: string }, hoy: string): { from: string; to: string } {
+  const to = q.to ?? hoy;
+  return { from: q.from ?? sumarDias(to, 1 - MY_SHIFTS_DEFAULT_DAYS), to };
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   estaArchivado,
   motivoDeCierre,
+  fichaModificable,
   puedeCambiarDeEstado,
   puedeSerAdoptable,
   sePuedeBorrar,
@@ -20,9 +21,18 @@ describe('CU-28 reglas del animal', () => {
     expect(puedeSerAdoptable('in_sanctuary', true)).toBe(true);
   });
 
-  it('CU-33: un archivado no cambia de estado', () => {
-    expect(puedeCambiarDeEstado('transferred')).toBe(false);
-    expect(puedeCambiarDeEstado('in_sanctuary')).toBe(true);
+  it('CU-33: el estado de un archivado solo lo cambia el administrador (para corregir un error)', () => {
+    expect(puedeCambiarDeEstado('transferred', 'caretaker')).toBe(false);
+    expect(puedeCambiarDeEstado('deceased', 'caretaker')).toBe(false);
+    expect(puedeCambiarDeEstado('transferred', 'admin')).toBe(true);
+    expect(puedeCambiarDeEstado('in_sanctuary', 'caretaker')).toBe(true);
+  });
+
+  it('RN-22: la información de un archivado solo se consulta', () => {
+    expect(fichaModificable('deceased')).toBe(false);
+    expect(fichaModificable('transferred')).toBe(false);
+    expect(fichaModificable('in_treatment')).toBe(true);
+    expect(fichaModificable('in_sanctuary')).toBe(true);
   });
 
   it('CU-33 5.2: motivo de cierre de las adopciones', () => {

@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { card, leonado, negro, page } from './helpers/fixtures';
@@ -97,5 +97,16 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     expect(await screen.findByRole('link', { name: /Rufo/ })).toBeInTheDocument();
     expect(pedidas('/api/animals')).toHaveLength(2);
+  });
+
+  it('el filtro de sexo solo ofrece macho o hembra', async () => {
+    mockApi({ '/api/species': especies, '/api/animals': { body: page([card()], { total: 1 }) } });
+    renderRoute('/animals');
+    const sexo = await screen.findByLabelText('Sexo');
+    expect(
+      within(sexo)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Cualquier sexo', 'Macho', 'Hembra']);
   });
 });

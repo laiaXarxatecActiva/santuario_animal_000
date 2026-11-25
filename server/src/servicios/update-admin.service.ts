@@ -16,11 +16,13 @@ import {
   puedeModificarActualizacion,
   puedePublicarActualizacion,
 } from '../dominio/actualizaciones.js';
+import { fichaModificable } from '../dominio/animal.js';
 import { extracto, recibeEmailPorActualizacion } from '../dominio/avisos.js';
 import type { ArchivoSubido } from '../dominio/fotos.js';
 import { paginar } from '../dominio/paginacion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import {
+  AnimalReadOnlyError,
   FieldRuleError,
   FilesRejectedError,
   NotFoundError,
@@ -76,7 +78,7 @@ export function createUpdateAdminService({
     visibility: r.visibility,
     publishedAt: r.publishedAt,
     photoCount: r.photoCount,
-    canEdit: puedeModificarActualizacion(usuario, r.author.id),
+    canEdit: puedeModificarActualizacion(usuario, r.author.id) && fichaModificable(r.animalStatus),
   });
 
   async function detalle(q: Queryable, id: number, usuario: Trabajador): Promise<AdminUpdateDto> {
@@ -98,6 +100,7 @@ export function createUpdateAdminService({
     const r = await updateModel.findAdminById(q, id, { forUpdate });
     if (!r) throw noExiste();
     if (!puedeModificarActualizacion(usuario, r.author.id)) throw new NotUpdateAuthorError();
+    if (!fichaModificable(r.animalStatus)) throw new AnimalReadOnlyError();
     return r;
   }
 

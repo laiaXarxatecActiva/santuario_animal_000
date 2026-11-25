@@ -77,7 +77,7 @@ describe('CU-66 Anotar lo que ha comido cada animal', () => {
     expect((await nuria.post(`/api/admin/tasks/${id}/reopen`).send({})).body.intakes).toEqual([]);
   });
 
-  it('en multipart, con foto, la comida llega como texto JSON', async () => {
+  it('una comida no admite fotos (415) y no se anota nada', async () => {
     const id = await tareaDe(3, '10:00');
     await t.pool.query(
       "UPDATE task_instances SET status = 'pending', resolved_by = NULL, resolved_at = NULL WHERE id = $1",
@@ -89,10 +89,12 @@ describe('CU-66 Anotar lo que ha comido cada animal', () => {
       .set('X-Requested-With', 'XMLHttpRequest')
       .field('intakes', JSON.stringify([{ animalId: 11, intake: 'little' }]))
       .attach('files', await jpeg(), 'comida.jpg');
-    expect(res.status).toBe(200);
-    // Lupe (11) es el único alimoche que sigue en el santuario.
-    expect(res.body.intakes).toEqual([{ animal: { id: 11, name: 'Lupe' }, intake: 'little' }]);
-    expect(res.body.photoUrl).toEqual(expect.any(String));
+    expect(res.status).toBe(415);
+    const { rows } = await t.pool.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM feeding_logs WHERE task_id = $1',
+      [id],
+    );
+    expect(rows[0]?.n).toBe(0);
   });
 });
 

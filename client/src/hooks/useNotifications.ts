@@ -15,7 +15,7 @@ export const useNotifications = (pagina: { page?: number; pageSize: number }, en
     placeholderData: keepPreviousData,
   });
 
-/** Marcar como leída, todas como leídas y borrar. Refrescan la campana y la página. */
+/** Marcar como leída, todas como leídas, borrar una y borrar todas. Refrescan la campana y la página. */
 export function useNotificationActions() {
   const queryClient = useQueryClient();
   const refrescar = () => queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_KEY });
@@ -23,5 +23,6 @@ export function useNotificationActions() {
     setRead: useMutation({ mutationFn: notificationsApi.setRead, onSuccess: refrescar }),
     readAll: useMutation({ mutationFn: notificationsApi.readAll, onSuccess: refrescar }),
     remove: useMutation({ mutationFn: notificationsApi.remove, onSuccess: refrescar }),
+    removeAll: useMutation({ mutationFn: notificationsApi.removeAll, onSuccess: refrescar }),
   };
 }

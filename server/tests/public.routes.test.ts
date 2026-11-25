@@ -68,9 +68,15 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     expect(nombres(res.body.data)).toEqual(['Carbón', 'Ébano', 'Sombra']);
   });
 
-  it('filtra por sexo, incluido «desconocido»', async () => {
-    const res = await request(t.app).get('/api/animals').query({ sex: 'unknown' });
-    expect(nombres(res.body.data)).toEqual(['Carbón', 'Canelo', 'Turia']);
+  it('filtra por sexo (macho o hembra; «desconocido» no existe)', async () => {
+    const hembras = await request(t.app).get('/api/animals').query({ sex: 'female' });
+    expect(hembras.body.data.length).toBeGreaterThan(0);
+    expect(hembras.body.data.every((a: AnimalCardDto) => a.sex === 'female')).toBe(true);
+    expect(nombres(hembras.body.data)).toContain('Turia');
+    const machos = await request(t.app).get('/api/animals').query({ sex: 'male' });
+    expect(machos.body.data.every((a: AnimalCardDto) => a.sex === 'male')).toBe(true);
+    expect(nombres(machos.body.data)).toEqual(expect.arrayContaining(['Canelo', 'Carbón']));
+    expect((await request(t.app).get('/api/animals').query({ sex: 'unknown' })).status).toBe(400);
   });
 
   it('filtra por rango de edad', async () => {

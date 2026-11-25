@@ -1,6 +1,6 @@
 import { faArrowUpRightFromSquare, faChevronDown, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ANIMAL_STATUSES, ARCHIVED_ANIMAL_STATUSES, type AdminAnimalDto, type AnimalStatus } from '@sanctuary/shared';
+import { ANIMAL_STATUSES, type AdminAnimalDto, type AnimalStatus } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,11 +18,24 @@ import { ApiError } from '../../api/client';
 import { errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
 import { formatDate } from '../../utils/format';
+import { esArchivado } from '../../utils/animal';
 import { parseId } from '../../utils/routeParams';
 import styles from './AnimalAdminPage.module.css';
 import pageStyles from './AdminPage.module.css';
 
 export type Aviso = { type: 'success' | 'error'; message: string };
+
+/** RN-22: un fallecido o trasladado solo se consulta; el administrador puede corregir su estado. */
+function AvisoSoloConsulta() {
+  const { t } = useTranslation();
+  const { user } = useSession();
+  return (
+    <Alert type="info">
+      {t('admin.animal.readOnly')}
+      {user?.role === 'admin' && ` ${t('admin.animal.readOnlyAdmin')}`}
+    </Alert>
+  );
+}
 
 /** Lo que reciben las pestañas de la ficha. */
 export interface AnimalTabContext {
@@ -31,8 +44,6 @@ export interface AnimalTabContext {
 }
 
 export const useAnimalTab = () => useOutletContext<AnimalTabContext>();
-
-const esArchivado = (s: AnimalStatus) => (ARCHIVED_ANIMAL_STATUSES as readonly AnimalStatus[]).includes(s);
 
 /** Hoy en el navegador, como `YYYY-MM-DD`. */
 const hoyLocal = () => new Intl.DateTimeFormat('sv-SE').format(new Date());
@@ -64,6 +75,7 @@ export function AnimalAdminPage() {
         <Link to="/admin/animals">{t('admin.animals.title')}</Link> › {datos.name}
       </nav>
       <Cabecera animal={datos} avisar={setAviso} />
+      {esArchivado(datos.status) && <AvisoSoloConsulta />}
       {aviso && (
         <Alert type={aviso.type} onClose={() => setAviso(null)}>
           {aviso.message}
@@ -105,7 +117,10 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
   // CU-12: en un fallecimiento, mostrarlo en «En memoria».
   const [enMemoria, setEnMemoria] = useState(false);
   const [borrando, setBorrando] = useState(false);
+  // CU-33: el administrador devuelve al santuario un animal archivado por error.
+  const [devolverA, setDevolverA] = useState<AnimalStatus | null>(null);
   const archivado = esArchivado(animal.status);
+  const puedeCambiarEstado = !archivado || user?.role === 'admin';
 
   const pideMensaje = archivarComo === 'deceased' && animal.openAdoptions > 0;
 
@@ -114,6 +129,7 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
       adminApi.animals.changeStatus(animal.id, cambio),
     onSuccess: async (actualizado) => {
       setArchivarComo(null);
+      setDevolverA(null);
       queryClient.setQueryData(adminAnimalKey(animal.id), actualizado);
       avisar({
         type: 'success',
@@ -129,6 +145,7 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
         return;
       }
       setArchivarComo(null);
+      setDevolverA(null);
       avisar({ type: 'error', message: errorMessage(t, e) });
     },
   });
@@ -171,6 +188,8 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
       setErrorMensaje(null);
       setEnMemoria(false);
       setArchivarComo(status);
+    } else if (archivado) {
+      setDevolverA(status);
     } else {
       cambiarEstado.mutate({ status });
     }
@@ -207,7 +226,7 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
             {t('admin.animal.viewOnSite')}
           </ButtonLink>
         )}
-        {!archivado && (
+        {puedeCambiarEstado && (
           <div className={styles.menu}>
             <Button variant="outline" aria-expanded={menu} onClick={() => setMenu((m) => !m)}>
               {t('admin.animal.changeStatus')}
@@ -287,6 +306,31 @@ function Cabecera({ animal, avisar }: { animal: AdminAnimalDto; avisar: (a: Avis
             />
           )}
         </div>
+      </Modal>
+
+      <Modal
+        open={devolverA !== null}
+        title={t('admin.animal.confirmRestore', {
+          name: animal.name,
+          status: devolverA ? t(`admin.animalStatus.${devolverA}`) : '',
+        })}
+        onClose={() => setDevolverA(null)}
+        footer={
+          <>
+            <Button variant="outline" data-autofocus onClick={() => setDevolverA(null)}>
+              {t('admin.common.cancel')}
+            </Button>
+            <Button
+              disabled={cambiarEstado.isPending}
+              onClick={() => devolverA && cambiarEstado.mutate({ status: devolverA })}
+            >
+              {t('admin.animal.changeStatus')}
+            </Button>
+          </>
+        }
+      >
+        <p>{t('admin.animal.restoreText')}</p>
+        {animal.showInMemorial && <p>{t('admin.animal.restoreMemorial')}</p>}
       </Modal>
 
       <Modal

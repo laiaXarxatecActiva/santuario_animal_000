@@ -4,17 +4,21 @@ import { countActiveFilters, readCatalogFilters, toApiQuery, writeCatalogFilters
 describe('CU-02 filtros del catálogo en la URL', () => {
   it('lee los filtros de la URL', () => {
     const filtros = readCatalogFilters(
-      new URLSearchParams('q=ru&speciesId=2&sex=unknown&age=adult&adoptable=true&sort=name&page=3'),
+      new URLSearchParams('q=ru&speciesId=2&sex=female&age=adult&adoptable=true&sort=name&page=3'),
     );
     expect(filtros).toEqual({
       q: 'ru',
       speciesId: 2,
-      sex: 'unknown',
+      sex: 'female',
       age: 'adult',
       adoptable: true,
       sort: 'name',
       page: 3,
     });
+  });
+
+  it('el sexo «desconocido» ya no existe: se descarta', () => {
+    expect(readCatalogFilters(new URLSearchParams('sex=unknown')).sex).toBeUndefined();
   });
 
   it('descarta valores no válidos y aplica los valores por defecto', () => {

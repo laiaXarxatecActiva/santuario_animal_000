@@ -1,8 +1,16 @@
-import type { AdminAnimalDto, AdminAnimalsQuery, AnimalData, AnimalStatusData, Paginated } from '@sanctuary/shared';
+import type {
+  AdminAnimalDto,
+  AdminAnimalsQuery,
+  AnimalData,
+  AnimalStatusData,
+  Paginated,
+  Role,
+} from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
 import {
+  fichaModificable,
   motivoDeCierre,
   puedeCambiarDeEstado,
   puedeEstarEnMemoria,
@@ -14,8 +22,9 @@ import {
 import { paginar } from '../dominio/paginacion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import {
-  AnimalArchivedError,
   AnimalHasAdoptionsError,
+  AnimalReadOnlyError,
+  ArchivedStatusAdminOnlyError,
   ArchivedAnimalNotAdoptableError,
   FieldRuleError,
   MemorialOnlyDeceasedError,
@@ -105,18 +114,25 @@ export function createAnimalAdminService({
       return buscar(db, id);
     },
 
-    /** Edición (pasos 2-3), A1 publicar u ocultar y 2b. */
+    /** Edición (pasos 2-3), A1 publicar u ocultar y 2b. RN-22: la de un archivado solo se consulta. */
     async update(id: number, datos: AnimalData): Promise<AdminAnimalDto> {
       return withTransaction(db, async (client) => {
         const actual = await buscar(client, id, true);
+        if (!fichaModificable(actual.status)) throw new AnimalReadOnlyError();
         await validar(client, datos);
         if (!puedeSerAdoptable(actual.status, datos.isAdoptable)) throw new ArchivedAnimalNotAdoptableError();
-        if (datos.showInMemorial !== undefined && !puedeEstarEnMemoria(actual.status, datos.showInMemorial)) {
-          throw new MemorialOnlyDeceasedError();
-        }
         await animalModel.update(client, id, datos);
         if (datos.zoneId !== undefined) await animalModel.setZone(client, id, datos.zoneId);
-        if (datos.showInMemorial !== undefined) await animalModel.setShowInMemorial(client, id, datos.showInMemorial);
+        return buscar(client, id);
+      });
+    },
+
+    /** CU-12: mostrar u ocultar en «En memoria»; solo un fallecido (RN-22). */
+    async setMemorial(id: number, showInMemorial: boolean): Promise<AdminAnimalDto> {
+      return withTransaction(db, async (client) => {
+        const actual = await buscar(client, id, true);
+        if (!puedeEstarEnMemoria(actual.status, showInMemorial)) throw new MemorialOnlyDeceasedError();
+        await animalModel.setShowInMemorial(client, id, showInMemorial);
         return buscar(client, id);
       });
     },
@@ -125,15 +141,22 @@ export function createAnimalAdminService({
      * CU-28 A2 (directo) y CU-33: fallecido o trasladado archiva el animal y
      * cierra sus adopciones abiertas (5.1-5.2); en un fallecimiento publica el
      * mensaje para los adoptantes (5.3). Después avisa a cada afectado (6).
+     * El de un archivado solo lo corrige el administrador: sus adopciones
+     * cerradas no se reabren y, si deja de estar fallecido, sale de «En memoria».
      */
-    async changeStatus(id: number, cambio: AnimalStatusData, autorId: number): Promise<AdminAnimalDto> {
+    async changeStatus(
+      id: number,
+      cambio: AnimalStatusData,
+      autor: { id: number; role: Role },
+    ): Promise<AdminAnimalDto> {
+      const autorId = autor.id;
       const hoy = reloj.hoy();
       const fecha = cambio.date ?? hoy;
       if (fecha > hoy) throw new FieldRuleError('DATE_IN_FUTURE', 'date', 'La fecha no puede ser futura.');
       if (!puedeEstarEnMemoria(cambio.status, cambio.showInMemorial ?? false)) throw new MemorialOnlyDeceasedError();
       const { animal, afectados, motivo } = await withTransaction(db, async (client) => {
         const actual = await buscar(client, id, true);
-        if (!puedeCambiarDeEstado(actual.status)) throw new AnimalArchivedError();
+        if (!puedeCambiarDeEstado(actual.status, autor.role)) throw new ArchivedStatusAdminOnlyError();
         // 3a: sin mensaje no se continúa.
         if (requiereMensajeDeDespedida(cambio.status, actual.openAdoptions) && !cambio.message) {
           throw new FieldRuleError('FAREWELL_MESSAGE_REQUIRED', 'message', 'Escribe el mensaje para los adoptantes.');

@@ -209,8 +209,7 @@ CREATE TABLE animals (
     name                VARCHAR(100) NOT NULL,
     species_id          INTEGER      NOT NULL REFERENCES species (id) ON DELETE RESTRICT,
     zone_id             INTEGER      REFERENCES zones (id) ON DELETE RESTRICT, -- CU-52: recinto donde vive
-    sex                 VARCHAR(10)  NOT NULL DEFAULT 'unknown'
-                        CHECK (sex IN ('male', 'female', 'unknown')),
+    sex                 VARCHAR(10)  NOT NULL CHECK (sex IN ('male', 'female')),
     approx_birth_date   DATE,
     arrival_date        DATE         NOT NULL,
     rescue_story        TEXT,
@@ -804,7 +803,6 @@ CREATE TABLE task_instances (
     resolved_by       INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
     resolved_at       TIMESTAMPTZ,
     observations      VARCHAR(1000),
-    photo_url         VARCHAR(500),
     created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT, -- admin, si es puntual
     medication_plan_id INTEGER     REFERENCES medication_plans (id) ON DELETE CASCADE, -- dosis de una pauta (CU-69)
     vet_visit_id      INTEGER      REFERENCES vet_visits (id) ON DELETE CASCADE,       -- visita programada (CU-68)

@@ -65,17 +65,15 @@ describe('CU-19 Consultar mis aportaciones', () => {
       reference: expect.stringMatching(/^SIM-/),
     });
     expect(res.donations.map((d) => d.id)).toEqual([12, 1]);
-    expect(res.donations[1]).toEqual(
-      {
-        id: 1,
-        amount: '20.00',
-        date: expect.any(String),
-        status: 'completed',
-        method: 'simulated',
-        reference: 'SIM-D0001',
-        isAnonymous: false,
-      },
-    );
+    expect(res.donations[1]).toEqual({
+      id: 1,
+      amount: '20.00',
+      date: expect.any(String),
+      status: 'completed',
+      method: 'simulated',
+      reference: 'SIM-D0001',
+      isAnonymous: false,
+    });
   });
 
   it('3: totales por año y desde el principio, solo con lo cobrado', async () => {
