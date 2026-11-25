@@ -7,7 +7,7 @@ const db = usarBaseDeDatos();
 describe('animal.model (web pública)', () => {
   it('cuenta los animales públicos con y sin filtros', async () => {
     expect(await countPublic(db.pool)).toBe(12);
-    expect(await countPublic(db.pool, { speciesId: 3 })).toBe(1);
+    expect(await countPublic(db.pool, { speciesIds: [3] })).toBe(1);
   });
 
   it('filtra por límites de fecha de nacimiento', async () => {

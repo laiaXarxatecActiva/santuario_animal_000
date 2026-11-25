@@ -1,4 +1,7 @@
-/* Menú «⋯» (DESIGN_SYSTEM §8.9): mismo panel que el menú de usuario. */
+/* Menú «⋯» (DESIGN_SYSTEM §8.9): mismo panel que el menú de usuario. Sin franjas
+   vacías arriba ni abajo y con `overflow: hidden`, para que el fondo de la primera y
+   la última opción siga la curva de las esquinas sin sobresalir; las del medio
+   quedan rectas. */
 .menu {
   position: relative;
 }
@@ -10,11 +13,16 @@
   z-index: 11;
   width: 240px;
   margin: 0;
-  padding: var(--space-2) 0;
+  padding: 0;
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   list-style: none;
+}
+
+.panel[hidden] {
+  display: none;
 }
 
 .item {
@@ -28,10 +36,17 @@
   color: var(--color-text);
   font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
 }
 
 .item:hover,
 .item:focus-visible {
   background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+/* El contorno del foco, por dentro, para que el recorte del panel no lo corte. */
+.item:focus-visible {
+  outline-offset: -3px;
 }

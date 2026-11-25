@@ -33,8 +33,37 @@ describe('ActionsMenu (DESIGN_SYSTEM §8.9)', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('una opción puede ser un enlace de descarga, y al elegirla se cierra el menú', async () => {
+    render(
+      <ActionsMenu
+        label="Más acciones"
+        items={[
+          { label: 'Forma de pago', onSelect: () => {} },
+          { label: 'Descargar certificado', href: '/api/me/adoptions/1/certificate?download=1', download: true },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Más acciones' }));
+    const enlace = screen.getByRole('menuitem', { name: 'Descargar certificado' });
+    expect(enlace.tagName).toBe('A');
+    expect(enlace).toHaveAttribute('href', '/api/me/adoptions/1/certificate?download=1');
+    expect(enlace).toHaveAttribute('download');
+    enlace.addEventListener('click', (e) => e.preventDefault());
+    await userEvent.click(enlace);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
   it('sin opciones no se muestra', () => {
     render(<ActionsMenu label="Más acciones" items={[]} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('el panel lleva la animación de los desplegables y se queda oculto al cerrarse para poder animarlo', async () => {
+    render(<ActionsMenu label="Más acciones" items={[{ label: 'Opción', onSelect: () => {} }]} />);
+    const boton = screen.getByRole('button', { name: 'Más acciones' });
+    const panel = document.getElementById(boton.getAttribute('aria-controls') ?? '');
+    expect(panel).toHaveAttribute('hidden');
+    await userEvent.click(boton);
+    expect(screen.getByRole('menu')).toHaveClass('dropdown-panel');
   });
 });

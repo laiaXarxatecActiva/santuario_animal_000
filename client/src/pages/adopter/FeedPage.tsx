@@ -1,9 +1,10 @@
 import { faNewspaper } from '@fortawesome/free-solid-svg-icons';
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '../../components/Alert';
 import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
+import { FilterSelect } from '../../components/FilterSelect';
 import { UpdateCard } from '../../components/UpdateCard';
 import { useMyAdoptions } from '../../hooks/useAdoptions';
 import { useFeed } from '../../hooks/useFeed';
@@ -12,7 +13,6 @@ import styles from './FeedPage.module.css';
 // CU-17 Consultar el muro de actualizaciones (SCREENS §4.4).
 export function FeedPage() {
   const { t } = useTranslation();
-  const idSelector = useId();
   const [soloNoLeidas, setSoloNoLeidas] = useState(false);
   const [animalId, setAnimalId] = useState<number | undefined>();
   const muro = useFeed({ unread: soloNoLeidas, animalId });
@@ -87,24 +87,17 @@ export function FeedPage() {
             {t('feed.unread')}
           </label>
         </fieldset>
-        <div className={styles.animalFilter}>
-          <label htmlFor={idSelector} className={styles.label}>
-            {t('feed.animal')}
-          </label>
-          <select
-            id={idSelector}
-            className={styles.select}
-            value={animalId ?? ''}
-            onChange={(e) => setAnimalId(e.target.value === '' ? undefined : Number(e.target.value))}
-          >
-            <option value="">{t('feed.allAnimals')}</option>
-            {animales.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FilterSelect
+          label={t('feed.animal')}
+          className={styles.animalFilter}
+          labelClassName={styles.label}
+          value={animalId === undefined ? '' : String(animalId)}
+          options={[
+            { value: '', label: t('feed.allAnimals') },
+            ...animales.map((a) => ({ value: String(a.id), label: a.name })),
+          ]}
+          onChange={(id) => setAnimalId(id === '' ? undefined : Number(id))}
+        />
       </div>
       {contenido}
     </div>

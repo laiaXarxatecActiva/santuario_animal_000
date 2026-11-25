@@ -34,9 +34,12 @@
   border-radius: var(--radius-md);
 }
 
-/* La foto abre la ficha del animal (DESIGN_SYSTEM §8.2). */
+/* La foto abre la ficha del animal (DESIGN_SYSTEM §8.2). Con `align-self: start`
+   el enlace mide lo mismo que la foto: sin él, la rejilla lo estira hasta el final
+   de la tarjeta y el hueco en blanco de debajo también abría la ficha. */
 .photoLink {
   display: block;
+  align-self: start;
   overflow: hidden;
   border-radius: var(--radius-md);
 }

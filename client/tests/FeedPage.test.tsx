@@ -69,13 +69,13 @@ describe('CU-17 Consultar el muro de actualizaciones', () => {
     await waitFor(() =>
       expect(pedidas('/api/me/feed').some((u) => u.searchParams.get('unread') === 'true')).toBe(true),
     );
-    const selector = screen.getByRole('combobox', { name: 'Animal' });
+    await userEvent.click(screen.getByRole('combobox', { name: 'Animal' }));
     expect(
-      within(selector)
+      within(screen.getByRole('listbox', { name: 'Animal' }))
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['Todos', 'Rufo', 'Sombra']);
-    await userEvent.selectOptions(selector, 'Sombra');
+    await userEvent.click(screen.getByRole('option', { name: 'Sombra' }));
     await waitFor(() => expect(pedidas('/api/me/feed').some((u) => u.searchParams.get('animalId') === '8')).toBe(true));
   });
 

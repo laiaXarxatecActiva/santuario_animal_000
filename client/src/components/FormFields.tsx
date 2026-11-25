@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { traducirMensaje } from '../i18n/mensajesValidacion';
 import styles from './FormFields.module.css';
+import { SelectArrow } from './SelectArrow';
 
 // Campos de formulario (DESIGN_SYSTEM §8.5): etiqueta siempre visible, ayuda y
 // error debajo, enlazados con aria-describedby. Funcionan con `register()` de react-hook-form.
@@ -139,15 +140,17 @@ export function SelectField({ label, error, help, id, className, children, ...re
       <label htmlFor={inputId} className={styles.label}>
         {label}
       </label>
-      <select
-        id={inputId}
-        className={`${styles.input} ${styles.select}`}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy}
-        {...rest}
-      >
-        {children}
-      </select>
+      <SelectArrow>
+        <select
+          id={inputId}
+          className={styles.input}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          {...rest}
+        >
+          {children}
+        </select>
+      </SelectArrow>
       {help && (
         <p id={helpId} className={styles.help}>
           {help}

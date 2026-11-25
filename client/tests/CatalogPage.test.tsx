@@ -18,15 +18,14 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     expect(screen.getByText('2 animales')).toBeInTheDocument();
   });
 
-  it('pide a la API los filtros de la URL, con el rango de edad convertido', async () => {
+  it('pide a la API los filtros de la URL', async () => {
     const { pedidas } = mockApi({ '/api/species': especies, '/api/animals': { body: page([]) } });
     renderRoute('/animals?speciesId=2&age=adult&adoptable=true&sort=name');
     await waitFor(() => expect(pedidas('/api/animals')).toHaveLength(1));
     const params = Object.fromEntries(pedidas('/api/animals')[0]!.searchParams);
     expect(params).toEqual({
       speciesId: '2',
-      minAge: '5',
-      maxAge: '15',
+      age: 'adult',
       adoptable: 'true',
       sort: 'name',
       page: '1',
@@ -37,11 +36,33 @@ describe('CU-02 Consultar el catálogo de animales', () => {
   it('al elegir un filtro lo refleja en la URL y vuelve a la primera página', async () => {
     mockApi({ '/api/species': especies, '/api/animals': { body: page([card()]) } });
     const { router } = renderRoute('/animals?page=2');
-    await screen.findByRole('option', { name: 'Buitre negro' });
-    await userEvent.selectOptions(screen.getByLabelText('Especie'), 'Buitre negro');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Especie' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Buitre negro' }));
     await waitFor(() => expect(router.state.location.search).toBe('?speciesId=2'));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Disponibles para adoptar' }));
     await waitFor(() => expect(router.state.location.search).toBe('?speciesId=2&adoptable=true'));
+  });
+
+  it('se pueden elegir varias especies y varios tramos de edad, cada uno con su filtro activo', async () => {
+    const { pedidas } = mockApi({ '/api/species': especies, '/api/animals': { body: page([card()]) } });
+    const { router } = renderRoute('/animals');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Especie' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Buitre negro' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Buitre leonado' }));
+    await waitFor(() => expect(decodeURIComponent(router.state.location.search)).toBe('?speciesId=2,1'));
+    expect(screen.getByRole('combobox', { name: 'Especie' })).toHaveTextContent('2 especies');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Edad' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Menos de 5 años' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Más de 15 años' }));
+    await waitFor(() =>
+      expect(decodeURIComponent(router.state.location.search)).toBe('?speciesId=2,1&age=young,senior'),
+    );
+    const ultima = pedidas('/api/animals').at(-1)!;
+    expect(ultima.searchParams.get('speciesId')).toBe('2,1');
+    expect(ultima.searchParams.get('age')).toBe('young,senior');
+    expect(screen.getByRole('button', { name: 'Filtros (4)' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Quitar el filtro Buitre negro' }));
+    await waitFor(() => expect(decodeURIComponent(router.state.location.search)).toBe('?speciesId=1&age=young,senior'));
   });
 
   it('muestra los filtros activos y permite quitarlos uno a uno', async () => {
@@ -49,6 +70,16 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     const { router } = renderRoute('/animals?speciesId=2&sex=female');
     await userEvent.click(await screen.findByRole('button', { name: 'Quitar el filtro Buitre negro' }));
     await waitFor(() => expect(router.state.location.search).toBe('?sex=female'));
+  });
+
+  it('el buscador lleva encima el título visible «Buscar por nombre» y dentro «Nombre del animal»', async () => {
+    mockApi({ '/api/species': especies, '/api/animals': { body: page([card()]) } });
+    renderRoute('/animals');
+    const titulo = screen.getByText('Buscar por nombre', { selector: 'label' });
+    expect(titulo).not.toHaveClass('visually-hidden');
+    const buscador = screen.getByRole('searchbox', { name: 'Buscar por nombre' });
+    expect(buscador).toHaveAttribute('placeholder', 'Nombre del animal');
+    await screen.findByText('1 animal');
   });
 
   it('busca por nombre', async () => {
@@ -61,7 +92,8 @@ describe('CU-02 Consultar el catálogo de animales', () => {
   it('cambia el orden', async () => {
     mockApi({ '/api/species': especies, '/api/animals': { body: page([card()]) } });
     const { router } = renderRoute('/animals');
-    await userEvent.selectOptions(screen.getByLabelText('Ordenar'), 'Menos adoptantes');
+    await userEvent.click(screen.getByRole('combobox', { name: 'Ordenar' }));
+    await userEvent.click(screen.getByRole('option', { name: 'Menos adoptantes' }));
     await waitFor(() => expect(router.state.location.search).toBe('?sort=adopterCount'));
   });
 
@@ -102,9 +134,9 @@ describe('CU-02 Consultar el catálogo de animales', () => {
   it('el filtro de sexo solo ofrece macho o hembra', async () => {
     mockApi({ '/api/species': especies, '/api/animals': { body: page([card()], { total: 1 }) } });
     renderRoute('/animals');
-    const sexo = await screen.findByLabelText('Sexo');
+    await userEvent.click(await screen.findByRole('combobox', { name: 'Sexo' }));
     expect(
-      within(sexo)
+      within(screen.getByRole('listbox', { name: 'Sexo' }))
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['Cualquier sexo', 'Macho', 'Hembra']);

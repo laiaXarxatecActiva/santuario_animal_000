@@ -117,3 +117,12 @@ describe('CU-18 Campana de notificaciones', () => {
     expect(screen.getByRole('region', { name: 'Notificaciones' })).toBeVisible();
   });
 });
+
+describe('Animación de los desplegables (DESIGN_SYSTEM §9)', () => {
+  it('el panel de la campana lleva la animación', async () => {
+    api();
+    renderRoute('/');
+    await userEvent.click(await campana('Notificaciones, 1 sin leer'));
+    expect(screen.getByRole('region', { name: 'Notificaciones' })).toHaveClass('dropdown-panel');
+  });
+});

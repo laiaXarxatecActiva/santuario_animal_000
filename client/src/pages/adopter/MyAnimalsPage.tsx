@@ -1,4 +1,4 @@
-import { faCertificate, faDownload, faFeather } from '@fortawesome/free-solid-svg-icons';
+import { faCertificate, faFeather } from '@fortawesome/free-solid-svg-icons';
 import {
   isOpenAdoptionStatus,
   PAYMENT_MODES,
@@ -265,11 +265,19 @@ function TarjetaAdopcion({
 
   // Las acciones que ofrece la API (CU-20 1a, CU-21): el servidor vuelve a comprobarlas.
   const activaSinBaja = adopcion.status === 'active' && !adopcion.cancelRequested;
-  const acciones: ActionsMenuItem[] = [];
   const abiertaSinBaja = activaSinBaja || adopcion.status === 'paused' || adopcion.status === 'pending';
-  if (activaSinBaja) acciones.push({ label: t('manageAdoption.changePlan'), onSelect: onChangePlan });
-  // CU-49 1a: abierta y sin la baja pedida.
+  // CU-22 1a: el certificado, mientras la adopción está activa (también con la baja pedida).
+  const conCertificado = adopcion.status === 'active';
+  // Menú «⋯» (SCREENS §4.2): forma de pago (CU-49 1a), descarga del certificado y baja.
+  const acciones: ActionsMenuItem[] = [];
   if (abiertaSinBaja) acciones.push({ label: t('paymentMode.title'), onSelect: onChangeMode });
+  if (conCertificado) {
+    acciones.push({
+      label: t('certificate.download'),
+      href: `/api/me/adoptions/${adopcion.id}/certificate?download=1`,
+      download: true,
+    });
+  }
   if (abiertaSinBaja) acciones.push({ label: t('manageAdoption.cancel'), onSelect: onCancel });
 
   return (
@@ -317,31 +325,24 @@ function TarjetaAdopcion({
         )}
         <div className={styles.actions}>
           <ButtonLink to={`/my-animals/${animal.id}`}>{t('myAnimals.seeProfile', { name: animal.name })}</ButtonLink>
-          {/* CU-22: certificado en PDF mientras la adopción está activa (1a). */}
-          {adopcion.status === 'active' && (
-            <>
-              <ButtonLink
-                variant="outline"
-                icon={faCertificate}
-                to={`/api/me/adoptions/${adopcion.id}/certificate`}
-                reloadDocument
-                target="_blank"
-                rel="noopener"
-                aria-label={t('certificate.viewOf', { name: animal.name })}
-              >
-                {t('certificate.view')}
-              </ButtonLink>
-              <ButtonLink
-                variant="outline"
-                icon={faDownload}
-                to={`/api/me/adoptions/${adopcion.id}/certificate?download=1`}
-                reloadDocument
-                download
-                aria-label={t('certificate.downloadOf', { name: animal.name })}
-              >
-                {t('certificate.download')}
-              </ButtonLink>
-            </>
+          {/* CU-22: el certificado en PDF se abre en otra pestaña; la descarga va en «⋯». */}
+          {conCertificado && (
+            <ButtonLink
+              variant="outline"
+              icon={faCertificate}
+              to={`/api/me/adoptions/${adopcion.id}/certificate`}
+              reloadDocument
+              target="_blank"
+              rel="noopener"
+              aria-label={t('certificate.viewOf', { name: animal.name })}
+            >
+              {t('certificate.view')}
+            </ButtonLink>
+          )}
+          {activaSinBaja && (
+            <Button variant="outline" aria-expanded={editandoPlan} onClick={editandoPlan ? onClosePlan : onChangePlan}>
+              {t('manageAdoption.changePlan')}
+            </Button>
           )}
         </div>
       </div>

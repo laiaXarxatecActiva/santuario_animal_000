@@ -80,8 +80,11 @@
     "intro": "They all live at the sanctuary and you can adopt them from a distance.",
     "filtersLabel": "Catalogue filters",
     "search": "Search by name",
+    "searchPlaceholder": "Animal name",
     "species": "Species",
     "allSpecies": "All species",
+    "speciesSelected_one": "{{count}} species",
+    "speciesSelected_other": "{{count}} species",
     "sex": "Sex",
     "anySex": "Any sex",
     "sexOptions": {
@@ -90,6 +93,8 @@
     },
     "age": "Age",
     "anyAge": "Any age",
+    "agesSelected_one": "{{count}} age range",
+    "agesSelected_other": "{{count}} age ranges",
     "ageRanges": {
       "young": "Under 5 years",
       "adult": "5 to 15 years",

@@ -68,6 +68,24 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     expect(nombres(res.body.data)).toEqual(['Carbón', 'Ébano', 'Sombra']);
   });
 
+  it('filtra por varias especies a la vez (speciesId=1,2)', async () => {
+    const porEspecie = async (speciesId: string) =>
+      nombres((await request(t.app).get('/api/animals').query({ speciesId, pageSize: 100 })).body.data);
+    const leonados = await porEspecie('1');
+    const negros = await porEspecie('2');
+    expect(leonados.length).toBeGreaterThan(0);
+    const ambas = await porEspecie('1,2');
+    expect([...ambas].sort()).toEqual([...leonados, ...negros].sort());
+  });
+
+  it('responde 400 si la lista de especies no es válida', async () => {
+    for (const speciesId of ['1,abc', '0', '1,,2', '']) {
+      const res = await request(t.app).get('/api/animals').query({ speciesId });
+      expect(res.status, speciesId).toBe(400);
+      expect(res.body.error.details.map((d: { field: string }) => d.field)).toEqual(['speciesId']);
+    }
+  });
+
   it('filtra por sexo (macho o hembra; «desconocido» no existe)', async () => {
     const hembras = await request(t.app).get('/api/animals').query({ sex: 'female' });
     expect(hembras.body.data.length).toBeGreaterThan(0);
@@ -84,6 +102,19 @@ describe('CU-02 Consultar el catálogo de animales', () => {
     expect(nombres(jovenes.body.data)).toEqual(['Canelo', 'Turia']);
     const mayores = await request(t.app).get('/api/animals').query({ minAge: 16 });
     expect(nombres(mayores.body.data)).toEqual(['Nieve']);
+  });
+
+  it('filtra por varios tramos de edad aunque no vayan seguidos (age=young,senior)', async () => {
+    const res = await request(t.app).get('/api/animals').query({ age: 'young,senior', sort: 'name' });
+    expect(nombres(res.body.data)).toEqual(['Canelo', 'Nieve', 'Turia']);
+    const uno = await request(t.app).get('/api/animals').query({ age: 'senior' });
+    expect(nombres(uno.body.data)).toEqual(['Nieve']);
+  });
+
+  it('responde 400 si un tramo de edad no existe', async () => {
+    const res = await request(t.app).get('/api/animals').query({ age: 'young,baby' });
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.map((d: { field: string }) => d.field)).toEqual(['age']);
   });
 
   it('«disponible para adoptar» oculta los no adoptables', async () => {

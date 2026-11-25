@@ -8,13 +8,25 @@ describe('CU-02 filtros del catálogo en la URL', () => {
     );
     expect(filtros).toEqual({
       q: 'ru',
-      speciesId: 2,
+      speciesIds: [2],
       sex: 'female',
-      age: 'adult',
+      ages: ['adult'],
       adoptable: true,
       sort: 'name',
       page: 3,
     });
+  });
+
+  it('lee varias especies y varios tramos de edad separados por comas', () => {
+    const filtros = readCatalogFilters(new URLSearchParams('speciesId=1,2&age=young,senior'));
+    expect(filtros.speciesIds).toEqual([1, 2]);
+    expect(filtros.ages).toEqual(['young', 'senior']);
+  });
+
+  it('de una lista descarta solo los valores no válidos y los repetidos', () => {
+    const filtros = readCatalogFilters(new URLSearchParams('speciesId=2,abc,2,0&age=young,viejo'));
+    expect(filtros.speciesIds).toEqual([2]);
+    expect(filtros.ages).toEqual(['young']);
   });
 
   it('el sexo «desconocido» ya no existe: se descarta', () => {
@@ -28,27 +40,40 @@ describe('CU-02 filtros del catálogo en la URL', () => {
     expect(filtros).toEqual({ sort: '-arrivalDate', page: 1 });
   });
 
-  it('escribe en la URL solo lo que no es por defecto', () => {
+  it('escribe en la URL solo lo que no es por defecto, con las listas separadas por comas', () => {
     expect(writeCatalogFilters({ sort: '-arrivalDate', page: 1 }).toString()).toBe('');
-    expect(writeCatalogFilters({ speciesId: 2, adoptable: true, sort: 'name', page: 2 }).toString()).toBe(
-      'speciesId=2&adoptable=true&sort=name&page=2',
-    );
+    expect(writeCatalogFilters({ speciesIds: [], ages: [], sort: '-arrivalDate', page: 1 }).toString()).toBe('');
+    expect(
+      decodeURIComponent(
+        writeCatalogFilters({
+          speciesIds: [2, 1],
+          ages: ['young', 'senior'],
+          adoptable: true,
+          sort: 'name',
+          page: 2,
+        }).toString(),
+      ),
+    ).toBe('speciesId=2,1&age=young,senior&adoptable=true&sort=name&page=2');
   });
 
-  it('convierte el rango de edad en minAge y maxAge para la API', () => {
-    expect(toApiQuery({ age: 'young', sort: '-arrivalDate', page: 1 }, 12)).toEqual({
-      minAge: 0,
-      maxAge: 4,
+  it('pasa las especies y los tramos de edad a la API como listas separadas por comas', () => {
+    expect(toApiQuery({ speciesIds: [1, 2], ages: ['young', 'senior'], sort: '-arrivalDate', page: 1 }, 12)).toEqual({
+      speciesId: '1,2',
+      age: 'young,senior',
       sort: '-arrivalDate',
       page: 1,
       pageSize: 12,
     });
-    expect(toApiQuery({ age: 'senior', sort: 'name', page: 1 }, 12)).toMatchObject({ minAge: 16 });
-    expect(toApiQuery({ age: 'senior', sort: 'name', page: 1 }, 12)).not.toHaveProperty('maxAge');
+    expect(toApiQuery({ speciesIds: [], ages: [], sort: 'name', page: 1 }, 12)).toEqual({
+      sort: 'name',
+      page: 1,
+      pageSize: 12,
+    });
   });
 
-  it('cuenta los filtros activos (el orden y la página no cuentan)', () => {
+  it('cuenta los filtros activos: cada especie y cada tramo de edad cuentan (el orden y la página, no)', () => {
     expect(countActiveFilters({ sort: 'name', page: 4 })).toBe(0);
     expect(countActiveFilters({ q: 'ru', sex: 'male', adoptable: true, sort: 'name', page: 1 })).toBe(3);
+    expect(countActiveFilters({ speciesIds: [1, 2], ages: ['young'], sort: 'name', page: 1 })).toBe(3);
   });
 });

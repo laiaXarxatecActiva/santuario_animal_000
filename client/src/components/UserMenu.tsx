@@ -1,4 +1,4 @@
-import { faChevronDown, faCircleUser, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp, faCircleUser, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -52,21 +52,28 @@ export function UserMenu({ name, links, onLogout }: UserMenuProps) {
       <Button
         ref={boton}
         variant="outline"
-        icon={faCircleUser}
+        className={styles.button}
         aria-expanded={abierto}
         aria-controls={panelId}
         aria-label={t('nav.userMenu', { name })}
         onClick={() => setAbierto((a) => !a)}
       >
+        <FontAwesomeIcon icon={faCircleUser} aria-hidden="true" className={styles.userIcon} />
         <span className={styles.name}>{name}</span>
-        <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" className={styles.chevron} />
+        {/* La flecha apunta hacia arriba mientras el panel está abierto. */}
+        <FontAwesomeIcon icon={abierto ? faChevronUp : faChevronDown} aria-hidden="true" className={styles.chevron} />
       </Button>
-      <div id={panelId} className={styles.panel} hidden={!abierto}>
+      <div id={panelId} className={`${styles.panel} dropdown-panel`} hidden={!abierto}>
         {links.length > 0 && (
           <ul className={styles.list}>
             {links.map(({ to, key }) => (
               <li key={to}>
-                <Link to={to} className={styles.item} onClick={() => setAbierto(false)}>
+                <Link
+                  to={to}
+                  className={styles.item}
+                  aria-current={pathname === to ? 'page' : undefined}
+                  onClick={() => setAbierto(false)}
+                >
                   {t(key)}
                 </Link>
               </li>
@@ -81,8 +88,8 @@ export function UserMenu({ name, links, onLogout }: UserMenuProps) {
             onLogout();
           }}
         >
-          <FontAwesomeIcon icon={faRightFromBracket} aria-hidden="true" />
           {t('nav.logout')}
+          <FontAwesomeIcon icon={faRightFromBracket} aria-hidden="true" className={styles.logoutIcon} />
         </button>
       </div>
     </div>

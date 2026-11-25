@@ -24,6 +24,18 @@ describe('CU-04 Consultar cómo funciona la adopción simbólica', () => {
     expect(screen.getByRole('link', { name: 'Ver animales' })).toHaveAttribute('href', '/animals');
   });
 
+  it('cada pregunta frecuente lleva la flecha chevron-down que indica que se despliega', () => {
+    mockApi({ '/api/plans': { body: { data: plans } } });
+    const { container } = renderRoute('/how-it-works');
+    const preguntas = container.querySelectorAll('details summary');
+    expect(preguntas).toHaveLength(4);
+    for (const pregunta of preguntas) {
+      const flecha = pregunta.querySelector('svg[data-icon="chevron-down"]');
+      expect(flecha).not.toBeNull();
+      expect(flecha).toHaveAttribute('aria-hidden', 'true');
+    }
+  });
+
   it('si no se pueden cargar los planes, el resto de la página sigue visible', async () => {
     mockApi({ '/api/plans': { status: 500, body: {} } });
     renderRoute('/how-it-works');

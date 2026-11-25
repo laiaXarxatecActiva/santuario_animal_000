@@ -67,7 +67,13 @@ export function NotificationBell() {
           </span>
         )}
       </button>
-      <div id={panelId} role="region" aria-label={t('notifications.title')} className={styles.panel} hidden={!abierto}>
+      <div
+        id={panelId}
+        role="region"
+        aria-label={t('notifications.title')}
+        className={`${styles.panel} dropdown-panel`}
+        hidden={!abierto}
+      >
         {notificaciones.length === 0 ? (
           <p className={styles.empty}>{ultimas.isPending ? t('common.loading') : t('notifications.empty')}</p>
         ) : (

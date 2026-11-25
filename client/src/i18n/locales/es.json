@@ -80,8 +80,11 @@
     "intro": "Todos ellos viven en el santuario y puedes adoptarlos a distancia.",
     "filtersLabel": "Filtros del catálogo",
     "search": "Buscar por nombre",
+    "searchPlaceholder": "Nombre del animal",
     "species": "Especie",
     "allSpecies": "Todas las especies",
+    "speciesSelected_one": "{{count}} especie",
+    "speciesSelected_other": "{{count}} especies",
     "sex": "Sexo",
     "anySex": "Cualquier sexo",
     "sexOptions": {
@@ -90,6 +93,8 @@
     },
     "age": "Edad",
     "anyAge": "Cualquier edad",
+    "agesSelected_one": "{{count}} edad",
+    "agesSelected_other": "{{count}} edades",
     "ageRanges": {
       "young": "Menos de 5 años",
       "adult": "De 5 a 15 años",

@@ -4,10 +4,9 @@ import { useEffect, useId, useRef, useState } from 'react';
 import iconStyles from './IconButton.module.css';
 import styles from './ActionsMenu.module.css';
 
-export interface ActionsMenuItem {
-  label: string;
-  onSelect: () => void;
-}
+/** Una opción es una acción (`onSelect`) o un enlace (`href`, p. ej. una descarga). */
+export type ActionsMenuItem =
+  { label: string; onSelect: () => void } | { label: string; href: string; download?: boolean };
 
 interface ActionsMenuProps {
   /** Nombre accesible del botón: «Más acciones de Rufo». */
@@ -56,10 +55,20 @@ export function ActionsMenu({ label, items }: ActionsMenuProps) {
       >
         <FontAwesomeIcon icon={faEllipsis} aria-hidden="true" />
       </button>
-      {abierto && (
-        <ul id={panelId} role="menu" aria-label={label} className={styles.panel}>
-          {items.map((item) => (
-            <li key={item.label} role="none">
+      <ul id={panelId} role="menu" aria-label={label} className={`${styles.panel} dropdown-panel`} hidden={!abierto}>
+        {items.map((item) => (
+          <li key={item.label} role="none">
+            {'href' in item ? (
+              <a
+                role="menuitem"
+                className={styles.item}
+                href={item.href}
+                download={item.download || undefined}
+                onClick={() => setAbierto(false)}
+              >
+                {item.label}
+              </a>
+            ) : (
               <button
                 type="button"
                 role="menuitem"
@@ -71,10 +80,10 @@ export function ActionsMenu({ label, items }: ActionsMenuProps) {
               >
                 {item.label}
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

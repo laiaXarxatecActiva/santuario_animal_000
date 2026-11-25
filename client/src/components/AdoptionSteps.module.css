@@ -1,6 +1,7 @@
+/* Pasos centrados, unidos por flechas: hacia abajo apilados y hacia la derecha en fila. */
 .steps {
   display: grid;
-  gap: var(--space-5);
+  gap: var(--space-8);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -13,9 +14,31 @@
 }
 
 .step {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+/* Flecha en mitad del hueco que separa este paso del anterior. */
+.arrow {
+  position: absolute;
+  top: calc(var(--space-8) / -2);
+  left: 50%;
+  translate: -50% -50%;
+  rotate: 90deg;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+}
+
+@media (min-width: 768px) {
+  .arrow {
+    top: calc(var(--size-touch) / 2);
+    left: calc(var(--space-8) / -2);
+    rotate: none;
+  }
 }
 
 .icon {
@@ -35,4 +58,9 @@
 
 .number {
   color: var(--color-text-muted);
+}
+
+/* Algo de aire entre el título del paso y su explicación. */
+.text {
+  margin-top: var(--space-2);
 }

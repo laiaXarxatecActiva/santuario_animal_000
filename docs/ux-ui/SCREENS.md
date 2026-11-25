@@ -54,7 +54,7 @@ Contenido según quién navega:
 | Usuario | Enlaces | Derecha |
 | --- | --- | --- |
 | Visitante | Animales · Cómo funciona · Donar · Sobre el santuario | Idioma ·  · [Entrar] · [■ Registrarse] (en escritorio) |
-| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
+| Adoptante | Animales · Cómo funciona · Mis animales · Novedades (con contador de no leídas) · Mis aportaciones · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mi perfil, Cerrar sesión |
 | Trabajador | Animales · Cómo funciona · Donar · **Panel** | · Idioma ·  · menú de usuario: Mi perfil, Cerrar sesión |
 
 **Menú de hamburguesa (móvil y tablet)** desplegado bajo la cabecera:
@@ -64,19 +64,20 @@ Contenido según quién navega:
 │ Santuario                ✕ │
 ├────────────────────────────────────┤
 │  Animales                          │
+│  Cómo funciona                     │
 │  Mis animales                      │
 │  Novedades                    (3)  │
-│  Donar                             │
-│  Cómo funciona                     │
-│  Sobre el santuario                │
-│  ────────────────────────────────  │
 │  Mis aportaciones                  │
+│  Donar                             │
+│  ────────────────────────────────  │
 │  Mi perfil                         │
 │  Cerrar sesión                     │
 └────────────────────────────────────┘
 ```
 
 Para el visitante, el final del menú son los botones [Entrar] y [■ Registrarse] a todo el ancho.
+
+El menú de usuario solo tiene lo de la cuenta (Mi perfil y Cerrar sesión); todo lo demás va en los enlaces principales, que nunca se parten en dos líneas. Como el adoptante tiene seis enlaces, que no caben junto a la campana, el idioma, el tema y su menú por debajo de `xl` (1280 px), hasta ese ancho sigue con la hamburguesa; desde `xl`, sus enlaces van a `--space-4` entre sí (los demás, a `--space-5`) y el selector de idioma muestra solo su icono, para que el menú de usuario conserve su relleno. El visitante y el trabajador pasan al menú de escritorio en `lg`.
 
 ### 2.2 Aviso de página
 
@@ -147,7 +148,7 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 4. Los dos botones apilados a todo el ancho.
 5. Contador.
 6. Animales destacados en tarjetas de una columna (máximo 4, con [Ver todos los animales] debajo).
-7. Los tres pasos, apilados con su icono.
+7. Los tres pasos, apilados y centrados con su icono, unidos por una flecha `right-long` girada hacia abajo. En escritorio, en fila y centrados, con la flecha hacia la derecha entre el 1 y el 2 y entre el 2 y el 3.
 
 ### 3.2 Catálogo (`/animals`) — CU-02
 
@@ -159,10 +160,11 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
   Todos ellos viven en el santuario y puedes adoptarlos a distancia.
 
   ┌──────────────────────────────────────────────────────────────────────────┐
-  │ 🔍 [Buscar por nombre____]  Especie ▼  Sexo ▼  Edad ▼  [☐ Disponibles]   │
-  │                                                    Ordenar: Recientes ▼  │
+  │ Buscar por nombre                                          Ordenar       │
+  │ 🔍 [Nombre del animal____________________________]         Recientes ▼   │
+  │ Especie ▼        Sexo ▼        Edad ▼        [☐ Disponibles]             │
   └──────────────────────────────────────────────────────────────────────────┘
-  Filtros activos: (Buitre negro ✕) (Disponibles ✕)   Limpiar filtros
+  Filtros activos: (Buitre negro ✕) (Buitre leonado ✕) (Disponibles ✕)   Limpiar filtros
   12 animales
 
   ╭──────────╮ ╭──────────╮ ╭──────────╮ ╭──────────╮
@@ -177,13 +179,16 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 [pie]
 ```
 
+El buscador lleva encima su título visible, «Buscar por nombre» (como «Ordenar» y los demás filtros), y dentro el texto de ejemplo «Nombre del animal».
+
 **Móvil:**
 
 ```text
   Animales
   Todos ellos viven en el santuario…
 
-  🔍 [Buscar por nombre______]
+  Buscar por nombre
+  🔍 [Nombre del animal______]
   [ ⚙ Filtros (2) ]     Recientes ▼
   12 animales
 
@@ -200,7 +205,8 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 ```
 
 - **Filtros en móvil:** el botón «Filtros» despliega un panel bajo él (no una ventana emergente) con los controles apilados y los botones [■ Ver 12 animales] y [Limpiar]. El número entre paréntesis indica los filtros activos.
-- Los filtros se reflejan en la URL (`?speciesId=2&adoptable=true`), así el botón «Atrás» y los enlaces compartidos funcionan.
+- **Varias opciones:** «Especie» y «Edad» permiten marcar varias (casillas en la lista, que no se cierra al marcar; «Todas las especies» y «Cualquier edad» desmarcan las demás). El recuadro muestra el nombre si hay una marcada y «2 especies» o «2 edades» si hay más. En «Filtros activos» hay una etiqueta por cada opción, y el número de «Filtros (n)» las cuenta una a una. «Sexo» y «Ordenar» son de una sola opción.
+- Los filtros se reflejan en la URL (`?speciesId=2,1&age=young&adoptable=true`), así el botón «Atrás» y los enlaces compartidos funcionan.
 - **Sin resultados:** estado vacío «No hay animales con estos filtros» + [Limpiar filtros].
 - **Cargando:** 8 tarjetas esqueleto.
 
@@ -265,9 +271,9 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 
 1. Título y una introducción.
 2. Aviso `info`: «Es una adopción simbólica: el animal sigue viviendo en el santuario».
-3. Tres pasos con icono (elige, adopta, recibe noticias).
+3. Tres pasos con icono (elige, adopta, recibe noticias), a todo el ancho como en el inicio: centrados y unidos por flechas `right-long` (hacia abajo en móvil). La explicación de cada paso va a `--space-2` de su título.
 4. Los tres planes como tarjetas en fila (en columna en móvil), con nombre, importe al mes y descripción. La Usual lleva la insignia «La más habitual». Son informativas, no seleccionables.
-5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece?
+5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece? Cada pregunta lleva a la derecha un `chevron-down` (en `--font-size-sm`, sin el triángulo del navegador) que gira 180° al desplegarla, para indicar que se puede volver a plegar.
 6. [■ Ver animales].
 
 ### 3.5 Donar (`/donate`) — CU-05
@@ -424,7 +430,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │ │         │  Plan Usual · 5,00 €/mes · desde el 5 sep 2025               │
   │ ╰─────────╯  róxima noticia prevista: hacia el 24 nov                │
   │              Pago automático cada mes                                    │
-  │   [■ Ver su ficha]  [ Certificado ]  [ Descargar certificado ]  ⋯       │
+  │   [■ Ver su ficha]  [ Certificado ]  [ Cambiar plan ]           ⋯       │
   ╰──────────────────────────────────────────────────────────────────────────╯
   ╭──────────────────────────────────────────────────────────────────────────╮
   │ ╭─────────╮  Lupe                                  [Pausada]             │
@@ -438,16 +444,16 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   Faro · Finalizada el 21 oct · Faro nos dejó.  ¿Quieres continuar con otro animal?
 ```
 
-**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Darme de baja); el botón principal va a todo el ancho.
+**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en el menú «⋯» (Forma de pago, Descargar certificado, Darme de baja); los botones van a todo el ancho.
 
-**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: primero [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña) y a su lado [Descargar certificado] (contorno, icono `download`, descarga `certificado-<animal>.pdf`). En las demás no aparece (1a).
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña). «Descargar certificado» (descarga `certificado-<animal>.pdf` sin abrirlo) va en el menú «⋯». En las demás no aparece ninguno de los dos (1a).
 
 **Forma de pago (CU-49):** las adopciones abiertas sin baja muestran «Pago automático cada mes» o «Pago manual: te avisaremos de cada cuota» (`--color-text-muted`). «Forma de pago» en el menú «⋯» abre un desplegable en la tarjeta, como «Cambiar plan»: «El cambio vale desde la próxima cuota.», las dos opciones (la actual marcada) y [■ Guardar] [Cancelar]. Con pago manual y la cuota a 7 días o menos, la tarjeta muestra un aviso `warning` «La cuota de Rufo vence el [fecha]. Puedes pagarla hasta el [fecha + 6] sin que la adopción se pause.» con [■ Pagar la cuota], que abre el pago simulado.
 
-- Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
-- «Darme de baja» y «Cambiar plan» están en el menú «⋯» en escritorio también, para no saturar la tarjeta.
+- Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Solo la foto: el hueco en blanco que queda debajo no es un enlace. Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
+- A la vista, por este orden: [■ Ver su ficha], [Certificado] y [Cambiar plan] (contorno; vuelve a pulsarse para cerrar el desplegable). «Forma de pago», «Descargar certificado» y «Darme de baja» están en el menú «⋯» también en escritorio, para no saturar la tarjeta.
 - **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
-- El menú «⋯» solo aparece si hay acciones: «Cambiar plan» en las activas sin baja; «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes.
+- [Cambiar plan] solo en las activas sin baja. El menú «⋯» solo aparece si hay acciones: «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes; «Descargar certificado» en las activas (también con la baja pedida).
 - Con baja solicitada: aviso `info` «Activa hasta el 29 nov. No se te volverá a cobrar».
 - Sin adopciones: estado vacío + [■ Ver animales].
 

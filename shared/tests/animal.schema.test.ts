@@ -21,13 +21,28 @@ describe('CU-02 catalogQuerySchema', () => {
       page: 1,
       pageSize: 20,
       sort: 'adopterCount',
-      speciesId: 2,
+      speciesId: [2],
       sex: 'female',
       minAge: 5,
       maxAge: 15,
       adoptable: true,
       q: 'rufo',
     });
+  });
+
+  it('admite varias especies separadas por comas, sin repetidas', () => {
+    expect(catalogQuerySchema.parse({ speciesId: '1,2' }).speciesId).toEqual([1, 2]);
+    expect(catalogQuerySchema.parse({ speciesId: '3' }).speciesId).toEqual([3]);
+    expect(catalogQuerySchema.parse({ speciesId: '2,2,1' }).speciesId).toEqual([2, 1]);
+    for (const speciesId of ['1,abc', '0', '1,,2', '', '-1']) {
+      expect(catalogQuerySchema.safeParse({ speciesId }).success, speciesId).toBe(false);
+    }
+  });
+
+  it('admite varios tramos de edad separados por comas', () => {
+    expect(catalogQuerySchema.parse({ age: 'young,senior' }).age).toEqual(['young', 'senior']);
+    expect(catalogQuerySchema.safeParse({ age: 'young,baby' }).success).toBe(false);
+    expect(catalogQuerySchema.safeParse({ age: '' }).success).toBe(false);
   });
 
   it('el sexo solo puede ser macho o hembra', () => {

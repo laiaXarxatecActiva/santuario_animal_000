@@ -64,16 +64,36 @@ describe('PublicHeader', () => {
     mockApi({ '/api/auth/me': { body: { user: sessionUser() } } });
     pintar();
     const menu = await screen.findByRole('button', { name: 'Menú de Lucía' });
-    expect(textos(navegacion())).toEqual(['Animales', 'Mis animales', 'Novedades', 'Donar']);
+    expect(textos(navegacion())).toEqual([
+      'Animales',
+      'Cómo funciona',
+      'Mis animales',
+      'Novedades',
+      'Mis aportaciones',
+      'Donar',
+    ]);
     expect(screen.queryByRole('link', { name: 'Entrar' })).not.toBeInTheDocument();
 
     expect(menu).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(menu);
     const panel = document.getElementById(menu.getAttribute('aria-controls') ?? '')!;
-    expect(textos(panel)).toEqual(['Mis aportaciones', 'Mi perfil', 'Cómo funciona']);
+    // En el menú de usuario solo queda lo de la cuenta: el perfil y cerrar sesión.
+    expect(textos(panel)).toEqual(['Mi perfil']);
     expect(within(panel).getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     expect(menu).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('el menú de usuario marca la página actual y deja el icono de «Cerrar sesión» detrás del texto', async () => {
+    mockApi({ '/api/auth/me': { body: { user: sessionUser() } } });
+    pintar('/profile');
+    const menu = await screen.findByRole('button', { name: 'Menú de Lucía' });
+    await userEvent.click(menu);
+    const panel = document.getElementById(menu.getAttribute('aria-controls') ?? '')!;
+    expect(within(panel).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page');
+    expect(within(navegacion()).getByRole('link', { name: 'Mis aportaciones' })).not.toHaveAttribute('aria-current');
+    const salir = within(panel).getByRole('button', { name: 'Cerrar sesión' });
+    expect(salir.lastElementChild).toHaveAttribute('data-icon', 'right-from-bracket');
   });
 
   it('CU-09: el trabajador ve el enlace al panel', async () => {
@@ -131,5 +151,39 @@ describe('PublicHeader', () => {
     pintar();
     await screen.findByRole('link', { name: 'Panel' });
     expect(trabajador.pedidas('/api/me/feed')).toHaveLength(0);
+  });
+
+  it('el menú de hamburguesa se cierra al pulsar fuera de la cabecera', async () => {
+    mockApi({});
+    pintar();
+    const fuera = document.createElement('main');
+    document.body.append(fuera);
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir el menú' }));
+    await userEvent.click(fuera);
+    expect(screen.getByRole('button', { name: 'Abrir el menú' })).toHaveAttribute('aria-expanded', 'false');
+    fuera.remove();
+  });
+
+  it('la flecha del menú de usuario apunta hacia arriba mientras está abierto', async () => {
+    mockApi({ '/api/auth/me': { body: { user: sessionUser() } } });
+    pintar();
+    const menu = await screen.findByRole('button', { name: 'Menú de Lucía' });
+    expect(menu.querySelector('svg[data-icon="chevron-down"]')).not.toBeNull();
+    await userEvent.click(menu);
+    expect(menu.querySelector('svg[data-icon="chevron-up"]')).not.toBeNull();
+    expect(menu.querySelector('svg[data-icon="chevron-down"]')).toBeNull();
+    await userEvent.click(menu);
+    expect(menu.querySelector('svg[data-icon="chevron-down"]')).not.toBeNull();
+  });
+});
+
+describe('Animación de los desplegables (DESIGN_SYSTEM §9)', () => {
+  it('el panel del menú de usuario lleva la animación y el icono circle-user', async () => {
+    mockApi({ '/api/auth/me': { body: { user: sessionUser() } } });
+    pintar();
+    const menu = await screen.findByRole('button', { name: 'Menú de Lucía' });
+    expect(menu.querySelector('svg[data-icon="circle-user"]')).not.toBeNull();
+    const panel = document.getElementById(menu.getAttribute('aria-controls') ?? '')!;
+    expect(panel).toHaveClass('dropdown-panel');
   });
 });

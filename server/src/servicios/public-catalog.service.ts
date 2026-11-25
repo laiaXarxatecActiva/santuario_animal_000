@@ -1,4 +1,5 @@
 import {
+  AGE_RANGES,
   FEATURED_ANIMALS_LIMIT,
   isWorkerRole,
   type AdoptionPlanDto,
@@ -85,9 +86,15 @@ export function createPublicCatalogService({ db, reloj }: PublicCatalogDeps) {
     async listCatalog(query: CatalogQuery): Promise<Paginated<AnimalCardDto>> {
       const hoy = reloj.hoy();
       const limites = limitesDeNacimiento(query, hoy);
+      // Varios tramos de edad se suman: basta con estar en uno.
+      const tramos = (query.age ?? []).map((tramo) => {
+        const { nacidoComoTarde, nacidoDespuesDe } = limitesDeNacimiento(AGE_RANGES[tramo], hoy);
+        return { bornOnOrBefore: nacidoComoTarde, bornAfter: nacidoDespuesDe };
+      });
       const filtros: animalModel.CatalogFilters = {
-        speciesId: query.speciesId,
+        speciesIds: query.speciesId,
         sex: query.sex,
+        ageRanges: tramos.length ? tramos : undefined,
         bornOnOrBefore: limites.nacidoComoTarde,
         bornAfter: limites.nacidoDespuesDe,
         adoptable: query.adoptable,

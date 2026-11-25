@@ -52,6 +52,14 @@ describe('AdminLayout (SCREENS §5.1)', () => {
     expect(screen.getByRole('button', { name: 'Cerrar el menú' })).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('móvil: el menú se cierra al pulsar fuera de él', async () => {
+    panel(admin());
+    renderRoute('/admin');
+    await userEvent.click(await screen.findByRole('button', { name: 'Abrir el menú' }));
+    await userEvent.click(await screen.findByRole('heading', { level: 1 }));
+    expect(screen.getByRole('button', { name: 'Abrir el menú' })).toHaveAttribute('aria-expanded', 'false');
+  });
+
   it('menú de usuario con el perfil y cerrar sesión', async () => {
     panel();
     const { router } = renderRoute('/admin');

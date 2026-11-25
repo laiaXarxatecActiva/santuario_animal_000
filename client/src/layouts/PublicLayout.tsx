@@ -6,6 +6,7 @@ import { CookieNotice } from '../components/CookieNotice';
 import { Footer } from '../components/Footer';
 import { PublicHeader } from '../components/PublicHeader';
 import { ResendVerificationButton } from '../components/ResendVerificationButton';
+import { ScrollToTop } from '../components/ScrollToTop';
 import { useSession } from '../hooks/useSession';
 import { useSessionExpiry } from '../hooks/useSessionExpiry';
 import { readFlash } from '../utils/flash';
@@ -53,6 +54,7 @@ export function PublicLayout() {
             )}
           </div>
         )}
+        <ScrollToTop />
         <Outlet />
       </main>
       <div className="print-hidden">

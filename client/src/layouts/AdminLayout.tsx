@@ -29,7 +29,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isWorkerRole, type Role } from '@sanctuary/shared';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { Alert } from '../components/Alert';
@@ -37,6 +37,7 @@ import iconStyles from '../components/IconButton.module.css';
 import { LanguageSelect } from '../components/LanguageSelect';
 import { Logo } from '../components/Logo';
 import { NotificationBell } from '../components/NotificationBell';
+import { ScrollToTop } from '../components/ScrollToTop';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { UserMenu } from '../components/UserMenu';
 import { useLogout, useSession } from '../hooks/useSession';
@@ -141,6 +142,8 @@ export function AdminLayout() {
   const [flashCerrado, setFlashCerrado] = useState<string | null>(null);
   const flash = flashCerrado === location.key ? undefined : readFlash(location.state);
   const menuId = useId();
+  const lateral = useRef<HTMLElement>(null);
+  const hamburguesa = useRef<HTMLButtonElement>(null);
   // CU-70: incidencias pendientes junto a «Incidencias».
   const resumen = useIncidentSummary(user !== null && isWorkerRole(user.role));
   const pendientes = resumen.data ? resumen.data.open + resumen.data.inProgress : 0;
@@ -157,14 +160,25 @@ export function AdminLayout() {
     if (pathname !== '/admin' && actual) setApartados((a) => (a[actual] === false ? { ...a, [actual]: true } : a));
   }, [pathname, actual]);
 
+  // En móvil, el menú se cierra al cambiar de página, con Esc y al pulsar fuera de él
+  // (la hamburguesa no cuenta: ella misma lo abre y lo cierra).
   useEffect(() => setAbierto(false), [pathname]);
   useEffect(() => {
     if (!abierto) return;
     const alPulsar = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setAbierto(false);
     };
+    const alPulsarFuera = (e: MouseEvent) => {
+      if (!(e.target instanceof Node)) return;
+      if (lateral.current?.contains(e.target) || hamburguesa.current?.contains(e.target)) return;
+      setAbierto(false);
+    };
     document.addEventListener('keydown', alPulsar);
-    return () => document.removeEventListener('keydown', alPulsar);
+    document.addEventListener('mousedown', alPulsarFuera);
+    return () => {
+      document.removeEventListener('keydown', alPulsar);
+      document.removeEventListener('mousedown', alPulsarFuera);
+    };
   }, [abierto]);
 
   const puedeVer = (roles?: readonly Role[]) => !roles || (user !== null && roles.includes(user.role));
@@ -180,6 +194,7 @@ export function AdminLayout() {
       </a>
       <header className={styles.topbar}>
         <button
+          ref={hamburguesa}
           type="button"
           className={`${iconStyles.iconButton} ${styles.menuButton}`}
           aria-expanded={abierto}
@@ -197,7 +212,7 @@ export function AdminLayout() {
           {user && <UserMenu name={user.firstName} links={MENU_USUARIO} onLogout={() => logout.mutate()} />}
         </div>
       </header>
-      <aside id={menuId} className={styles.sidebar} data-open={abierto}>
+      <aside ref={lateral} id={menuId} className={styles.sidebar} data-open={abierto}>
         <div className={styles.brand}>
           <Logo />
           <span className={styles.brandSub}>{t('admin.nav.title')}</span>
@@ -260,6 +275,7 @@ export function AdminLayout() {
             </Alert>
           </div>
         )}
+        <ScrollToTop />
         <Outlet />
       </main>
     </div>

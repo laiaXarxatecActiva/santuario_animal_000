@@ -80,8 +80,11 @@
     "intro": "Tots viuen al santuari i pots adoptar-los a distància.",
     "filtersLabel": "Filtres del catàleg",
     "search": "Busca pel nom",
+    "searchPlaceholder": "Nom de l'animal",
     "species": "Espècie",
     "allSpecies": "Totes les espècies",
+    "speciesSelected_one": "{{count}} espècie",
+    "speciesSelected_other": "{{count}} espècies",
     "sex": "Sexe",
     "anySex": "Qualsevol sexe",
     "sexOptions": {
@@ -90,6 +93,8 @@
     },
     "age": "Edat",
     "anyAge": "Qualsevol edat",
+    "agesSelected_one": "{{count}} edat",
+    "agesSelected_other": "{{count}} edats",
     "ageRanges": {
       "young": "Menys de 5 anys",
       "adult": "De 5 a 15 anys",

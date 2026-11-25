@@ -20,8 +20,11 @@
 }
 
 .searchField {
-  position: relative;
   flex: 1 1 100%;
+}
+
+.searchInput {
+  position: relative;
 }
 
 .searchIcon {
@@ -32,8 +35,7 @@
   transform: translateY(-50%);
 }
 
-.input,
-.select {
+.input {
   width: 100%;
   min-height: var(--size-touch);
   padding: 0 var(--space-3);
@@ -74,7 +76,9 @@
   background: var(--color-surface-alt);
 }
 
-.searchRow .field {
+/* «Ordenar», a la derecha, con el ancho justo para «Menos adoptantes». */
+.sortField {
+  min-width: 200px;
   margin-left: auto;
 }
 

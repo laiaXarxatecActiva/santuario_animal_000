@@ -88,10 +88,6 @@
   cursor: pointer;
 }
 
-.select {
-  cursor: pointer;
-}
-
 .textarea {
   padding-block: var(--space-2);
   resize: vertical;

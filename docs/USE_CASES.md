@@ -123,7 +123,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El visitante entra en «Animales» (`/animals`).
 2. El sistema muestra una página de tarjetas con foto (miniatura de la portada), nombre, especie y número de adoptantes activos. Por defecto, primero los más recientes.
-3. El visitante aplica filtros (especie, sexo, rango de edad, «disponible para adoptar»), busca por nombre o cambia el orden (más recientes, por nombre, menos adoptantes).
+3. El visitante aplica filtros (especie, sexo, rango de edad, «disponible para adoptar»), busca por nombre o cambia el orden (más recientes, por nombre, menos adoptantes). En especie y en rango de edad puede marcar varias opciones a la vez: se muestran los animales que cumplen cualquiera de ellas (p. ej., buitres leonados **o** negros; menores de 5 **o** mayores de 15). El sexo es de una sola opción (cualquiera, macho o hembra).
 4. El sistema actualiza el listado y la paginación. Los filtros se reflejan en la URL para poder compartirla.
 5. El visitante pulsa una tarjeta y pasa a CU-03.
 
@@ -733,7 +733,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujo principal**
 
-1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o, a su lado, «Descargar certificado».
+1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o elige «Descargar certificado» en el menú «⋯» de la tarjeta.
 2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
 3. El navegador lo muestra para verlo o imprimirlo, o descarga el archivo `certificado-<animal>.pdf`.
 
