@@ -527,14 +527,15 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El adoptante entra en «Mis animales» (`/my-animals`).
 2. El sistema muestra una tarjeta por adopción con: foto y nombre del animal, plan (y el plan siguiente si hay un cambio programado), estado (activa, pendiente de pago, pausada, finalizada o cancelada), fecha de inicio y fecha de la próxima actualización prevista (última actualización + 14 días).
-3. Las adopciones abiertas aparecen primero; las cerradas, en una sección «Historial».
+3. Las adopciones abiertas aparecen como tarjetas. Debajo, la sección «Historial» cuenta lo que ha pasado en todas sus adopciones durante el último año, del más reciente al más antiguo: adopción nueva, cuotas cobradas, fallidas y devueltas, cambios de plan (pedido, anulado y aplicado), cambios de forma de pago, pausas y reanudaciones, baja pedida y cierre con su motivo. Se ven 10 y «Ver más» carga 10 más; con más de un animal, se puede filtrar por animal. Al final, un aviso: solo se muestra el último año y los pagos anteriores están en «Mis aportaciones» (CU-19).
 4. Desde cada tarjeta, el adoptante puede abrir la ficha ampliada (CU-16), pagar (CU-14), cambiar de plan (CU-20), darse de baja (CU-21) o descargar el certificado (CU-22, Fase 3).
 
 **Flujos alternativos**
 
 - **2a.** No tiene adopciones: se muestra «Todavía no has adoptado a ningún animal» con un enlace al catálogo.
 - **2b.** Una adopción tiene la baja solicitada: se muestra «Activa hasta el [end_date]», sin acciones de cambio de plan.
-- **2c.** Una adopción se cerró por fallecimiento o traslado del animal: se muestra el motivo con delicadeza y la sugerencia «¿Quieres continuar con otro animal?», que lleva al catálogo.
+- **2c.** Una adopción se cerró por fallecimiento o traslado del animal: en el historial se muestra el motivo con delicadeza y la sugerencia «¿Quieres continuar con otro animal?», que lleva al catálogo.
+- **3a.** No ha pasado nada en el último año: «Todavía no hay nada en tu historial.»
 
 **Postcondiciones**
 

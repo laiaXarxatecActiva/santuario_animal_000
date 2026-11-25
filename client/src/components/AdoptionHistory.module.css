@@ -1,0 +1,87 @@
+/* Historial de «Mis animales» (SCREENS §4.2, DESIGN_SYSTEM §8.9): una lista
+   de sucesos con la fecha a la izquierda; en móvil, la fecha va encima. */
+.history {
+  margin-top: var(--space-7);
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  margin-bottom: var(--space-1);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* El desplegable (`FilterSelect`), con sitio para «Todos» y los nombres. */
+.filter > div {
+  min-width: 180px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.item {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (min-width: 768px) {
+  .item {
+    grid-template-columns: 8rem 1fr;
+    gap: var(--space-4);
+  }
+}
+
+.date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .date {
+    padding-top: 0.15em;
+  }
+}
+
+.text {
+  margin: 0;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+.note {
+  margin-top: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

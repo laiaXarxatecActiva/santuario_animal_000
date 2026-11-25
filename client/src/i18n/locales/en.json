@@ -437,9 +437,34 @@
     "empty": "You have not adopted any animal yet",
     "seeAnimals": "See the animals",
     "seeProfile": "See {{name}}'s profile",
-    "history": "History",
     "continueWithOther": "Would you like to carry on with another animal?",
     "errorLoading": "We could not load your adoptions"
+  },
+  "history": {
+    "title": "History",
+    "intro": "What has happened in your adoptions over the last year.",
+    "animal": "Animal",
+    "allAnimals": "All",
+    "empty": "There is nothing in your history yet.",
+    "error": "We couldn't load your history",
+    "loadMore": "Show more",
+    "olderNote": "Only the last year is shown.",
+    "olderLink": "Your earlier payments are in “My contributions”.",
+    "events": {
+      "adopted": "You started adopting {{name}} on the {{plan}} plan.",
+      "payment_completed": "{{name}}'s fee paid: {{amount}} (from {{date}}).",
+      "payment_failed": "We couldn't charge {{name}}'s fee: {{amount}} (from {{date}}).",
+      "payment_refunded": "We refunded {{name}}'s fee: {{amount}} (from {{date}}).",
+      "cancel_requested": "You asked to end {{name}}'s adoption.",
+      "ended_cancelled": "{{name}}'s adoption was cancelled.",
+      "ended_finished": "{{name}}'s adoption ended.",
+      "plan_change_requested": "You asked to change {{name}}'s plan from {{from}} to {{to}} from the next fee.",
+      "plan_change_cancelled": "You cancelled {{name}}'s plan change: it stays on the {{plan}} plan.",
+      "plan_changed": "{{name}}'s plan changed from {{from}} to {{to}}.",
+      "payment_mode_changed": "You changed {{name}}'s payment method to “{{mode}}”.",
+      "paused": "{{name}}'s adoption was paused.",
+      "resumed": "{{name}}'s adoption was resumed."
+    }
   },
   "manageAdoption": {
     "moreActions": "More actions for {{name}}",

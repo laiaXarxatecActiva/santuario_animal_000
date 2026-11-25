@@ -437,9 +437,34 @@
     "empty": "Encara no has adoptat cap animal",
     "seeAnimals": "Mostra els animals",
     "seeProfile": "Mostra la fitxa de {{name}}",
-    "history": "Historial",
     "continueWithOther": "Vols continuar amb un altre animal?",
     "errorLoading": "No hem pogut carregar les teues adopcions"
+  },
+  "history": {
+    "title": "Historial",
+    "intro": "El que ha passat en les teues adopcions durant l'últim any.",
+    "animal": "Animal",
+    "allAnimals": "Tots",
+    "empty": "Encara no hi ha res en el teu historial.",
+    "error": "No hem pogut carregar l'historial",
+    "loadMore": "Veure'n més",
+    "olderNote": "Només es mostra l'últim any.",
+    "olderLink": "Els teus pagaments anteriors són a «Les meues aportacions».",
+    "events": {
+      "adopted": "Vas començar a adoptar {{name}} amb el pla {{plan}}.",
+      "payment_completed": "Quota de {{name}} pagada: {{amount}} (des del {{date}}).",
+      "payment_failed": "No s'ha pogut cobrar la quota de {{name}}: {{amount}} (des del {{date}}).",
+      "payment_refunded": "Et vam tornar la quota de {{name}}: {{amount}} (des del {{date}}).",
+      "cancel_requested": "Vas demanar la baixa de l'adopció de {{name}}.",
+      "ended_cancelled": "Es va cancel·lar l'adopció de {{name}}.",
+      "ended_finished": "Va acabar l'adopció de {{name}}.",
+      "plan_change_requested": "Vas demanar canviar el pla de {{name}} de {{from}} a {{to}} a partir de la pròxima quota.",
+      "plan_change_cancelled": "Vas anul·lar el canvi de pla de {{name}}: continua amb el pla {{plan}}.",
+      "plan_changed": "El pla de {{name}} va passar de {{from}} a {{to}}.",
+      "payment_mode_changed": "Vas canviar la forma de pagament de {{name}} a «{{mode}}».",
+      "paused": "L'adopció de {{name}} es va pausar.",
+      "resumed": "L'adopció de {{name}} es va reprendre."
+    }
   },
   "manageAdoption": {
     "moreActions": "Més accions de {{name}}",

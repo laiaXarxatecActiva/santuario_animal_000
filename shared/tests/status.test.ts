@@ -36,3 +36,30 @@ describe('constantes de pagos y notificaciones', () => {
     expect(SIMULATED_OUTCOMES).toEqual(['success', 'failure']);
   });
 });
+
+describe('CU-15 sucesos del historial de adopciones', () => {
+  it('los guardados en adoption_events coinciden con el CHECK de seedsql.sql', async () => {
+    const { ADOPTION_EVENT_TYPES } = await import('../src/constants/status.js');
+    expect(ADOPTION_EVENT_TYPES).toEqual([
+      'plan_change_requested',
+      'plan_change_cancelled',
+      'plan_changed',
+      'payment_mode_changed',
+      'paused',
+      'resumed',
+    ]);
+  });
+
+  it('el historial suma a esos los que salen de las adopciones y los pagos', async () => {
+    const { ADOPTION_EVENT_TYPES, HISTORY_EVENT_TYPES } = await import('../src/constants/status.js');
+    expect(HISTORY_EVENT_TYPES).toEqual([
+      'adopted',
+      'payment_completed',
+      'payment_failed',
+      'payment_refunded',
+      'cancel_requested',
+      'ended',
+      ...ADOPTION_EVENT_TYPES,
+    ]);
+  });
+});

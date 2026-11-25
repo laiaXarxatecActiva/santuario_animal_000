@@ -143,6 +143,7 @@ Las reglas críticas se aplican **dos veces**: en el modelo, para dar un mensaje
 | Un animal fallecido o trasladado no es adoptable | `CHECK animals_archived_not_adoptable` |
 | No hay dos cuotas válidas para el mismo mes de una adopción | Índice único parcial `payments_one_valid_per_period` |
 | Las adopciones cerradas indican el motivo; las abiertas no | `CHECK adoptions_end_reason_consistent` |
+| Historial de «Mis animales» (CU-15): los cambios de plan (pedido, anulado y aplicado), de forma de pago, las pausas y las reanudaciones quedan apuntados, los haga el adoptante, el panel o una tarea | Trigger `adoptions_record_event` (función `record_adoption_event`) en `adoption_events`, con `CHECK adoption_events_plans` y `adoption_events_payment_mode` |
 | Emails únicos sin distinguir mayúsculas | Índice único `users_email_lower_key` |
 | No se borran especies, animales, planes ni usuarios con historial | Claves foráneas `ON DELETE RESTRICT` |
 | Trabajo diario: los turnos acaban después de empezar; la salida, después de la entrada; una persona no tiene dos veces el mismo turno el mismo día; solo los trabajadores tienen turnos y ausencias; una ausencia acaba el mismo día o después | `CHECK shift_templates_times`, `CHECK shift_assignments_check_out`, `UNIQUE shift_assignments_unique`, triggers `shift_assignments_check_worker` y `absences_check_worker`, `CHECK absences_dates`. Un turno con personas asignadas no se borra (`ON DELETE RESTRICT`) |
@@ -289,6 +290,7 @@ La estructura completa está en `database/seedsql.sql`. Esta sección resume las
 | Plan_Adopción | `adoption_plans` | |
 | Adopción | `adoptions` | |
 | Pago | `payments` | Cuotas mensuales de las adopciones |
+| Suceso de adopción | `adoption_events` | CU-15: lo que la adopción no conserva (cambios de plan y de forma de pago, pausas y reanudaciones), para el historial. Lo rellena el trigger `adoptions_record_event` |
 | Donación | `donations` | |
 | Actualización | `animal_updates` | |
 | Registro_Veterinario | `vet_records` | Fase 3; la tabla existe desde el principio |
@@ -471,7 +473,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | Actualizaciones y fotos `adopters` | — | Leer las de sus animales con adopción activa | Leer todas | Leer todas |
 | Donar | Sí | Sí (se vincula a su cuenta) | Sí, pero no se vincula a la cuenta de trabajo | Sí, pero no se vincula a la cuenta de trabajo |
 | Adoptar | Debe registrarse | Sí | No | No |
-| Sus adopciones, pagos, donaciones, notificaciones y perfil | — | CRUD según los casos de uso | Perfil propio | Perfil propio |
+| Sus adopciones, pagos, donaciones, notificaciones, historial de «Mis animales» y perfil | — | CRUD según los casos de uso (el historial, solo leer el suyo) | Perfil propio | Perfil propio |
 | Animales, fotos, especies | — | — | Crear, leer, editar; borrar fotos | Todo (incluido el borrado físico de animales sin adopciones) |
 | Actualizaciones (panel) | — | — | Crear; editar y borrar las suyas | Todo |
 | Historial veterinario (Fase 3) | — | — | Crear, leer, editar | Todo |
@@ -551,6 +553,7 @@ Además, cada modelo comprueba la **propiedad** del recurso: un adoptante solo a
 | PATCH | `/api/me/adoptions/:id/payment-mode` | `{ paymentMode }` (`automatic` o `manual`): forma de pago desde la próxima cuota. Solo `pending`, `paused` o `active` sin baja (422 `PAYMENT_MODE_CHANGE_NOT_ALLOWED`). Devuelve la adopción | CU-49 |
 | POST | `/api/me/adoptions/:id/cancel` | Baja (`{}`): la activa sigue hasta el último día pagado, la pendiente pasa a `cancelled` y la pausada a `finished`. Baja ya pedida: 409 `ADOPTION_CANCEL_ALREADY_REQUESTED`; cerrada: 422 `ADOPTION_CLOSED`. Devuelve la adopción | CU-21 |
 | GET | `/api/me/adoptions/:id/certificate` | Certificado PDF (Fase 3) de una adopción propia `active` (si no, 422 `CERTIFICATE_NOT_AVAILABLE`): nombre del adoptante, nombre, especie y foto de portada del animal (sin foto si no tiene o no se puede leer), y dos fechas con su etiqueta: «Adopción desde» (`adoptions.start_date`) y «En el santuario desde» (`animals.arrival_date`). Se abre en el navegador (`inline`) o, con `?download=1`, se descarga como `certificado-<animal>.pdf`. `Cache-Control: no-store` | CU-22 |
+| GET | `/api/me/history` | Historial de «Mis animales»: sucesos del último año (desde el mismo día del año pasado, `meta.since`) de las adopciones propias, del más reciente al más antiguo. El alta, los pagos (cobrados, fallidos y devueltos), la baja pedida y el cierre salen de `adoptions` y `payments`; lo demás, de `adoption_events`. `?animalId=`, `?page&pageSize` (10 por defecto). Solo adoptantes | CU-15 |
 | GET | `/api/me/feed` | Muro de actualizaciones de mis animales (adopciones activas, desde su `start_date`), con `isRead`. Filtros `?unread=true` y `?animalId=`. `meta.unreadCount` da las no leídas de todo el muro (contador del menú) | CU-17 |
 | PUT | `/api/me/feed/:updateId/read` | Marcar como leída | CU-17 |
 | DELETE | `/api/me/feed/:updateId/read` | Marcar como no leída | CU-17 |

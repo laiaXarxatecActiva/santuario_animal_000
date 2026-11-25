@@ -437,9 +437,34 @@
     "empty": "Todavía no has adoptado a ningún animal",
     "seeAnimals": "Ver animales",
     "seeProfile": "Ver la ficha de {{name}}",
-    "history": "Historial",
     "continueWithOther": "¿Quieres continuar con otro animal?",
     "errorLoading": "No hemos podido cargar tus adopciones"
+  },
+  "history": {
+    "title": "Historial",
+    "intro": "Lo que ha pasado en tus adopciones durante el último año.",
+    "animal": "Animal",
+    "allAnimals": "Todos",
+    "empty": "Todavía no hay nada en tu historial.",
+    "error": "No hemos podido cargar el historial",
+    "loadMore": "Ver más",
+    "olderNote": "Solo se muestra el último año.",
+    "olderLink": "Tus pagos anteriores están en «Mis aportaciones».",
+    "events": {
+      "adopted": "Empezaste a adoptar a {{name}} con el plan {{plan}}.",
+      "payment_completed": "Cuota de {{name}} pagada: {{amount}} (desde el {{date}}).",
+      "payment_failed": "No se pudo cobrar la cuota de {{name}}: {{amount}} (desde el {{date}}).",
+      "payment_refunded": "Te devolvimos la cuota de {{name}}: {{amount}} (desde el {{date}}).",
+      "cancel_requested": "Pediste la baja de la adopción de {{name}}.",
+      "ended_cancelled": "Se canceló la adopción de {{name}}.",
+      "ended_finished": "Terminó la adopción de {{name}}.",
+      "plan_change_requested": "Pediste cambiar el plan de {{name}} de {{from}} a {{to}} desde la próxima cuota.",
+      "plan_change_cancelled": "Anulaste el cambio de plan de {{name}}: sigue con el plan {{plan}}.",
+      "plan_changed": "El plan de {{name}} pasó de {{from}} a {{to}}.",
+      "payment_mode_changed": "Cambiaste la forma de pago de {{name}} a «{{mode}}».",
+      "paused": "La adopción de {{name}} se pausó.",
+      "resumed": "La adopción de {{name}} se reanudó."
+    }
   },
   "manageAdoption": {
     "moreActions": "Más acciones de {{name}}",

@@ -10,6 +10,8 @@ import type {
   DashboardDto,
   SpeciesAdminDto,
   AdoptionDto,
+  HistoryEventDto,
+  HistoryResponse,
   FeedItemDto,
   FeedResponse,
   AdoptionPlanDto,
@@ -481,3 +483,29 @@ export const adminDonations: AdminDonationListItemDto[] = [
     recordedBy: null,
   },
 ];
+
+/** CU-15: un suceso del historial de «Mis animales». */
+export function historyEvent(overrides: Partial<HistoryEventDto> = {}): HistoryEventDto {
+  return {
+    id: 'payment-1-completed',
+    type: 'payment_completed',
+    date: '2026-11-05',
+    animal: { id: 1, name: 'Rufo' },
+    amount: '5.00',
+    periodStart: '2026-11-05',
+    planName: null,
+    previousPlanName: null,
+    paymentMode: null,
+    endStatus: null,
+    endReason: null,
+    ...overrides,
+  };
+}
+
+/** CU-15: respuesta de GET /api/me/history. */
+export function historyPage(data: HistoryEventDto[], meta: Partial<HistoryResponse['meta']> = {}): HistoryResponse {
+  return {
+    data,
+    meta: { page: 1, pageSize: 10, total: data.length, totalPages: 1, since: '2025-11-25', ...meta },
+  };
+}

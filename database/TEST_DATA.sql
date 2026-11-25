@@ -76,6 +76,7 @@ TRUNCATE TABLE
     notifications,
     update_reads,
     donations,
+    adoption_events,
     payments,
     adoptions,
     adoption_plans,
@@ -496,6 +497,17 @@ INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, me
 
 -- La adopción 12 (pendiente antigua) no tiene ningún intento de pago:
 -- el adoptante abandonó la pasarela.
+
+-- 8.4 Historial (CU-15): lo que la adopción no conserva. En la aplicación lo
+--     apunta el trigger adoptions_record_event; aquí se inserta a mano con fecha.
+INSERT INTO adoption_events (adoption_id, type, from_plan_id, to_plan_id, payment_mode, created_at) VALUES
+-- Lucía probó el pago manual con Rufo y volvió al automático.
+(1, 'payment_mode_changed', NULL, NULL, 'manual',    pg_temp.ago_ts('2 months 3 days', '21:15')),
+(1, 'payment_mode_changed', NULL, NULL, 'automatic', pg_temp.ago_ts('1 month 12 days', '09:40')),
+-- Pablo programó el cambio de Usual a Extraordinaria (sigue pendiente).
+(5, 'plan_change_requested', 2, 3, NULL, pg_temp.ago_ts('6 days', '18:20')),
+-- Elena: la adopción 7 se pausó al fallar la cuota.
+(7, 'paused', NULL, NULL, NULL, (pg_temp.ago('4 months 15 days') + INTERVAL '4 months')::DATE + TIME '03:00');
 
 -- -----------------------------------------------------------------------------
 -- 9. Donaciones

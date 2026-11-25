@@ -18,6 +18,7 @@ import { createContributionRoutes } from './routes/contribution.routes.js';
 import { createDocumentRoutes } from './routes/document.routes.js';
 import { createDonationRoutes } from './routes/donation.routes.js';
 import { createFeedRoutes } from './routes/feed.routes.js';
+import { createHistoryRoutes } from './routes/history.routes.js';
 import { createNotificationRoutes } from './routes/notification.routes.js';
 import { createProfileRoutes } from './routes/profile.routes.js';
 import { createPublicRoutes } from './routes/public.routes.js';
@@ -41,6 +42,7 @@ import { createUserAdminService } from './servicios/user-admin.service.js';
 import { createAdoptionAdminService } from './servicios/adoption-admin.service.js';
 import { createDonationAdminService } from './servicios/donation-admin.service.js';
 import { createPaymentAdminService } from './servicios/payment-admin.service.js';
+import { createHistoryService } from './servicios/history.service.js';
 import { createFeedService } from './servicios/feed.service.js';
 import { createNotificationService } from './servicios/notification.service.js';
 import { createMediaUploader } from './servicios/media-upload.service.js';
@@ -160,6 +162,7 @@ export function createApp(options: AppOptions): Express {
   app.use('/api/auth', createAuthRoutes(authService, { secureCookies: production }));
   app.use('/api', createAdoptionRoutes(adoptionService));
   app.use('/api', createFeedRoutes(createFeedService({ db })));
+  app.use('/api', createHistoryRoutes(createHistoryService({ db, reloj })));
   const contributionService = createContributionService({ db });
   app.use('/api', createContributionRoutes(contributionService));
   const donationService = createDonationService({

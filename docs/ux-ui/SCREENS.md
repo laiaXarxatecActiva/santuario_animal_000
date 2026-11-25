@@ -440,9 +440,21 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │              ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │
   ╰──────────────────────────────────────────────────────────────────────────╯
 
-  Historial                                                   (desplegable)
-  Faro · Finalizada el 21 oct · Faro nos dejó.  ¿Quieres continuar con otro animal?
+  Historial (h2)                                          Animal [Todos ▾]
+  Lo que ha pasado en tus adopciones durante el último año.
+  ─────────────────────────────────────────────────────────────────────────
+  20 nov 2026   Pediste la baja de la adopción de Lupe.
+  ─────────────────────────────────────────────────────────────────────────
+  5 nov 2026    Cuota de Rufo pagada: 5,00 € (desde el 5 nov 2026).
+  ─────────────────────────────────────────────────────────────────────────
+  23 oct 2026   Terminó la adopción de Faro. Faro nos ha dejado.
+                ¿Quieres continuar con otro animal?
+  ─────────────────────────────────────────────────────────────────────────
+                              [ Ver más ]
+  Solo se muestra el último año. Tus pagos anteriores están en «Mis aportaciones».
 ```
+
+**Historial (CU-15):** sustituye a la antigua lista de adopciones cerradas (las cerradas ya no tienen tarjeta). Lista de sucesos (DESIGN_SYSTEM §8.9) del último año, de 10 en 10 con [Ver más] (contorno). El filtro «Animal» (`FilterSelect`) solo aparece con más de un animal. Sin sucesos: «Todavía no hay nada en tu historial.» Se vuelve a pedir tras pagar, cambiar de plan o de forma de pago y darse de baja.
 
 **Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en el menú «⋯» (Forma de pago, Descargar certificado, Darme de baja); los botones van a todo el ancho.
 

@@ -57,6 +57,7 @@ DROP TABLE IF EXISTS
     notifications,
     update_reads,
     donations,
+    adoption_events,
     payments,
     adoptions,
     adoption_plans,
@@ -77,6 +78,7 @@ DROP FUNCTION IF EXISTS check_animal_cover_photo() CASCADE;
 DROP FUNCTION IF EXISTS check_worker_user() CASCADE;
 DROP FUNCTION IF EXISTS check_task_people() CASCADE;
 DROP FUNCTION IF EXISTS check_feeding_log_task() CASCADE;
+DROP FUNCTION IF EXISTS record_adoption_event() CASCADE;
 
 -- -----------------------------------------------------------------------------
 -- 1. Funciones auxiliares
@@ -491,6 +493,71 @@ CREATE INDEX payments_status_idx ON payments (status, created_at);
 CREATE TRIGGER payments_set_updated_at
     BEFORE UPDATE ON payments
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- CU-15: historial de «Mis animales». Guarda solo lo que la adopción no conserva
+-- (cambios de plan y de forma de pago, pausas y reanudaciones); el alta, los
+-- pagos, la baja pedida y el cierre se sacan de adoptions y payments. Lo rellena
+-- el trigger de abajo, así que vale para el adoptante, el panel y las tareas.
+CREATE TABLE adoption_events (
+    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    adoption_id   INTEGER      NOT NULL REFERENCES adoptions (id) ON DELETE CASCADE,
+    type          VARCHAR(30)  NOT NULL
+                  CHECK (type IN (
+                      'plan_change_requested', -- CU-20: plan para la próxima cuota
+                      'plan_change_cancelled', -- CU-20 3a: vuelve a elegir el plan actual
+                      'plan_changed',          -- CU-43: el cambio se aplica al cobrar
+                      'payment_mode_changed',  -- CU-49
+                      'paused',
+                      'resumed'
+                  )),
+    from_plan_id  INTEGER      REFERENCES adoption_plans (id) ON DELETE RESTRICT,
+    to_plan_id    INTEGER      REFERENCES adoption_plans (id) ON DELETE RESTRICT,
+    payment_mode  VARCHAR(20)  CHECK (payment_mode IN ('automatic', 'manual')), -- la nueva forma de pago
+    created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT adoption_events_plans
+        CHECK ((type IN ('plan_change_requested', 'plan_change_cancelled', 'plan_changed'))
+               = (from_plan_id IS NOT NULL AND to_plan_id IS NOT NULL)),
+    CONSTRAINT adoption_events_payment_mode
+        CHECK ((type = 'payment_mode_changed') = (payment_mode IS NOT NULL))
+);
+
+CREATE INDEX adoption_events_adoption_idx ON adoption_events (adoption_id, created_at DESC);
+
+CREATE FUNCTION record_adoption_event() RETURNS trigger AS $$
+BEGIN
+    -- El cambio de plan se aplica (CU-43): el plan de la cuota pasa a ser el programado.
+    IF NEW.plan_id <> OLD.plan_id THEN
+        INSERT INTO adoption_events (adoption_id, type, from_plan_id, to_plan_id)
+        VALUES (NEW.id, 'plan_changed', OLD.plan_id, NEW.plan_id);
+    -- Se programa (o se cambia) el plan de la próxima cuota (CU-20).
+    ELSIF NEW.next_plan_id IS NOT NULL AND NEW.next_plan_id IS DISTINCT FROM OLD.next_plan_id THEN
+        INSERT INTO adoption_events (adoption_id, type, from_plan_id, to_plan_id)
+        VALUES (NEW.id, 'plan_change_requested', NEW.plan_id, NEW.next_plan_id);
+    -- Se anula el cambio programado (CU-20 3a). No cuenta si lo borra una baja o un cierre.
+    ELSIF OLD.next_plan_id IS NOT NULL AND NEW.next_plan_id IS NULL
+          AND NEW.status = OLD.status
+          AND NEW.cancel_requested_at IS NOT DISTINCT FROM OLD.cancel_requested_at THEN
+        INSERT INTO adoption_events (adoption_id, type, from_plan_id, to_plan_id)
+        VALUES (NEW.id, 'plan_change_cancelled', OLD.next_plan_id, NEW.plan_id);
+    END IF;
+
+    IF NEW.payment_mode <> OLD.payment_mode THEN
+        INSERT INTO adoption_events (adoption_id, type, payment_mode)
+        VALUES (NEW.id, 'payment_mode_changed', NEW.payment_mode);
+    END IF;
+
+    IF OLD.status = 'active' AND NEW.status = 'paused' THEN
+        INSERT INTO adoption_events (adoption_id, type) VALUES (NEW.id, 'paused');
+    ELSIF OLD.status = 'paused' AND NEW.status = 'active' THEN
+        INSERT INTO adoption_events (adoption_id, type) VALUES (NEW.id, 'resumed');
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER adoptions_record_event
+    AFTER UPDATE OF plan_id, next_plan_id, payment_mode, status ON adoptions
+    FOR EACH ROW EXECUTE FUNCTION record_adoption_event();
 
 -- Donaciones únicas al santuario, de importe libre (sin mínimo, mayor que 0),
 -- con o sin cuenta. No se vinculan a ningún animal. Nunca se borran.
