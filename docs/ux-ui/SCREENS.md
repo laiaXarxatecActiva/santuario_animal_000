@@ -446,7 +446,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
 
 **Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en el menú «⋯» (Forma de pago, Descargar certificado, Darme de baja); los botones van a todo el ancho.
 
-**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña). «Descargar certificado» (descarga `certificado-<animal>.pdf` sin abrirlo) va en el menú «⋯». En las demás no aparece ninguno de los dos (1a).
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña). «Descargar certificado» (descarga `certificado-<animal>.pdf` sin abrirlo) va en el menú «⋯». En las demás no aparece ninguno de los dos (1a). En el PDF, debajo de la especie y tras una línea fina, van dos filas con la etiqueta en gris y la fecha en negrita: «Adopción desde» y «En el santuario desde».
 
 **Forma de pago (CU-49):** las adopciones abiertas sin baja muestran «Pago automático cada mes» o «Pago manual: te avisaremos de cada cuota» (`--color-text-muted`). «Forma de pago» en el menú «⋯» abre un desplegable en la tarjeta, como «Cambiar plan»: «El cambio vale desde la próxima cuota.», las dos opciones (la actual marcada) y [■ Guardar] [Cancelar]. Con pago manual y la cuota a 7 días o menos, la tarjeta muestra un aviso `warning` «La cuota de Rufo vence el [fecha]. Puedes pagarla hasta el [fecha + 6] sin que la adopción se pause.» con [■ Pagar la cuota], que abre el pago simulado.
 

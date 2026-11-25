@@ -3,6 +3,7 @@ import type { Pool } from 'pg';
 import { contenidoCertificado, contenidoRecibo, nombreArchivo, PREFIJOS } from '../dominio/documentos.js';
 import { CertificateNotAvailableError, NotFoundError } from '../errors/app-error.js';
 import * as adoptionModel from '../models/adoption.model.js';
+import * as animalModel from '../models/animal.model.js';
 import * as userModel from '../models/user.model.js';
 import type { PdfService } from '../services/pdf/pdf.service.js';
 import type { StorageService } from '../services/storage/storage.service.js';
@@ -54,6 +55,8 @@ export function createDocumentService({ db, pdf, storage, contributions, donatio
       if (adopcion.status !== 'active' || !adopcion.startDate) throw new CertificateNotAvailableError();
       const usuario = await userModel.findById(db, userId);
       if (!usuario) throw new NotFoundError();
+      const llegada = await animalModel.findArrivalDate(db, adopcion.animal.id);
+      if (!llegada) throw new NotFoundError();
       const idioma = usuario.preferredLanguage ?? 'es';
       const contenido = contenidoCertificado(
         {
@@ -61,6 +64,7 @@ export function createDocumentService({ db, pdf, storage, contributions, donatio
           animalName: adopcion.animal.name,
           speciesName: adopcion.animal.species,
           startDate: adopcion.startDate,
+          arrivalDate: llegada,
         },
         idioma,
       );

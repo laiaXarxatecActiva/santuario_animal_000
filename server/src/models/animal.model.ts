@@ -189,6 +189,12 @@ export async function findPublicById(db: Queryable, id: number): Promise<PublicA
   return row ? mapRow(row) : null;
 }
 
+/** CU-22: día en que el animal llegó al santuario (`YYYY-MM-DD`), sea cual sea su estado. */
+export async function findArrivalDate(db: Queryable, id: number): Promise<string | null> {
+  const { rows } = await db.query<{ arrival_date: string }>('SELECT arrival_date FROM animals WHERE id = $1', [id]);
+  return rows[0]?.arrival_date ?? null;
+}
+
 // --- CU-12 «En memoria» ---
 
 export interface MemorialAnimal {

@@ -734,7 +734,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal**
 
 1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o elige «Descargar certificado» en el menú «⋯» de la tarjeta.
-2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
+2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y, debajo y cada una con su etiqueta para que no se confundan, el día en que empezó la adopción («Adopción desde») y el día en que el animal llegó al santuario («En el santuario desde»).
 3. El navegador lo muestra para verlo o imprimirlo, o descarga el archivo `certificado-<animal>.pdf`.
 
 **Flujos alternativos**
