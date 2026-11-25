@@ -3,7 +3,7 @@ import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { useHistory } from '../hooks/useHistory';
+import { useForgetHistoryPages, useHistory } from '../hooks/useHistory';
 import { formatCurrency, formatShortDate } from '../utils/format';
 import { Alert } from './Alert';
 import { Button } from './Button';
@@ -49,11 +49,23 @@ function texto(t: TFunction, suceso: HistoryEventDto): string {
   }
 }
 
-/** CU-15: lo que ha pasado en las adopciones durante el último año, de 10 en 10. */
+/** CU-15: lo que ha pasado en las adopciones durante el último año, de 10 en 10, en un desplegable. */
 export function AdoptionHistory({ animals }: AdoptionHistoryProps) {
   const { t } = useTranslation();
+  // Plegado al entrar (SCREENS §4.2): no se pide nada hasta desplegarlo.
+  const [abierto, setAbierto] = useState(false);
   const [animalId, setAnimalId] = useState<number | undefined>();
-  const historial = useHistory(animalId);
+  const historial = useHistory(animalId, abierto);
+  const olvidarPaginas = useForgetHistoryPages();
+
+  const alternar = () => {
+    if (abierto) {
+      // Al plegarlo se vuelve al principio: los 10 últimos, de todos los animales.
+      olvidarPaginas();
+      setAnimalId(undefined);
+    }
+    setAbierto(!abierto);
+  };
   // Sin repetidos: si llega un suceso nuevo entre una página y otra, el último de
   // una página vuelve a venir al principio de la siguiente.
   const sucesos = [...new Map((historial.data?.pages.flatMap((p) => p.data) ?? []).map((s) => [s.id, s])).values()];
@@ -116,33 +128,46 @@ export function AdoptionHistory({ animals }: AdoptionHistoryProps) {
 
   return (
     <section className={styles.history} aria-labelledby="historial-titulo">
-      <div className={styles.heading}>
-        <div>
+      <details open={abierto}>
+        {/* Se controla desde React para poder volver al principio al plegarlo. */}
+        <summary
+          className={styles.summary}
+          onClick={(e) => {
+            e.preventDefault();
+            alternar();
+          }}
+        >
           <h2 id="historial-titulo" className={styles.title}>
             {t('history.title')}
           </h2>
-          <p className={styles.muted}>{t('history.intro')}</p>
-        </div>
-        {animals.length > 1 && (
-          <FilterSelect
-            label={t('history.animal')}
-            className={styles.filter}
-            labelClassName={styles.label}
-            value={animalId === undefined ? '' : String(animalId)}
-            options={[
-              { value: '', label: t('history.allAnimals') },
-              ...animals.map((a) => ({ value: String(a.id), label: a.name })),
-            ]}
-            onChange={(id) => setAnimalId(id === '' ? undefined : Number(id))}
-          />
+        </summary>
+        {abierto && (
+          <>
+            <div className={styles.heading}>
+              <p className={styles.muted}>{t('history.intro')}</p>
+              {animals.length > 1 && (
+                <FilterSelect
+                  label={t('history.animal')}
+                  className={styles.filter}
+                  labelClassName={styles.label}
+                  value={animalId === undefined ? '' : String(animalId)}
+                  options={[
+                    { value: '', label: t('history.allAnimals') },
+                    ...animals.map((a) => ({ value: String(a.id), label: a.name })),
+                  ]}
+                  onChange={(id) => setAnimalId(id === '' ? undefined : Number(id))}
+                />
+              )}
+            </div>
+            {contenido}
+            {historial.data && (
+              <p className={styles.note}>
+                {t('history.olderNote')} <Link to="/my-contributions">{t('history.olderLink')}</Link>
+              </p>
+            )}
+          </>
         )}
-      </div>
-      {contenido}
-      {historial.data && (
-        <p className={styles.note}>
-          {t('history.olderNote')} <Link to="/my-contributions">{t('history.olderLink')}</Link>
-        </p>
-      )}
+      </details>
     </section>
   );
 }

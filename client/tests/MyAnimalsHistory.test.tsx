@@ -12,8 +12,12 @@ const conHistorial = (historial: Parameters<typeof mockApi>[0][string], adopcion
   '/api/me/history': historial,
 });
 
-const seccion = async () =>
-  (await screen.findByRole('heading', { level: 2, name: 'Historial' })).closest('section') as HTMLElement;
+/** El historial empieza plegado: se despliega pulsando «Historial». */
+const seccion = async () => {
+  const titulo = await screen.findByRole('heading', { level: 2, name: 'Historial' });
+  await userEvent.click(titulo);
+  return titulo.closest('section') as HTMLElement;
+};
 
 describe('CU-15 Historial de «Mis animales»', () => {
   it('cuenta lo que ha pasado en cada adopción, del más reciente al más antiguo', async () => {
@@ -221,5 +225,59 @@ describe('CU-15 Historial de «Mis animales»', () => {
     await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(2));
     await userEvent.click(within(historial).getByRole('button', { name: 'Ver más' }));
     await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(3));
+  });
+
+  it('al entrar está plegado: solo se ve el título y no se pide nada', async () => {
+    const { pedidas } = mockApi(conHistorial({ body: historyPage([historyEvent()]) }));
+    renderRoute('/my-animals');
+    const titulo = await screen.findByRole('heading', { level: 2, name: 'Historial' });
+    const historial = titulo.closest('section') as HTMLElement;
+    expect(historial.querySelector('details')).not.toHaveAttribute('open');
+    expect(within(historial).queryByText(/Cuota de Rufo pagada/)).not.toBeInTheDocument();
+    expect(within(historial).queryByText('Lo que ha pasado en tus adopciones durante el último año.')).toBeNull();
+    expect(pedidas('/api/me/history')).toHaveLength(0);
+
+    await userEvent.click(titulo);
+    expect(historial.querySelector('details')).toHaveAttribute('open');
+    expect(await within(historial).findByText(/Cuota de Rufo pagada/)).toBeInTheDocument();
+  });
+
+  it('al plegarlo se esconde todo; al volver a desplegarlo, solo los 10 últimos y de todos los animales', async () => {
+    const { pedidas } = mockApi(
+      conHistorial(
+        (url: URL) => {
+          const pagina = Number(url.searchParams.get('page') ?? '1');
+          const datos = Array.from({ length: pagina === 1 ? 10 : 2 }, (_, i) =>
+            historyEvent({ id: `p${pagina}-${i}` }),
+          );
+          return { body: historyPage(datos, { page: pagina, total: 12, totalPages: 2 }) };
+        },
+        [
+          activeAdoption(),
+          adoption({ id: 3, status: 'finished', animal: FARO, endDate: '2026-10-23', endReason: 'animal_deceased' }),
+        ],
+      ),
+    );
+    renderRoute('/my-animals');
+    const historial = await seccion();
+    await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(10));
+    await userEvent.click(within(historial).getByRole('button', { name: 'Ver más' }));
+    await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(12));
+
+    // Plegar: no queda nada a la vista, ni la lista, ni el filtro, ni la nota.
+    const titulo = within(historial).getByRole('heading', { level: 2, name: 'Historial' });
+    await userEvent.click(titulo);
+    expect(within(historial).queryAllByRole('listitem')).toHaveLength(0);
+    expect(within(historial).queryByRole('combobox', { name: 'Animal' })).not.toBeInTheDocument();
+    expect(within(historial).queryByRole('button', { name: 'Ver más' })).not.toBeInTheDocument();
+    expect(within(historial).queryByText(/Solo se muestra el último año/)).not.toBeInTheDocument();
+
+    // Desplegar otra vez: los 10 últimos, como al principio, sin filtro por animal.
+    await userEvent.click(titulo);
+    await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(10));
+    expect(within(historial).getByRole('button', { name: 'Ver más' })).toBeInTheDocument();
+    const ultima = pedidas('/api/me/history').at(-1)!;
+    expect(ultima.searchParams.get('page')).toBe('1');
+    expect(ultima.searchParams.get('animalId')).toBeNull();
   });
 });

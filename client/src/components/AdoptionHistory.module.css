@@ -1,20 +1,31 @@
-/* Historial de «Mis animales» (SCREENS §4.2, DESIGN_SYSTEM §8.9): una lista
-   de sucesos con la fecha a la izquierda; en móvil, la fecha va encima. */
+/* Historial de «Mis animales» (SCREENS §4.2, DESIGN_SYSTEM §8.9): un desplegable,
+   plegado al entrar, con una lista de sucesos con la fecha a la izquierda; en
+   móvil, la fecha va encima. */
 .history {
   margin-top: var(--space-7);
+}
+
+/* El título con el triángulo del desplegable a su lado, como antes. */
+.summary {
+  display: list-item;
+  cursor: pointer;
+}
+
+.summary .title {
+  display: inline;
 }
 
 .heading {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  margin: var(--space-3) 0 var(--space-4);
 }
 
 .title {
-  margin-bottom: var(--space-1);
+  margin: 0;
 }
 
 .muted {
