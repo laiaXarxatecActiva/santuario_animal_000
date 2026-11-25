@@ -49,7 +49,9 @@ describe('CU-44 Cancelar adopciones pendientes caducadas (tarea expire-pending)'
 
   it('ejecutarla dos veces no cancela ni avisa de nuevo (idempotente)', async () => {
     expect(await runExpirePending(depsDePrueba(t))).toEqual({ cancelled: 0, expiredTokensDeleted: 0 });
-    const { rows } = await t.pool.query("SELECT 1 FROM notifications WHERE user_id = 11 AND type = 'adoption_cancelled'");
+    const { rows } = await t.pool.query(
+      "SELECT 1 FROM notifications WHERE user_id = 11 AND type = 'adoption_cancelled'",
+    );
     expect(rows).toHaveLength(1);
   });
 });

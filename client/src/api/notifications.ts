@@ -9,4 +9,5 @@ export const notificationsApi = {
     apiPatch<NotificationDto>(`/api/me/notifications/${id}`, { isRead }),
   readAll: () => apiPost('/api/me/notifications/read-all'),
   remove: (id: number) => apiDelete(`/api/me/notifications/${id}`),
+  removeAll: () => apiDelete('/api/me/notifications'),
 };

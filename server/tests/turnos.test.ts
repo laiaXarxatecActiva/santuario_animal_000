@@ -5,7 +5,9 @@ import {
   esDeMiTurno,
   huecos,
   lunesDe,
+  minutosTrabajados,
   planificarCopia,
+  rangoDeFichajes,
   seSolapan,
   type TurnoParaCalendario,
 } from '../src/dominio/turnos.js';
@@ -144,5 +146,28 @@ describe('CU-61 Copiar la semana anterior', () => {
       turnos: new Map([[2, { ...TARDE, weekdays: [1, 2, 3, 4, 5] }]]),
     });
     expect(plan.saltar.map((s) => s.reason)).toEqual(['NOT_THAT_WEEKDAY']);
+  });
+});
+
+describe('CU-63 Mis fichajes', () => {
+  it('minutos trabajados: de la entrada a la salida, en minutos enteros', () => {
+    expect(
+      minutosTrabajados({ checkedInAt: '2026-11-23T05:58:00.000Z', checkedOutAt: '2026-11-23T14:05:30.000Z' }),
+    ).toBe(487);
+  });
+
+  it('sin entrada o sin salida, no hay minutos', () => {
+    expect(minutosTrabajados({ checkedInAt: null, checkedOutAt: null })).toBeNull();
+    expect(minutosTrabajados({ checkedInAt: '2026-11-23T05:58:00.000Z', checkedOutAt: null })).toBeNull();
+  });
+
+  it('rango: por defecto, las últimas 4 semanas hasta hoy', () => {
+    expect(rangoDeFichajes({}, '2026-11-24')).toEqual({ from: '2026-10-28', to: '2026-11-24' });
+    expect(rangoDeFichajes({ to: '2026-11-10' }, '2026-11-24')).toEqual({ from: '2026-10-14', to: '2026-11-10' });
+    expect(rangoDeFichajes({ from: '2026-11-01' }, '2026-11-24')).toEqual({ from: '2026-11-01', to: '2026-11-24' });
+    expect(rangoDeFichajes({ from: '2026-11-01', to: '2026-11-03' }, '2026-11-24')).toEqual({
+      from: '2026-11-01',
+      to: '2026-11-03',
+    });
   });
 });

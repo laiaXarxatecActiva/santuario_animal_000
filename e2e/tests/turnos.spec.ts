@@ -10,17 +10,22 @@ test.describe('CU-63, CU-61 Turnos', () => {
   test('la cuidadora ficha la entrada y la salida desde «Mi día» y el administrador lo ve en el calendario', async ({
     page,
   }) => {
-    // CU-63: «Tu turno» en «Mi día», con sus zonas.
+    // CU-63: el bloque «Fichaje» de «Mi día», con sus zonas.
     await iniciarSesion(page, NURIA);
     await expect(page).toHaveURL(/\/admin\/my-day$/);
-    const turno = page.getByRole('region', { name: t('work.shifts.yourShift') }).getByRole('article', { name: MANANA });
+    const turno = page.getByRole('region', { name: t('work.clock.title') }).getByRole('article', { name: MANANA });
     await expect(turno.getByText('Clínica y recuperación, Voladero de alimoches')).toBeVisible();
 
     await turno.getByRole('button', { name: t('work.shifts.checkIn'), exact: true }).click();
     await expect(page.getByText(t('work.shifts.checkInDone'), { exact: true })).toBeVisible();
-    await expect(turno.getByText(/^Entrada: \d\d:\d\d$/)).toBeVisible();
+    await expect(turno.getByText(/^Trabajando desde las \d\d:\d\d$/)).toBeVisible();
 
+    // La salida pide confirmación.
     await turno.getByRole('button', { name: t('work.shifts.checkOut'), exact: true }).click();
+    await page
+      .getByRole('dialog', { name: t('work.clock.confirmOutTitle') })
+      .getByRole('button', { name: t('work.shifts.checkOut'), exact: true })
+      .click();
     await expect(page.getByText(t('work.shifts.checkOutDone'), { exact: true })).toBeVisible();
     await expect(turno.getByRole('button')).toHaveCount(0);
 

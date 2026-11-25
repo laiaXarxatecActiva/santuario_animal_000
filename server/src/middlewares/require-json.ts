@@ -19,3 +19,9 @@ export const requireJson: RequestHandler = (req, _res, next) => {
   const subida = tipo === 'multipart/form-data' && Boolean(req.headers['x-requested-with']);
   next(tipo === 'application/json' || subida ? undefined : new UnsupportedMediaTypeError());
 };
+
+/** Para las rutas que no admiten archivos (las tareas, CU-57): solo JSON, nunca `multipart`. */
+export const soloJson: RequestHandler = (req, _res, next) => {
+  const tipo = req.headers['content-type']?.split(';')[0]?.trim().toLowerCase();
+  next(tipo === 'multipart/form-data' ? new UnsupportedMediaTypeError() : undefined);
+};

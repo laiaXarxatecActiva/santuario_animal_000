@@ -59,7 +59,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-19 | Los emails de actualizaciones y resúmenes respetan las preferencias del usuario. Los emails de seguridad (verificación, contraseña) y de pagos se envían siempre. |
 | RN-20 | La baja de una cuenta anonimiza los datos personales y conserva los pagos y donaciones. |
 | RN-21 | Para adoptar hay que tener el email verificado (provisional; ver `TECH_SPEC.md` §18). |
-| RN-22 | Los fallecidos y trasladados no aparecen en el catálogo; los fallecidos pueden aparecer en «En memoria» (Fase 3). |
+| RN-22 | Los fallecidos y trasladados no aparecen en el catálogo; los fallecidos pueden aparecer en «En memoria» (Fase 3). Ya no están en el santuario, así que su información solo se consulta: ni sus datos, ni sus fotos, ni sus actualizaciones, ni su historial veterinario se pueden crear, cambiar o borrar (422 `ANIMAL_ARCHIVED_READ_ONLY`). Lo único que se cambia es «En memoria» y, si fue un error, su estado (solo el administrador, CU-28 A5). |
 | RN-23 | El cuidador no gestiona dinero ni usuarios y no ve datos económicos (ingresos, pagos, donaciones). |
 | RN-24 | Trabajo diario: las tareas recurrentes salen de **plantillas** y se generan cada día con 7 días de antelación, en la hora de Madrid, una sola vez por plantilla y hora (la generación es idempotente). Nunca se generan para animales fallecidos o trasladados, y al archivar un animal se retira de sus tareas pendientes. |
 | RN-25 | Una tarea que exige una **cualificación** solo la puede completar, marcar como no realizada o tener asignada un trabajador que la tenga (también un administrador). Se comprueba en el servidor y en la base de datos. |
@@ -123,7 +123,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El visitante entra en «Animales» (`/animals`).
 2. El sistema muestra una página de tarjetas con foto (miniatura de la portada), nombre, especie y número de adoptantes activos. Por defecto, primero los más recientes.
-3. El visitante aplica filtros (especie, sexo, rango de edad, «disponible para adoptar»), busca por nombre o cambia el orden (más recientes, por nombre, menos adoptantes).
+3. El visitante aplica filtros (especie, sexo, rango de edad, «disponible para adoptar»), busca por nombre o cambia el orden (más recientes, por nombre, menos adoptantes). En especie y en rango de edad puede marcar varias opciones a la vez: se muestran los animales que cumplen cualquiera de ellas (p. ej., buitres leonados **o** negros; menores de 5 **o** mayores de 15). El sexo es de una sola opción (cualquiera, macho o hembra).
 4. El sistema actualiza el listado y la paginación. Los filtros se reflejan en la URL para poder compartirla.
 5. El visitante pulsa una tarjeta y pasa a CU-03.
 
@@ -138,7 +138,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-22.
 
-**Notas:** solo aparecen animales con `is_published = TRUE` y estado `in_sanctuary` o `in_treatment`. Los animales no adoptables (por ejemplo, uno que se prepara para su liberación) aparecen sin el botón de adoptar, salvo si se filtra por «disponible para adoptar». El filtro de sexo incluye la opción «Desconocido», porque en muchos buitres no se distingue a simple vista.
+**Notas:** solo aparecen animales con `is_published = TRUE` y estado `in_sanctuary` o `in_treatment`. Los animales no adoptables (por ejemplo, uno que se prepara para su liberación) aparecen sin el botón de adoptar, salvo si se filtra por «disponible para adoptar». El filtro de sexo ofrece «Macho» y «Hembra»: todos los animales tienen el sexo definido.
 
 ### CU-03 — Consultar la ficha pública de un animal
 
@@ -432,6 +432,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - Ninguna (solo lectura).
 
+**Notas:** en el panel se marca al registrar el fallecimiento (CU-33) o, después, con el interruptor «Mostrar en «En memoria»» de la pestaña «Datos» del fallecido (`PATCH /api/admin/animals/:id/memorial`), lo único de su ficha que se puede cambiar.
+
 **Reglas de negocio:** RN-22.
 
 ## 6. Área del adoptante
@@ -525,14 +527,15 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El adoptante entra en «Mis animales» (`/my-animals`).
 2. El sistema muestra una tarjeta por adopción con: foto y nombre del animal, plan (y el plan siguiente si hay un cambio programado), estado (activa, pendiente de pago, pausada, finalizada o cancelada), fecha de inicio y fecha de la próxima actualización prevista (última actualización + 14 días).
-3. Las adopciones abiertas aparecen primero; las cerradas, en una sección «Historial».
+3. Las adopciones abiertas aparecen como tarjetas. Debajo, la sección «Historial» cuenta lo que ha pasado en todas sus adopciones durante el último año, del más reciente al más antiguo: adopción nueva, cuotas cobradas, fallidas y devueltas, cambios de plan (pedido, anulado y aplicado), cambios de forma de pago, pausas y reanudaciones, baja pedida y cierre con su motivo. Se ven 10 y «Ver más» carga 10 más; con más de un animal, se puede filtrar por animal. Al final, un aviso: solo se muestra el último año y los pagos anteriores están en «Mis aportaciones» (CU-19).
 4. Desde cada tarjeta, el adoptante puede abrir la ficha ampliada (CU-16), pagar (CU-14), cambiar de plan (CU-20), darse de baja (CU-21) o descargar el certificado (CU-22, Fase 3).
 
 **Flujos alternativos**
 
 - **2a.** No tiene adopciones: se muestra «Todavía no has adoptado a ningún animal» con un enlace al catálogo.
 - **2b.** Una adopción tiene la baja solicitada: se muestra «Activa hasta el [end_date]», sin acciones de cambio de plan.
-- **2c.** Una adopción se cerró por fallecimiento o traslado del animal: se muestra el motivo con delicadeza y la sugerencia «¿Quieres continuar con otro animal?», que lleva al catálogo.
+- **2c.** Una adopción se cerró por fallecimiento o traslado del animal: en el historial se muestra el motivo con delicadeza y la sugerencia «¿Quieres continuar con otro animal?», que lleva al catálogo.
+- **3a.** No ha pasado nada en el último año: «Todavía no hay nada en tu historial.»
 
 **Postcondiciones**
 
@@ -614,7 +617,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 1. El sistema muestra en la cabecera una campana con el número de notificaciones no leídas.
 2. El usuario abre la campana y ve las últimas notificaciones (mensaje, fecha, estado de lectura).
 3. Al pulsar una notificación, se marca como leída y el sistema navega a su enlace.
-4. El usuario puede marcar todas como leídas o borrar una notificación. En `/notifications` está el listado completo, paginado.
+4. El usuario puede marcar todas como leídas o borrar una notificación (también desde la campana). En `/notifications` está el listado completo, paginado, y el botón «Limpiar notificaciones», que las borra todas tras confirmarlo.
 
 **Flujos alternativos**
 
@@ -731,8 +734,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujo principal**
 
-1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o, a su lado, «Descargar certificado».
-2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y la fecha de inicio de la adopción.
+1. En «Mis animales», el adoptante pulsa «Certificado» (lo abre en el navegador, en otra pestaña) o elige «Descargar certificado» en el menú «⋯» de la tarjeta.
+2. El sistema genera un PDF con el nombre del adoptante, el nombre y la foto de portada del animal, la especie y, debajo y cada una con su etiqueta para que no se confundan, el día en que empezó la adopción («Adopción desde») y el día en que el animal llegó al santuario («En el santuario desde»).
 3. El navegador lo muestra para verlo o imprimirlo, o descarga el archivo `certificado-<animal>.pdf`.
 
 **Flujos alternativos**
@@ -948,7 +951,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujo principal (alta)**
 
 1. El trabajador entra en «Animales» (`/admin/animals`) y pulsa «Nuevo animal».
-2. Rellena nombre, especie (de la lista de especies), sexo (macho, hembra o desconocido), fecha de nacimiento aproximada, fecha de llegada, historia de rescate, carácter, necesidades especiales y resumen de salud, y marca si es adoptable y si se publica.
+2. Rellena nombre, especie (de la lista de especies), sexo (macho o hembra, obligatorio), fecha de nacimiento aproximada, fecha de llegada, historia de rescate, carácter, necesidades especiales y resumen de salud, y marca si es adoptable y si se publica.
 3. El sistema valida y crea el animal (por defecto, `in_sanctuary`) y lleva a la gestión de fotos (CU-29).
 
 **Flujo principal (listado y edición)**
@@ -964,7 +967,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **A3. Cambiar el estado a `deceased` o `transferred`:** se sigue CU-33.
 - **A4. Borrado físico (solo administrador):** permitido solo si el animal nunca ha tenido adopciones. El sistema pide confirmación y borra el animal con sus fotos (y los archivos), actualizaciones e historial. Si tiene adopciones, se muestra «Este animal tiene historial de adopciones; archívalo cambiando su estado» (RN-17).
 - **2a.** Fecha de nacimiento posterior a la de llegada: error en el campo.
-- **2b.** Se marca como adoptable un animal fallecido o trasladado: no se permite.
+- **A5. Corregir el estado de un animal fallecido o trasladado (solo administrador):** si se archivó por error, el administrador elige otro estado en «Cambiar estado». A otro estado archivado se sigue CU-33. Para devolverlo a `in_sanctuary` o `in_treatment` se pide confirmación: sus adopciones cerradas no se reabren, no admite adopciones hasta que se active en «Datos», se borra la fecha del suceso y sale de «En memoria». Un cuidador no ve la opción y el servidor responde con 403 `ARCHIVED_STATUS_ADMIN_ONLY`.
+- **2b.** Los datos de un animal fallecido o trasladado no se modifican (RN-22): la pestaña «Datos» los muestra sin formulario y el servidor responde con 422 `ANIMAL_ARCHIVED_READ_ONLY`.
 
 **Postcondiciones**
 
@@ -998,6 +1002,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **5a.** Se elige como portada un vídeo o una foto «solo adoptantes»: no se permite.
 - **A1. Editar:** se cambia el texto alternativo o la visibilidad. Si la foto es la portada, no puede pasar a «solo adoptantes».
 - **A2. Borrar:** se pide confirmación y se borran el registro y los archivos. Si era la portada, el animal queda sin portada y se avisa.
+- **1a.** El animal ha fallecido o fue trasladado (RN-22): la galería se ve sin «Subir fotos y vídeos» ni acciones en cada foto, y el servidor responde con 422 `ANIMAL_ARCHIVED_READ_ONLY`.
 
 **Postcondiciones**
 
@@ -1088,6 +1093,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 - **1a.** Un cuidador intenta modificar una actualización de otro trabajador: no se muestran las acciones, y el servidor responde con 403.
 - **2a.** Al borrar la última actualización de un animal con adoptantes, el escritorio puede pasar a mostrar una alerta de 14 días.
+- **1b.** El animal ha fallecido o fue trasladado (RN-22): nadie, ni el administrador, puede editarla o borrarla (`canEdit: false`; 422 `ANIMAL_ARCHIVED_READ_ONLY`).
 
 **Postcondiciones**
 
@@ -1101,7 +1107,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Precondiciones**
 
-- El animal está en estado `in_sanctuary` o `in_treatment`.
+- El animal está en estado `in_sanctuary` o `in_treatment`, o en el otro estado archivado si lo corrige el administrador (CU-28 A5).
 
 **Flujo principal**
 
@@ -1121,6 +1127,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **2a.** El animal no tiene adopciones abiertas: se cambia el estado sin mensaje ni avisos.
 - **3a.** Mensaje de fallecimiento vacío con adoptantes afectados: no se permite continuar.
 - **4a.** El trabajador cancela: no cambia nada.
+- **A1. Corrección:** si el animal ya estaba archivado (solo el administrador), las adopciones ya están cerradas y no hay avisos. Al pasar de fallecido a trasladado sale de «En memoria».
 
 **Postcondiciones**
 
@@ -1153,6 +1160,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **4a.** Peso menor o igual a 0, o fecha futura: error en el campo.
 - **A1. Editar:** cuidador o administrador.
 - **A2. Borrar:** solo el administrador, con confirmación.
+- **1a.** El animal ha fallecido o fue trasladado (RN-22): el historial se ve sin «Nuevo registro» ni acciones, y el servidor responde con 422 `ANIMAL_ARCHIVED_READ_ONLY`.
 
 **Postcondiciones**
 
@@ -1710,7 +1718,7 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 
 **Flujo principal**
 
-1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado, y para cada una su hora, zona, insignias (tipo, atrasada, puntual, estado), a quién está asignada y, si está resuelta, quién y cuándo, las observaciones y la foto.
+1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado, y para cada una su hora, zona, insignias (tipo, atrasada, puntual, estado), a quién está asignada y, si está resuelta, quién y cuándo y las observaciones.
 2. Crea una tarea puntual (sin plantilla): tipo, título, descripción, zona, animales, cualificación, día (hoy o después), hora y, opcionalmente, una persona.
 3. Reasigna una tarea pendiente a un trabajador en activo, o le quita la asignación (vuelve a ser de la zona).
 4. Borra una tarea pendiente.
@@ -1754,12 +1762,12 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 
 1. En «Mi día», el trabajador pulsa «Hecha» en una tarea pendiente de hoy.
 2. El sistema comprueba que es de hoy, que sigue pendiente y que tiene la cualificación, y guarda quién y cuándo.
-3. Con «Con nota o foto» puede añadir observaciones (hasta 1000 caracteres) y una foto (JPEG, PNG o WebP; se guarda en WebP).
+3. Con «Con nota» puede añadir observaciones (hasta 1000 caracteres). Las tareas no llevan fotos.
 
 **Flujos alternativos**
 
 - **A1.** «No se ha podido hacer»: el motivo es obligatorio y queda en las observaciones; la tarea pasa a `not_done`.
-- **A2.** «Deshacer»: quien la resolvió, el mismo día, o un administrador en cualquier momento, la devuelve a pendiente; se borran las observaciones y la foto.
+- **A2.** «Deshacer»: quien la resolvió, el mismo día, o un administrador en cualquier momento, la devuelve a pendiente; se borran las observaciones.
 - **2a.** Ya resuelta (`TASK_NOT_PENDING`), de otro día (`TASK_FUTURE_DAY`) o sin la cualificación (`MISSING_QUALIFICATION`, 403).
 - Una tarea de otra zona también se puede completar (para ayudar a un compañero).
 
@@ -1878,8 +1886,9 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 **Flujo principal**
 
-1. En «Mi día», el trabajador ve su turno de hoy y pulsa «Fichar entrada». Se guarda la hora.
-2. Al acabar, pulsa «Fichar salida».
+1. En «Mi día», el bloque «Fichaje» muestra su turno de hoy y si ha fichado («Aún no has fichado la entrada», «Trabajando desde las 07:58» o «Turno terminado: de 07:58 a 15:05»; sin turno, «Hoy no tienes turno»). Pulsa «Fichar entrada» y se guarda la hora.
+2. Al acabar, pulsa «Fichar salida» y lo confirma (después no se puede cambiar; un error se arregla hablando con el administrador).
+3. En «Mis fichajes» (`/admin/my-shifts`) consulta sus turnos de un rango de fechas (las últimas 4 semanas por defecto, 92 días como mucho), del más reciente al más antiguo, con la entrada, la salida, las horas trabajadas de cada uno y el total.
 
 **Flujos alternativos**
 

@@ -32,6 +32,7 @@ import { UserAdminPage } from './pages/admin/UserAdminPage';
 import { UsersAdminPage } from './pages/admin/UsersAdminPage';
 import { SpeciesAdminPage } from './pages/admin/SpeciesAdminPage';
 import { MyDayPage } from './pages/admin/MyDayPage';
+import { MyShiftsPage } from './pages/admin/MyShiftsPage';
 import { AlertSettingsPage } from './pages/admin/AlertSettingsPage';
 import { IncidentPage } from './pages/admin/IncidentPage';
 import { IncidentsPage } from './pages/admin/IncidentsPage';
@@ -93,6 +94,7 @@ export const routes: RouteObject[] = [
           { path: 'updates/new', element: <UpdateFormPage /> },
           { path: 'updates/:id', element: <UpdateFormPage /> },
           { path: 'my-day', element: <MyDayPage /> },
+          { path: 'my-shifts', element: <MyShiftsPage /> },
           { path: 'shifts', element: <ShiftsPage /> },
           { path: 'incidents', element: <IncidentsPage /> },
           { path: 'incidents/:id', element: <IncidentPage /> },

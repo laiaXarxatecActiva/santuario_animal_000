@@ -26,7 +26,7 @@ describe('CU-20 Cambiar de plan (Mis animales)', () => {
     });
     renderRoute('/my-animals');
     const rufo = await tarjeta('Rufo');
-    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Cambiar plan' }));
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Cambiar plan' }));
 
     const formulario = within(rufo).getByRole('group', { name: 'Cambiar plan' });
     expect(
@@ -57,7 +57,7 @@ describe('CU-20 Cambiar de plan (Mis animales)', () => {
     });
     renderRoute('/my-animals');
     const rufo = await tarjeta('Rufo');
-    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Cambiar plan' }));
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Cambiar plan' }));
     const formulario = within(rufo).getByRole('group', { name: 'Cambiar plan' });
     expect(within(formulario).getByRole('radio', { name: /Extraordinaria/ })).toBeChecked();
     await userEvent.click(within(formulario).getByRole('radio', { name: /Usual/ }));
@@ -74,7 +74,7 @@ describe('CU-20 Cambiar de plan (Mis animales)', () => {
     });
     renderRoute('/my-animals');
     const rufo = await tarjeta('Rufo');
-    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Cambiar plan' }));
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Cambiar plan' }));
     await userEvent.click(within(rufo).getByRole('button', { name: 'Cancelar' }));
     expect(within(rufo).queryByRole('group', { name: 'Cambiar plan' })).not.toBeInTheDocument();
     expect(pedidas('/api/me/adoptions/1/plan')).toEqual([]);
@@ -99,8 +99,16 @@ describe('CU-20 Cambiar de plan (Mis animales)', () => {
     });
     renderRoute('/my-animals');
     const rufo = await tarjeta('Rufo');
-    expect(within(rufo).queryByRole('button', { name: 'Más acciones de Rufo' })).not.toBeInTheDocument();
+    // Con la baja pedida, solo le queda descargar el certificado (sigue activa).
+    expect(within(rufo).queryByRole('button', { name: 'Cambiar plan' })).not.toBeInTheDocument();
+    const menuRufo = await abrirMenu(rufo);
+    expect(
+      within(menuRufo)
+        .getAllByRole('menuitem')
+        .map((o) => o.textContent),
+    ).toEqual(['Descargar certificado']);
     const lupe = await tarjeta('Lupe');
+    expect(within(lupe).queryByRole('button', { name: 'Cambiar plan' })).not.toBeInTheDocument();
     await userEvent.click(within(lupe).getByRole('button', { name: 'Más acciones de Lupe' }));
     const menu = within(lupe).getByRole('menu');
     expect(within(menu).queryByRole('menuitem', { name: 'Cambiar plan' })).not.toBeInTheDocument();
@@ -215,9 +223,10 @@ describe('CU-49 Cambiar la forma de pago (Mis animales)', () => {
       '/api/me/adoptions': { body: { data: [activeAdoption({ cancelRequested: true, endDate: '2026-12-04' })] } },
     });
     renderRoute('/my-animals');
-    // Sin acciones que ofrecer, la tarjeta no muestra el menú «⋯».
+    // El menú «⋯» solo ofrece descargar el certificado (sigue activa hasta el final).
     const rufo = await tarjeta('Rufo');
-    expect(within(rufo).queryByRole('button', { name: 'Más acciones de Rufo' })).not.toBeInTheDocument();
+    const menu = await abrirMenu(rufo);
+    expect(within(menu).queryByRole('menuitem', { name: 'Forma de pago' })).not.toBeInTheDocument();
     expect(within(rufo).queryByText('Pago automático cada mes')).not.toBeInTheDocument();
   });
 

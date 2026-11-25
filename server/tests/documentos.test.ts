@@ -22,12 +22,13 @@ const cuota: ReceiptDto = {
 };
 
 describe('CU-22 Contenido del certificado de adopción', () => {
-  it('2: nombre del adoptante, del animal, especie y fecha de inicio', () => {
+  it('2: nombre del adoptante, del animal, especie, inicio de la adopción y llegada al santuario', () => {
     const c = contenidoCertificado({
       adopterName: 'Lucía Martínez Navarro',
       animalName: 'Rufo',
       speciesName: 'Buitre leonado',
       startDate: '2025-09-05',
+      arrivalDate: '2021-03-12',
     });
     expect(c.titulo).toBe('Certificado de adopción');
     expect(c.lineas).toEqual([
@@ -36,7 +37,11 @@ describe('CU-22 Contenido del certificado de adopción', () => {
       'apadrina simbólicamente a',
       'Rufo',
       'Buitre leonado',
-      'desde el 5 de septiembre de 2025',
+    ]);
+    // Las dos fechas, cada una con su etiqueta para que no se confundan: primero la adopción.
+    expect(c.fechas).toEqual([
+      { etiqueta: 'Adopción desde', valor: '5 de septiembre de 2025' },
+      { etiqueta: 'En el santuario desde', valor: '12 de marzo de 2021' },
     ]);
     expect(c.nota).toMatch(/simbólic/);
   });

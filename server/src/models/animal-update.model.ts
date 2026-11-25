@@ -1,4 +1,4 @@
-import type { PhotoDto, Visibility } from '@sanctuary/shared';
+import type { AnimalStatus, PhotoDto, Visibility } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import { ZONA_HORARIA_SANTUARIO } from '../dominio/reloj.js';
 import { COLUMNAS_PORTADA, JOIN_PORTADA, mapCover, type CoverRow } from './photo.model.js';
@@ -156,6 +156,8 @@ export async function listFeed(
 export interface AdminUpdateRecord {
   id: number;
   animal: { id: number; name: string };
+  /** RN-22: la de un animal fallecido o trasladado ya no se edita. */
+  animalStatus: AnimalStatus;
   author: { id: number; name: string };
   title: string;
   body: string;
@@ -169,6 +171,7 @@ interface AdminUpdateRow {
   id: number;
   animal_id: number;
   animal_name: string;
+  animal_status: AnimalStatus;
   author_id: number;
   author_name: string;
   title: string;
@@ -183,6 +186,7 @@ export function mapAdminRow(row: AdminUpdateRow): AdminUpdateRecord {
   return {
     id: row.id,
     animal: { id: row.animal_id, name: row.animal_name },
+    animalStatus: row.animal_status,
     author: { id: row.author_id, name: row.author_name },
     title: row.title,
     body: row.body,
@@ -194,7 +198,7 @@ export function mapAdminRow(row: AdminUpdateRow): AdminUpdateRecord {
 }
 
 const SELECT_ADMIN = `
-  SELECT u.id, u.animal_id, a.name AS animal_name, u.author_id,
+  SELECT u.id, u.animal_id, a.name AS animal_name, a.status AS animal_status, u.author_id,
          au.first_name || ' ' || au.last_name AS author_name,
          u.title, u.body, u.visibility, u.published_at, u.updated_at,
          (SELECT count(*)::int FROM photos p WHERE p.update_id = u.id) AS photo_count

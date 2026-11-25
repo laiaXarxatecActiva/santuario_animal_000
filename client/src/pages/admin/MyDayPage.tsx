@@ -5,7 +5,6 @@ import {
   type IntakeLevel,
   type MyDayTaskDto,
   type NamedRef,
-  type ShiftAssignmentDto,
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
@@ -16,18 +15,17 @@ import { VetRecordForm } from '../../components/admin/VetRecords';
 import { Button } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { SelectField, TextAreaField } from '../../components/FormFields';
-import { PhotoPicker } from '../../components/PhotoPicker';
 import { Modal } from '../../components/Modal';
 import { HandoverNotes } from '../../components/work/HandoverNotes';
 import { TaskCard } from '../../components/work/TaskCard';
 import { useSession } from '../../hooks/useSession';
-import { CARE_KEY, TASKS_KEY, useMyDay, useZones } from '../../hooks/useWork';
+import { CARE_KEY, SHIFTS_KEY, TASKS_KEY, useMyDay, useZones } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
-import { addDays, formatTime, formatWeekdayDate } from '../../utils/format';
+import { addDays, formatWeekdayDate } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import diaStyles from './MyDayPage.module.css';
-import turnoStyles from './ShiftsPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
+import { ClockInPanel } from '../../components/work/ClockInPanel';
 
 type Aviso = { type: 'success' | 'error'; message: string };
 type Ventana = { tipo: 'completar' | 'noRealizada' | 'visita'; tarea: MyDayTaskDto };
@@ -56,17 +54,8 @@ export function MyDayPage() {
   const alFallar = (error: unknown) => setAviso({ type: 'error', message: errorMessage(t, error) });
 
   const completar = useMutation({
-    mutationFn: ({
-      id,
-      observations,
-      photo,
-      intakes,
-    }: {
-      id: number;
-      observations?: string;
-      photo?: File;
-      intakes?: Ingesta[];
-    }) => workApi.tasks.complete(id, { observations, photo, intakes }),
+    mutationFn: ({ id, observations, intakes }: { id: number; observations?: string; intakes?: Ingesta[] }) =>
+      workApi.tasks.complete(id, { observations, intakes }),
     onSuccess: alTerminar('work.myDay.markedDone'),
     onError: alFallar,
   });
@@ -84,8 +73,10 @@ export function MyDayPage() {
   const fichar = useMutation({
     mutationFn: ({ id, tipo }: { id: number; tipo: 'entrada' | 'salida' }) =>
       tipo === 'entrada' ? workApi.shifts.checkIn(id) : workApi.shifts.checkOut(id),
-    onSuccess: (_r, { tipo }) =>
-      alTerminar(tipo === 'entrada' ? 'work.shifts.checkInDone' : 'work.shifts.checkOutDone')(),
+    onSuccess: async (_r, { tipo }) => {
+      await alTerminar(tipo === 'entrada' ? 'work.shifts.checkInDone' : 'work.shifts.checkOutDone')();
+      await queryClient.invalidateQueries({ queryKey: SHIFTS_KEY });
+    },
     onError: alFallar,
   });
   const ocupado = completar.isPending || noRealizada.isPending || deshacer.isPending || fichar.isPending;
@@ -189,22 +180,14 @@ export function MyDayPage() {
         </Alert>
       )}
 
-      {dia.data && (dia.data.shifts ?? []).length > 0 && (
-        <section aria-labelledby="tu-turno" className={turnoStyles.mine}>
-          <h2 id="tu-turno">{t('work.shifts.yourShift')}</h2>
-          <div className={diaStyles.list}>
-            {(dia.data.shifts ?? []).map((turno) => (
-              <TarjetaTurno
-                key={turno.id}
-                turno={turno}
-                // Solo se ficha el día del turno; el servidor lo comprueba igualmente.
-                puedeFichar={fecha === undefined}
-                ocupado={ocupado}
-                onFichar={(tipo) => fichar.mutate({ id: turno.id, tipo })}
-              />
-            ))}
-          </div>
-        </section>
+      {/* CU-63: hoy siempre (aunque no haya turno); otro día, solo si lo hay. */}
+      {dia.data && (fecha === undefined || (dia.data.shifts ?? []).length > 0) && (
+        <ClockInPanel
+          turnos={dia.data.shifts ?? []}
+          esHoy={fecha === undefined}
+          ocupado={ocupado}
+          onFichar={(id, tipo) => fichar.mutate({ id, tipo })}
+        />
       )}
 
       <HandoverNotes zonas={zonasDelRelevo} />
@@ -236,9 +219,7 @@ export function MyDayPage() {
           tarea={ventana.tarea}
           pendiente={completar.isPending}
           onClose={() => setVentana(null)}
-          onSubmit={(observations, photo, intakes) =>
-            completar.mutate({ id: ventana.tarea.id, observations, photo, intakes })
-          }
+          onSubmit={(observations, intakes) => completar.mutate({ id: ventana.tarea.id, observations, intakes })}
         />
       )}
       {ventana?.tipo === 'visita' && (
@@ -262,48 +243,6 @@ export function MyDayPage() {
         />
       )}
     </div>
-  );
-}
-
-/** CU-63: el turno de la persona, sus zonas y su fichaje. */
-function TarjetaTurno({
-  turno,
-  puedeFichar,
-  ocupado,
-  onFichar,
-}: {
-  turno: ShiftAssignmentDto;
-  puedeFichar: boolean;
-  ocupado: boolean;
-  onFichar: (tipo: 'entrada' | 'salida') => void;
-}) {
-  const { t } = useTranslation();
-  const { shift } = turno;
-  return (
-    <article
-      className={turnoStyles.shift}
-      aria-label={t('work.shifts.shiftLabel', { name: shift.name, start: shift.startTime, end: shift.endTime })}
-    >
-      <div className={turnoStyles.shiftHeader}>
-        <h3>{shift.name}</h3>
-        <span className={styles.muted}>
-          {shift.startTime}–{shift.endTime}
-        </span>
-      </div>
-      {turno.zones.length > 0 && <p className={styles.muted}>{turno.zones.map((z) => z.name).join(', ')}</p>}
-      {turno.checkedInAt && <p>{t('work.shifts.checkedInAt', { time: formatTime(turno.checkedInAt) })}</p>}
-      {turno.checkedOutAt && <p>{t('work.shifts.checkedOutAt', { time: formatTime(turno.checkedOutAt) })}</p>}
-      {puedeFichar && !turno.checkedInAt && (
-        <Button disabled={ocupado} onClick={() => onFichar('entrada')}>
-          {t('work.shifts.checkIn')}
-        </Button>
-      )}
-      {puedeFichar && turno.checkedInAt && !turno.checkedOutAt && (
-        <Button variant="outline" disabled={ocupado} onClick={() => onFichar('salida')}>
-          {t('work.shifts.checkOut')}
-        </Button>
-      )}
-    </article>
   );
 }
 
@@ -340,11 +279,10 @@ function VentanaCompletar({
   tarea: MyDayTaskDto;
   pendiente: boolean;
   onClose: () => void;
-  onSubmit: (observations: string | undefined, photo: File | undefined, intakes: Ingesta[] | undefined) => void;
+  onSubmit: (observations: string | undefined, intakes: Ingesta[] | undefined) => void;
 }) {
   const { t } = useTranslation();
   const [observaciones, setObservaciones] = useState('');
-  const [foto, setFoto] = useState<File | undefined>(undefined);
   const animales = animalesDeLaComida(tarea);
   const [ingestas, setIngestas] = useState<Record<number, IntakeLevel>>(() =>
     Object.fromEntries(animales.map((a) => [a.id, 'all' as IntakeLevel])),
@@ -374,7 +312,6 @@ function VentanaCompletar({
           e.preventDefault();
           onSubmit(
             observaciones.trim() === '' ? undefined : observaciones,
-            foto,
             animales.length > 0
               ? animales.map((a) => ({ animalId: a.id, intake: ingestas[a.id] ?? 'all' }))
               : undefined,
@@ -407,7 +344,6 @@ function VentanaCompletar({
           value={observaciones}
           onChange={(e) => setObservaciones(e.target.value)}
         />
-        <PhotoPicker label={t('form.optional', { label: t('work.photo') })} value={foto} onChange={setFoto} />
       </form>
     </Modal>
   );

@@ -9,6 +9,7 @@ import { AnimalCard } from '../../components/AnimalCard';
 import { Button } from '../../components/Button';
 import { CardSkeletons } from '../../components/CardSkeleton';
 import { EmptyState } from '../../components/EmptyState';
+import { FilterSelect } from '../../components/FilterSelect';
 import { Pagination } from '../../components/Pagination';
 import { useCatalog, useSpecies } from '../../hooks/usePublicData';
 import {
@@ -18,7 +19,6 @@ import {
   toApiQuery,
   writeCatalogFilters,
   type CatalogFilters,
-  type CatalogUiSort,
 } from '../../utils/catalogParams';
 import styles from './CatalogPage.module.css';
 
@@ -49,12 +49,46 @@ export function CatalogPage() {
   const limpiar = () => setSearchParams(writeCatalogFilters({ sort: filtros.sort, page: 1 }));
 
   const nombreEspecie = (id: number) => especies.data?.find((s) => s.id === id)?.name ?? `#${id}`;
-  const activos: { key: keyof CatalogFilters; label: string }[] = [];
-  if (filtros.q) activos.push({ key: 'q', label: t('catalog.searchFilter', { q: filtros.q }) });
-  if (filtros.speciesId) activos.push({ key: 'speciesId', label: nombreEspecie(filtros.speciesId) });
-  if (filtros.sex) activos.push({ key: 'sex', label: t(`catalog.sexOptions.${filtros.sex}`) });
-  if (filtros.age) activos.push({ key: 'age', label: t(`catalog.ageRanges.${filtros.age}`) });
-  if (filtros.adoptable) activos.push({ key: 'adoptable', label: t('catalog.adoptable') });
+  // Un filtro activo por valor: cada especie y cada tramo de edad se quitan por separado.
+  const activos: { id: string; label: string; quitar: () => void }[] = [];
+  const sinValor = <V,>(lista: V[] | undefined, valor: V) => {
+    const resto = (lista ?? []).filter((v) => v !== valor);
+    return resto.length ? resto : undefined;
+  };
+  if (filtros.q)
+    activos.push({
+      id: 'q',
+      label: t('catalog.searchFilter', { q: filtros.q }),
+      quitar: () => actualizar({ q: undefined }),
+    });
+  for (const id of filtros.speciesIds ?? []) {
+    activos.push({
+      id: `species-${id}`,
+      label: nombreEspecie(id),
+      quitar: () => actualizar({ speciesIds: sinValor(filtros.speciesIds, id) }),
+    });
+  }
+  if (filtros.sex) {
+    activos.push({
+      id: 'sex',
+      label: t(`catalog.sexOptions.${filtros.sex}`),
+      quitar: () => actualizar({ sex: undefined }),
+    });
+  }
+  for (const age of filtros.ages ?? []) {
+    activos.push({
+      id: `age-${age}`,
+      label: t(`catalog.ageRanges.${age}`),
+      quitar: () => actualizar({ ages: sinValor(filtros.ages, age) }),
+    });
+  }
+  if (filtros.adoptable) {
+    activos.push({
+      id: 'adoptable',
+      label: t('catalog.adoptable'),
+      quitar: () => actualizar({ adoptable: undefined }),
+    });
+  }
   const numActivos = countActiveFilters(filtros);
 
   const total = catalogo.data?.meta.total ?? 0;
@@ -67,22 +101,24 @@ export function CatalogPage() {
 
       <search aria-label={t('catalog.filtersLabel')} className={styles.toolbar}>
         <div className={styles.searchRow}>
-          <div className={styles.searchField}>
-            <label htmlFor="catalog-q" className="visually-hidden">
+          <div className={`${styles.field} ${styles.searchField}`}>
+            <label htmlFor="catalog-q" className={styles.label}>
               {t('catalog.search')}
             </label>
-            <FontAwesomeIcon icon={faMagnifyingGlass} aria-hidden="true" className={styles.searchIcon} />
-            <input
-              id="catalog-q"
-              type="search"
-              className={styles.input}
-              placeholder={t('catalog.search')}
-              value={texto}
-              onChange={(e) => {
-                setTexto(e.target.value);
-                actualizar({ q: e.target.value.trim() || undefined }, { replace: true });
-              }}
-            />
+            <div className={styles.searchInput}>
+              <FontAwesomeIcon icon={faMagnifyingGlass} aria-hidden="true" className={styles.searchIcon} />
+              <input
+                id="catalog-q"
+                type="search"
+                className={styles.input}
+                placeholder={t('catalog.searchPlaceholder')}
+                value={texto}
+                onChange={(e) => {
+                  setTexto(e.target.value);
+                  actualizar({ q: e.target.value.trim() || undefined }, { replace: true });
+                }}
+              />
+            </div>
           </div>
           <button
             type="button"
@@ -94,80 +130,50 @@ export function CatalogPage() {
             <FontAwesomeIcon icon={faSliders} aria-hidden="true" />
             {numActivos > 0 ? t('catalog.filtersCount', { count: numActivos }) : t('catalog.filters')}
           </button>
-          <div className={styles.field}>
-            <label htmlFor="catalog-sort" className={styles.label}>
-              {t('catalog.sort')}
-            </label>
-            <select
-              id="catalog-sort"
-              className={styles.select}
-              value={filtros.sort}
-              onChange={(e) => actualizar({ sort: e.target.value as CatalogUiSort })}
-            >
-              {CATALOG_UI_SORTS.map((sort) => (
-                <option key={sort} value={sort}>
-                  {t(`catalog.sorts.${sort}`)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            label={t('catalog.sort')}
+            className={`${styles.field} ${styles.sortField}`}
+            labelClassName={styles.label}
+            value={filtros.sort}
+            options={CATALOG_UI_SORTS.map((sort) => ({ value: sort, label: t(`catalog.sorts.${sort}`) }))}
+            onChange={(sort) => actualizar({ sort })}
+          />
         </div>
 
         <div id={panelId} className={styles.panel} data-open={panelAbierto}>
-          <div className={styles.field}>
-            <label htmlFor="catalog-species" className={styles.label}>
-              {t('catalog.species')}
-            </label>
-            <select
-              id="catalog-species"
-              className={styles.select}
-              value={filtros.speciesId ?? ''}
-              onChange={(e) => actualizar({ speciesId: e.target.value ? Number(e.target.value) : undefined })}
-            >
-              <option value="">{t('catalog.allSpecies')}</option>
-              {especies.data?.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="catalog-sex" className={styles.label}>
-              {t('catalog.sex')}
-            </label>
-            <select
-              id="catalog-sex"
-              className={styles.select}
-              value={filtros.sex ?? ''}
-              onChange={(e) => actualizar({ sex: (e.target.value || undefined) as AnimalSex | undefined })}
-            >
-              <option value="">{t('catalog.anySex')}</option>
-              {ANIMAL_SEXES.map((sex) => (
-                <option key={sex} value={sex}>
-                  {t(`catalog.sexOptions.${sex}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="catalog-age" className={styles.label}>
-              {t('catalog.age')}
-            </label>
-            <select
-              id="catalog-age"
-              className={styles.select}
-              value={filtros.age ?? ''}
-              onChange={(e) => actualizar({ age: (e.target.value || undefined) as AgeRange | undefined })}
-            >
-              <option value="">{t('catalog.anyAge')}</option>
-              {AGE_KEYS.map((age) => (
-                <option key={age} value={age}>
-                  {t(`catalog.ageRanges.${age}`)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FilterSelect
+            multiple
+            label={t('catalog.species')}
+            className={styles.field}
+            labelClassName={styles.label}
+            allLabel={t('catalog.allSpecies')}
+            summary={(count) => t('catalog.speciesSelected', { count })}
+            value={(filtros.speciesIds ?? []).map(String)}
+            options={(especies.data ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
+            onChange={(ids) => actualizar({ speciesIds: ids.length ? ids.map(Number) : undefined })}
+          />
+          <FilterSelect<AnimalSex | ''>
+            label={t('catalog.sex')}
+            className={styles.field}
+            labelClassName={styles.label}
+            value={filtros.sex ?? ''}
+            options={[
+              { value: '', label: t('catalog.anySex') },
+              ...ANIMAL_SEXES.map((sex) => ({ value: sex, label: t(`catalog.sexOptions.${sex}`) })),
+            ]}
+            onChange={(sex) => actualizar({ sex: sex || undefined })}
+          />
+          <FilterSelect<AgeRange>
+            multiple
+            label={t('catalog.age')}
+            className={styles.field}
+            labelClassName={styles.label}
+            allLabel={t('catalog.anyAge')}
+            summary={(count) => t('catalog.agesSelected', { count })}
+            value={filtros.ages ?? []}
+            options={AGE_KEYS.map((age) => ({ value: age, label: t(`catalog.ageRanges.${age}`) }))}
+            onChange={(ages) => actualizar({ ages: ages.length ? ages : undefined })}
+          />
           <label className={styles.checkbox}>
             <input
               type="checkbox"
@@ -188,15 +194,15 @@ export function CatalogPage() {
         <div className={styles.active}>
           <span>{t('catalog.activeFilters')}</span>
           <ul className={styles.chips}>
-            {activos.map(({ key, label }) => (
-              <li key={key}>
+            {activos.map(({ id, label, quitar }) => (
+              <li key={id}>
                 <span className={styles.chip}>
                   {label}
                   <button
                     type="button"
                     className={styles.chipRemove}
                     aria-label={t('catalog.removeFilter', { label })}
-                    onClick={() => actualizar({ [key]: undefined })}
+                    onClick={quitar}
                   >
                     <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
                   </button>

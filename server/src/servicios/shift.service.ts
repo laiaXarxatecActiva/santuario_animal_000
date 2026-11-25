@@ -6,6 +6,8 @@ import {
   type AbsencesQuery,
   type CopyWeekResultDto,
   type CoverageGapDto,
+  type MyShiftsDto,
+  type MyShiftsQuery,
   type SessionUser,
   type ShiftAssignmentData,
   type ShiftAssignmentDto,
@@ -24,7 +26,9 @@ import {
   comprobarSalida,
   huecos,
   lunesDe,
+  minutosTrabajados,
   planificarCopia,
+  rangoDeFichajes,
   seHaceEl,
   seSolapan,
   type MotivoFichaje,
@@ -281,6 +285,13 @@ export function createShiftService({ db, reloj }: ShiftServiceDeps) {
     },
 
     // CU-63.
+    /** CU-63: los turnos propios de un rango, del más reciente al más antiguo, con lo trabajado. */
+    async mine(user: SessionUser, query: MyShiftsQuery): Promise<MyShiftsDto> {
+      const { from, to } = rangoDeFichajes(query, reloj.hoy());
+      const turnos = await assignmentModel.listByRange(db, { from, to, userId: user.id });
+      const data = turnos.reverse().map((a) => ({ ...a, workedMinutes: minutosTrabajados(a) }));
+      return { from, to, data, totalWorkedMinutes: data.reduce((suma, a) => suma + (a.workedMinutes ?? 0), 0) };
+    },
     checkIn: (user: SessionUser, id: number) => fichar(user, id, 'entrada'),
     checkOut: (user: SessionUser, id: number) => fichar(user, id, 'salida'),
     /** CU-56: los turnos de una persona un día. */

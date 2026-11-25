@@ -67,7 +67,6 @@ export function tarea(overrides: Partial<TaskDto> = {}): TaskDto {
     resolvedBy: null,
     resolvedAt: null,
     observations: null,
-    photoUrl: null,
     isOneOff: false,
     ...overrides,
   };

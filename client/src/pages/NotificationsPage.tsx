@@ -7,6 +7,7 @@ import { Link } from 'react-router';
 import { Alert } from '../components/Alert';
 import { Button } from '../components/Button';
 import { EmptyState } from '../components/EmptyState';
+import { Modal } from '../components/Modal';
 import iconStyles from '../components/IconButton.module.css';
 import { NotificationContent, NotificationRow, notificationStyles } from '../components/NotificationItem';
 import { Pagination } from '../components/Pagination';
@@ -18,9 +19,24 @@ export function NotificationsPage() {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const consulta = useNotifications({ page, pageSize: NOTIFICATIONS_PAGE_SIZE });
-  const { setRead, readAll, remove } = useNotificationActions();
+  const { setRead, readAll, remove, removeAll } = useNotificationActions();
+  const [limpiando, setLimpiando] = useState(false);
   const notificaciones = consulta.data?.data ?? [];
   const sinLeer = consulta.data?.meta.unreadCount ?? 0;
+
+  const cerrarLimpiar = () => {
+    setLimpiando(false);
+    removeAll.reset();
+  };
+
+  const limpiar = () => {
+    removeAll.mutate(undefined, {
+      onSuccess: () => {
+        setLimpiando(false);
+        setPage(1);
+      },
+    });
+  };
 
   const abrir = (n: NotificationDto) => {
     if (!n.isRead) setRead.mutate({ id: n.id, isRead: true });
@@ -79,13 +95,39 @@ export function NotificationsPage() {
     <div className={`container ${styles.page}`}>
       <div className={styles.header}>
         <h1>{t('notifications.title')}</h1>
-        {sinLeer > 0 && (
-          <Button variant="outline" disabled={readAll.isPending} onClick={() => readAll.mutate()}>
-            {t('notifications.readAll')}
-          </Button>
-        )}
+        <div className={styles.actions}>
+          {sinLeer > 0 && (
+            <Button variant="outline" disabled={readAll.isPending} onClick={() => readAll.mutate()}>
+              {t('notifications.readAll')}
+            </Button>
+          )}
+          {notificaciones.length > 0 && (
+            <Button variant="outline" onClick={() => setLimpiando(true)}>
+              {t('notifications.clearAll')}
+            </Button>
+          )}
+        </div>
       </div>
       {contenido}
+      <Modal
+        open={limpiando}
+        title={t('notifications.clearConfirmTitle')}
+        onClose={cerrarLimpiar}
+        closable={!removeAll.isPending}
+        footer={
+          <>
+            <Button variant="outline" data-autofocus onClick={cerrarLimpiar} disabled={removeAll.isPending}>
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" onClick={limpiar} disabled={removeAll.isPending}>
+              {removeAll.isPending ? t('notifications.clearing') : t('notifications.clearConfirm')}
+            </Button>
+          </>
+        }
+      >
+        <p>{t('notifications.clearConfirmText')}</p>
+        {removeAll.isError && <Alert type="error">{t('notifications.clearError')}</Alert>}
+      </Modal>
     </div>
   );
 }

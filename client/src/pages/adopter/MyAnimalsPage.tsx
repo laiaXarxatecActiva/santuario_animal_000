@@ -1,4 +1,4 @@
-import { faCertificate, faDownload, faFeather } from '@fortawesome/free-solid-svg-icons';
+import { faCertificate, faFeather } from '@fortawesome/free-solid-svg-icons';
 import {
   isOpenAdoptionStatus,
   PAYMENT_MODES,
@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { adoptionsApi } from '../../api/adoptions';
 import { ActionsMenu, type ActionsMenuItem } from '../../components/ActionsMenu';
+import { AdoptionHistory } from '../../components/AdoptionHistory';
 import { AdoptionStatusBadge } from '../../components/AdoptionStatusBadge';
 import { Alert } from '../../components/Alert';
 import { AnimalPhoto } from '../../components/AnimalPhoto';
@@ -24,6 +25,7 @@ import { PaymentFailedModal } from '../../components/PaymentFailedModal';
 import { PaymentModal } from '../../components/PaymentModal';
 import { MY_ADOPTIONS_KEY, useMyAdoptions } from '../../hooks/useAdoptions';
 import { CONTRIBUTIONS_KEY } from '../../hooks/useContributions';
+import { HISTORY_KEY } from '../../hooks/useHistory';
 import { usePlans } from '../../hooks/usePublicData';
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatDate, previousDay } from '../../utils/format';
@@ -48,6 +50,7 @@ export function MyAnimalsPage() {
   const refrescar = () => {
     void queryClient.invalidateQueries({ queryKey: MY_ADOPTIONS_KEY });
     void queryClient.invalidateQueries({ queryKey: CONTRIBUTIONS_KEY });
+    void queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
   };
 
   const cambiarPlan = useMutation({
@@ -106,6 +109,7 @@ export function MyAnimalsPage() {
     onSettled: () => {
       setAPagar(null);
       void queryClient.invalidateQueries({ queryKey: MY_ADOPTIONS_KEY });
+      void queryClient.invalidateQueries({ queryKey: HISTORY_KEY });
     },
   });
 
@@ -138,9 +142,9 @@ export function MyAnimalsPage() {
       />
     );
   } else {
-    // 3: las abiertas primero; las cerradas, en «Historial».
+    // 3: las abiertas, como tarjetas; lo demás (también los cierres), en «Historial».
     const abiertas = adopciones.data.filter((a) => isOpenAdoptionStatus(a.status));
-    const cerradas = adopciones.data.filter((a) => !isOpenAdoptionStatus(a.status));
+    const animales = [...new Map(adopciones.data.map((a) => [a.animal.id, a.animal])).values()];
     contenido = (
       <>
         {abiertas.length > 0 && (
@@ -177,7 +181,7 @@ export function MyAnimalsPage() {
             ))}
           </ul>
         )}
-        {cerradas.length > 0 && <Historial adopciones={cerradas} />}
+        <AdoptionHistory animals={animales} />
       </>
     );
   }
@@ -265,11 +269,19 @@ function TarjetaAdopcion({
 
   // Las acciones que ofrece la API (CU-20 1a, CU-21): el servidor vuelve a comprobarlas.
   const activaSinBaja = adopcion.status === 'active' && !adopcion.cancelRequested;
-  const acciones: ActionsMenuItem[] = [];
   const abiertaSinBaja = activaSinBaja || adopcion.status === 'paused' || adopcion.status === 'pending';
-  if (activaSinBaja) acciones.push({ label: t('manageAdoption.changePlan'), onSelect: onChangePlan });
-  // CU-49 1a: abierta y sin la baja pedida.
+  // CU-22 1a: el certificado, mientras la adopción está activa (también con la baja pedida).
+  const conCertificado = adopcion.status === 'active';
+  // Menú «⋯» (SCREENS §4.2): forma de pago (CU-49 1a), descarga del certificado y baja.
+  const acciones: ActionsMenuItem[] = [];
   if (abiertaSinBaja) acciones.push({ label: t('paymentMode.title'), onSelect: onChangeMode });
+  if (conCertificado) {
+    acciones.push({
+      label: t('certificate.download'),
+      href: `/api/me/adoptions/${adopcion.id}/certificate?download=1`,
+      download: true,
+    });
+  }
   if (abiertaSinBaja) acciones.push({ label: t('manageAdoption.cancel'), onSelect: onCancel });
 
   return (
@@ -317,31 +329,24 @@ function TarjetaAdopcion({
         )}
         <div className={styles.actions}>
           <ButtonLink to={`/my-animals/${animal.id}`}>{t('myAnimals.seeProfile', { name: animal.name })}</ButtonLink>
-          {/* CU-22: certificado en PDF mientras la adopción está activa (1a). */}
-          {adopcion.status === 'active' && (
-            <>
-              <ButtonLink
-                variant="outline"
-                icon={faCertificate}
-                to={`/api/me/adoptions/${adopcion.id}/certificate`}
-                reloadDocument
-                target="_blank"
-                rel="noopener"
-                aria-label={t('certificate.viewOf', { name: animal.name })}
-              >
-                {t('certificate.view')}
-              </ButtonLink>
-              <ButtonLink
-                variant="outline"
-                icon={faDownload}
-                to={`/api/me/adoptions/${adopcion.id}/certificate?download=1`}
-                reloadDocument
-                download
-                aria-label={t('certificate.downloadOf', { name: animal.name })}
-              >
-                {t('certificate.download')}
-              </ButtonLink>
-            </>
+          {/* CU-22: el certificado en PDF se abre en otra pestaña; la descarga va en «⋯». */}
+          {conCertificado && (
+            <ButtonLink
+              variant="outline"
+              icon={faCertificate}
+              to={`/api/me/adoptions/${adopcion.id}/certificate`}
+              reloadDocument
+              target="_blank"
+              rel="noopener"
+              aria-label={t('certificate.viewOf', { name: animal.name })}
+            >
+              {t('certificate.view')}
+            </ButtonLink>
+          )}
+          {activaSinBaja && (
+            <Button variant="outline" aria-expanded={editandoPlan} onClick={editandoPlan ? onClosePlan : onChangePlan}>
+              {t('manageAdoption.changePlan')}
+            </Button>
           )}
         </div>
       </div>
@@ -377,35 +382,6 @@ function EstadoPago({ adopcion, onPay }: { adopcion: AdoptionDto; onPay: () => v
         ? t('adopt.pausedPayment', { name: nombre })
         : t('adopt.pendingPayment', { name: nombre })}
     </Alert>
-  );
-}
-
-function Historial({ adopciones }: { adopciones: AdoptionDto[] }) {
-  const { t } = useTranslation();
-  return (
-    <details className={styles.history}>
-      <summary className={styles.historyTitle}>{t('myAnimals.history')}</summary>
-      <ul className={styles.historyList}>
-        {adopciones.map((adopcion) => {
-          const animalSeFue = adopcion.endReason === 'animal_deceased' || adopcion.endReason === 'animal_transferred';
-          const estado = adopcion.status === 'finished' ? 'finished' : 'cancelled';
-          return (
-            <li key={adopcion.id} className={styles.historyItem}>
-              <strong>{adopcion.animal.name}</strong>
-              <span>
-                {adopcion.endDate
-                  ? t(`adoption.closedOn.${estado}`, { date: formatDate(adopcion.endDate) })
-                  : t(`adoption.status.${estado}`)}
-              </span>
-              {adopcion.endReason && (
-                <span>{t(`adoption.endReason.${adopcion.endReason}`, { name: adopcion.animal.name })}</span>
-              )}
-              {animalSeFue && <Link to="/animals">{t('myAnimals.continueWithOther')}</Link>}
-            </li>
-          );
-        })}
-      </ul>
-    </details>
   );
 }
 

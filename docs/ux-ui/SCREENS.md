@@ -54,7 +54,7 @@ Contenido según quién navega:
 | Usuario | Enlaces | Derecha |
 | --- | --- | --- |
 | Visitante | Animales · Cómo funciona · Donar · Sobre el santuario | Idioma ·  · [Entrar] · [■ Registrarse] (en escritorio) |
-| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mis aportaciones, Mi perfil, Cómo funciona, Cerrar sesión |
+| Adoptante | Animales · Cómo funciona · Mis animales · Novedades (con contador de no leídas) · Mis aportaciones · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mi perfil, Cerrar sesión |
 | Trabajador | Animales · Cómo funciona · Donar · **Panel** | · Idioma ·  · menú de usuario: Mi perfil, Cerrar sesión |
 
 **Menú de hamburguesa (móvil y tablet)** desplegado bajo la cabecera:
@@ -64,19 +64,20 @@ Contenido según quién navega:
 │ Santuario                ✕ │
 ├────────────────────────────────────┤
 │  Animales                          │
+│  Cómo funciona                     │
 │  Mis animales                      │
 │  Novedades                    (3)  │
-│  Donar                             │
-│  Cómo funciona                     │
-│  Sobre el santuario                │
-│  ────────────────────────────────  │
 │  Mis aportaciones                  │
+│  Donar                             │
+│  ────────────────────────────────  │
 │  Mi perfil                         │
 │  Cerrar sesión                     │
 └────────────────────────────────────┘
 ```
 
 Para el visitante, el final del menú son los botones [Entrar] y [■ Registrarse] a todo el ancho.
+
+El menú de usuario solo tiene lo de la cuenta (Mi perfil y Cerrar sesión); todo lo demás va en los enlaces principales, que nunca se parten en dos líneas. Como el adoptante tiene seis enlaces, que no caben junto a la campana, el idioma, el tema y su menú por debajo de `xl` (1280 px), hasta ese ancho sigue con la hamburguesa; desde `xl`, sus enlaces van a `--space-4` entre sí (los demás, a `--space-5`) y el selector de idioma muestra solo su icono, para que el menú de usuario conserve su relleno. El visitante y el trabajador pasan al menú de escritorio en `lg`.
 
 ### 2.2 Aviso de página
 
@@ -147,7 +148,7 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 4. Los dos botones apilados a todo el ancho.
 5. Contador.
 6. Animales destacados en tarjetas de una columna (máximo 4, con [Ver todos los animales] debajo).
-7. Los tres pasos, apilados con su icono.
+7. Los tres pasos, apilados y centrados con su icono, unidos por una flecha `right-long` girada hacia abajo. En escritorio, en fila y centrados, con la flecha hacia la derecha entre el 1 y el 2 y entre el 2 y el 3.
 
 ### 3.2 Catálogo (`/animals`) — CU-02
 
@@ -159,10 +160,11 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
   Todos ellos viven en el santuario y puedes adoptarlos a distancia.
 
   ┌──────────────────────────────────────────────────────────────────────────┐
-  │ 🔍 [Buscar por nombre____]  Especie ▼  Sexo ▼  Edad ▼  [☐ Disponibles]   │
-  │                                                    Ordenar: Recientes ▼  │
+  │ Buscar por nombre                                          Ordenar       │
+  │ 🔍 [Nombre del animal____________________________]         Recientes ▼   │
+  │ Especie ▼        Sexo ▼        Edad ▼        [☐ Disponibles]             │
   └──────────────────────────────────────────────────────────────────────────┘
-  Filtros activos: (Buitre negro ✕) (Disponibles ✕)   Limpiar filtros
+  Filtros activos: (Buitre negro ✕) (Buitre leonado ✕) (Disponibles ✕)   Limpiar filtros
   12 animales
 
   ╭──────────╮ ╭──────────╮ ╭──────────╮ ╭──────────╮
@@ -177,13 +179,16 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 [pie]
 ```
 
+El buscador lleva encima su título visible, «Buscar por nombre» (como «Ordenar» y los demás filtros), y dentro el texto de ejemplo «Nombre del animal».
+
 **Móvil:**
 
 ```text
   Animales
   Todos ellos viven en el santuario…
 
-  🔍 [Buscar por nombre______]
+  Buscar por nombre
+  🔍 [Nombre del animal______]
   [ ⚙ Filtros (2) ]     Recientes ▼
   12 animales
 
@@ -200,7 +205,8 @@ Al entrar por primera vez, un **aviso en línea** de tipo `info`, fijo en la par
 ```
 
 - **Filtros en móvil:** el botón «Filtros» despliega un panel bajo él (no una ventana emergente) con los controles apilados y los botones [■ Ver 12 animales] y [Limpiar]. El número entre paréntesis indica los filtros activos.
-- Los filtros se reflejan en la URL (`?speciesId=2&adoptable=true`), así el botón «Atrás» y los enlaces compartidos funcionan.
+- **Varias opciones:** «Especie» y «Edad» permiten marcar varias (casillas en la lista, que no se cierra al marcar; «Todas las especies» y «Cualquier edad» desmarcan las demás). El recuadro muestra el nombre si hay una marcada y «2 especies» o «2 edades» si hay más. En «Filtros activos» hay una etiqueta por cada opción, y el número de «Filtros (n)» las cuenta una a una. «Sexo» y «Ordenar» son de una sola opción.
+- Los filtros se reflejan en la URL (`?speciesId=2,1&age=young&adoptable=true`), así el botón «Atrás» y los enlaces compartidos funcionan.
 - **Sin resultados:** estado vacío «No hay animales con estos filtros» + [Limpiar filtros].
 - **Cargando:** 8 tarjetas esqueleto.
 
@@ -265,9 +271,9 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 
 1. Título y una introducción.
 2. Aviso `info`: «Es una adopción simbólica: el animal sigue viviendo en el santuario».
-3. Tres pasos con icono (elige, adopta, recibe noticias).
+3. Tres pasos con icono (elige, adopta, recibe noticias), a todo el ancho como en el inicio: centrados y unidos por flechas `right-long` (hacia abajo en móvil). La explicación de cada paso va a `--space-2` de su título.
 4. Los tres planes como tarjetas en fila (en columna en móvil), con nombre, importe al mes y descripción. La Usual lleva la insignia «La más habitual». Son informativas, no seleccionables.
-5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece?
+5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece? Cada pregunta lleva a la derecha un `chevron-down` (en `--font-size-sm`, sin el triángulo del navegador) que gira 180° al desplegarla, para indicar que se puede volver a plegar.
 6. [■ Ver animales].
 
 ### 3.5 Donar (`/donate`) — CU-05
@@ -321,7 +327,7 @@ Introducción breve y respetuosa, y una cuadrícula de tarjetas como la del cat�
 
 - Cada tarjeta abre `/memorial/:id`: la ficha de solo lectura (galería, especie y sexo, «Llegó al santuario el…», «Nos dejó el…», su historia y sus noticias públicas), sin tarjeta de adopción ni contador de adoptantes.
 - El enlace «En memoria» va en el pie (columna «Explorar») y solo aparece si hay algún animal marcado (CU-12 2a). Si se entra por la URL sin animales marcados: estado vacío con el icono `dove` y «Por ahora no hay ningún animal en esta sección».
-- En el panel, la casilla «Mostrar en «En memoria»» está en la ventana de fallecimiento (CU-33) y, para los fallecidos, en la pestaña «Datos».
+- En el panel, la casilla «Mostrar en «En memoria»» está en la ventana de fallecimiento (CU-33) y, para los fallecidos, es un interruptor en la pestaña «Datos» que se guarda al pulsarlo.
 
 ### 3.8 Autenticación — CU-07 a CU-10
 
@@ -424,7 +430,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │ │         │  Plan Usual · 5,00 €/mes · desde el 5 sep 2025               │
   │ ╰─────────╯  róxima noticia prevista: hacia el 24 nov                │
   │              Pago automático cada mes                                    │
-  │   [■ Ver su ficha]  [ Certificado ]  [ Descargar certificado ]  ⋯       │
+  │   [■ Ver su ficha]  [ Certificado ]  [ Cambiar plan ]           ⋯       │
   ╰──────────────────────────────────────────────────────────────────────────╯
   ╭──────────────────────────────────────────────────────────────────────────╮
   │ ╭─────────╮  Lupe                                  [Pausada]             │
@@ -434,20 +440,32 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │              ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │
   ╰──────────────────────────────────────────────────────────────────────────╯
 
-  Historial                                                   (desplegable)
-  Faro · Finalizada el 21 oct · Faro nos dejó.  ¿Quieres continuar con otro animal?
+  Historial (h2)                                          Animal [Todos ▾]
+  Lo que ha pasado en tus adopciones durante el último año.
+  ─────────────────────────────────────────────────────────────────────────
+  20 nov 2026   Pediste la baja de la adopción de Lupe.
+  ─────────────────────────────────────────────────────────────────────────
+  5 nov 2026    Cuota de Rufo pagada: 5,00 € (desde el 5 nov 2026).
+  ─────────────────────────────────────────────────────────────────────────
+  23 oct 2026   Terminó la adopción de Faro. Faro nos ha dejado.
+                ¿Quieres continuar con otro animal?
+  ─────────────────────────────────────────────────────────────────────────
+                              [ Ver más ]
+  Solo se muestra el último año. Tus pagos anteriores están en «Mis aportaciones».
 ```
 
-**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en un menú «⋯» (Cambiar plan, Darme de baja); el botón principal va a todo el ancho.
+**Historial (CU-15):** sustituye a la antigua lista de adopciones cerradas (las cerradas ya no tienen tarjeta). Lista de sucesos (DESIGN_SYSTEM §8.9) del último año, de 10 en 10 con [Ver más] (contorno). El filtro «Animal» (`FilterSelect`) solo aparece con más de un animal. Sin sucesos: «Todavía no hay nada en tu historial.» Se vuelve a pedir tras pagar, cambiar de plan o de forma de pago y darse de baja.
 
-**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: primero [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña) y a su lado [Descargar certificado] (contorno, icono `download`, descarga `certificado-<animal>.pdf`). En las demás no aparece (1a).
+**Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en el menú «⋯» (Forma de pago, Descargar certificado, Darme de baja); los botones van a todo el ancho.
+
+**Certificado (CU-22, Fase 3):** en las adopciones activas (también con la baja pedida), junto a «Ver su ficha»: [Certificado] (contorno, icono `certificate`, lo abre en otra pestaña). «Descargar certificado» (descarga `certificado-<animal>.pdf` sin abrirlo) va en el menú «⋯». En las demás no aparece ninguno de los dos (1a). En el PDF, debajo de la especie y tras una línea fina, van dos filas con la etiqueta en gris y la fecha en negrita: «Adopción desde» y «En el santuario desde».
 
 **Forma de pago (CU-49):** las adopciones abiertas sin baja muestran «Pago automático cada mes» o «Pago manual: te avisaremos de cada cuota» (`--color-text-muted`). «Forma de pago» en el menú «⋯» abre un desplegable en la tarjeta, como «Cambiar plan»: «El cambio vale desde la próxima cuota.», las dos opciones (la actual marcada) y [■ Guardar] [Cancelar]. Con pago manual y la cuota a 7 días o menos, la tarjeta muestra un aviso `warning` «La cuota de Rufo vence el [fecha]. Puedes pagarla hasta el [fecha + 6] sin que la adopción se pause.» con [■ Pagar la cuota], que abre el pago simulado.
 
-- Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
-- «Darme de baja» y «Cambiar plan» están en el menú «⋯» en escritorio también, para no saturar la tarjeta.
+- Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Solo la foto: el hueco en blanco que queda debajo no es un enlace. Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
+- A la vista, por este orden: [■ Ver su ficha], [Certificado] y [Cambiar plan] (contorno; vuelve a pulsarse para cerrar el desplegable). «Forma de pago», «Descargar certificado» y «Darme de baja» están en el menú «⋯» también en escritorio, para no saturar la tarjeta.
 - **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
-- El menú «⋯» solo aparece si hay acciones: «Cambiar plan» en las activas sin baja; «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes.
+- [Cambiar plan] solo en las activas sin baja. El menú «⋯» solo aparece si hay acciones: «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes; «Descargar certificado» en las activas (también con la baja pedida).
 - Con baja solicitada: aviso `info` «Activa hasta el 29 nov. No se te volverá a cobrar».
 - Sin adopciones: estado vacío + [■ Ver animales].
 
@@ -512,7 +530,7 @@ Los trabajadores ven solo las secciones 1, 2 y 5.
 
 ### 4.7 Notificaciones (`/notifications`) — CU-18
 
-Lista completa paginada, con el mismo aspecto que el desplegable de la campana (`DESIGN_SYSTEM.md` §8.8): icono según el tipo, mensaje, fecha relativa («hace 2 días»), punto terracota si no está leída y botón de borrar. Arriba, [Marcar todas como leídas].
+Lista completa paginada, con el mismo aspecto que el desplegable de la campana (`DESIGN_SYSTEM.md` §8.8): icono según el tipo, mensaje, fecha relativa («hace 2 días»), punto terracota si no está leída y botón de borrar. Arriba, [Marcar todas como leídas] (si hay alguna sin leer) y [Limpiar notificaciones] (si hay alguna), que abre una confirmación «¿Borrar todas tus notificaciones?» con [Cancelar] (con el foco) y [Borrar todas] (`danger`).
 
 ## 5. Panel de gestión
 
@@ -648,7 +666,7 @@ Encabezado con el nombre, las insignias de estado y las acciones [Ver en la web 
 
 | Pestaña | Contenido |
 | --- | --- |
-| **Datos** | Formulario: en escritorio, dos columnas (identificación a la izquierda: nombre, especie, sexo, fechas; publicación a la derecha: interruptores «Publicado» y «Admite adopciones»); debajo, a todo el ancho, las áreas de texto (historia, carácter, necesidades, resumen de salud). En móvil, una columna. [■ Guardar cambios] fijo al pie de la pestaña. |
+| **Datos** | Formulario: en escritorio, dos columnas (identificación a la izquierda: nombre, especie, sexo (obligatorio: «Elige…», «Macho» o «Hembra»), fechas; publicación a la derecha: interruptores «Publicado» y «Admite adopciones»); debajo, a todo el ancho, las áreas de texto (historia, carácter, necesidades, resumen de salud). En móvil, una columna. [■ Guardar cambios] fijo al pie de la pestaña. |
 | **Fotos** | Zona de subida (arrastrar o [Elegir archivos]) y cuadrícula de miniaturas reordenables. Cada miniatura muestra la visibilidad, una estrella para la portada y los botones de editar y borrar. En móvil, el orden se cambia con los botones ↑ ↓ en lugar de arrastrar. |
 | **Actualizaciones** | Lista de las actualizaciones del animal + [■ Nueva actualización] |
 | **Veterinario** (Fase 3) | Tabla de registros + gráfico de peso + [■ Nuevo registro] |
@@ -677,6 +695,16 @@ Encabezado con el nombre, las insignias de estado y las acciones [Ver en la web 
 ```
 
 El botón de confirmar es terracota, no rojo: no es un borrado, sino un cambio de estado delicado. El mensaje solo aparece en un fallecimiento con adopciones abiertas y es obligatorio (CU-33 3a); en un traslado con adopciones abiertas se indica que sus adoptantes recibirán un aviso. La casilla «En memoria» llega con la Fase 3.
+
+**Animal fallecido o trasladado (RN-22): solo consulta.** Bajo el encabezado, aviso `info` «Este animal ya no está en el santuario: solo se puede consultar su información.» (el administrador lee además «Si es un error, cambia su estado.»). En cada pestaña se ve lo recabado, sin acciones:
+
+- **Datos:** lista de dos columnas (etiqueta y valor, como la ficha de un usuario) en lugar del formulario, sin [Guardar cambios]. Si ha fallecido, debajo, el interruptor «Mostrar en «En memoria»».
+- **Fotos:** sin la zona de subida; las miniaturas sin botones ni arrastre.
+- **Actualizaciones:** sin [Nueva actualización] ni editar o borrar.
+- **Veterinario:** sin [Nuevo registro] ni la columna «Acciones».
+- **Cuidados:** como se describe en §5.7.
+
+[Cambiar estado ▼] solo lo ve el administrador (CU-28 A5). Si elige «En el santuario» o «En tratamiento», ventana de confirmación «¿Devolver a Faro a «En el santuario»?» con «Sus adopciones cerradas no se reabren: quien quiera tendrá que adoptarlo de nuevo. No admitirá adopciones hasta que lo actives en «Datos».» (y, si estaba en «En memoria», «También dejará de aparecer en «En memoria».») y [Cancelar] [■ Cambiar estado]. Si elige el otro estado archivado, se abre la ventana de CU-33.
 
 ### 5.5 Nueva actualización (`/admin/updates/new`) — CU-31
 
@@ -713,45 +741,48 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 ┌──────────────────────────────────────────────┐
 │ Mi día              ‹  lunes, 23 de noviembre  ›  [Hoy] │
 │                                              │
-│ Tu turno                                     │
-│ ┌──────────────────────────────────────────┐ │
-│ │ Mañana                      07:00–15:00  │ │
-│ │ Clínica y recuperación, Voladero de alim.│ │
-│ │ Entrada: 06:58                           │ │
-│ │ [Fichar salida]                          │ │
-│ └──────────────────────────────────────────┘ │
+│ Fichaje                    Ver mis fichajes  │
+│ ┃ Mañana                      07:00–15:00    │  ← borde izquierdo: aviso / éxito / gris
+│ ┃ Clínica y recuperación, Voladero de alim.  │
+│ ┃ [Trabajando] Trabajando desde las 06:58    │
+│ ┃ [      Fichar salida (todo el ancho)     ] │
+│                                              │
 │ Asignadas a ti                               │
 │ ┌──────────────────────────────────────────┐ │
 │ │ 15:00  Reparar la puerta del almacén     │ │
 │ │ [Mantenimiento] [Puntual]                │ │
 │ │ Cocina y almacén                         │ │
-│ │ [■ Hecha] [Con nota o foto] [No se ha…]  │ │
+│ │ [■ Hecha] [Con nota] [No se ha…]         │ │
 │ └──────────────────────────────────────────┘ │
 │ Tareas del día                               │
 │ ┃08:30  Revisión de los animales en trat.   │  ← borde izquierdo de error si está atrasada
 │ ┃[Revisión de salud] [Atrasada]             │
 │ ┃Clínica y recuperación · Exige: Manejo…    │
-│ ┃[■ Hecha] [Con nota o foto] [No se ha…]    │
+│ ┃[■ Hecha] [Con nota] [No se ha…]           │
 └──────────────────────────────────────────────┘
 ```
 
-- **Tu turno** (CU-63, h2, solo si tiene turno ese día): una tarjeta de turno (DESIGN_SYSTEM §8.9) por turno, con el horario, las zonas y, si ya ha fichado, «Entrada: 06:58» y «Salida: 15:05». Hoy ofrece «Fichar entrada» (`primary`) y, después, «Fichar salida» (`outline`); con la salida fichada, ninguno. En otros días no hay botones. Avisos `success` «Entrada fichada» y «Salida fichada»; los errores del servidor, en un aviso `error`.
+- **Fichaje** (CU-63, h2, al principio; hoy siempre y otro día solo si hay turno): a la derecha, el enlace «Ver mis fichajes». Un bloque de fichaje (DESIGN_SYSTEM §8.9) por turno con el nombre, el horario, las zonas y el estado en grande: insignia «Sin fichar» (`warning`) y «Aún no has fichado la entrada»; «Trabajando» (`success`) y «Trabajando desde las 06:58»; o «Terminado» (`neutral`) y «Turno terminado: de 06:58 a 15:05». En otro día: «No se fichó la entrada» o «Entrada a las 06:58, sin fichar la salida». Hoy ofrece «Fichar entrada» (`primary`, `arrow-right-to-bracket`) o «Fichar salida» (`outline`, `arrow-right-from-bracket`), a todo el ancho; con la salida fichada, ninguno. La salida pide confirmación: «¿Fichar la salida?», «Se guardará la hora de ahora como fin de tu turno. Después no se puede cambiar: si te equivocas, díselo a quien organiza los turnos.», [Cancelar] (con el foco) [■ Fichar salida]. Sin turno hoy: «Hoy no tienes turno». Avisos `success` «Entrada fichada» y «Salida fichada»; los errores del servidor, en un aviso `error`.
 - Cada tarjeta de tarea es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» (las asignadas a la persona y las sin asignar de una zona de su turno a una hora del turno) y «Tareas del día» (h2), ordenadas por hora.
-- **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota o foto» (`outline`: ventana con «Observaciones (opcional)», «Foto (opcional)» (selector de una foto, DESIGN_SYSTEM §8.9) y [Cancelar] [■ Marcar como hecha]) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
-- **Comidas** (CU-66): en una tarea de alimentación, «Hecha» abre siempre la ventana, con el grupo «Lo que ha comido cada animal»: un desplegable por animal (su nombre como etiqueta) con «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada», y debajo las observaciones y la foto. No hay botón «Con nota o foto». Resuelta, muestra «Carbón: Nada» por cada animal.
+- **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota» (`outline`: ventana con «Observaciones (opcional)» y [Cancelar] [■ Marcar como hecha]; las tareas no llevan fotos) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
+- **Comidas** (CU-66): en una tarea de alimentación, «Hecha» abre siempre la ventana, con el grupo «Lo que ha comido cada animal»: un desplegable por animal (su nombre como etiqueta) con «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada», y debajo las observaciones. No hay botón «Con nota». Resuelta, muestra «Carbón: Nada» por cada animal.
 - **Visitas veterinarias** (CU-68): insignia «Visita veterinaria» (`info`). En lugar de «Hecha», «Registrar la visita» (`primary`), que abre el formulario del historial veterinario (CU-34) con la descripción ya puesta; al guardar, aviso «Visita registrada en el historial veterinario».
 - **Dosis de medicación** (CU-69): título «Doxiciclina · 100 mg», tipo «Medicación» y la cualificación que pida la pauta; se completan como cualquier tarea.
 - **Sin la cualificación:** texto en cursiva «Necesitas la cualificación «…».» y sin botones. **Otro día:** «Se podrá marcar ese mismo día.»
-- **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), las observaciones y «Ver la foto». Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
+- **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), y las observaciones. Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
 - Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
 - Vacío: `EmptyState` con `list-check` y «No hay tareas para este día.». Avisos `success` tras cada acción («Tarea marcada como hecha»…).
 - **Notas de relevo** (CU-71, h2, entre «Tu turno» y las tareas): una tarjeta por nota de las últimas 24 horas con «Carmen Boix Vidal · Clínica y recuperación · 22/11, 21:50», el texto y, si no se ha leído, la insignia «Nueva», borde izquierdo terracota y «Marcar como leída» (`ghost`). «Dejar una nota» (`outline`, `pen-to-square`) solo si tiene turno hoy (el administrador, siempre): ventana «Dejar una nota de relevo» con «Zona» (las de su turno de hoy) y «Nota» (ayuda: «La verán durante 24 horas quienes tengan turno en esta zona.»). Sin notas: «No hay notas de relevo de las últimas 24 horas.».
+
+#### «Mis fichajes» (`/admin/my-shifts`) — CU-63
+
+Todo el personal; en el menú, en «Trabajo diario» tras «Mi día» (`user-clock`). Título «Mis fichajes», explicación breve (`PageIntro`) y filtros «Desde» y «Hasta» (vacíos: las últimas 4 semanas). Debajo, «Del 27/10 al 23/11» y una tabla (tarjetas en móvil): Día · Turno (con el horario apagado) · Entrada · Salida · Horas («8 h 7 min»). Una entrada o salida que falta se ve como la insignia «Sin fichar» (`warning`), y sus horas, «—». Al final, «Total: 56 h 49 min» en negrita. Sin turnos: «No tienes turnos en estas fechas.».
 
 #### Tareas del día (`/admin/tasks`) — CU-55, CU-73
 
 - Cabecera: «Tareas del día» y, a la derecha, «Ajustes» (`outline`, `gear`) y «Nueva tarea puntual» (`primary`, `plus`).
 - Filtros: «Día» (hoy por defecto), «Zona» y «Estado».
-- Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones, foto) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
+- Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
 - «Nueva tarea puntual»: ventana con tipo, título, descripción, zona, animales (casillas, solo los que siguen en el santuario), cualificación, día, hora (HH:MM) y persona.
 - «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)» y «Tomas seguidas comiendo poco para avisar» (1-10, con la ayuda «Cuentan «Menos de la mitad» y «Nada».», CU-67). Los avisos por email y el resumen diario están en su propia pantalla, «Avisos por email».
 

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { AGE_RANGES, ANIMAL_SEXES, PUBLIC_ANIMAL_STATUSES } from '../src/constants/animals.js';
 
 describe('constantes de animales', () => {
-  it('los sexos coinciden con el CHECK de animals.sex', () => {
-    expect(ANIMAL_SEXES).toEqual(['male', 'female', 'unknown']);
+  it('los sexos coinciden con el CHECK de animals.sex: macho o hembra, nunca desconocido', () => {
+    expect(ANIMAL_SEXES).toEqual(['male', 'female']);
   });
 
   it('solo los animales en el santuario o en tratamiento son públicos (RN-22)', () => {

@@ -9,6 +9,7 @@ const certificado = contenidoCertificado({
   animalName: 'Rufo',
   speciesName: 'Buitre leonado',
   startDate: '2025-09-05',
+  arrivalDate: '2021-03-12',
 });
 const esPdf = (b: Buffer) => b.subarray(0, 5).toString() === '%PDF-';
 

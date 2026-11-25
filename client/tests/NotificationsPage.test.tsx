@@ -69,4 +69,46 @@ describe('CU-18 Página de notificaciones', () => {
     renderRoute('/notifications');
     expect(await screen.findByText('No tienes notificaciones')).toBeInTheDocument();
   });
+
+  describe('4: limpiar notificaciones', () => {
+    function apiConLimpiar(lista = notificationsPage([sinLeer, leida])) {
+      const metodos: string[] = [];
+      const mocks = mockApi({
+        '/api/auth/me': { body: { user: sessionUser() } },
+        '/api/me/notifications': (_url: URL, p: Peticion) => {
+          metodos.push(p.method);
+          return p.method === 'DELETE' ? { status: 204 } : { body: lista };
+        },
+      });
+      return { ...mocks, borrados: () => metodos.filter((m) => m === 'DELETE') };
+    }
+
+    it('pide confirmación y borra todas', async () => {
+      const { borrados } = apiConLimpiar();
+      renderRoute('/notifications');
+      await userEvent.click(await screen.findByRole('button', { name: 'Limpiar notificaciones' }));
+      const dialogo = await screen.findByRole('dialog', { name: '¿Borrar todas tus notificaciones?' });
+      expect(borrados()).toEqual([]);
+      await userEvent.click(within(dialogo).getByRole('button', { name: 'Borrar todas' }));
+      await waitFor(() => expect(borrados()).toEqual(['DELETE']));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('al cancelar no borra nada', async () => {
+      const { borrados } = apiConLimpiar();
+      renderRoute('/notifications');
+      await userEvent.click(await screen.findByRole('button', { name: 'Limpiar notificaciones' }));
+      const dialogo = await screen.findByRole('dialog', { name: '¿Borrar todas tus notificaciones?' });
+      await userEvent.click(within(dialogo).getByRole('button', { name: 'Cancelar' }));
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+      expect(borrados()).toEqual([]);
+    });
+
+    it('no aparece si no hay notificaciones', async () => {
+      apiConLimpiar(notificationsPage([]));
+      renderRoute('/notifications');
+      expect(await screen.findByText('No tienes notificaciones')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Limpiar notificaciones' })).not.toBeInTheDocument();
+    });
+  });
 });

@@ -49,14 +49,24 @@ export interface DatosCertificado {
   adopterName: string;
   animalName: string;
   speciesName: string;
-  /** `YYYY-MM-DD`. */
+  /** Día en que empezó la adopción, `YYYY-MM-DD`. */
   startDate: string;
+  /** Día en que el animal llegó al santuario, `YYYY-MM-DD`. */
+  arrivalDate: string;
+}
+
+/** Una fecha del certificado con su etiqueta («Adopción desde», «5 de septiembre de 2025»). */
+export interface FechaCertificado {
+  etiqueta: string;
+  valor: string;
 }
 
 export interface ContenidoCertificado {
   titulo: string;
   /** Líneas centradas; las pares (0, 2, 4…) son el texto de enlace y las impares, los datos. */
   lineas: string[];
+  /** Debajo de las líneas: inicio de la adopción y llegada al santuario, cada una con su etiqueta. */
+  fechas: FechaCertificado[];
   nota: string;
   /** Nota del pie y metadatos del PDF. */
   idioma: Language;
@@ -70,27 +80,35 @@ export function contenidoCertificado(d: DatosCertificado, idioma: Language = 'es
       titulo: 'Certificado de adopción',
       certifica: `${NOMBRE_SANTUARIO} certifica que`,
       apadrina: 'apadrina simbólicamente a',
-      desde: `desde el ${f.fechaLarga(d.startDate)}`,
+      adopcion: 'Adopción desde',
+      llegada: 'En el santuario desde',
       nota: 'La adopción es simbólica: el animal sigue viviendo en el santuario. Gracias por ayudarnos a cuidarlo.',
     },
     ca: {
       titulo: "Certificat d'adopció",
       certifica: `${NOMBRE_SANTUARIO} certifica que`,
       apadrina: 'apadrina simbòlicament',
-      desde: `des del ${f.fechaLarga(d.startDate)}`,
+      adopcion: 'Adopció des de',
+      llegada: 'Al santuari des de',
       nota: "L'adopció és simbòlica: l'animal continua vivint al santuari. Gràcies per ajudar-nos a cuidar-lo.",
     },
     en: {
       titulo: 'Adoption certificate',
       certifica: `${NOMBRE_SANTUARIO} certifies that`,
       apadrina: 'symbolically sponsors',
-      desde: `since ${f.fechaLarga(d.startDate)}`,
+      adopcion: 'Adopted since',
+      llegada: 'At the sanctuary since',
       nota: 'The adoption is symbolic: the animal keeps living at the sanctuary. Thank you for helping us care for them.',
     },
   }[idioma];
   return {
     titulo: textos.titulo,
-    lineas: [textos.certifica, d.adopterName, textos.apadrina, d.animalName, d.speciesName, textos.desde],
+    lineas: [textos.certifica, d.adopterName, textos.apadrina, d.animalName, d.speciesName],
+    // Con etiqueta, para no confundir el inicio de la adopción con la llegada del animal.
+    fechas: [
+      { etiqueta: textos.adopcion, valor: f.fechaLarga(d.startDate) },
+      { etiqueta: textos.llegada, valor: f.fechaLarga(d.arrivalDate) },
+    ],
     nota: textos.nota,
     idioma,
   };

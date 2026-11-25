@@ -76,6 +76,7 @@ TRUNCATE TABLE
     notifications,
     update_reads,
     donations,
+    adoption_events,
     payments,
     adoptions,
     adoption_plans,
@@ -176,7 +177,7 @@ INSERT INTO animals (
     'Ve mal del ojo izquierdo; se le ofrece la comida siempre por el lado derecho.',
     'Greta está estable. Tiene una visión reducida en el ojo izquierdo que no le causa dolor.',
     'in_sanctuary', NULL, TRUE, TRUE, FALSE, pg_temp.ago_ts('3 years 8 months')),
-(3, 'Turia', 1, 'unknown', pg_temp.ago('4 years'), pg_temp.ago('4 years'),
+(3, 'Turia', 1, 'female', pg_temp.ago('4 years'), pg_temp.ago('4 years'),
     'Cayó del nido siendo un pollo y fue criada por personas antes de llegar al santuario. Está improntada: no sabría sobrevivir en libertad.',
     'Curiosa y confiada. Le encanta observar a los visitantes.',
     NULL,
@@ -194,7 +195,7 @@ INSERT INTO animals (
     'Posaderos acolchados.',
     'Brisa está bien. La pata operada no le duele, aunque se apoya menos en ella.',
     'in_sanctuary', NULL, TRUE, TRUE, FALSE, pg_temp.ago_ts('2 years 2 months')),
-(6, 'Canelo', 1, 'unknown', pg_temp.ago('3 years'), pg_temp.ago('1 year 5 months'),
+(6, 'Canelo', 1, 'male', pg_temp.ago('3 years'), pg_temp.ago('1 year 5 months'),
     'Apareció muy débil y desnutrido en su primer invierno. Se recuperó, pero una lesión en el hombro le impide volar largas distancias.',
     'Juguetón; mueve todo lo que encuentra en su recinto.',
     NULL,
@@ -218,7 +219,7 @@ INSERT INTO animals (
     'Controles de plomo en sangre cada seis meses.',
     'Ébano está estable. Los niveles de plomo son normales y su equilibrio mejora poco a poco.',
     'in_sanctuary', NULL, TRUE, TRUE, FALSE, pg_temp.ago_ts('1 year 1 month')),
-(10, 'Carbón', 2, 'unknown', pg_temp.ago('5 years'), pg_temp.ago('3 months'),
+(10, 'Carbón', 2, 'male', pg_temp.ago('5 years'), pg_temp.ago('3 months'),
     'Encontrado con una infección respiratoria grave. Está respondiendo bien al tratamiento.',
     'Todavía reservado; se está adaptando al santuario.',
     'Tratamiento con nebulizaciones diarias.',
@@ -242,7 +243,7 @@ INSERT INTO animals (
     NULL,
     'Barbas se recuperó por completo antes de su traslado.',
     'transferred', pg_temp.ago('2 months'), FALSE, TRUE, FALSE, pg_temp.ago_ts('2 years')),
-(14, 'Pipa', 1, 'unknown', pg_temp.ago('1 year'), pg_temp.ago('10 days'),
+(14, 'Pipa', 1, 'female', pg_temp.ago('1 year'), pg_temp.ago('10 days'),
     'Acaba de llegar con signos de agotamiento. Está en cuarentena y en observación.',
     NULL,
     'Cuarentena: sin contacto con otros buitres.',
@@ -496,6 +497,17 @@ INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, me
 
 -- La adopción 12 (pendiente antigua) no tiene ningún intento de pago:
 -- el adoptante abandonó la pasarela.
+
+-- 8.4 Historial (CU-15): lo que la adopción no conserva. En la aplicación lo
+--     apunta el trigger adoptions_record_event; aquí se inserta a mano con fecha.
+INSERT INTO adoption_events (adoption_id, type, from_plan_id, to_plan_id, payment_mode, created_at) VALUES
+-- Lucía probó el pago manual con Rufo y volvió al automático.
+(1, 'payment_mode_changed', NULL, NULL, 'manual',    pg_temp.ago_ts('2 months 3 days', '21:15')),
+(1, 'payment_mode_changed', NULL, NULL, 'automatic', pg_temp.ago_ts('1 month 12 days', '09:40')),
+-- Pablo programó el cambio de Usual a Extraordinaria (sigue pendiente).
+(5, 'plan_change_requested', 2, 3, NULL, pg_temp.ago_ts('6 days', '18:20')),
+-- Elena: la adopción 7 se pausó al fallar la cuota.
+(7, 'paused', NULL, NULL, NULL, (pg_temp.ago('4 months 15 days') + INTERVAL '4 months')::DATE + TIME '03:00');
 
 -- -----------------------------------------------------------------------------
 -- 9. Donaciones

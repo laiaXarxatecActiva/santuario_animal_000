@@ -33,6 +33,10 @@ export type AbsenceType = (typeof ABSENCE_TYPES)[number];
 /** CU-61: el calendario pide como mucho 31 días seguidos. */
 export const MAX_SHIFT_RANGE_DAYS = 31;
 
+/** CU-63: «Mis fichajes» muestra por defecto 28 días (hasta hoy) y como mucho 92. */
+export const MY_SHIFTS_DEFAULT_DAYS = 28;
+export const MAX_MY_SHIFTS_RANGE_DAYS = 92;
+
 /** CU-64: días que se revisan por adelantado (hoy incluido). */
 export const COVERAGE_CHECK_DAYS = 7;
 

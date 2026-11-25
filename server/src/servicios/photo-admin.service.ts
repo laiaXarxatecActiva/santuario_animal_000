@@ -2,8 +2,10 @@ import type { AdminPhotoDto, PhotoMeta, PhotoPatchBody, PhotoUploadResultDto } f
 import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
+import { fichaModificable } from '../dominio/animal.js';
 import { ordenValido, puedeCambiarVisibilidad, puedeSerPortada, type ArchivoSubido } from '../dominio/fotos.js';
 import {
+  AnimalReadOnlyError,
   CoverMustBePublicError,
   InvalidCoverError,
   InvalidPhotoOrderError,
@@ -34,6 +36,13 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
     if (!(await animalModel.exists(q, id, { forUpdate }))) throw animalNoExiste();
   }
 
+  /** RN-22: la galería de un animal fallecido o trasladado solo se consulta. */
+  async function animalModificable(q: Queryable, id: number, forUpdate = false): Promise<void> {
+    await comprobarAnimal(q, id, forUpdate);
+    const status = await animalModel.findStatus(q, id);
+    if (status && !fichaModificable(status)) throw new AnimalReadOnlyError();
+  }
+
   async function fotoDeGaleria(q: Queryable, id: number, forUpdate = false): Promise<photoModel.AdminPhoto> {
     const foto = await photoModel.findAdminById(q, id, { forUpdate });
     if (!foto) throw fotoNoExiste();
@@ -55,7 +64,7 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
       archivos: ArchivoSubido[],
       metas: PhotoMeta[],
     ): Promise<PhotoUploadResultDto> {
-      await comprobarAnimal(db, animalId);
+      await animalModificable(db, animalId);
       if (archivos.length === 0) throw new NoFilesError();
       if (metas.length !== archivos.length) {
         throw new ValidationError([{ field: 'meta', message: 'Indica el texto alternativo de cada archivo.' }]);
@@ -66,7 +75,7 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
       let ids: number[];
       try {
         ids = await withTransaction(db, async (client) => {
-          await comprobarAnimal(client, animalId, true);
+          await animalModificable(client, animalId, true);
           return photoModel.insertMany(
             client,
             guardados.map((g) => ({
@@ -95,7 +104,7 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
       return withTransaction(db, async (client) => {
         const { animalId } = await fotoDeGaleria(client, photoId);
         // Se bloquea el animal para que la portada no cambie mientras tanto.
-        await comprobarAnimal(client, animalId, true);
+        await animalModificable(client, animalId, true);
         const foto = await fotoDeGaleria(client, photoId, true);
         if (!puedeCambiarVisibilidad(foto.isCover, datos.visibility)) throw new CoverMustBePublicError();
         await photoModel.updateMeta(client, photoId, datos);
@@ -106,7 +115,7 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
     /** Pasos 5-6: el nuevo orden de toda la galería. */
     async reorder(animalId: number, photoIds: number[]): Promise<void> {
       await withTransaction(db, async (client) => {
-        await comprobarAnimal(client, animalId, true);
+        await animalModificable(client, animalId, true);
         const galeria = await photoModel.listGalleryAdmin(client, animalId);
         if (
           !ordenValido(
@@ -123,7 +132,7 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
     /** Pasos 5-6 y 5a: la portada es una imagen pública de la galería. */
     async setCover(animalId: number, photoId: number): Promise<void> {
       await withTransaction(db, async (client) => {
-        await comprobarAnimal(client, animalId, true);
+        await animalModificable(client, animalId, true);
         const foto = await photoModel.findAdminById(client, photoId);
         if (!foto) throw fotoNoExiste();
         if (!puedeSerPortada(foto, animalId)) throw new InvalidCoverError();
@@ -134,7 +143,8 @@ export function createPhotoAdminService({ db, media }: PhotoAdminServiceDeps) {
     /** A2: borra el registro y, después, los archivos. Si era la portada, el animal queda sin portada. */
     async remove(photoId: number): Promise<void> {
       const urls = await withTransaction(db, async (client) => {
-        await fotoDeGaleria(client, photoId, true);
+        const { animalId } = await fotoDeGaleria(client, photoId, true);
+        await animalModificable(client, animalId);
         return photoModel.removeMany(client, [photoId]);
       });
       await media.borrar(urls);

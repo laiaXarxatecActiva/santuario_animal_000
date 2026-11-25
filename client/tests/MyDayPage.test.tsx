@@ -100,10 +100,10 @@ describe('CU-57 Completar una tarea', () => {
       '/api/admin/tasks/1/complete': () => ({ body: tareaDelDia({ id: 1, status: 'completed' }) }),
     });
     renderRoute('/admin/my-day');
-    await userEvent.click(
-      within(await tarjeta('Revisión de la clínica')).getByRole('button', { name: 'Con nota o foto' }),
-    );
+    await userEvent.click(within(await tarjeta('Revisión de la clínica')).getByRole('button', { name: 'Con nota' }));
     const dialogo = screen.getByRole('dialog', { name: 'Revisión de la clínica' });
+    expect(within(dialogo).queryByText('Foto (opcional)')).not.toBeInTheDocument();
+    expect(within(dialogo).queryByRole('button', { name: 'Elegir foto' })).not.toBeInTheDocument();
     await userEvent.type(within(dialogo).getByLabelText('Observaciones (opcional)'), 'Olmo cojea un poco.');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Marcar como hecha' }));
     await waitFor(() =>

@@ -1,4 +1,4 @@
-/* Página de lectura a 70 caracteres, salvo los planes (SCREENS §3.4). */
+/* Página de lectura a 70 caracteres, salvo los pasos y los planes (SCREENS §3.4). */
 .page {
   display: flex;
   flex-direction: column;
@@ -6,8 +6,12 @@
   gap: var(--space-6);
 }
 
-.page > :not(section:has(.plans)) {
+.page > :not(.wide) {
   max-width: var(--reading-max);
+}
+
+.wide {
+  align-self: stretch;
 }
 
 .page h2 {
@@ -65,10 +69,30 @@
 .question summary {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  list-style: none;
   min-height: var(--size-touch);
   padding: var(--space-3) var(--space-4);
   font-weight: 600;
   cursor: pointer;
+}
+
+/* Sin el triángulo del navegador: lo sustituye el `chevron-down`. */
+.question summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Apunta abajo cerrada (se despliega) y arriba abierta (se pliega). */
+.chevron {
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  transition: rotate var(--duration-fast) ease-out;
+}
+
+.question[open] .chevron {
+  rotate: 180deg;
 }
 
 .question p {

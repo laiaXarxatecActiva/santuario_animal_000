@@ -79,9 +79,15 @@ describe('CU-31 Publicar una actualización: listado y detalle', () => {
     expect((await nuria.get('/api/admin/updates?visibility=secret')).status).toBe(400);
   });
 
-  it('CU-32: el administrador puede modificar cualquiera', async () => {
-    const res = await marta.get('/api/admin/updates');
-    expect(res.body.data.every((u: { canEdit: boolean }) => u.canEdit)).toBe(true);
+  it('CU-32: el administrador puede modificar cualquiera, salvo las de un animal archivado (RN-22)', async () => {
+    const res = await marta.get('/api/admin/updates?pageSize=100');
+    // TEST_DATA: Faro (12) ha fallecido y Barbas (13) fue trasladado.
+    const archivados = [12, 13];
+    const lista: { canEdit: boolean; animal: { id: number } }[] = res.body.data;
+    const deArchivados = lista.filter((u) => archivados.includes(u.animal.id));
+    expect(deArchivados.length).toBeGreaterThan(0);
+    expect(deArchivados.every((u) => !u.canEdit)).toBe(true);
+    expect(lista.filter((u) => !archivados.includes(u.animal.id)).every((u) => u.canEdit)).toBe(true);
   });
 
   it('el detalle incluye el texto y las fotos', async () => {

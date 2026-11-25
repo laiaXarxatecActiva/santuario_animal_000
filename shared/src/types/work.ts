@@ -94,7 +94,6 @@ export interface TaskDto {
   resolvedBy: AdminPersonRef | null;
   resolvedAt: string | null;
   observations: string | null;
-  photoUrl: string | null;
   /** Puntual: creada a mano, sin plantilla, pauta ni visita. */
   isOneOff: boolean;
   /** CU-69: la pauta de medicación de la que sale. */
@@ -155,6 +154,19 @@ export interface ShiftRef {
 }
 
 /** CU-61 y CU-63: una persona en un turno un día. */
+/** CU-63: un turno propio en «Mis fichajes», con lo trabajado (si fichó la entrada y la salida). */
+export interface MyShiftDto extends ShiftAssignmentDto {
+  workedMinutes: number | null;
+}
+
+/** CU-63: «Mis fichajes», del día más reciente al más antiguo. */
+export interface MyShiftsDto {
+  from: string;
+  to: string;
+  data: MyShiftDto[];
+  totalWorkedMinutes: number;
+}
+
 export interface ShiftAssignmentDto {
   id: number;
   shift: ShiftRef;

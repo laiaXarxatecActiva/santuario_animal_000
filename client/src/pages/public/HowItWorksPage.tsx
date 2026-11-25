@@ -1,4 +1,5 @@
-import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faStar } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useTranslation } from 'react-i18next';
 import { AdoptionSteps } from '../../components/AdoptionSteps';
 import { Alert } from '../../components/Alert';
@@ -23,12 +24,12 @@ export function HowItWorksPage() {
         {t('howItWorks.symbolicText')}
       </Alert>
 
-      <section aria-labelledby="pasos">
+      <section aria-labelledby="pasos" className={styles.wide}>
         <h2 id="pasos">{t('howItWorks.stepsTitle')}</h2>
         <AdoptionSteps detailed />
       </section>
 
-      <section aria-labelledby="planes">
+      <section aria-labelledby="planes" className={styles.wide}>
         <h2 id="planes">{t('howItWorks.plansTitle')}</h2>
         {planes.isError && <Alert type="error" title={t('howItWorks.plansError')} />}
         {planes.data && (
@@ -56,7 +57,10 @@ export function HowItWorksPage() {
         <div className={styles.faq}>
           {PREGUNTAS.map((p) => (
             <details key={p} className={styles.question}>
-              <summary>{t(`howItWorks.faq.${p}Q`)}</summary>
+              <summary>
+                {t(`howItWorks.faq.${p}Q`)}
+                <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" className={styles.chevron} />
+              </summary>
               <p>{t(`howItWorks.faq.${p}A`)}</p>
             </details>
           ))}

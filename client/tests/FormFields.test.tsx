@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { Checkbox, PasswordField, TextField } from '../src/components/FormFields';
+import { Checkbox, PasswordField, SelectField, TextField } from '../src/components/FormFields';
 
 describe('campos de formulario (DESIGN_SYSTEM §8.5)', () => {
   it('TextField: etiqueta visible, ayuda y error enlazados con aria-describedby', () => {
@@ -31,5 +31,15 @@ describe('campos de formulario (DESIGN_SYSTEM §8.5)', () => {
     const casilla = screen.getByRole('checkbox', { name: 'Acepto' });
     expect(casilla).toHaveAttribute('aria-invalid', 'true');
     expect(casilla).toHaveAccessibleDescription('Tienes que aceptar.');
+  });
+
+  it('SelectField lleva la flecha chevron-down del sistema de diseño', () => {
+    const { container } = render(
+      <SelectField label="Especie">
+        <option value="1">Buitre leonado</option>
+      </SelectField>,
+    );
+    expect(screen.getByRole('combobox', { name: 'Especie' })).toBeInTheDocument();
+    expect(container.querySelector('svg[data-icon="chevron-down"]')).not.toBeNull();
   });
 });

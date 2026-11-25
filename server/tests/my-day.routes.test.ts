@@ -102,7 +102,6 @@ describe('CU-57 Completar una tarea', () => {
       resolvedBy: { id: 3, name: 'Nuria Peris Gil' },
       resolvedAt: t.reloj.ahora().toISOString(),
       observations: null,
-      photoUrl: null,
     });
   });
 
@@ -119,16 +118,26 @@ describe('CU-57 Completar una tarea', () => {
     ).rejects.toThrow(/exige la cualificación/);
   });
 
-  it('3: con observaciones y una foto (opcionales)', async () => {
+  it('3: con observaciones (opcionales)', async () => {
     const id = await tareaDe(11, t.hoy, '09:00');
     const res = await nuria
       .post(`/api/admin/tasks/${id}/complete`)
-      .set('X-Requested-With', 'XMLHttpRequest')
-      .field('observations', 'Se lo ha comido todo con la carne.')
-      .attach('files', await jpeg(800, 600), { filename: 'olmo.jpg', contentType: 'image/jpeg' });
+      .send({ observations: 'Se lo ha comido todo con la carne.' });
     expect(res.status).toBe(200);
     expect(res.body.observations).toBe('Se lo ha comido todo con la carne.');
-    expect(res.body.photoUrl).toMatch(/^\/uploads\/tasks\/\d+\/[0-9a-f-]{36}\.webp$/);
+    expect(res.body).not.toHaveProperty('photoUrl');
+  });
+
+  it('3: las tareas no admiten fotos (415) y la tarea sigue pendiente', async () => {
+    const id = await tareaDe(6, t.hoy, '12:00');
+    const res = await nuria
+      .post(`/api/admin/tasks/${id}/complete`)
+      .set('X-Requested-With', 'XMLHttpRequest')
+      .field('observations', 'Con foto.')
+      .attach('files', await jpeg(800, 600), { filename: 'olmo.jpg', contentType: 'image/jpeg' });
+    expect(res.status).toBe(415);
+    const { rows } = await t.pool.query<{ status: string }>('SELECT status FROM task_instances WHERE id = $1', [id]);
+    expect(rows).toEqual([{ status: 'pending' }]);
   });
 
   it('2b: una tarea ya resuelta da 409; una de mañana, 422; una que no existe, 404', async () => {

@@ -50,7 +50,7 @@ export function TaskCard({ tarea, acciones }: { tarea: MyDayTaskDto; acciones: R
 export function Resolucion({
   tarea,
 }: {
-  tarea: Pick<MyDayTaskDto, 'resolvedBy' | 'resolvedAt' | 'observations' | 'photoUrl' | 'intakes'>;
+  tarea: Pick<MyDayTaskDto, 'resolvedBy' | 'resolvedAt' | 'observations' | 'intakes'>;
 }) {
   const { t } = useTranslation();
   return (
@@ -70,11 +70,6 @@ export function Resolucion({
         </p>
       )}
       {tarea.observations && <p>{tarea.observations}</p>}
-      {tarea.photoUrl && (
-        <a href={tarea.photoUrl} target="_blank" rel="noreferrer">
-          {t('work.viewPhoto')}
-        </a>
-      )}
     </div>
   );
 }

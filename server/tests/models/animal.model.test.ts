@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countPublic, findPublicById, listPublic } from '../../src/models/animal.model.js';
+import { countPublic, findArrivalDate, findPublicById, listPublic } from '../../src/models/animal.model.js';
 import { usarBaseDeDatos } from '../helpers/db-fixture.js';
 
 const db = usarBaseDeDatos();
@@ -7,7 +7,7 @@ const db = usarBaseDeDatos();
 describe('animal.model (web pública)', () => {
   it('cuenta los animales públicos con y sin filtros', async () => {
     expect(await countPublic(db.pool)).toBe(12);
-    expect(await countPublic(db.pool, { speciesId: 3 })).toBe(1);
+    expect(await countPublic(db.pool, { speciesIds: [3] })).toBe(1);
   });
 
   it('filtra por límites de fecha de nacimiento', async () => {
@@ -43,5 +43,14 @@ describe('animal.model (web pública)', () => {
 
   it('devuelve null si el animal no es público', async () => {
     expect(await findPublicById(db.pool, 14)).toBeNull();
+  });
+});
+
+describe('animal.model (CU-22 certificado)', () => {
+  it('devuelve la fecha de llegada al santuario, o null si el animal no existe', async () => {
+    const { rows } = await db.pool.query<{ arrival_date: string }>('SELECT arrival_date FROM animals WHERE id = 1');
+    expect(await findArrivalDate(db.pool, 1)).toBe(rows[0]!.arrival_date);
+    expect(await findArrivalDate(db.pool, 1)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(await findArrivalDate(db.pool, 999999)).toBeNull();
   });
 });

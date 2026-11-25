@@ -32,6 +32,30 @@ export const ADOPTION_END_REASONS = [
 ] as const;
 export type AdoptionEndReason = (typeof ADOPTION_END_REASONS)[number];
 
+// CU-15: sucesos que guarda adoption_events (los apunta un trigger). Debe
+// coincidir con su CHECK de seedsql.sql.
+export const ADOPTION_EVENT_TYPES = [
+  'plan_change_requested',
+  'plan_change_cancelled',
+  'plan_changed',
+  'payment_mode_changed',
+  'paused',
+  'resumed',
+] as const;
+export type AdoptionEventType = (typeof ADOPTION_EVENT_TYPES)[number];
+
+// CU-15: todos los sucesos del historial. Los primeros salen de adoptions y payments.
+export const HISTORY_EVENT_TYPES = [
+  'adopted',
+  'payment_completed',
+  'payment_failed',
+  'payment_refunded',
+  'cancel_requested',
+  'ended',
+  ...ADOPTION_EVENT_TYPES,
+] as const;
+export type HistoryEventType = (typeof HISTORY_EVENT_TYPES)[number];
+
 // Estados comunes a pagos (cuotas) y donaciones.
 export const PAYMENT_STATUSES = ['pending', 'completed', 'failed', 'refunded'] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];

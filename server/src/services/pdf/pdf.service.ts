@@ -125,6 +125,35 @@ export function createPdfService(): PdfService {
           doc.moveDown(dato ? 0.6 : 0.3);
         });
 
+        // Las fechas, separadas por una línea fina: la etiqueta en gris a la izquierda
+        // del centro y la fecha en negrita a la derecha, para leerlas de un vistazo.
+        doc.moveDown(0.6);
+        const bloque = 400;
+        const izquierda = (width - bloque) / 2;
+        doc
+          .moveTo(izquierda, doc.y)
+          .lineTo(izquierda + bloque, doc.y)
+          .lineWidth(0.75)
+          .strokeColor(COLOR.borde)
+          .stroke();
+        doc.moveDown(0.8);
+        const columna = bloque / 2 - 8;
+        for (const { etiqueta, valor } of contenido.fechas) {
+          const y = doc.y;
+          doc
+            .font('Helvetica')
+            .fontSize(12)
+            .fillColor(COLOR.secundario)
+            .text(etiqueta, izquierda, y + 1, { width: columna, align: 'right' });
+          doc
+            .font('Helvetica-Bold')
+            .fontSize(13)
+            .fillColor(COLOR.texto)
+            .text(valor, izquierda + bloque / 2 + 8, y, { width: columna, align: 'left' });
+          doc.y = Math.max(doc.y, y + 18);
+          doc.moveDown(0.3);
+        }
+
         doc.moveDown(1.5);
         doc.font('Helvetica-Oblique').fontSize(10).fillColor(COLOR.secundario);
         doc.text(contenido.nota, MARGEN + 40, doc.y, { width: ancho - 80, align: 'center' });

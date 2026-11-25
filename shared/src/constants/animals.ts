@@ -1,7 +1,7 @@
 import type { AnimalStatus } from './status.js';
 
 // Deben coincidir con el CHECK de animals.sex en seedsql.sql.
-export const ANIMAL_SEXES = ['male', 'female', 'unknown'] as const;
+export const ANIMAL_SEXES = ['male', 'female'] as const;
 export type AnimalSex = (typeof ANIMAL_SEXES)[number];
 
 // Estados que se muestran en la web pública (RN-22): los fallecidos y los

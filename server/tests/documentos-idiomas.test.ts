@@ -19,13 +19,25 @@ const recibo: ReceiptDto = {
 
 describe('Fase 3 CU-22 y CU-19 PDF en el idioma del usuario', () => {
   it('certificado en valenciano y en inglés', () => {
-    const datos = { adopterName: 'Lucía', animalName: 'Rufo', speciesName: 'Buitre leonado', startDate: '2030-01-05' };
+    const datos = {
+      adopterName: 'Lucía',
+      animalName: 'Rufo',
+      speciesName: 'Buitre leonado',
+      startDate: '2030-01-05',
+      arrivalDate: '2027-03-12',
+    };
     const ca = contenidoCertificado(datos, 'ca');
     expect(ca.titulo).toBe("Certificat d'adopció");
-    expect(ca.lineas.at(-1)).toBe('des del 5 de gener del 2030');
+    expect(ca.fechas).toEqual([
+      { etiqueta: 'Adopció des de', valor: '5 de gener del 2030' },
+      { etiqueta: 'Al santuari des de', valor: '12 de març del 2027' },
+    ]);
     const en = contenidoCertificado(datos, 'en');
     expect(en.titulo).toBe('Adoption certificate');
-    expect(en.lineas.at(-1)).toBe('since 5 January 2030');
+    expect(en.fechas).toEqual([
+      { etiqueta: 'Adopted since', valor: '5 January 2030' },
+      { etiqueta: 'At the sanctuary since', valor: '12 March 2027' },
+    ]);
   });
 
   it('recibo en inglés con su formato de importe y la fila del importe marcada', () => {

@@ -1,21 +1,17 @@
-/* Selector de idioma de la cabecera (DESIGN_SYSTEM §8.7): lista nativa con el icono `language`. */
-.wrapper {
+/* Selector de idioma de la cabecera (DESIGN_SYSTEM §8.7): botón con el icono
+   `language`, el idioma actual y `chevron-down`, que abre el mismo panel que el
+   menú de usuario. */
+.menu {
   position: relative;
-  display: inline-flex;
-  align-items: center;
   flex-shrink: 0;
 }
 
-.icon {
-  position: absolute;
-  left: var(--space-3);
-  color: var(--color-text-muted);
-  pointer-events: none;
-}
-
-.select {
+.button {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
   height: var(--size-touch);
-  padding: 0 var(--space-3) 0 var(--space-6);
+  padding-inline: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background: transparent;
@@ -26,29 +22,90 @@
   transition: background-color var(--duration-fast) ease-out;
 }
 
-.select:hover {
+.button:hover {
   background: var(--color-surface-alt);
 }
 
-/* En el modo oscuro, la lista desplegada usa los colores del tema. */
-.select option {
-  background: var(--color-surface);
-  color: var(--color-text);
+.icon {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
 }
 
-/* Por debajo de 480 px, botón redondo de 44 px con el icono, como el del tema,
-   para que la cabecera quepa sin desplazamiento lateral (DESIGN_SYSTEM §7). La
-   lista desplegada sigue mostrando los nombres completos. */
-@media (max-width: 479px) {
-  .icon {
-    left: 50%;
-    transform: translateX(-50%);
-  }
+.chevron {
+  font-size: var(--font-size-sm);
+}
 
-  .select {
+/* Mismo panel que el menú de usuario, con el ancho justo para los nombres.
+   `overflow: hidden` recorta el fondo de las opciones por la curva de las
+   esquinas, como en los desplegables de los filtros. */
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 11;
+  width: max-content;
+  min-width: 180px;
+  margin: 0;
+  padding: var(--space-2) 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  list-style: none;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.item {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  width: 100%;
+  min-height: var(--size-touch);
+  padding-inline: var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--color-surface-alt);
+}
+
+/* El contorno del foco, por dentro, para que el recorte del panel no lo corte. */
+.item:focus-visible {
+  outline-offset: -3px;
+}
+
+/* El idioma elegido, con el mismo fondo que la página actual del menú del panel. */
+.item[aria-checked='true'] {
+  background: var(--color-primary-soft);
+  font-weight: 600;
+}
+
+.check {
+  margin-left: auto;
+  color: var(--color-primary);
+}
+
+/* Por debajo de 480 px, botón redondo de 44 px con solo el icono, como el del tema,
+   para que la cabecera quepa sin desplazamiento lateral (DESIGN_SYSTEM §7). El panel
+   sigue mostrando los nombres completos. */
+@media (max-width: 479px) {
+  .button {
+    justify-content: center;
     width: var(--size-touch);
     padding: 0;
-    color: transparent;
-    appearance: none;
+  }
+
+  .name,
+  .chevron {
+    display: none;
   }
 }

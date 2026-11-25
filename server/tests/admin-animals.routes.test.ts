@@ -86,7 +86,7 @@ describe('CU-28 Gestionar animales: ficha, alta y edición', () => {
       id: 14,
       name: 'Pipa',
       species: { id: 1, name: 'Buitre leonado' },
-      sex: 'unknown',
+      sex: 'female',
       status: 'in_treatment',
       isPublished: false,
       isAdoptable: false,
@@ -155,14 +155,11 @@ describe('CU-28 Gestionar animales: ficha, alta y edición', () => {
     expect((await request(t.app).get('/api/animals/1')).status).toBe(200);
   });
 
-  it('2b: un animal fallecido o trasladado no puede ser adoptable', async () => {
+  it('2b: los datos de un animal fallecido o trasladado ya no se editan (tampoco para hacerlo adoptable)', async () => {
     const faro = (await nuria.get('/api/admin/animals/12')).body;
     const res = await nuria.put('/api/admin/animals/12').send({ ...faro, speciesId: 3, isAdoptable: true });
     expect(res.status).toBe(422);
-    expect(res.body.error).toMatchObject({
-      code: 'ARCHIVED_ANIMAL_NOT_ADOPTABLE',
-      details: [{ field: 'isAdoptable', message: 'Un animal fallecido o trasladado no puede admitir adopciones.' }],
-    });
+    expect(res.body.error.code).toBe('ANIMAL_ARCHIVED_READ_ONLY');
   });
 });
 
@@ -212,10 +209,10 @@ describe('CU-28 Gestionar animales: cambio de estado', () => {
     expect((await request(t.app).get('/api/animals/7')).status).toBe(404);
   });
 
-  it('un animal archivado no cambia de estado y la fecha no puede ser futura', async () => {
+  it('un cuidador no cambia el estado de un archivado (403) y la fecha no puede ser futura', async () => {
     const archivado = await nuria.patch('/api/admin/animals/12/status').send({ status: 'in_sanctuary' });
-    expect(archivado.status).toBe(422);
-    expect(archivado.body.error.code).toBe('ANIMAL_ARCHIVED');
+    expect(archivado.status).toBe(403);
+    expect(archivado.body.error.code).toBe('ARCHIVED_STATUS_ADMIN_ONLY');
     const futura = await nuria
       .patch('/api/admin/animals/2/status')
       .send({ status: 'deceased', date: sumarDias(t.hoy, 2) });
@@ -259,5 +256,28 @@ describe('CU-28 Los animales ya no tienen raza', () => {
       "SELECT 1 FROM information_schema.columns WHERE table_name = 'animals' AND column_name = 'breed'",
     );
     expect(rowCount).toBe(0);
+  });
+});
+
+describe('CU-28 El sexo es siempre macho o hembra', () => {
+  it('el alta exige el sexo y no admite «desconocido»', async () => {
+    const sinSexo = nuevo();
+    delete (sinSexo as Record<string, unknown>).sex;
+    for (const cuerpo of [sinSexo, nuevo({ sex: 'unknown' }), nuevo({ sex: '' })]) {
+      const res = await nuria.post('/api/admin/animals').send(cuerpo);
+      expect(res.status).toBe(400);
+      expect(res.body.error.details).toContainEqual({ field: 'sex', message: 'Elige el sexo.' });
+    }
+  });
+
+  it('la base de datos tampoco lo admite ni lo rellena por defecto', async () => {
+    // 23514: no cumple el CHECK; 23502: valor nulo en una columna NOT NULL (sin valor por defecto).
+    await expect(t.pool.query("UPDATE animals SET sex = 'unknown' WHERE id = 1")).rejects.toMatchObject({
+      code: '23514',
+      constraint: 'animals_sex_check',
+    });
+    await expect(
+      t.pool.query("INSERT INTO animals (name, species_id, arrival_date) VALUES ('Sin sexo', 1, CURRENT_DATE)"),
+    ).rejects.toMatchObject({ code: '23502', column: 'sex' });
   });
 });

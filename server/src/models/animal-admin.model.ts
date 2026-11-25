@@ -221,9 +221,11 @@ export async function updateStatus(
   await db.query(
     `UPDATE animals
         SET status = $2, status_changed_at = $3,
-            is_adoptable = CASE WHEN $4 THEN FALSE ELSE is_adoptable END
+            is_adoptable = CASE WHEN $4 THEN FALSE ELSE is_adoptable END,
+            show_in_memorial = show_in_memorial AND $5
       WHERE id = $1`,
-    [id, cambio.status, cambio.statusChangedAt, cambio.archivar],
+    // CU-12: si deja de estar fallecido, sale de «En memoria» (lo exige el CHECK).
+    [id, cambio.status, cambio.statusChangedAt, cambio.archivar, cambio.status === 'deceased'],
   );
 }
 

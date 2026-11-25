@@ -76,18 +76,12 @@ describe('CU-12 en el panel: marcar un fallecido para «En memoria»', () => {
     );
   });
 
-  it('en los datos de un fallecido se puede quitar de «En memoria»', async () => {
+  it('en los datos de un fallecido se puede quitar de «En memoria» con su interruptor', async () => {
+    const faro = adminAnimal({ id: 12, name: 'Faro', status: 'deceased', isAdoptable: false, showInMemorial: true });
     const { enviados } = mockApi({
       '/api/auth/me': { body: { user: caretaker() } },
-      '/api/admin/animals/12': (_url, { method }) => ({
-        body: adminAnimal({
-          id: 12,
-          name: 'Faro',
-          status: 'deceased',
-          isAdoptable: false,
-          showInMemorial: method === 'GET',
-        }),
-      }),
+      '/api/admin/animals/12': { body: faro },
+      '/api/admin/animals/12/memorial': (_url, { body }) => ({ body: { ...faro, ...(body as object) } }),
       '/api/admin/species': {
         body: { data: [{ id: 1, name: 'Buitre leonado', scientificName: null, description: null, animalCount: 1 }] },
       },
@@ -96,10 +90,8 @@ describe('CU-12 en el panel: marcar un fallecido para «En memoria»', () => {
     const interruptor = await screen.findByRole('switch', { name: 'Mostrar en «En memoria»' });
     expect(interruptor).toBeChecked();
     await userEvent.click(interruptor);
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
-    await waitFor(() =>
-      expect(enviados('/api/admin/animals/12').find(Boolean)).toMatchObject({ showInMemorial: false }),
-    );
+    await waitFor(() => expect(enviados('/api/admin/animals/12/memorial')).toEqual([{ showInMemorial: false }]));
+    expect(await screen.findByRole('switch', { name: 'Mostrar en «En memoria»' })).not.toBeChecked();
   });
 
   it('un animal que no ha fallecido no muestra la opción', async () => {

@@ -47,8 +47,7 @@
   "animal": {
     "sex": {
       "male": "Mascle",
-      "female": "Femella",
-      "unknown": "Sexe desconegut"
+      "female": "Femella"
     },
     "inTreatment": "En tractament",
     "notAdoptable": "No disponible per a adoptar",
@@ -81,17 +80,21 @@
     "intro": "Tots viuen al santuari i pots adoptar-los a distància.",
     "filtersLabel": "Filtres del catàleg",
     "search": "Busca pel nom",
+    "searchPlaceholder": "Nom de l'animal",
     "species": "Espècie",
     "allSpecies": "Totes les espècies",
+    "speciesSelected_one": "{{count}} espècie",
+    "speciesSelected_other": "{{count}} espècies",
     "sex": "Sexe",
     "anySex": "Qualsevol sexe",
     "sexOptions": {
       "male": "Mascle",
-      "female": "Femella",
-      "unknown": "Desconegut"
+      "female": "Femella"
     },
     "age": "Edat",
     "anyAge": "Qualsevol edat",
+    "agesSelected_one": "{{count}} edat",
+    "agesSelected_other": "{{count}} edats",
     "ageRanges": {
       "young": "Menys de 5 anys",
       "adult": "De 5 a 15 anys",
@@ -215,7 +218,8 @@
     "SPECIES_ALREADY_EXISTS": "Esta espècie ja existeix.",
     "ANIMAL_HAS_ADOPTIONS": "Este animal té historial d'adopcions; arxiva'l canviant-ne l'estat.",
     "ARCHIVED_ANIMAL_NOT_ADOPTABLE": "Un animal mort o traslladat no pot admetre adopcions.",
-    "ANIMAL_ARCHIVED": "Este animal està arxivat (mort o traslladat) i el seu estat ja no es pot canviar.",
+    "ARCHIVED_STATUS_ADMIN_ONLY": "Només un administrador pot canviar l’estat d’un animal mort o traslladat.",
+    "ANIMAL_ARCHIVED_READ_ONLY": "Aquest animal ja no és al santuari: la seua informació només es pot consultar.",
     "ARRIVAL_IN_FUTURE": "La data d'arribada no pot ser futura.",
     "DATE_IN_FUTURE": "La data no pot ser futura.",
     "SPECIES_NOT_FOUND": "Esta espècie no existeix.",
@@ -433,9 +437,34 @@
     "empty": "Encara no has adoptat cap animal",
     "seeAnimals": "Mostra els animals",
     "seeProfile": "Mostra la fitxa de {{name}}",
-    "history": "Historial",
     "continueWithOther": "Vols continuar amb un altre animal?",
     "errorLoading": "No hem pogut carregar les teues adopcions"
+  },
+  "history": {
+    "title": "Historial",
+    "intro": "El que ha passat en les teues adopcions durant l'últim any.",
+    "animal": "Animal",
+    "allAnimals": "Tots",
+    "empty": "Encara no hi ha res en el teu historial.",
+    "error": "No hem pogut carregar l'historial",
+    "loadMore": "Veure'n més",
+    "olderNote": "Només es mostra l'últim any.",
+    "olderLink": "Els teus pagaments anteriors són a «Les meues aportacions».",
+    "events": {
+      "adopted": "Vas començar a adoptar {{name}} amb el pla {{plan}}.",
+      "payment_completed": "Quota de {{name}} pagada: {{amount}} (des del {{date}}).",
+      "payment_failed": "No s'ha pogut cobrar la quota de {{name}}: {{amount}} (des del {{date}}).",
+      "payment_refunded": "Et vam tornar la quota de {{name}}: {{amount}} (des del {{date}}).",
+      "cancel_requested": "Vas demanar la baixa de l'adopció de {{name}}.",
+      "ended_cancelled": "Es va cancel·lar l'adopció de {{name}}.",
+      "ended_finished": "Va acabar l'adopció de {{name}}.",
+      "plan_change_requested": "Vas demanar canviar el pla de {{name}} de {{from}} a {{to}} a partir de la pròxima quota.",
+      "plan_change_cancelled": "Vas anul·lar el canvi de pla de {{name}}: continua amb el pla {{plan}}.",
+      "plan_changed": "El pla de {{name}} va passar de {{from}} a {{to}}.",
+      "payment_mode_changed": "Vas canviar la forma de pagament de {{name}} a «{{mode}}».",
+      "paused": "L'adopció de {{name}} es va pausar.",
+      "resumed": "L'adopció de {{name}} es va reprendre."
+    }
   },
   "manageAdoption": {
     "moreActions": "Més accions de {{name}}",
@@ -610,6 +639,7 @@
       "stats": "Estadístiques",
       "groupWork": "Treball diari",
       "myDay": "El meu dia",
+      "myShifts": "Els meus fitxatges",
       "tasks": "Tasques del dia",
       "taskTemplates": "Plantilles de tasques",
       "zones": "Zones i qualificacions",
@@ -724,7 +754,6 @@
       "isPublishedHelp": "Apareix al catàleg de la web.",
       "isAdoptable": "Admet adopcions",
       "isAdoptableHelp": "Es pot adoptar des de la web.",
-      "archivedHelp": "Un animal mort o traslladat no pot admetre adopcions.",
       "nameRequired": "Escriu el nom de l'animal.",
       "speciesRequired": "Tria l'espècie.",
       "arrivalRequired": "Indica la data d'arribada.",
@@ -754,14 +783,18 @@
       "confirmDeleteText": "També s'esborraran les seues fotos i actualitzacions. Esta acció no es pot desfer.",
       "deleted": "{{name}} s'ha esborrat",
       "statusSince": "Des del {{date}}",
-      "sexUnknown": "Desconegut",
       "tabPhotos": "Fotos",
       "tabUpdates": "Actualitzacions",
       "tabVet": "Veterinari",
       "showInMemorial": "Mostra a «En memòria»",
       "showInMemorialHelp": "La seua fitxa apareixerà a la secció pública «En memòria», sense opció d'adoptar.",
       "zone": "Zona",
-      "tabCare": "Cures"
+      "tabCare": "Cures",
+      "readOnly": "Aquest animal ja no és al santuari: només es pot consultar la seua informació.",
+      "readOnlyAdmin": "Si és un error, canvia el seu estat.",
+      "confirmRestore": "Vols tornar {{name}} a «{{status}}»?",
+      "restoreText": "Les seues adopcions tancades no es tornen a obrir: qui vulga haurà d’adoptar-lo de nou. No admetrà adopcions fins que ho actives a «Dades».",
+      "restoreMemorial": "També deixarà d’aparéixer a «En memòria»."
     },
     "media": {
       "dropHere": "Arrossega ací les fotos o els vídeos",
@@ -1194,6 +1227,7 @@
         "vet": "L’historial veterinari de tots els animals, només per al personal.",
         "today": "El més important de hui d’un colp d’ull: tasques, medicació, incidències, torns i buits. Cada bloc porta a la seua pàgina.",
         "myDay": "Les teues tasques i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
+        "myShifts": "Quan has fitxat l’entrada i l’eixida de cada torn i quantes hores has treballat. Sense dates, les últimes 4 setmanes.",
         "incidents": "Per a comunicar problemes del santuari (un animal ferit, una avaria…) i seguir com es resolen.",
         "shifts": "Ací veus qui treballa cada dia de la setmana i en quines zones. Si falta personal en un torn, apareix en groc.",
         "tasks": "Totes les tasques d’un dia. Pots crear tasques puntuals, reassignar-les i canviar els ajustos del treball diari.",
@@ -1327,7 +1361,13 @@
     "seeAll": "Mostra-les totes",
     "readAll": "Marca-les totes com a llegides",
     "delete": "Esborra: {{message}}",
-    "errorLoading": "No hem pogut carregar les teues notificacions"
+    "errorLoading": "No hem pogut carregar les teues notificacions",
+    "clearAll": "Netejar notificacions",
+    "clearConfirmTitle": "Vols esborrar totes les notificacions?",
+    "clearConfirmText": "S'esborraran totes, també les que no has llegit. No es pot desfer.",
+    "clearConfirm": "Esborrar-les totes",
+    "clearing": "Esborrant…",
+    "clearError": "No hem pogut esborrar les teues notificacions. Torna-ho a intentar."
   },
   "charts": {
     "empty": "No hi ha dades en este interval",
@@ -1395,7 +1435,6 @@
     "assignedTo": "Assignada a {{name}}",
     "requires": "Exigix: {{name}}",
     "photo": "Foto",
-    "viewPhoto": "Veure la foto",
     "blocked": {
       "MISSING_QUALIFICATION": "Necessites la qualificació «{{name}}».",
       "FUTURE_DAY": "Es podrà marcar eixe mateix dia."
@@ -1427,7 +1466,7 @@
       "nextDay": "Dia següent",
       "today": "Hui",
       "done": "Feta",
-      "withNote": "Amb nota o foto",
+      "withNote": "Amb nota",
       "notDone": "No s’ha pogut fer",
       "undo": "Desfer",
       "markedDone": "Tasca marcada com a feta",
@@ -1591,11 +1630,8 @@
       },
       "noShifts": "Sense torns aquest dia.",
       "loadError": "No s’han pogut carregar els torns.",
-      "yourShift": "El teu torn",
       "checkIn": "Fitxar l’entrada",
       "checkOut": "Fitxar l’eixida",
-      "checkedInAt": "Entrada: {{time}}",
-      "checkedOutAt": "Eixida: {{time}}",
       "checkInDone": "Entrada fitxada",
       "checkOutDone": "Eixida fitxada",
       "today": "Hui"
@@ -1881,6 +1917,34 @@
       "summaryHelp": "Un correu a l’administració amb les tasques, la medicació, les incidències i els buits del dia.",
       "summaryEnabled": "Enviar el resum del dia",
       "summaryTime": "Hora del resum"
+    },
+    "clock": {
+      "title": "Fitxatge",
+      "history": "Veure els meus fitxatges",
+      "historyTitle": "Els meus fitxatges",
+      "noShiftToday": "Hui no tens torn",
+      "states": {
+        "pending": "Sense fitxar",
+        "working": "Treballant",
+        "done": "Acabat"
+      },
+      "notYet": "Encara no has fitxat l’entrada",
+      "notClocked": "No es va fitxar l’entrada",
+      "workingSince": "Treballant des de les {{time}}",
+      "noExit": "Entrada a les {{time}}, sense fitxar l’eixida",
+      "finished": "Torn acabat: de {{from}} a {{to}}",
+      "confirmOutTitle": "Vols fitxar l’eixida?",
+      "confirmOutText": "Es guardarà l’hora d’ara com a final del teu torn. Després no es pot canviar: si t’equivoques, digues-ho a qui organitza els torns.",
+      "duration": "{{hours}} h {{minutes}} min",
+      "total": "Total: {{duration}}",
+      "range": "Del {{from}} al {{to}}",
+      "historyEmpty": "No tens torns en aquestes dates.",
+      "loadError": "No hem pogut carregar els teus fitxatges.",
+      "day": "Dia",
+      "shift": "Torn",
+      "in": "Entrada",
+      "out": "Eixida",
+      "worked": "Hores"
     }
   },
   "photoPicker": {

@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { caretaker } from './helpers/fixtures';
-import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { asignacion } from './helpers/work-fixtures';
 
 function api(turno = asignacion(), extra: Parameters<typeof mockApi>[0] = {}) {
@@ -19,7 +19,7 @@ function api(turno = asignacion(), extra: Parameters<typeof mockApi>[0] = {}) {
   });
 }
 
-const tuTurno = async () => within(await screen.findByRole('region', { name: 'Tu turno' }));
+const tuTurno = async () => within(await screen.findByRole('region', { name: 'Fichaje' }));
 
 describe('CU-63 Fichar desde «Mi día»', () => {
   it('muestra el turno de hoy con sus zonas y ficha la entrada', async () => {
@@ -45,7 +45,7 @@ describe('CU-63 Fichar desde «Mi día»', () => {
     api(asignacion({ checkedInAt: '2026-11-23T06:58:00.000Z' }));
     renderRoute('/admin/my-day');
     const turno = await tuTurno();
-    expect(turno.getByText('Entrada: 07:58')).toBeInTheDocument();
+    expect(turno.getByText('Trabajando desde las 07:58')).toBeInTheDocument();
     expect(turno.getByRole('button', { name: 'Fichar salida' })).toBeInTheDocument();
     expect(turno.queryByRole('button', { name: 'Fichar entrada' })).not.toBeInTheDocument();
   });
@@ -54,7 +54,7 @@ describe('CU-63 Fichar desde «Mi día»', () => {
     api(asignacion({ checkedInAt: '2026-11-23T06:58:00.000Z', checkedOutAt: '2026-11-23T14:05:00.000Z' }));
     renderRoute('/admin/my-day');
     const turno = await tuTurno();
-    expect(turno.getByText('Salida: 15:05')).toBeInTheDocument();
+    expect(turno.getByText('Turno terminado: de 07:58 a 15:05')).toBeInTheDocument();
     expect(turno.queryByRole('button')).not.toBeInTheDocument();
   });
 
@@ -73,6 +73,46 @@ describe('CU-63 Fichar desde «Mi día»', () => {
     renderRoute('/admin/my-day');
     await userEvent.click(await screen.findByRole('button', { name: 'Día siguiente' }));
     expect(await screen.findByText('No hay tareas para este día.')).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Tu turno' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Fichaje' })).not.toBeInTheDocument();
+  });
+
+  it('sin fichar, lo dice claramente y enlaza a «Mis fichajes»', async () => {
+    api();
+    renderRoute('/admin/my-day');
+    const turno = await tuTurno();
+    expect(turno.getByText('Aún no has fichado la entrada')).toBeInTheDocument();
+    expect(turno.getByRole('link', { name: 'Ver mis fichajes' })).toHaveAttribute('href', '/admin/my-shifts');
+  });
+
+  it('hoy sin turno, lo indica', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: caretaker() } },
+      '/api/admin/my-day': { body: { date: '2026-11-23', tasks: [], shifts: [] } },
+    });
+    renderRoute('/admin/my-day');
+    expect((await tuTurno()).getByText('Hoy no tienes turno')).toBeInTheDocument();
+  });
+
+  it('la salida pide confirmación; al cancelar no se ficha', async () => {
+    const salidas: string[] = [];
+    api(asignacion({ checkedInAt: '2026-11-23T06:58:00.000Z' }), {
+      '/api/admin/shift-assignments/501/check-out': (_u: URL, p: Peticion) => {
+        salidas.push(p.method);
+        return {
+          body: asignacion({ checkedInAt: '2026-11-23T06:58:00.000Z', checkedOutAt: '2026-11-23T14:05:00.000Z' }),
+        };
+      },
+    });
+    renderRoute('/admin/my-day');
+    await userEvent.click((await tuTurno()).getByRole('button', { name: 'Fichar salida' }));
+    let dialogo = within(await screen.findByRole('dialog', { name: '¿Fichar la salida?' }));
+    await userEvent.click(dialogo.getByRole('button', { name: 'Cancelar' }));
+    expect(salidas).toEqual([]);
+
+    await userEvent.click((await tuTurno()).getByRole('button', { name: 'Fichar salida' }));
+    dialogo = within(await screen.findByRole('dialog', { name: '¿Fichar la salida?' }));
+    await userEvent.click(dialogo.getByRole('button', { name: 'Fichar salida' }));
+    expect(await screen.findByText('Salida fichada')).toBeInTheDocument();
+    expect(salidas).toEqual(['POST']);
   });
 });

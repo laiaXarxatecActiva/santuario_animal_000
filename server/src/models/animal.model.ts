@@ -84,9 +84,20 @@ const SELECT_PUBLICO = `
 
 const CONDICION_PUBLICO = 'a.is_published AND a.status = ANY($1::varchar[])';
 
+/** Límites de fecha de nacimiento de un tramo de edad. */
+export interface BirthBounds {
+  /** Nacido en esta fecha o antes (edad mínima). */
+  bornOnOrBefore?: string;
+  /** Nacido después de esta fecha (edad máxima). */
+  bornAfter?: string;
+}
+
 export interface CatalogFilters {
-  speciesId?: number;
+  /** Una o varias especies (basta con que sea de una). */
+  speciesIds?: number[];
   sex?: AnimalSex;
+  /** Tramos de edad: basta con estar en uno de ellos. */
+  ageRanges?: BirthBounds[];
   /** Nacido en esta fecha o antes (edad mínima). */
   bornOnOrBefore?: string;
   /** Nacido después de esta fecha (edad máxima). */
@@ -106,10 +117,24 @@ function construirFiltro(filtros: CatalogFilters): { where: string; params: unkn
     condiciones.push(sql(`$${params.length}`));
   };
 
-  if (filtros.speciesId !== undefined) añadir((n) => `a.species_id = ${n}`, filtros.speciesId);
+  if (filtros.speciesIds?.length) añadir((n) => `a.species_id = ANY(${n}::int[])`, filtros.speciesIds);
   if (filtros.sex !== undefined) añadir((n) => `a.sex = ${n}`, filtros.sex);
   if (filtros.bornOnOrBefore !== undefined) añadir((n) => `a.approx_birth_date <= ${n}::date`, filtros.bornOnOrBefore);
   if (filtros.bornAfter !== undefined) añadir((n) => `a.approx_birth_date > ${n}::date`, filtros.bornAfter);
+  if (filtros.ageRanges?.length) {
+    const tramos = filtros.ageRanges.map((tramo) => {
+      const partes: string[] = [];
+      const parametro = (valor: string) => {
+        params.push(valor);
+        return `$${params.length}::date`;
+      };
+      if (tramo.bornOnOrBefore !== undefined) partes.push(`a.approx_birth_date <= ${parametro(tramo.bornOnOrBefore)}`);
+      if (tramo.bornAfter !== undefined) partes.push(`a.approx_birth_date > ${parametro(tramo.bornAfter)}`);
+      // Un tramo sin límites (no debería darse) admite cualquier fecha conocida.
+      return partes.length ? `(${partes.join(' AND ')})` : '(a.approx_birth_date IS NOT NULL)';
+    });
+    condiciones.push(`(${tramos.join(' OR ')})`);
+  }
   if (filtros.adoptable !== undefined) añadir((n) => `a.is_adoptable = ${n}`, filtros.adoptable);
   if (filtros.q !== undefined) {
     const patron = filtros.q.replace(/[\\%_]/g, '\\$&');
@@ -162,6 +187,12 @@ export async function findPublicById(db: Queryable, id: number): Promise<PublicA
   ]);
   const row = rows[0];
   return row ? mapRow(row) : null;
+}
+
+/** CU-22: día en que el animal llegó al santuario (`YYYY-MM-DD`), sea cual sea su estado. */
+export async function findArrivalDate(db: Queryable, id: number): Promise<string | null> {
+  const { rows } = await db.query<{ arrival_date: string }>('SELECT arrival_date FROM animals WHERE id = $1', [id]);
+  return rows[0]?.arrival_date ?? null;
 }
 
 // --- CU-12 «En memoria» ---

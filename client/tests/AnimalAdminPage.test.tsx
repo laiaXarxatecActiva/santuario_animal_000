@@ -62,12 +62,36 @@ describe('CU-28 Gestionar animales: alta', () => {
     renderRoute('/admin/animals/new');
     await userEvent.type(await screen.findByLabelText('Nombre'), 'Lucero');
     await userEvent.selectOptions(await screen.findByLabelText('Especie'), 'Alimoche común');
+    await userEvent.selectOptions(screen.getByLabelText('Sexo'), 'Macho');
     await userEvent.type(screen.getByLabelText('Fecha de nacimiento aproximada (opcional)'), '2026-11-05');
     await userEvent.type(screen.getByLabelText('Fecha de llegada'), '2026-11-01');
     await userEvent.click(screen.getByRole('button', { name: 'Crear animal' }));
     expect(
       await screen.findByText('La fecha de nacimiento no puede ser posterior a la de llegada.'),
     ).toBeInTheDocument();
+    expect(pedidas('/api/admin/animals')).toHaveLength(0);
+  });
+});
+
+describe('CU-28 El sexo es siempre macho o hembra', () => {
+  it('en el alta empieza sin elegir, solo ofrece macho o hembra y es obligatorio', async () => {
+    const { pedidas } = mockApi({
+      '/api/auth/me': { body: { user: caretaker() } },
+      '/api/admin/species': { body: { data: adminSpecies } },
+    });
+    renderRoute('/admin/animals/new');
+    const sexo = await screen.findByLabelText('Sexo');
+    expect(sexo).toHaveValue('');
+    expect(
+      within(sexo)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Elige…', 'Macho', 'Hembra']);
+    await userEvent.type(screen.getByLabelText('Nombre'), 'Lucero');
+    await userEvent.selectOptions(await screen.findByLabelText('Especie'), 'Alimoche común');
+    await userEvent.type(screen.getByLabelText('Fecha de llegada'), '2026-11-01');
+    await userEvent.click(screen.getByRole('button', { name: 'Crear animal' }));
+    expect(await screen.findByText('Elige el sexo.')).toBeInTheDocument();
     expect(pedidas('/api/admin/animals')).toHaveLength(0);
   });
 });
@@ -93,10 +117,11 @@ describe('CU-28 Gestionar animales: ficha y edición', () => {
     expect(await screen.findByRole('link', { name: /Ver en la web/ })).toHaveAttribute('href', '/animals/1');
   });
 
-  it('2b: un animal archivado no puede admitir adopciones', async () => {
+  it('2b: los datos de un animal archivado ya no se editan (tampoco «Admite adopciones»)', async () => {
     api({ animal: adminAnimal({ id: 12, name: 'Faro', status: 'deceased', isAdoptable: false }) });
     renderRoute('/admin/animals/12');
-    expect(await screen.findByRole('switch', { name: 'Admite adopciones' })).toBeDisabled();
+    expect(await screen.findByText(/solo se puede consultar su información/)).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Admite adopciones' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cambiar estado' })).not.toBeInTheDocument();
   });
 

@@ -54,10 +54,11 @@ describe('CU-66 Anotar lo que ha comido cada animal', () => {
     });
     renderRoute('/admin/my-day');
     const comida = await tarjeta('Comida de la clínica');
-    expect(within(comida).queryByRole('button', { name: 'Con nota o foto' })).not.toBeInTheDocument();
+    expect(within(comida).queryByRole('button', { name: /^Con nota/ })).not.toBeInTheDocument();
     await userEvent.click(within(comida).getByRole('button', { name: 'Hecha' }));
     const ventana = await screen.findByRole('dialog', { name: 'Comida de la clínica' });
     expect(within(ventana).getByLabelText('Olmo')).toHaveValue('all');
+    expect(within(ventana).queryByRole('button', { name: 'Elegir foto' })).not.toBeInTheDocument();
     await userEvent.selectOptions(within(ventana).getByLabelText('Carbón'), 'Nada');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Marcar como hecha' }));
     expect(await screen.findByText('Tarea marcada como hecha')).toBeInTheDocument();

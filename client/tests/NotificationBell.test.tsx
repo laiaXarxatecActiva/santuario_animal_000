@@ -96,4 +96,33 @@ describe('CU-18 Campana de notificaciones', () => {
     await userEvent.click(await campana('Notificaciones, 1 sin leer'));
     expect(screen.getByText('Turia lleva más de 14 días sin actualización.')).toBeInTheDocument();
   });
+
+  it('4: borra una notificación desde el desplegable sin cerrarlo ni navegar', async () => {
+    const borradas: string[] = [];
+    mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/home': { body: { featured: [], animalCount: 0 } },
+      '/api/me/notifications': { body: notificationsPage([sinLeer, leida]) },
+      '/api/me/notifications/1': (url: URL, p: Peticion) => {
+        borradas.push(`${p.method} ${url.pathname}`);
+        return { status: 204 };
+      },
+    });
+    const { router } = renderRoute('/');
+    await userEvent.click(await campana('Notificaciones, 1 sin leer'));
+    const panel = screen.getByRole('region', { name: 'Notificaciones' });
+    await userEvent.click(within(panel).getByRole('button', { name: 'Borrar: Gracias por tu donación de 10,00 €.' }));
+    await waitFor(() => expect(borradas).toEqual(['DELETE /api/me/notifications/1']));
+    expect(router.state.location.pathname).toBe('/');
+    expect(screen.getByRole('region', { name: 'Notificaciones' })).toBeVisible();
+  });
+});
+
+describe('Animación de los desplegables (DESIGN_SYSTEM §9)', () => {
+  it('el panel de la campana lleva la animación', async () => {
+    api();
+    renderRoute('/');
+    await userEvent.click(await campana('Notificaciones, 1 sin leer'));
+    expect(screen.getByRole('region', { name: 'Notificaciones' })).toHaveClass('dropdown-panel');
+  });
 });

@@ -193,15 +193,13 @@ describe('CU-70 Listado de incidencias', () => {
 
 describe('CU-70 El personal cambia el estado', () => {
   it('el cuidador también puede resolverla, y queda quién lo hizo', async () => {
-    const nueva = await nuria
-      .post('/api/admin/incidents')
-      .send({
-        category: 'facilities',
-        severity: 'low',
-        title: 'Grifo que gotea',
-        description: 'Grifo que gotea.',
-        zoneId: 5,
-      });
+    const nueva = await nuria.post('/api/admin/incidents').send({
+      category: 'facilities',
+      severity: 'low',
+      title: 'Grifo que gotea',
+      description: 'Grifo que gotea.',
+      zoneId: 5,
+    });
     const id = (nueva.body as IncidentDto).id;
     const res = await nuria
       .patch(`/api/admin/incidents/${id}/status`)

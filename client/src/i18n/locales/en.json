@@ -47,8 +47,7 @@
   "animal": {
     "sex": {
       "male": "Male",
-      "female": "Female",
-      "unknown": "Unknown sex"
+      "female": "Female"
     },
     "inTreatment": "In treatment",
     "notAdoptable": "Not available for adoption",
@@ -81,17 +80,21 @@
     "intro": "They all live at the sanctuary and you can adopt them from a distance.",
     "filtersLabel": "Catalogue filters",
     "search": "Search by name",
+    "searchPlaceholder": "Animal name",
     "species": "Species",
     "allSpecies": "All species",
+    "speciesSelected_one": "{{count}} species",
+    "speciesSelected_other": "{{count}} species",
     "sex": "Sex",
     "anySex": "Any sex",
     "sexOptions": {
       "male": "Male",
-      "female": "Female",
-      "unknown": "Unknown"
+      "female": "Female"
     },
     "age": "Age",
     "anyAge": "Any age",
+    "agesSelected_one": "{{count}} age range",
+    "agesSelected_other": "{{count}} age ranges",
     "ageRanges": {
       "young": "Under 5 years",
       "adult": "5 to 15 years",
@@ -215,7 +218,8 @@
     "SPECIES_ALREADY_EXISTS": "This species already exists.",
     "ANIMAL_HAS_ADOPTIONS": "This animal has an adoption history; archive it by changing its status.",
     "ARCHIVED_ANIMAL_NOT_ADOPTABLE": "An animal that has died or moved cannot be open to adoptions.",
-    "ANIMAL_ARCHIVED": "This animal is archived (died or moved) and its status can no longer change.",
+    "ARCHIVED_STATUS_ADMIN_ONLY": "Only an administrator can change the status of an animal that has died or moved.",
+    "ANIMAL_ARCHIVED_READ_ONLY": "This animal is no longer at the sanctuary: its information can only be viewed.",
     "ARRIVAL_IN_FUTURE": "The arrival date cannot be in the future.",
     "DATE_IN_FUTURE": "The date cannot be in the future.",
     "SPECIES_NOT_FOUND": "This species does not exist.",
@@ -433,9 +437,34 @@
     "empty": "You have not adopted any animal yet",
     "seeAnimals": "See the animals",
     "seeProfile": "See {{name}}'s profile",
-    "history": "History",
     "continueWithOther": "Would you like to carry on with another animal?",
     "errorLoading": "We could not load your adoptions"
+  },
+  "history": {
+    "title": "History",
+    "intro": "What has happened in your adoptions over the last year.",
+    "animal": "Animal",
+    "allAnimals": "All",
+    "empty": "There is nothing in your history yet.",
+    "error": "We couldn't load your history",
+    "loadMore": "Show more",
+    "olderNote": "Only the last year is shown.",
+    "olderLink": "Your earlier payments are in “My contributions”.",
+    "events": {
+      "adopted": "You started adopting {{name}} on the {{plan}} plan.",
+      "payment_completed": "{{name}}'s fee paid: {{amount}} (from {{date}}).",
+      "payment_failed": "We couldn't charge {{name}}'s fee: {{amount}} (from {{date}}).",
+      "payment_refunded": "We refunded {{name}}'s fee: {{amount}} (from {{date}}).",
+      "cancel_requested": "You asked to end {{name}}'s adoption.",
+      "ended_cancelled": "{{name}}'s adoption was cancelled.",
+      "ended_finished": "{{name}}'s adoption ended.",
+      "plan_change_requested": "You asked to change {{name}}'s plan from {{from}} to {{to}} from the next fee.",
+      "plan_change_cancelled": "You cancelled {{name}}'s plan change: it stays on the {{plan}} plan.",
+      "plan_changed": "{{name}}'s plan changed from {{from}} to {{to}}.",
+      "payment_mode_changed": "You changed {{name}}'s payment method to “{{mode}}”.",
+      "paused": "{{name}}'s adoption was paused.",
+      "resumed": "{{name}}'s adoption was resumed."
+    }
   },
   "manageAdoption": {
     "moreActions": "More actions for {{name}}",
@@ -610,6 +639,7 @@
       "stats": "Statistics",
       "groupWork": "Daily work",
       "myDay": "My day",
+      "myShifts": "My clock-ins",
       "tasks": "Today's tasks",
       "taskTemplates": "Task templates",
       "zones": "Areas and qualifications",
@@ -724,7 +754,6 @@
       "isPublishedHelp": "Appears in the website's catalogue.",
       "isAdoptable": "Open to adoptions",
       "isAdoptableHelp": "Can be adopted from the website.",
-      "archivedHelp": "An animal that has died or moved cannot be open to adoptions.",
       "nameRequired": "Enter the animal's name.",
       "speciesRequired": "Choose the species.",
       "arrivalRequired": "Enter the arrival date.",
@@ -754,14 +783,18 @@
       "confirmDeleteText": "Their photos and updates will also be deleted. This cannot be undone.",
       "deleted": "{{name}} has been deleted",
       "statusSince": "Since {{date}}",
-      "sexUnknown": "Unknown",
       "tabPhotos": "Photos",
       "tabUpdates": "Updates",
       "tabVet": "Veterinary",
       "showInMemorial": "Show in \"In memory\"",
       "showInMemorialHelp": "Their profile will appear in the public \"In memory\" section, with no option to adopt.",
       "zone": "Area",
-      "tabCare": "Care"
+      "tabCare": "Care",
+      "readOnly": "This animal is no longer at the sanctuary: its information can only be viewed.",
+      "readOnlyAdmin": "If this is a mistake, change its status.",
+      "confirmRestore": "Return {{name}} to “{{status}}”?",
+      "restoreText": "Its closed adoptions won’t reopen: anyone who wants to will have to adopt it again. It won’t accept adoptions until you turn that on in “Details”.",
+      "restoreMemorial": "It will also stop appearing in “In memory”."
     },
     "media": {
       "dropHere": "Drag photos or videos here",
@@ -1194,6 +1227,7 @@
         "vet": "The vet history of all the animals, for staff only.",
         "today": "Today’s key points at a glance: tasks, medication, incidents, shifts and gaps. Each block links to its page.",
         "myDay": "Your tasks and shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
+        "myShifts": "When you clocked in and out of each shift and how many hours you worked. Without dates, the last 4 weeks.",
         "incidents": "To report problems at the sanctuary (an injured animal, a breakdown…) and follow how they are solved.",
         "shifts": "See who works each day of the week and in which zones. If a shift is short of staff, it shows in yellow.",
         "tasks": "All the tasks of a day. You can create one-off tasks, reassign them and change the daily work settings.",
@@ -1327,7 +1361,13 @@
     "seeAll": "See all",
     "readAll": "Mark all as read",
     "delete": "Delete: {{message}}",
-    "errorLoading": "We could not load your notifications"
+    "errorLoading": "We could not load your notifications",
+    "clearAll": "Clear notifications",
+    "clearConfirmTitle": "Delete all your notifications?",
+    "clearConfirmText": "All of them will be deleted, including unread ones. This can't be undone.",
+    "clearConfirm": "Delete all",
+    "clearing": "Deleting…",
+    "clearError": "We couldn't delete your notifications. Please try again."
   },
   "charts": {
     "empty": "No data in this range",
@@ -1395,7 +1435,6 @@
     "assignedTo": "Assigned to {{name}}",
     "requires": "Requires: {{name}}",
     "photo": "Photo",
-    "viewPhoto": "View the photo",
     "blocked": {
       "MISSING_QUALIFICATION": "You need the “{{name}}” qualification.",
       "FUTURE_DAY": "It can be marked on that day."
@@ -1427,7 +1466,7 @@
       "nextDay": "Next day",
       "today": "Today",
       "done": "Done",
-      "withNote": "With a note or photo",
+      "withNote": "With a note",
       "notDone": "Could not be done",
       "undo": "Undo",
       "markedDone": "Task marked as done",
@@ -1591,11 +1630,8 @@
       },
       "noShifts": "No shifts this day.",
       "loadError": "The shifts could not be loaded.",
-      "yourShift": "Your shift",
       "checkIn": "Check in",
       "checkOut": "Check out",
-      "checkedInAt": "In: {{time}}",
-      "checkedOutAt": "Out: {{time}}",
       "checkInDone": "Checked in",
       "checkOutDone": "Checked out",
       "today": "Today"
@@ -1881,6 +1917,34 @@
       "summaryHelp": "An email to the admins with the day’s tasks, medication, incidents and gaps.",
       "summaryEnabled": "Send the daily summary",
       "summaryTime": "Summary time"
+    },
+    "clock": {
+      "title": "Clock in",
+      "history": "See my clock-ins",
+      "historyTitle": "My clock-ins",
+      "noShiftToday": "You have no shift today",
+      "states": {
+        "pending": "Not clocked",
+        "working": "Working",
+        "done": "Finished"
+      },
+      "notYet": "You haven’t clocked in yet",
+      "notClocked": "No clock-in was recorded",
+      "workingSince": "Working since {{time}}",
+      "noExit": "Clocked in at {{time}}, no clock-out",
+      "finished": "Shift finished: from {{from}} to {{to}}",
+      "confirmOutTitle": "Clock out?",
+      "confirmOutText": "The current time will be saved as the end of your shift. It can’t be changed afterwards: if you make a mistake, tell whoever organises the shifts.",
+      "duration": "{{hours}} h {{minutes}} min",
+      "total": "Total: {{duration}}",
+      "range": "From {{from}} to {{to}}",
+      "historyEmpty": "You have no shifts in these dates.",
+      "loadError": "We couldn’t load your clock-ins.",
+      "day": "Day",
+      "shift": "Shift",
+      "in": "In",
+      "out": "Out",
+      "worked": "Hours"
     }
   },
   "photoPicker": {

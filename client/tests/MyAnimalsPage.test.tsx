@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { activeAdoption, adoption, payment, sessionUser } from './helpers/fixtures';
+import { activeAdoption, adoption, historyEvent, historyPage, payment, sessionUser } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 import { rellenarTarjeta } from './helpers/tarjeta';
 
@@ -115,9 +115,9 @@ describe('CU-15 Consultar «Mis animales»', () => {
     expect(within(rufo).queryByRole('button', { name: 'Pagar ahora' })).not.toBeInTheDocument();
   });
 
-  it('3 y 2c: las cerradas van al historial; un fallecimiento se explica con delicadeza', async () => {
-    mockApi(
-      conAdopciones([
+  it('3 y 2c: las cerradas no son tarjetas; su cierre se cuenta en el historial con delicadeza', async () => {
+    mockApi({
+      ...conAdopciones([
         activeAdoption(),
         adoption({
           id: 3,
@@ -129,14 +129,27 @@ describe('CU-15 Consultar «Mis animales»', () => {
           canPay: false,
         }),
       ]),
-    );
+      '/api/me/history': {
+        body: historyPage([
+          historyEvent({
+            id: 'ended-3',
+            type: 'ended',
+            date: '2026-10-23',
+            animal: { id: 12, name: 'Faro' },
+            amount: null,
+            periodStart: null,
+            endStatus: 'finished',
+            endReason: 'animal_deceased',
+          }),
+        ]),
+      },
+    });
     renderRoute('/my-animals');
     await tarjeta('Rufo');
-    const historial = screen.getByText('Historial').closest('details') as HTMLElement;
-    expect(within(historial).queryByText('Rufo')).not.toBeInTheDocument();
-    expect(within(historial).getByText('Faro')).toBeInTheDocument();
-    expect(within(historial).getByText('Finalizada el 23 de octubre de 2026')).toBeInTheDocument();
-    expect(within(historial).getByText('Faro nos ha dejado.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: 'Faro' })).not.toBeInTheDocument();
+    const historial = screen.getByRole('heading', { level: 2, name: 'Historial' }).closest('section') as HTMLElement;
+    expect(await within(historial).findByText('Terminó la adopción de Faro. Faro nos ha dejado.')).toBeInTheDocument();
+    expect(within(historial).getByText('23 oct 2026')).toBeInTheDocument();
     expect(within(historial).getByRole('link', { name: '¿Quieres continuar con otro animal?' })).toHaveAttribute(
       'href',
       '/animals',

@@ -1,5 +1,21 @@
 .menu {
   position: relative;
+  flex-shrink: 0;
+}
+
+/* Con el mismo relleno que el selector de idioma (`--space-3`) y sin encogerse
+   cuando falta sitio en la cabecera, para que la flecha no quede pegada al borde.
+   Un nombre muy largo se corta con «…» (el nombre completo está en `aria-label`). */
+.button {
+  flex-shrink: 0;
+  padding-inline: var(--space-3);
+  white-space: nowrap;
+}
+
+.name {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Por debajo de 480 px solo se ven los iconos; el botón conserva su `aria-label`. */
@@ -9,17 +25,26 @@
   }
 }
 
+/* Icono `circle-user` del botón, a 1,25 rem (DESIGN_SYSTEM §8.7). */
+.userIcon {
+  font-size: 1.25rem;
+}
+
 .chevron {
   font-size: var(--font-size-sm);
 }
 
+/* Igual que el panel del selector de idioma: sin franjas vacías arriba ni abajo,
+   con el ancho justo para las opciones (mínimo 200 px) y el fondo de las opciones
+   recortado por la curva de las esquinas. */
 .panel {
   position: absolute;
   top: calc(100% + var(--space-2));
   right: 0;
   z-index: 11;
-  width: 240px;
-  padding-block: var(--space-2);
+  width: max-content;
+  min-width: 200px;
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface);
@@ -36,7 +61,7 @@
 
 .item {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--space-4);
   align-items: center;
   width: 100%;
   min-height: var(--size-touch);
@@ -55,7 +80,24 @@
   color: var(--color-text);
 }
 
+/* El contorno del foco, por dentro, para que el recorte del panel no lo corte. */
+.item:focus-visible {
+  outline-offset: -3px;
+}
+
+/* La página actual, como el idioma elegido. */
+.item[aria-current='page'] {
+  background: var(--color-primary-soft);
+  font-weight: 600;
+}
+
+/* «Cerrar sesión», separado por una línea y con su icono a la derecha (como la ✓
+   del idioma), para que todos los textos empiecen a la misma altura. */
 .logout {
-  margin-top: var(--space-2);
   border-top: 1px solid var(--color-border);
+}
+
+.logoutIcon {
+  margin-left: auto;
+  color: var(--color-text-muted);
 }
