@@ -147,7 +147,10 @@ describe('CU-15 Consultar «Mis animales»', () => {
     renderRoute('/my-animals');
     await tarjeta('Rufo');
     expect(screen.queryByRole('heading', { level: 2, name: 'Faro' })).not.toBeInTheDocument();
-    const historial = screen.getByRole('heading', { level: 2, name: 'Historial' }).closest('section') as HTMLElement;
+    // El historial empieza plegado: se despliega pulsando «Historial».
+    const titulo = screen.getByRole('heading', { level: 2, name: 'Historial' });
+    await userEvent.click(titulo);
+    const historial = titulo.closest('section') as HTMLElement;
     expect(await within(historial).findByText('Terminó la adopción de Faro. Faro nos ha dejado.')).toBeInTheDocument();
     expect(within(historial).getByText('23 oct 2026')).toBeInTheDocument();
     expect(within(historial).getByRole('link', { name: '¿Quieres continuar con otro animal?' })).toHaveAttribute(

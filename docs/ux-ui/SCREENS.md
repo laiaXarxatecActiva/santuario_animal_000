@@ -440,8 +440,8 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   │              ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   │
   ╰──────────────────────────────────────────────────────────────────────────╯
 
-  Historial (h2)                                          Animal [Todos ▾]
-  Lo que ha pasado en tus adopciones durante el último año.
+  ▾ Historial (h2, desplegable; al entrar, plegado: «▸ Historial»)
+  Lo que ha pasado en tus adopciones durante el último año.   Animal [Todos ▾]
   ─────────────────────────────────────────────────────────────────────────
   20 nov 2026   Pediste la baja de la adopción de Lupe.
   ─────────────────────────────────────────────────────────────────────────
@@ -454,7 +454,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
   Solo se muestra el último año. Tus pagos anteriores están en «Mis aportaciones».
 ```
 
-**Historial (CU-15):** sustituye a la antigua lista de adopciones cerradas (las cerradas ya no tienen tarjeta). Lista de sucesos (DESIGN_SYSTEM §8.9) del último año, de 10 en 10 con [Ver más] (contorno). El filtro «Animal» (`FilterSelect`) solo aparece con más de un animal. Sin sucesos: «Todavía no hay nada en tu historial.» Se vuelve a pedir tras pagar, cambiar de plan o de forma de pago y darse de baja.
+**Historial (CU-15):** sustituye a la antigua lista de adopciones cerradas (las cerradas ya no tienen tarjeta). Es un desplegable plegado al entrar: plegado solo se ve el título y no se pide nada; al plegarlo se esconde todo y, al desplegarlo otra vez, vuelve al principio (los 10 últimos, de todos los animales), aunque antes se hubiera pulsado [Ver más] o filtrado. Lista de sucesos (DESIGN_SYSTEM §8.9) del último año, de 10 en 10 con [Ver más] (contorno). El filtro «Animal» (`FilterSelect`) solo aparece con más de un animal. Sin sucesos: «Todavía no hay nada en tu historial.» Se vuelve a pedir tras pagar, cambiar de plan o de forma de pago y darse de baja.
 
 **Móvil:** cada adopción es una tarjeta con la foto 4:3 arriba y los datos debajo. Las acciones secundarias van en el menú «⋯» (Forma de pago, Descargar certificado, Darme de baja); los botones van a todo el ancho.
 
