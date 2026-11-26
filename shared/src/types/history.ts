@@ -4,15 +4,12 @@ import type { PageMeta } from './api.js';
 // Historial de «Mis animales» (CU-15, TECH_SPEC §10.4).
 
 export interface HistoryEventDto {
-  /** Único en el historial («payment-12-completed»), para las listas de React. */
+  /** Único en el historial («event-12»), para las listas de React. */
   id: string;
   type: HistoryEventType;
   /** Día del suceso en el santuario, `YYYY-MM-DD`. */
   date: string;
   animal: { id: number; name: string };
-  /** Pagos: importe y primer día del mes cubierto. */
-  amount: string | null;
-  periodStart: string | null;
   /** `adopted`: plan elegido; cambios de plan: el nuevo (el que se mantiene, si se anula). */
   planName: string | null;
   /** Cambios de plan: el de antes. */
