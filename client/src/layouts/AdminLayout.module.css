@@ -61,6 +61,18 @@
 
 .sidebar[data-open='true'] {
   display: block;
+  /*
+   * En pantalla estrecha el menú abierto queda fijo bajo la barra superior al
+   * bajar por la página; si no cabe, se desplaza por dentro sin mover la página.
+   */
+  position: fixed;
+  top: var(--size-header);
+  right: 0;
+  left: 0;
+  z-index: 9;
+  max-height: calc(100dvh - var(--size-header));
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .brand {
