@@ -1,6 +1,6 @@
-import { faExpand, faFeather, faHandHoldingHeart, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faExpand, faFeather, faHandHoldingHeart, faPen, faUsers } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { AdoptionPlanDto, PublicAnimalDto } from '@sanctuary/shared';
+import { isWorkerRole, type AdoptionPlanDto, type PublicAnimalDto } from '@sanctuary/shared';
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
@@ -120,15 +120,7 @@ export function AnimalProfile({ animal, breadcrumb, notice, aside, extra, news }
 
   return (
     <article className="container">
-      <nav aria-label={t('animalPage.breadcrumb')} className={styles.breadcrumb}>
-        <ol>
-          <li>
-            <Link to={breadcrumb.to}>{breadcrumb.label}</Link>
-          </li>
-          <li aria-hidden="true">›</li>
-          <li aria-current="page">{animal.name}</li>
-        </ol>
-      </nav>
+      <MigasDePan to={breadcrumb.to} label={breadcrumb.label} animal={animal} />
 
       {notice && <div className={styles.notice}>{notice}</div>}
 
@@ -191,6 +183,47 @@ export function AnimalProfile({ animal, breadcrumb, notice, aside, extra, news }
 
       {news}
     </article>
+  );
+}
+
+/** ¿La sesión es de un trabajador (cuidador o administrador)? Solo oculta o muestra interfaz. */
+function useEsPersonal(): boolean {
+  const { user } = useSession();
+  return user !== null && user !== undefined && isWorkerRole(user.role);
+}
+
+/**
+ * Migas de pan de la ficha; al personal le añade «Ver en el panel», que abre la
+ * ficha del mismo animal en el panel (SCREENS §3.3). También la usa «En memoria» (CU-12).
+ */
+export function MigasDePan({
+  to,
+  label,
+  animal,
+}: {
+  to: string;
+  label: string;
+  animal: Pick<PublicAnimalDto, 'id' | 'name'>;
+}) {
+  const { t } = useTranslation();
+  const esPersonal = useEsPersonal();
+  return (
+    <div className={styles.breadcrumbRow}>
+      <nav aria-label={t('animalPage.breadcrumb')} className={styles.breadcrumb}>
+        <ol>
+          <li>
+            <Link to={to}>{label}</Link>
+          </li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">{animal.name}</li>
+        </ol>
+      </nav>
+      {esPersonal && (
+        <ButtonLink to={`/admin/animals/${animal.id}`} variant="outline" icon={faPen}>
+          {t('animalPage.openInPanel')}
+        </ButtonLink>
+      )}
+    </div>
   );
 }
 
@@ -282,7 +315,9 @@ function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
   const desde = planMasBarato(planes.data);
   const tarjeta = useRef<HTMLDivElement>(null);
   const yaAdopta = user?.role === 'adopter' && animal.exclusiveAccess;
-  const barraFija = useYaPasada(tarjeta, animal.isAdoptable && !yaAdopta);
+  // El personal ve la tarjeta tal como la verá el público, pero sin poder adoptar.
+  const esPersonal = useEsPersonal();
+  const barraFija = useYaPasada(tarjeta, animal.isAdoptable && !yaAdopta && !esPersonal);
 
   // Variante «Ya adoptas a Rufo» (SCREENS §3.3): el servidor indica si tiene acceso.
   if (yaAdopta) {
@@ -305,9 +340,20 @@ function TarjetaAdoptar({ animal }: { animal: PublicAnimalDto }) {
           {desde && (
             <p className={styles.from}>{t('animalPage.fromAmount', { amount: formatCurrency(desde.monthlyAmount) })}</p>
           )}
-          <ButtonLink to={`/adopt/${animal.id}`} icon={faHandHoldingHeart} block>
-            {t('animalPage.adopt', { name: animal.name })}
-          </ButtonLink>
+          {esPersonal ? (
+            <>
+              <Button icon={faHandHoldingHeart} block disabled aria-describedby="adoptar-personal">
+                {t('animalPage.adopt', { name: animal.name })}
+              </Button>
+              <p id="adoptar-personal" className={styles.muted}>
+                {t('animalPage.staffCannotAdopt')}
+              </p>
+            </>
+          ) : (
+            <ButtonLink to={`/adopt/${animal.id}`} icon={faHandHoldingHeart} block>
+              {t('animalPage.adopt', { name: animal.name })}
+            </ButtonLink>
+          )}
         </>
       ) : (
         <p className={styles.notAdoptable}>{t('animalPage.notAdoptable')}</p>

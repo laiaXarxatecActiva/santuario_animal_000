@@ -7,7 +7,7 @@ import { UpdateCard } from '../../components/UpdateCard';
 import { useMemorial } from '../../hooks/usePublicData';
 import { formatDate } from '../../utils/format';
 import { parseId } from '../../utils/routeParams';
-import { Galeria } from './AnimalPage';
+import { Galeria, MigasDePan } from './AnimalPage';
 import styles from './AnimalPage.module.css';
 
 // CU-12 paso 3: ficha de solo lectura, sin botón de adoptar y con sus
@@ -35,15 +35,7 @@ export function MemorialAnimalPage() {
   const sep = t('common.listSeparator');
   return (
     <article className="container">
-      <nav aria-label={t('animalPage.breadcrumb')} className={styles.breadcrumb}>
-        <ol>
-          <li>
-            <Link to="/memorial">{t('memorial.title')}</Link>
-          </li>
-          <li aria-hidden="true">›</li>
-          <li aria-current="page">{animal.name}</li>
-        </ol>
-      </nav>
+      <MigasDePan to="/memorial" label={t('memorial.title')} animal={animal} />
 
       <div className={styles.top}>
         <Galeria animal={animal} />
