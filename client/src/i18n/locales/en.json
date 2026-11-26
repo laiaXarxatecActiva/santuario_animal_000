@@ -157,7 +157,9 @@
     "showPhotoExclusive": "Show photo {{n}} of {{total}} (adopters only)",
     "alreadyAdopting": "You already adopt {{name}}",
     "seeFullProfile": "See their full profile",
-    "enlargePhoto": "Show photo {{n}} of {{total}} full size"
+    "enlargePhoto": "Show photo {{n}} of {{total}} full size",
+    "openInPanel": "View in the panel",
+    "staffCannotAdopt": "Staff accounts cannot adopt."
   },
   "howItWorks": {
     "title": "How symbolic adoption works",
@@ -245,7 +247,7 @@
     "FAREWELL_MESSAGE_REQUIRED": "Write the message for the adopters.",
     "INVALID_PASSWORD": "The password is not correct.",
     "CANNOT_DEACTIVATE_SELF": "You cannot deactivate your own account.",
-    "ANONYMIZED_CANNOT_REACTIVATE": "This account was deleted at its holder's request and cannot be reactivated.",
+    "ANONYMIZED_CANNOT_REACTIVATE": "This account no longer has personal data and can't be reactivated.",
     "ROLE_CHANGE_NOT_ALLOWED": "The role can only change between caretaker and administrator.",
     "LAST_ACTIVE_ADMIN": "This is the last active administrator: appoint another administrator first.",
     "INVITATION_NOT_PENDING": "This account has no pending invitation.",
@@ -281,7 +283,11 @@
     "VET_VISIT_NEEDS_RECORD": "Record the visit with the vet history form.",
     "INCIDENT_SAME_STATUS": "The incident already has that status.",
     "INCIDENT_HAS_TASK": "This incident already has a task.",
-    "INCIDENT_RESOLVED": "This incident is already resolved."
+    "INCIDENT_RESOLVED": "This incident is already resolved.",
+    "CANNOT_DELETE_SELF": "You can't delete your own account or erase its personal data.",
+    "ALREADY_ANONYMIZED": "This account no longer has personal data.",
+    "ACCOUNT_HAS_DATA": "This account has linked data. Erase only its personal data or confirm that you also want to delete everything else.",
+    "DEFAULT_PLAN_NOT_UNIQUE": "There can only be one default plan."
   },
   "form": {
     "showPassword": "Show password",
@@ -382,11 +388,10 @@
     "errorLoading": "We could not load the adoption details"
   },
   "payment": {
-    "title": "Simulated payment",
+    "title": "Card payment",
     "concept": "Concept",
     "conceptValue": "Adoption of {{name}} · {{plan}} plan",
     "amount": "Amount",
-    "notice": "Simulated payment: no real charge will be made.",
     "succeed": "Simulate a successful payment",
     "fail": "Simulate a failed payment",
     "processing": "Processing the payment…",
@@ -418,7 +423,6 @@
     "endReason": {
       "user_cancelled": "You cancelled it.",
       "payment_not_completed": "The payment was not completed in time.",
-      "payment_failed": "The pending fee could not be settled.",
       "animal_deceased": "{{name}} has left us.",
       "animal_transferred": "{{name}} has moved to another centre.",
       "admin_cancelled": "The sanctuary closed it.",
@@ -449,12 +453,9 @@
     "error": "We couldn't load your history",
     "loadMore": "Show more",
     "olderNote": "Only the last year is shown.",
-    "olderLink": "Your earlier payments are in “My contributions”.",
+    "olderLink": "Your payments are in “My contributions”.",
     "events": {
       "adopted": "You started adopting {{name}} on the {{plan}} plan.",
-      "payment_completed": "{{name}}'s fee paid: {{amount}} (from {{date}}).",
-      "payment_failed": "We couldn't charge {{name}}'s fee: {{amount}} (from {{date}}).",
-      "payment_refunded": "We refunded {{name}}'s fee: {{amount}} (from {{date}}).",
       "cancel_requested": "You asked to end {{name}}'s adoption.",
       "ended_cancelled": "{{name}}'s adoption was cancelled.",
       "ended_finished": "{{name}}'s adoption ended.",
@@ -525,13 +526,10 @@
     "paidAt": "Payment date",
     "method": "Payment method",
     "methods": {
-      "simulated": "Simulated payment",
-      "cash": "Cash",
-      "bank_transfer": "Bank transfer",
-      "card": "Card"
+      "card": "Card",
+      "bank_transfer": "Bank transfer"
     },
-    "refundedOn": "Refunded on {{date}}",
-    "simulated": "Simulated payment: no real charge has been made."
+    "refundedOn": "Refunded on {{date}}"
   },
   "adoptedAnimal": {
     "yourAdoption": "Your adoption",
@@ -687,8 +685,8 @@
       "actions": "Actions",
       "results_one": "{{count}} result",
       "results_other": "{{count}} results",
-      "search": "Search",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "byTransfer": "Payment method: bank transfer."
     },
     "animalStatus": {
       "in_sanctuary": "At the sanctuary",
@@ -874,12 +872,21 @@
       "isActive": "Active",
       "activeAdoptions_one": "{{count}} active adoption",
       "activeAdoptions_other": "{{count}} active adoptions",
-      "amountChangeWarning_one": "The new amount will be charged to this plan's active adoption from its next fee.",
-      "amountChangeWarning_other": "The new amount will be charged to this plan's {{count}} active adoptions from their next fee.",
       "confirmAndSave": "Confirm and save",
-      "saved": "Plan saved",
       "created": "Plan created",
-      "loadError": "We could not load the plans"
+      "loadError": "We could not load the plans",
+      "saveAll": "Save changes",
+      "discard": "Discard changes",
+      "savedAll": "Plans saved",
+      "defaultRequired": "There must always be a default plan: mark another plan as the default plan.",
+      "defaultMustBeActive": "The default plan must be active: first mark another plan as the default plan.",
+      "activatedAsDefault": "It has been activated because the default plan must be active.",
+      "amountChangePlan_one": "{{name}}: the new amount will be charged to this plan's active adoption from its next fee.",
+      "amountChangePlan_other": "{{name}}: the new amount will be charged to this plan's {{count}} active adoptions from their next fee.",
+      "unsavedTitle": "You have unsaved changes",
+      "unsavedText": "If you leave now, the changes to the plans will be lost.",
+      "unsavedStay": "Keep editing",
+      "unsavedLeave": "Leave without saving"
     },
     "users": {
       "title": "Users",
@@ -904,7 +911,7 @@
       "statuses": {
         "active": "Active",
         "inactive": "Inactive",
-        "anonymized": "Anonymised"
+        "anonymized": "No personal data"
       },
       "empty": "No users match these filters",
       "loadError": "We could not load the users",
@@ -948,7 +955,31 @@
       "feeFor": "{{name}}'s fee",
       "create": "Create account",
       "created": "Account created. We have sent an invitation to {{email}}",
-      "invitationHelp": "We will send them an email with a link to choose their password. The link expires in 24 hours."
+      "invitationHelp": "We will send them an email with a link to choose their password. The link expires in 24 hours.",
+      "deleteAccount": "Delete account",
+      "confirmDelete": "Delete {{name}}'s account?",
+      "deleteExplain": "The account will be deleted for good. This can't be undone.",
+      "deleteHasData": "This account has linked data:",
+      "deleteForceWarning": "If you delete it anyway, everything related to this person will also be deleted and can't be recovered. What belongs to the sanctuary (vet records, templates, diets…) is kept without their name. If their payments and donations must be kept, use «Erase personal data» instead.",
+      "deleteReason": "Reason (optional; kept in the activity log)",
+      "deleteConfirm": "Delete account",
+      "deleteForce": "Delete anyway",
+      "deleted": "{{name}}'s account has been deleted",
+      "linkedData": {
+        "adoptions": "Adoptions: {{count}}",
+        "payments": "Payments: {{count}}",
+        "donations": "Donations: {{count}}",
+        "incidents": "Reported incidents: {{count}}",
+        "handoverNotes": "Handover notes: {{count}}",
+        "animalUpdates": "Animal updates: {{count}}",
+        "tasks": "Tasks: {{count}}",
+        "activityLogs": "Activity log entries: {{count}}"
+      },
+      "anonymizeAccount": "Erase personal data",
+      "confirmAnonymize": "Erase {{name}}'s personal data?",
+      "anonymizeExplain": "Their personal data (name, email and phone) will be deleted, their adoptions and sessions will be closed and they won't be able to log in again. The amounts of their payments and donations are kept. This can't be undone.",
+      "anonymizeConfirm": "Erase personal data",
+      "anonymized": "Their personal data has been erased"
     },
     "adoptions": {
       "title": "Adoptions",
@@ -988,10 +1019,8 @@
       "method": "Payment method",
       "recordedBy": "Recorded by",
       "methods": {
-        "simulated": "Simulated payment",
-        "cash": "Cash",
-        "bank_transfer": "Bank transfer",
-        "card": "Card"
+        "card": "Card",
+        "bank_transfer": "Bank transfer"
       },
       "notes": "Internal notes",
       "noNotes": "No notes.",
@@ -1016,16 +1045,15 @@
         "cancel": "Adoption cancelled"
       },
       "searchAdopter": "Search for an adopter by name or email",
-      "searchAdopterButton": "Search adopter",
       "noAdopters": "No active adopters match that search.",
       "planOption": "{{name}} ({{amount}}/month)",
-      "firstPayment": "First payment method",
       "newHelp": "The adoption becomes active straight away, with the first payment recorded as collected. We will notify the adopter.",
       "create": "Create adoption",
       "created": "Adoption created. We have notified the adopter.",
       "errors": {
         "ADOPTION_ALREADY_OPEN": "This person already has an ongoing adoption of this animal."
-      }
+      },
+      "firstPaymentTransfer": "First payment: by bank transfer."
     },
     "payments": {
       "title": "Payments",
@@ -1042,7 +1070,7 @@
       "confirmRefund": "Refund this payment?",
       "refundSummary": "{{amount}} will be refunded to {{name}} ({{animal}}'s fee). We will notify them by email and on the website.",
       "refundOnline": "It was paid on the website: the refund goes back the same way.",
-      "refundManual": "It was paid in cash or by bank transfer: the money is returned by hand; it is only recorded here.",
+      "refundManual": "It was paid by bank transfer: the money is returned by hand with another transfer; it is only recorded here.",
       "refundKeepsAdoption": "The adoption does not change. If it needs closing, cancel it from its page.",
       "refunded": "Payment refunded. We have notified the adopter.",
       "register": "Record payment",
@@ -1086,7 +1114,7 @@
       "confirmRefund": "Refund this donation?",
       "refundSummary": "{{amount}} will be refunded to {{name}}.",
       "refundOnline": "It was made on the website: the refund goes back the same way.",
-      "refundManual": "It was paid in cash or by bank transfer: the money is returned by hand; it is only recorded here.",
+      "refundManual": "It was paid by bank transfer: the money is returned by hand with another transfer; it is only recorded here.",
       "noticeBoth": "We will notify them by email and on the website.",
       "noticeEmail": "We will notify them by email.",
       "noticeWeb": "We will notify them on the website.",
@@ -1236,7 +1264,7 @@
         "shiftTemplates": "The shifts worked (morning, afternoon…), their hours and how many people each zone needs.",
         "absences": "Holidays, sick leave and other absences. Recording one removes that person’s shifts on those days.",
         "alertSettings": "Choose which staff alerts also arrive by email and whether a daily summary is sent.",
-        "users": "Adopter and staff accounts. New workers are invited from here.",
+        "users": "All accounts: adopters and staff. Search for someone by name or email and open their record to see their adoptions and payments, deactivate it, change their role, close their sessions, erase their personal data or delete it. New workers are also added from here.",
         "adoptions": "All adoptions, with their payments and notes. You can pause, resume or create them manually.",
         "payments": "Fee payments. You can filter them, export them and refund a payment.",
         "donations": "Donations received, as a list or by month. You can record one manually or refund it.",
@@ -1435,6 +1463,7 @@
     "assignedTo": "Assigned to {{name}}",
     "requires": "Requires: {{name}}",
     "photo": "Photo",
+    "photos": "Photos",
     "blocked": {
       "MISSING_QUALIFICATION": "You need the “{{name}}” qualification.",
       "FUTURE_DAY": "It can be marked on that day."
@@ -1490,7 +1519,7 @@
       "all": "All",
       "allStatuses": "All",
       "task": "Task",
-      "assignee": "Assigned to",
+      "assignee": "Responsible",
       "result": "Result",
       "reassign": "Reassign {{title}}",
       "reassignTitle": "Reassign: {{title}}",
@@ -1800,6 +1829,7 @@
       "category": "Type",
       "severity": "Severity",
       "zone": "Zone",
+      "noZone": "No zone",
       "animal": "Animal",
       "noAnimal": "None",
       "description": "What is happening",
@@ -1844,14 +1874,14 @@
       "createTask": "Create task",
       "taskTitle": "Task for incident no. {{id}}",
       "taskCreated": "Task created",
-      "task": "Task",
-      "taskLink": "Task no. {{id}}",
+      "tasks": "Tasks",
       "resolution": "Resolution",
       "resolvedBy": "{{name}}, on {{date}}",
-      "photoAlt": "Photo of the incident",
+      "photoAlt": "Incident photo {{n}}",
       "resolve": "Resolve",
       "reopen": "Reopen",
       "resolveTitle": "Resolve the incident",
+      "pendingTaskWillClose": "Its pending task “{{title}}” will be closed: it is no longer needed.",
       "resolveSubmit": "Mark as resolved",
       "resolveNote": "How was it resolved?",
       "resolvedOk": "Incident resolved",
@@ -1948,14 +1978,17 @@
     }
   },
   "photoPicker": {
-    "dropHere": "Drag a photo here or",
-    "choose": "Choose photo",
-    "change": "Change photo",
-    "remove": "Remove photo",
-    "help": "JPG, PNG or WebP up to 5 MB.",
+    "dropHere": "Drag the photos here or",
+    "choose": "Choose photos",
+    "remove": "Remove",
+    "help": "Up to {{count}} JPG, PNG or WebP photos of up to 5 MB each.",
     "wrongType": "Choose a JPG, PNG or WebP photo.",
     "tooBig": "The photo is larger than 5 MB.",
     "kb": "{{size}} KB",
-    "mb": "{{size}} MB"
+    "mb": "{{size}} MB",
+    "add": "Add photos",
+    "removeOne": "Remove {{name}}",
+    "chosen": "Chosen photos",
+    "tooMany": "At most {{count}} photos."
   }
 }

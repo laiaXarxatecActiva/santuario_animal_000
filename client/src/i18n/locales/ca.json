@@ -157,7 +157,9 @@
     "showPhotoExclusive": "Mostra la foto {{n}} de {{total}} (només adoptants)",
     "alreadyAdopting": "Ja adoptes {{name}}",
     "seeFullProfile": "Mostra la seua fitxa completa",
-    "enlargePhoto": "Mostra la foto {{n}} de {{total}} en gran"
+    "enlargePhoto": "Mostra la foto {{n}} de {{total}} en gran",
+    "openInPanel": "Veure al tauler",
+    "staffCannotAdopt": "Els comptes del personal no poden adoptar."
   },
   "howItWorks": {
     "title": "Com funciona l'adopció simbòlica",
@@ -245,7 +247,7 @@
     "FAREWELL_MESSAGE_REQUIRED": "Escriu el missatge per als adoptants.",
     "INVALID_PASSWORD": "La contrasenya no és correcta.",
     "CANNOT_DEACTIVATE_SELF": "No pots desactivar el teu propi compte.",
-    "ANONYMIZED_CANNOT_REACTIVATE": "Este compte es va eliminar a petició del seu titular i no es pot reactivar.",
+    "ANONYMIZED_CANNOT_REACTIVATE": "Aquest compte ja no té dades personals i no es pot reactivar.",
     "ROLE_CHANGE_NOT_ALLOWED": "El rol només es pot canviar entre cuidador i administrador.",
     "LAST_ACTIVE_ADMIN": "És l'últim administrador actiu: nomena abans un altre administrador.",
     "INVITATION_NOT_PENDING": "Este compte no té cap invitació pendent.",
@@ -281,7 +283,11 @@
     "VET_VISIT_NEEDS_RECORD": "Registra la visita amb el formulari de l'historial veterinari.",
     "INCIDENT_SAME_STATUS": "La incidència ja està en eixe estat.",
     "INCIDENT_HAS_TASK": "Esta incidència ja té una tasca.",
-    "INCIDENT_RESOLVED": "Esta incidència ja està resolta."
+    "INCIDENT_RESOLVED": "Esta incidència ja està resolta.",
+    "CANNOT_DELETE_SELF": "No pots eliminar el teu propi compte ni esborrar-ne les dades personals.",
+    "ALREADY_ANONYMIZED": "Aquest compte ja no té dades personals.",
+    "ACCOUNT_HAS_DATA": "Aquest compte té dades enllaçades. Esborra només les seues dades personals o confirma que vols esborrar també tota la resta.",
+    "DEFAULT_PLAN_NOT_UNIQUE": "Només hi pot haver un pla per defecte."
   },
   "form": {
     "showPassword": "Mostra la contrasenya",
@@ -382,11 +388,10 @@
     "errorLoading": "No hem pogut carregar les dades de l'adopció"
   },
   "payment": {
-    "title": "Pagament simulat",
+    "title": "Pagament amb targeta",
     "concept": "Concepte",
     "conceptValue": "Adopció de {{name}} · Pla {{plan}}",
     "amount": "Import",
-    "notice": "Pagament simulat: no es farà cap càrrec real.",
     "succeed": "Simula un pagament correcte",
     "fail": "Simula un pagament fallit",
     "processing": "Processant el pagament…",
@@ -418,7 +423,6 @@
     "endReason": {
       "user_cancelled": "Et vas donar de baixa.",
       "payment_not_completed": "El pagament no es va completar a temps.",
-      "payment_failed": "No es va poder regularitzar la quota pendent.",
       "animal_deceased": "{{name}} ens ha deixat.",
       "animal_transferred": "{{name}} s'ha traslladat a un altre centre.",
       "admin_cancelled": "La va tancar el santuari.",
@@ -449,12 +453,9 @@
     "error": "No hem pogut carregar l'historial",
     "loadMore": "Veure'n més",
     "olderNote": "Només es mostra l'últim any.",
-    "olderLink": "Els teus pagaments anteriors són a «Les meues aportacions».",
+    "olderLink": "Els teus pagaments són a «Les meues aportacions».",
     "events": {
       "adopted": "Vas començar a adoptar {{name}} amb el pla {{plan}}.",
-      "payment_completed": "Quota de {{name}} pagada: {{amount}} (des del {{date}}).",
-      "payment_failed": "No s'ha pogut cobrar la quota de {{name}}: {{amount}} (des del {{date}}).",
-      "payment_refunded": "Et vam tornar la quota de {{name}}: {{amount}} (des del {{date}}).",
       "cancel_requested": "Vas demanar la baixa de l'adopció de {{name}}.",
       "ended_cancelled": "Es va cancel·lar l'adopció de {{name}}.",
       "ended_finished": "Va acabar l'adopció de {{name}}.",
@@ -525,13 +526,10 @@
     "paidAt": "Data del pagament",
     "method": "Forma de pagament",
     "methods": {
-      "simulated": "Pagament simulat",
-      "cash": "Efectiu",
-      "bank_transfer": "Transferència",
-      "card": "Targeta"
+      "card": "Targeta",
+      "bank_transfer": "Transferència"
     },
-    "refundedOn": "Retornat el {{date}}",
-    "simulated": "Pagament simulat: no s'ha fet cap càrrec real."
+    "refundedOn": "Retornat el {{date}}"
   },
   "adoptedAnimal": {
     "yourAdoption": "La teua adopció",
@@ -687,8 +685,8 @@
       "actions": "Accions",
       "results_one": "{{count}} resultat",
       "results_other": "{{count}} resultats",
-      "search": "Busca",
-      "clearFilters": "Neteja els filtres"
+      "clearFilters": "Neteja els filtres",
+      "byTransfer": "Forma de pagament: transferència."
     },
     "animalStatus": {
       "in_sanctuary": "Al santuari",
@@ -874,12 +872,21 @@
       "isActive": "Actiu",
       "activeAdoptions_one": "{{count}} adopció activa",
       "activeAdoptions_other": "{{count}} adopcions actives",
-      "amountChangeWarning_one": "El nou import es cobrarà a l'adopció activa d'este pla a partir de la seua quota següent.",
-      "amountChangeWarning_other": "El nou import es cobrarà a les {{count}} adopcions actives d'este pla a partir de la seua quota següent.",
       "confirmAndSave": "Confirma i guarda",
-      "saved": "Pla guardat",
       "created": "Pla creat",
-      "loadError": "No hem pogut carregar els plans"
+      "loadError": "No hem pogut carregar els plans",
+      "saveAll": "Desar els canvis",
+      "discard": "Descartar els canvis",
+      "savedAll": "Plans desats",
+      "defaultRequired": "Sempre hi ha d'haver un pla per defecte: marca un altre pla com a pla per defecte.",
+      "defaultMustBeActive": "El pla per defecte ha d'estar actiu: marca abans un altre pla com a pla per defecte.",
+      "activatedAsDefault": "S'ha activat perquè el pla per defecte ha d'estar actiu.",
+      "amountChangePlan_one": "{{name}}: el nou import es cobrarà a l'adopció activa d'aquest pla a partir de la seua quota següent.",
+      "amountChangePlan_other": "{{name}}: el nou import es cobrarà a les {{count}} adopcions actives d'aquest pla a partir de la seua quota següent.",
+      "unsavedTitle": "Tens canvis sense desar",
+      "unsavedText": "Si ixes ara, es perdran els canvis dels plans.",
+      "unsavedStay": "Continuar editant",
+      "unsavedLeave": "Eixir sense desar"
     },
     "users": {
       "title": "Usuaris",
@@ -904,7 +911,7 @@
       "statuses": {
         "active": "Activa",
         "inactive": "Inactiva",
-        "anonymized": "Anonimitzada"
+        "anonymized": "Sense dades personals"
       },
       "empty": "No hi ha usuaris amb estos filtres",
       "loadError": "No hem pogut carregar els usuaris",
@@ -948,7 +955,31 @@
       "feeFor": "Quota de {{name}}",
       "create": "Crea el compte",
       "created": "Compte creat. Hem enviat una invitació a {{email}}",
-      "invitationHelp": "Li enviarem un correu amb un enllaç per a triar la seua contrasenya. L'enllaç caduca en 24 hores."
+      "invitationHelp": "Li enviarem un correu amb un enllaç per a triar la seua contrasenya. L'enllaç caduca en 24 hores.",
+      "deleteAccount": "Eliminar compte",
+      "confirmDelete": "Vols eliminar el compte de {{name}}?",
+      "deleteExplain": "S'esborrarà el compte per sempre. No es pot desfer.",
+      "deleteHasData": "Aquest compte té dades enllaçades:",
+      "deleteForceWarning": "Si l'esborres igualment, s'esborrarà també tot el que està relacionat amb aquesta persona i no es podrà recuperar. El que és del santuari (historial veterinari, plantilles, dietes…) es conserva sense el seu nom. Si cal conservar els seus pagaments i donacions, fes servir «Esborrar dades personals».",
+      "deleteReason": "Motiu (opcional; queda en el registre d'activitat)",
+      "deleteConfirm": "Eliminar compte",
+      "deleteForce": "Esborrar igualment",
+      "deleted": "S'ha eliminat el compte de {{name}}",
+      "linkedData": {
+        "adoptions": "Adopcions: {{count}}",
+        "payments": "Pagaments: {{count}}",
+        "donations": "Donacions: {{count}}",
+        "incidents": "Incidències comunicades: {{count}}",
+        "handoverNotes": "Notes de relleu: {{count}}",
+        "animalUpdates": "Actualitzacions d'animals: {{count}}",
+        "tasks": "Tasques: {{count}}",
+        "activityLogs": "Entrades del registre d'activitat: {{count}}"
+      },
+      "anonymizeAccount": "Esborrar dades personals",
+      "confirmAnonymize": "Vols esborrar les dades personals de {{name}}?",
+      "anonymizeExplain": "S'esborraran les seues dades personals (nom, email i telèfon), es tancaran les seues adopcions i sessions i no podrà tornar a entrar. Es conserven els imports dels seus pagaments i donacions. No es pot desfer.",
+      "anonymizeConfirm": "Esborrar dades personals",
+      "anonymized": "S'han esborrat les seues dades personals"
     },
     "adoptions": {
       "title": "Adopcions",
@@ -988,10 +1019,8 @@
       "method": "Forma de pagament",
       "recordedBy": "Registrat per",
       "methods": {
-        "simulated": "Pagament simulat",
-        "cash": "Efectiu",
-        "bank_transfer": "Transferència",
-        "card": "Targeta"
+        "card": "Targeta",
+        "bank_transfer": "Transferència"
       },
       "notes": "Notes internes",
       "noNotes": "Sense notes.",
@@ -1016,16 +1045,15 @@
         "cancel": "Adopció cancel·lada"
       },
       "searchAdopter": "Busca l'adoptant pel nom o el correu",
-      "searchAdopterButton": "Busca l'adoptant",
       "noAdopters": "No hi ha adoptants actius amb esta cerca.",
       "planOption": "{{name}} ({{amount}}/mes)",
-      "firstPayment": "Forma del primer pagament",
       "newHelp": "L'adopció queda activa de seguida, amb el primer pagament anotat com a cobrat. Avisarem l'adoptant.",
       "create": "Crea l'adopció",
       "created": "Adopció creada. Hem avisat l'adoptant.",
       "errors": {
         "ADOPTION_ALREADY_OPEN": "Esta persona ja té una adopció en curs d'este animal."
-      }
+      },
+      "firstPaymentTransfer": "Primer pagament: per transferència."
     },
     "payments": {
       "title": "Pagaments",
@@ -1042,7 +1070,7 @@
       "confirmRefund": "Vols retornar este pagament?",
       "refundSummary": "Es retornaran {{amount}} a {{name}} (quota de {{animal}}). L'avisarem per correu i a la web.",
       "refundOnline": "Es va pagar a la web: la devolució es fa pel mateix mitjà.",
-      "refundManual": "Es va pagar en efectiu o per transferència: els diners es retornen a mà; ací només queda anotat.",
+      "refundManual": "Es va pagar per transferència: els diners es retornen a mà amb una altra transferència; ací només queda anotat.",
       "refundKeepsAdoption": "L'adopció no canvia. Si cal tancar-la, cancel·la-la des de la seua fitxa.",
       "refunded": "Pagament retornat. Hem avisat l'adoptant.",
       "register": "Registra un pagament",
@@ -1086,7 +1114,7 @@
       "confirmRefund": "Vols retornar esta donació?",
       "refundSummary": "Es retornaran {{amount}} a {{name}}.",
       "refundOnline": "Es va fer a la web: la devolució es fa pel mateix mitjà.",
-      "refundManual": "Es va pagar en efectiu o per transferència: els diners es retornen a mà; ací només queda anotat.",
+      "refundManual": "Es va pagar per transferència: els diners es retornen a mà amb una altra transferència; ací només queda anotat.",
       "noticeBoth": "L'avisarem per correu i a la web.",
       "noticeEmail": "L'avisarem per correu.",
       "noticeWeb": "L'avisarem a la web.",
@@ -1236,7 +1264,7 @@
         "shiftTemplates": "Els torns que es fan (matí, vesprada…), el seu horari i quantes persones necessita cada zona.",
         "absences": "Vacances, baixes i altres absències. En registrar-ne una, es lleven els torns d’eixa persona en eixos dies.",
         "alertSettings": "Tria quins avisos del personal arriben també per correu i si s’envia un resum del dia.",
-        "users": "Els comptes d’adoptants i del personal. Des d’ací es convida treballadors nous.",
+        "users": "Tots els comptes: adoptants i personal. Busca algú pel nom o l'email i obri la seua fitxa per a veure'n les adopcions i els pagaments, desactivar-lo, canviar-ne el rol, tancar-ne les sessions, esborrar-ne les dades personals o eliminar-lo. Des d'ací també es dona d'alta un treballador nou.",
         "adoptions": "Totes les adopcions, amb els pagaments i les notes. Pots pausar-les, reprendre-les o donar-les d’alta a mà.",
         "payments": "Els cobraments de les quotes. Pots filtrar-los, exportar-los i tornar un pagament.",
         "donations": "Les donacions rebudes, per llista o per mesos. Pots registrar-ne una a mà o tornar-la.",
@@ -1435,6 +1463,7 @@
     "assignedTo": "Assignada a {{name}}",
     "requires": "Exigix: {{name}}",
     "photo": "Foto",
+    "photos": "Fotos",
     "blocked": {
       "MISSING_QUALIFICATION": "Necessites la qualificació «{{name}}».",
       "FUTURE_DAY": "Es podrà marcar eixe mateix dia."
@@ -1490,7 +1519,7 @@
       "all": "Totes",
       "allStatuses": "Tots",
       "task": "Tasca",
-      "assignee": "Assignada a",
+      "assignee": "Responsable",
       "result": "Resultat",
       "reassign": "Reassignar {{title}}",
       "reassignTitle": "Reassignar: {{title}}",
@@ -1800,6 +1829,7 @@
       "category": "Tipus",
       "severity": "Gravetat",
       "zone": "Zona",
+      "noZone": "Sense zona",
       "animal": "Animal",
       "noAnimal": "Cap",
       "description": "Què passa",
@@ -1844,14 +1874,14 @@
       "createTask": "Crear una tasca",
       "taskTitle": "Tasca de la incidència núm. {{id}}",
       "taskCreated": "Tasca creada",
-      "task": "Tasca",
-      "taskLink": "Tasca núm. {{id}}",
+      "tasks": "Tasques",
       "resolution": "Resolució",
       "resolvedBy": "{{name}}, el {{date}}",
-      "photoAlt": "Foto de la incidència",
+      "photoAlt": "Foto {{n}} de la incidència",
       "resolve": "Resoldre",
       "reopen": "Reobrir",
       "resolveTitle": "Resoldre la incidència",
+      "pendingTaskWillClose": "La seua tasca pendent «{{title}}» es tancarà: ja no caldrà.",
       "resolveSubmit": "Marcar com a resolta",
       "resolveNote": "Com s’ha resolt?",
       "resolvedOk": "Incidència resolta",
@@ -1948,14 +1978,17 @@
     }
   },
   "photoPicker": {
-    "dropHere": "Arrossega ací una foto o",
-    "choose": "Triar foto",
-    "change": "Canviar la foto",
-    "remove": "Llevar la foto",
-    "help": "JPG, PNG o WebP de fins a 5 MB.",
+    "dropHere": "Arrossega ací les fotos o",
+    "choose": "Tria fotos",
+    "remove": "Lleva",
+    "help": "Fins a {{count}} fotos JPG, PNG o WebP de fins a 5 MB cadascuna.",
     "wrongType": "Tria una foto JPG, PNG o WebP.",
     "tooBig": "La foto ocupa més de 5 MB.",
     "kb": "{{size}} KB",
-    "mb": "{{size}} MB"
+    "mb": "{{size}} MB",
+    "add": "Afig fotos",
+    "removeOne": "Lleva {{name}}",
+    "chosen": "Fotos triades",
+    "tooMany": "Com a màxim {{count}} fotos."
   }
 }

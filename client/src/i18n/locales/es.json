@@ -157,7 +157,9 @@
     "showPhotoExclusive": "Ver foto {{n}} de {{total}} (solo adoptantes)",
     "alreadyAdopting": "Ya adoptas a {{name}}",
     "seeFullProfile": "Ver su ficha completa",
-    "enlargePhoto": "Ver la foto {{n}} de {{total}} en grande"
+    "enlargePhoto": "Ver la foto {{n}} de {{total}} en grande",
+    "openInPanel": "Ver en el panel",
+    "staffCannotAdopt": "Las cuentas del personal no pueden adoptar."
   },
   "howItWorks": {
     "title": "Cómo funciona la adopción simbólica",
@@ -245,7 +247,7 @@
     "FAREWELL_MESSAGE_REQUIRED": "Escribe el mensaje para los adoptantes.",
     "INVALID_PASSWORD": "La contraseña no es correcta.",
     "CANNOT_DEACTIVATE_SELF": "No puedes desactivar tu propia cuenta.",
-    "ANONYMIZED_CANNOT_REACTIVATE": "Esta cuenta se eliminó a petición de su titular y no se puede reactivar.",
+    "ANONYMIZED_CANNOT_REACTIVATE": "Esta cuenta ya no tiene datos personales y no se puede reactivar.",
     "ROLE_CHANGE_NOT_ALLOWED": "El rol solo se puede cambiar entre cuidador y administrador.",
     "LAST_ACTIVE_ADMIN": "Es el último administrador activo: nombra antes a otro administrador.",
     "INVITATION_NOT_PENDING": "Esta cuenta no tiene ninguna invitación pendiente.",
@@ -281,7 +283,11 @@
     "VET_VISIT_NEEDS_RECORD": "Registra la visita con el formulario del historial veterinario.",
     "INCIDENT_SAME_STATUS": "La incidencia ya está en ese estado.",
     "INCIDENT_HAS_TASK": "Esta incidencia ya tiene una tarea.",
-    "INCIDENT_RESOLVED": "Esta incidencia ya está resuelta."
+    "INCIDENT_RESOLVED": "Esta incidencia ya está resuelta.",
+    "CANNOT_DELETE_SELF": "No puedes eliminar tu propia cuenta ni borrar sus datos personales.",
+    "ALREADY_ANONYMIZED": "Esta cuenta ya no tiene datos personales.",
+    "ACCOUNT_HAS_DATA": "Esta cuenta tiene datos enlazados. Borra solo sus datos personales o confirma que quieres borrar también todo lo demás.",
+    "DEFAULT_PLAN_NOT_UNIQUE": "Solo puede haber un plan por defecto."
   },
   "form": {
     "showPassword": "Mostrar contraseña",
@@ -382,11 +388,10 @@
     "errorLoading": "No hemos podido cargar los datos de la adopción"
   },
   "payment": {
-    "title": "Pago simulado",
+    "title": "Pago con tarjeta",
     "concept": "Concepto",
     "conceptValue": "Adopción de {{name}} · Plan {{plan}}",
     "amount": "Importe",
-    "notice": "Pago simulado: no se realizará ningún cargo real.",
     "succeed": "Simular pago correcto",
     "fail": "Simular pago fallido",
     "processing": "Procesando el pago…",
@@ -418,7 +423,6 @@
     "endReason": {
       "user_cancelled": "Te diste de baja.",
       "payment_not_completed": "El pago no se completó a tiempo.",
-      "payment_failed": "No se pudo regularizar la cuota pendiente.",
       "animal_deceased": "{{name}} nos ha dejado.",
       "animal_transferred": "{{name}} se ha trasladado a otro centro.",
       "admin_cancelled": "La cerró el santuario.",
@@ -449,12 +453,9 @@
     "error": "No hemos podido cargar el historial",
     "loadMore": "Ver más",
     "olderNote": "Solo se muestra el último año.",
-    "olderLink": "Tus pagos anteriores están en «Mis aportaciones».",
+    "olderLink": "Tus pagos están en «Mis aportaciones».",
     "events": {
       "adopted": "Empezaste a adoptar a {{name}} con el plan {{plan}}.",
-      "payment_completed": "Cuota de {{name}} pagada: {{amount}} (desde el {{date}}).",
-      "payment_failed": "No se pudo cobrar la cuota de {{name}}: {{amount}} (desde el {{date}}).",
-      "payment_refunded": "Te devolvimos la cuota de {{name}}: {{amount}} (desde el {{date}}).",
       "cancel_requested": "Pediste la baja de la adopción de {{name}}.",
       "ended_cancelled": "Se canceló la adopción de {{name}}.",
       "ended_finished": "Terminó la adopción de {{name}}.",
@@ -525,13 +526,10 @@
     "paidAt": "Fecha del pago",
     "method": "Forma de pago",
     "methods": {
-      "simulated": "Pago simulado",
-      "cash": "Efectivo",
-      "bank_transfer": "Transferencia",
-      "card": "Tarjeta"
+      "card": "Tarjeta",
+      "bank_transfer": "Transferencia"
     },
-    "refundedOn": "Devuelto el {{date}}",
-    "simulated": "Pago simulado: no se ha realizado ningún cargo real."
+    "refundedOn": "Devuelto el {{date}}"
   },
   "adoptedAnimal": {
     "yourAdoption": "Tu adopción",
@@ -687,8 +685,8 @@
       "actions": "Acciones",
       "results_one": "{{count}} resultado",
       "results_other": "{{count}} resultados",
-      "search": "Buscar",
-      "clearFilters": "Limpiar filtros"
+      "clearFilters": "Limpiar filtros",
+      "byTransfer": "Forma de pago: transferencia."
     },
     "animalStatus": {
       "in_sanctuary": "En el santuario",
@@ -874,12 +872,21 @@
       "isActive": "Activo",
       "activeAdoptions_one": "{{count}} adopción activa",
       "activeAdoptions_other": "{{count}} adopciones activas",
-      "amountChangeWarning_one": "El nuevo importe se cobrará a la adopción activa de este plan desde su siguiente cuota.",
-      "amountChangeWarning_other": "El nuevo importe se cobrará a las {{count}} adopciones activas de este plan desde su siguiente cuota.",
       "confirmAndSave": "Confirmar y guardar",
-      "saved": "Plan guardado",
       "created": "Plan creado",
-      "loadError": "No hemos podido cargar los planes"
+      "loadError": "No hemos podido cargar los planes",
+      "saveAll": "Guardar cambios",
+      "discard": "Descartar cambios",
+      "savedAll": "Planes guardados",
+      "defaultRequired": "Siempre tiene que haber un plan por defecto: marca otro plan como plan por defecto.",
+      "defaultMustBeActive": "El plan por defecto tiene que estar activo: marca antes otro plan como plan por defecto.",
+      "activatedAsDefault": "Se ha activado porque el plan por defecto tiene que estar activo.",
+      "amountChangePlan_one": "{{name}}: el nuevo importe se cobrará a la adopción activa de este plan desde su siguiente cuota.",
+      "amountChangePlan_other": "{{name}}: el nuevo importe se cobrará a las {{count}} adopciones activas de este plan desde su siguiente cuota.",
+      "unsavedTitle": "Tienes cambios sin guardar",
+      "unsavedText": "Si sales ahora, se perderán los cambios de los planes.",
+      "unsavedStay": "Seguir editando",
+      "unsavedLeave": "Salir sin guardar"
     },
     "users": {
       "title": "Usuarios",
@@ -904,7 +911,7 @@
       "statuses": {
         "active": "Activa",
         "inactive": "Inactiva",
-        "anonymized": "Anonimizada"
+        "anonymized": "Sin datos personales"
       },
       "empty": "No hay usuarios con estos filtros",
       "loadError": "No hemos podido cargar los usuarios",
@@ -948,7 +955,31 @@
       "feeFor": "Cuota de {{name}}",
       "create": "Crear cuenta",
       "created": "Cuenta creada. Hemos enviado una invitación a {{email}}",
-      "invitationHelp": "Le enviaremos un email con un enlace para elegir su contraseña. El enlace caduca en 24 horas."
+      "invitationHelp": "Le enviaremos un email con un enlace para elegir su contraseña. El enlace caduca en 24 horas.",
+      "deleteAccount": "Eliminar cuenta",
+      "confirmDelete": "¿Eliminar la cuenta de {{name}}?",
+      "deleteExplain": "Se borrará la cuenta para siempre. No se puede deshacer.",
+      "deleteHasData": "Esta cuenta tiene datos enlazados:",
+      "deleteForceWarning": "Si la borras de todos modos, se borrará también todo lo relacionado con esta persona y no se podrá recuperar. Lo que es del santuario (historial veterinario, plantillas, dietas…) se conserva sin su nombre. Si hay que conservar sus pagos y donaciones, usa «Borrar datos personales».",
+      "deleteReason": "Motivo (opcional; queda en el registro de actividad)",
+      "deleteConfirm": "Eliminar cuenta",
+      "deleteForce": "Borrar de todos modos",
+      "deleted": "Se ha eliminado la cuenta de {{name}}",
+      "linkedData": {
+        "adoptions": "Adopciones: {{count}}",
+        "payments": "Pagos: {{count}}",
+        "donations": "Donaciones: {{count}}",
+        "incidents": "Incidencias comunicadas: {{count}}",
+        "handoverNotes": "Notas de relevo: {{count}}",
+        "animalUpdates": "Actualizaciones de animales: {{count}}",
+        "tasks": "Tareas: {{count}}",
+        "activityLogs": "Entradas del registro de actividad: {{count}}"
+      },
+      "anonymizeAccount": "Borrar datos personales",
+      "confirmAnonymize": "¿Borrar los datos personales de {{name}}?",
+      "anonymizeExplain": "Se borrarán sus datos personales (nombre, email y teléfono), se cerrarán sus adopciones y sus sesiones y no podrá volver a entrar. Se conservan los importes de sus pagos y donaciones. No se puede deshacer.",
+      "anonymizeConfirm": "Borrar datos personales",
+      "anonymized": "Se han borrado sus datos personales"
     },
     "adoptions": {
       "title": "Adopciones",
@@ -988,10 +1019,8 @@
       "method": "Forma de pago",
       "recordedBy": "Registrado por",
       "methods": {
-        "simulated": "Pago simulado",
-        "cash": "Efectivo",
-        "bank_transfer": "Transferencia",
-        "card": "Tarjeta"
+        "card": "Tarjeta",
+        "bank_transfer": "Transferencia"
       },
       "notes": "Notas internas",
       "noNotes": "Sin notas.",
@@ -1016,16 +1045,15 @@
         "cancel": "Adopción cancelada"
       },
       "searchAdopter": "Buscar adoptante por nombre o email",
-      "searchAdopterButton": "Buscar adoptante",
       "noAdopters": "No hay adoptantes activos con esa búsqueda.",
       "planOption": "{{name}} ({{amount}}/mes)",
-      "firstPayment": "Forma del primer pago",
       "newHelp": "La adopción queda activa al momento, con el primer pago apuntado como cobrado. Avisaremos al adoptante.",
       "create": "Crear adopción",
       "created": "Adopción creada. Hemos avisado al adoptante.",
       "errors": {
         "ADOPTION_ALREADY_OPEN": "Esta persona ya tiene una adopción en curso de este animal."
-      }
+      },
+      "firstPaymentTransfer": "Primer pago: por transferencia."
     },
     "payments": {
       "title": "Pagos",
@@ -1042,7 +1070,7 @@
       "confirmRefund": "¿Devolver este pago?",
       "refundSummary": "Se devolverán {{amount}} a {{name}} (cuota de {{animal}}). Le avisaremos por email y en la web.",
       "refundOnline": "Se pagó en la web: la devolución se hace por el mismo medio.",
-      "refundManual": "Se pagó en efectivo o por transferencia: el dinero se devuelve a mano; aquí solo queda anotado.",
+      "refundManual": "Se pagó por transferencia: el dinero se devuelve a mano con otra transferencia; aquí solo queda anotado.",
       "refundKeepsAdoption": "La adopción no cambia. Si hay que cerrarla, cancélala desde su ficha.",
       "refunded": "Pago devuelto. Hemos avisado al adoptante.",
       "register": "Registrar pago",
@@ -1086,7 +1114,7 @@
       "confirmRefund": "¿Devolver esta donación?",
       "refundSummary": "Se devolverán {{amount}} a {{name}}.",
       "refundOnline": "Se hizo en la web: la devolución se hace por el mismo medio.",
-      "refundManual": "Se pagó en efectivo o por transferencia: el dinero se devuelve a mano; aquí solo queda anotado.",
+      "refundManual": "Se pagó por transferencia: el dinero se devuelve a mano con otra transferencia; aquí solo queda anotado.",
       "noticeBoth": "Le avisaremos por email y en la web.",
       "noticeEmail": "Le avisaremos por email.",
       "noticeWeb": "Le avisaremos en la web.",
@@ -1236,7 +1264,7 @@
         "shiftTemplates": "Los turnos que se hacen (mañana, tarde…), su horario y cuántas personas necesita cada zona.",
         "absences": "Vacaciones, bajas y otras ausencias. Al registrar una, se quitan los turnos de esa persona en esos días.",
         "alertSettings": "Elige qué avisos del personal llegan también por email y si se envía un resumen del día.",
-        "users": "Las cuentas de adoptantes y del personal. Desde aquí se invita a trabajadores nuevos.",
+        "users": "Todas las cuentas: adoptantes y personal. Busca a alguien por nombre o email y abre su ficha para ver sus adopciones y pagos, desactivarla, cambiar su rol, cerrar sus sesiones, borrar sus datos personales o eliminarla. Desde aquí también se da de alta a un trabajador nuevo.",
         "adoptions": "Todas las adopciones, con sus pagos y notas. Puedes pausarlas, reanudarlas o darlas de alta a mano.",
         "payments": "Los cobros de las cuotas. Puedes filtrarlos, exportarlos y devolver un pago.",
         "donations": "Las donaciones recibidas, por lista o por meses. Puedes registrar una a mano o devolverla.",
@@ -1435,6 +1463,7 @@
     "assignedTo": "Asignada a {{name}}",
     "requires": "Exige: {{name}}",
     "photo": "Foto",
+    "photos": "Fotos",
     "blocked": {
       "MISSING_QUALIFICATION": "Necesitas la cualificación «{{name}}».",
       "FUTURE_DAY": "Se podrá marcar ese mismo día."
@@ -1490,7 +1519,7 @@
       "all": "Todas",
       "allStatuses": "Todos",
       "task": "Tarea",
-      "assignee": "Asignada a",
+      "assignee": "Responsable",
       "result": "Resultado",
       "reassign": "Reasignar {{title}}",
       "reassignTitle": "Reasignar: {{title}}",
@@ -1800,6 +1829,7 @@
       "category": "Tipo",
       "severity": "Gravedad",
       "zone": "Zona",
+      "noZone": "Sin zona",
       "animal": "Animal",
       "noAnimal": "Ninguno",
       "description": "Qué pasa",
@@ -1844,14 +1874,14 @@
       "createTask": "Crear tarea",
       "taskTitle": "Tarea de la incidencia n.º {{id}}",
       "taskCreated": "Tarea creada",
-      "task": "Tarea",
-      "taskLink": "Tarea n.º {{id}}",
+      "tasks": "Tareas",
       "resolution": "Resolución",
       "resolvedBy": "{{name}}, el {{date}}",
-      "photoAlt": "Foto de la incidencia",
+      "photoAlt": "Foto {{n}} de la incidencia",
       "resolve": "Resolver",
       "reopen": "Reabrir",
       "resolveTitle": "Resolver la incidencia",
+      "pendingTaskWillClose": "Su tarea pendiente «{{title}}» se cerrará: ya no hará falta.",
       "resolveSubmit": "Marcar como resuelta",
       "resolveNote": "¿Cómo se ha resuelto?",
       "resolvedOk": "Incidencia resuelta",
@@ -1948,14 +1978,17 @@
     }
   },
   "photoPicker": {
-    "dropHere": "Arrastra aquí una foto o",
-    "choose": "Elegir foto",
-    "change": "Cambiar foto",
-    "remove": "Quitar la foto",
-    "help": "JPG, PNG o WebP de hasta 5 MB.",
+    "dropHere": "Arrastra aquí las fotos o",
+    "choose": "Elegir fotos",
+    "remove": "Quitar",
+    "help": "Hasta {{count}} fotos JPG, PNG o WebP de hasta 5 MB cada una.",
     "wrongType": "Elige una foto JPG, PNG o WebP.",
     "tooBig": "La foto ocupa más de 5 MB.",
     "kb": "{{size}} KB",
-    "mb": "{{size}} MB"
+    "mb": "{{size}} MB",
+    "add": "Añadir fotos",
+    "removeOne": "Quitar {{name}}",
+    "chosen": "Fotos elegidas",
+    "tooMany": "Como mucho {{count}} fotos."
   }
 }

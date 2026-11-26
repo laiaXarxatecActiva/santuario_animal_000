@@ -54,7 +54,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-14 | El santuario se compromete a publicar al menos una actualización cada 14 días por cada animal con adoptantes activos. El panel avisa cuando quedan 2 días (12 días sin actualización) y muestra una alerta en rojo si se superan los 14. |
 | RN-15 | El contenido exclusivo (actualizaciones y fotos `adopters`, resumen de salud) solo lo ven los adoptantes con una adopción **activa** del animal y los trabajadores. |
 | RN-16 | El nombre de un adoptante aparece en la ficha pública solo si tiene una adopción activa del animal y ha activado `show_public_name`. Por defecto, no aparece. |
-| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. |
+| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. **Excepción:** un administrador puede borrar del todo una cuenta (CU-75); si tiene datos enlazados, solo confirmándolo, y se borran con ella. |
 | RN-18 | Los permisos se comprueban siempre en el servidor. |
 | RN-19 | Los emails de actualizaciones y resúmenes respetan las preferencias del usuario. Los emails de seguridad (verificación, contraseña) y de pagos se envían siempre. |
 | RN-20 | La baja de una cuenta anonimiza los datos personales y conserva los pagos y donaciones. |
@@ -74,7 +74,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
 | RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
 | RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
-| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona o animal, un título corto de 3 a 80 caracteres, la descripción y foto opcional) y ve todas. Todo el personal la resuelve (con una nota obligatoria) y la reabre si el problema vuelve; pasa a «en curso» cuando el administrador crea su tarea; queda quién la resolvió, cómo y cuándo, y cada cambio en el registro de actividad. Solo el administrador crea una tarea puntual a partir de ella, que la pasa a «en curso». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona, sin contar a quien la comunica. |
+| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona y animal opcionales, un título corto de 3 a 80 caracteres, la descripción y hasta 5 fotos opcionales) y ve todas. Todo el personal la resuelve (con una nota obligatoria) y la reabre si el problema vuelve; queda quién la resolvió, cómo y cuándo, y cada cambio en el registro de actividad. Solo el administrador crea una tarea puntual a partir de ella; puede tener varias a lo largo del tiempo, pero solo una pendiente a la vez. **La incidencia sigue a su tarea:** «en curso» quiere decir que tiene una tarea pendiente; si la tarea se hace, la incidencia se resuelve sola; si no se puede hacer (o el sistema la cierra al acabar el día) o se borra, vuelve a «abierta»; si se reabre la tarea, vuelve a «en curso»; y si se resuelve la incidencia a mano, su tarea pendiente se cierra como «no realizada». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona (si tiene zona), sin contar a quien la comunica. |
 | RN-38 | Las **notas de relevo** son de una zona: las escribe quien tiene turno hoy en ella (el administrador, en cualquiera) y las ve durante 24 horas quien tiene turno hoy en esa zona y los administradores. Cada persona las marca como leídas; las propias cuentan como leídas. |
 | RN-39 | Los avisos del personal (huecos, come poco, medicación no dada, visita de hoy e incidencia grave) siempre van a la campana; el administrador elige cuáles van **también por email**, para todo el personal (todos menos la visita de hoy, por defecto). El email se envía aparte (`staff-emails`), así que un fallo del correo nunca deshace la operación. El **resumen diario** por email a los administradores está desactivado por defecto (a las 20:00 si se activa) y se envía una vez al día. |
 
@@ -214,7 +214,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 1. El usuario entra en «Donar» (`/donate`).
 2. El sistema muestra el formulario: importe (libre, con algunas cantidades sugeridas), nombre, apellidos, email, teléfono opcional, casilla «Donación anónima», mensaje opcional, casilla «Quiero el certificado para desgravar» y la aceptación de la política de privacidad. Si hay sesión de adoptante, el nombre, los apellidos y el email se rellenan con los de su cuenta. El email es obligatorio aunque la donación sea anónima: con él se envía el recibo y se avisa de la operación.
 3. El usuario completa el formulario y pulsa «Continuar».
-4. El sistema valida los datos y muestra la pantalla de pago simulado con el aviso «Pago simulado: no se realizará ningún cargo real» y los campos de la tarjeta.
+4. El sistema valida los datos y muestra la ventana «Pago con tarjeta» con los campos de la tarjeta.
 5. El usuario escribe una tarjeta con buen formato (solo se comprueba el formato y nunca se envía ni se guarda) y pulsa «Simular pago correcto».
 6. El sistema crea la donación (`pending`), la cobra con la pasarela simulada y la marca como `completed` con su `paid_at` y su referencia.
 7. El sistema muestra una página de agradecimiento con el recibo, que se puede ver o descargar en PDF, y envía un email de agradecimiento con el recibo y el enlace al PDF.
@@ -527,7 +527,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El adoptante entra en «Mis animales» (`/my-animals`).
 2. El sistema muestra una tarjeta por adopción con: foto y nombre del animal, plan (y el plan siguiente si hay un cambio programado), estado (activa, pendiente de pago, pausada, finalizada o cancelada), fecha de inicio y fecha de la próxima actualización prevista (última actualización + 14 días).
-3. Las adopciones abiertas aparecen como tarjetas. Debajo, la sección «Historial» (un desplegable, plegado al entrar; al volver a desplegarlo empieza de nuevo por los 10 últimos) cuenta lo que ha pasado en todas sus adopciones durante el último año, del más reciente al más antiguo: adopción nueva, cuotas cobradas, fallidas y devueltas, cambios de plan (pedido, anulado y aplicado), cambios de forma de pago, pausas y reanudaciones, baja pedida y cierre con su motivo. Se ven 10 y «Ver más» carga 10 más; con más de un animal, se puede filtrar por animal. Al final, un aviso: solo se muestra el último año y los pagos anteriores están en «Mis aportaciones» (CU-19).
+3. Las adopciones abiertas aparecen como tarjetas. Debajo, la sección «Historial» (un desplegable, plegado al entrar; al volver a desplegarlo empieza de nuevo por los 10 últimos) cuenta lo que ha pasado en todas sus adopciones durante el último año, del más reciente al más antiguo: adopción nueva, cambios de plan (pedido, anulado y aplicado), cambios de forma de pago, pausas y reanudaciones, baja pedida y cierre con su motivo. Se ven 10 y «Ver más» carga 10 más; con más de un animal, se puede filtrar por animal. Los pagos (cuotas cobradas, fallidas y devueltas) no salen: están en «Mis aportaciones» (CU-19). Al final, un aviso: solo se muestra el último año y los pagos están en «Mis aportaciones».
 4. Desde cada tarjeta, el adoptante puede abrir la ficha ampliada (CU-16), pagar (CU-14), cambiar de plan (CU-20), darse de baja (CU-21) o descargar el certificado (CU-22, Fase 3).
 
 **Flujos alternativos**
@@ -645,7 +645,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 2. El sistema muestra dos listados, cuotas y donaciones, con: concepto (animal y plan, o «Donación»), importe, fecha, estado (completado, fallido, pendiente, devuelto) y referencia.
 3. El sistema muestra el total aportado por año (solo pagos `completed`).
 4. El adoptante pulsa «Recibo» en un pago o donación completado.
-5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, referencia y la indicación «Pago simulado». En la Fase 2 era una página HTML imprimible; desde la Fase 3 es un PDF que se puede abrir en el navegador (para verlo o imprimirlo) o descargar.
+5. El sistema muestra el recibo: datos del santuario, del adoptante, concepto, importe, fecha, forma de pago («Tarjeta» o «Transferencia»), referencia y estado, como un recibo real (sin indicación de «Pago simulado»). En la Fase 2 era una página HTML imprimible; desde la Fase 3 es un PDF que se puede abrir en el navegador (para verlo o imprimirlo) o descargar.
 
 **Flujos alternativos**
 
@@ -829,7 +829,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 **Flujos alternativos**
 
 - **3a.** Contraseña incorrecta: no se elimina nada.
-- **1a.** El usuario es un trabajador: la opción no existe; la cuenta la desactiva un administrador (CU-35).
+- **1a.** El usuario es un trabajador: la opción no existe; la cuenta la desactiva, anonimiza o elimina un administrador (CU-35, CU-76, CU-75).
 
 **Postcondiciones**
 
@@ -1261,6 +1261,59 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Reglas de negocio:** RN-02.
 
+
+### CU-75 — Eliminar una cuenta desde el panel
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Mejora tras la fase 3 |
+
+Sirve, por ejemplo, para quitar una cuenta creada por error. Es la excepción a RN-17: la cuenta desaparece del todo. Si hay que conservar pagos y donaciones, se usa CU-76.
+
+**Precondiciones**
+
+- El usuario es administrador. La cuenta no es la suya (puede estar activa, desactivada o anonimizada, y ser de un adoptante o de un trabajador).
+
+**Flujo principal**
+
+1. En la ficha del usuario (`/admin/users/:id`), el administrador pulsa «Eliminar cuenta» (una cuenta concreta; no existe un borrado de todas).
+2. El sistema consulta lo que es de esa cuenta (`GET /api/admin/users/:id/linked-data`): adopciones, pagos de esas adopciones, donaciones, incidencias que comunicó, notas de relevo, actualizaciones de animales, tareas que completó o que solo tenía ella y entradas del registro de actividad.
+3. Si no tiene nada, la ventana avisa en rojo de que no se puede deshacer y pide un **motivo opcional**. Al confirmar, el sistema borra la cuenta (`DELETE /api/admin/users/:id`), vuelve al listado con «Se ha eliminado la cuenta de [nombre]» y lo anota en el registro de actividad (`delete`, con el motivo si lo hay).
+
+**Flujos alternativos**
+
+- **1a.** Es su propia cuenta: la opción no aparece y la API responde 422 `CANNOT_DELETE_SELF`.
+- **3a.** Tiene datos enlazados: la ventana los enumera y ofrece **Cancelar**, **Borrar datos personales** (CU-76) y **Borrar de todos modos**, con la advertencia en rojo de que se borrará todo lo relacionado. Sin confirmarlo (`force`), la API responde 409 `ACCOUNT_HAS_DATA` y no borra nada.
+- **3b.** «Borrar de todos modos» (`force: true`): en una transacción se borran sus adopciones con sus pagos, sus donaciones, sus incidencias con sus fotos, sus notas de relevo, sus actualizaciones con sus fotos, sus tareas y sus entradas del registro de actividad; sesiones, tokens, avisos, cualificaciones, turnos y ausencias se borran en cascada. Lo que es del santuario y solo lleva su nombre como autor (historial veterinario, visitas, pautas, plantillas, dietas, tomas, pagos o adopciones de otras personas registrados a mano, tareas de una zona, incidencias que resolvió) se conserva **sin autor**. Los archivos de las fotos borradas se borran del disco después; si falla, no se deshace nada.
+
+**Postcondiciones**
+
+- La cuenta no existe. El email queda libre.
+
+### CU-76 — Borrar los datos personales de una cuenta desde el panel (anonimizar)
+
+| Actor principal | Fase |
+| --- | --- |
+| Administrador | Mejora tras la fase 3 |
+
+**Precondiciones**
+
+- El usuario es administrador. La cuenta no es la suya y no está anonimizada.
+
+**Flujo principal**
+
+1. En la ficha del usuario, el administrador pulsa «Borrar datos personales» (también en la ventana de CU-75 3a). En la interfaz no se dice «anonimizar», porque confunde; el estado se muestra como «Sin datos personales».
+2. El sistema explica las consecuencias en un aviso amarillo y pide un **motivo opcional**.
+3. Al confirmar (`POST /api/admin/users/:id/anonymize`), hace lo mismo que CU-25 paso 4, sin pedir la contraseña: cierra sus adopciones abiertas (`account_deleted`), anonimiza al usuario (TECH_SPEC §13), vacía sus datos de donante, borra sus notificaciones, lecturas, tokens y sesiones y, si es un trabajador, sus turnos futuros sin fichar. Muestra «Se han borrado sus datos personales» y lo anota en el registro de actividad (`{ anonymized: true, reason }`).
+
+**Flujos alternativos**
+
+- **1a.** Su propia cuenta: 422 `CANNOT_DELETE_SELF`. Ya anonimizada: 422 `ALREADY_ANONYMIZED`.
+
+**Postcondiciones**
+
+- Como en CU-25: no queda ningún dato personal; se conservan los importes de pagos y donaciones.
+
 ### CU-37 — Gestionar adopciones
 
 | Actor principal | Fase |
@@ -1279,8 +1332,8 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujo principal (alta manual)**
 
-1. El administrador pulsa «Nueva adopción», por ejemplo para un pago en efectivo en una jornada de puertas abiertas.
-2. Elige el adoptante (debe tener cuenta), el animal y el plan, e indica el método del primer pago (efectivo o transferencia) y notas.
+1. El administrador pulsa «Nueva adopción», por ejemplo para alguien que la pide por teléfono y paga por transferencia.
+2. Elige el adoptante (debe tener cuenta), el animal y el plan, y añade notas. El primer pago siempre es por transferencia (el santuario no acepta efectivo ni pagos en persona), así que no se pregunta.
 3. El sistema crea la adopción `active` (`created_by` = el administrador) y su primer pago `completed` con ese método (`recorded_by` = el administrador).
 4. Se notifica al adoptante como en CU-13.
 
@@ -1320,7 +1373,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 - **A2. Registrar un pago manual** de una adopción (cobrado fuera de la web): el administrador indica la adopción, el periodo, el importe y el método. Si la adopción estaba `paused` por ese periodo, pasa a `active` y avanza `next_billing_date`.
 - **A2a.** Ya hay un pago válido de ese periodo: «Este periodo ya está pagado».
 - **Concreción de A2:** se registra desde la ficha de la adopción y solo la cuota pendiente: la que empieza en `next_billing_date` (activa o pausada, sin baja solicitada) o, en una pendiente de pago dentro de sus 7 días, el primer mes desde hoy. El importe propuesto es el del plan (el programado, si lo hay, que se aplica en esa cuota) y se puede cambiar. Después la adopción queda activa y `next_billing_date` avanza un mes; se avisa al adoptante con el recibo.
-- **Concreción de A1:** un pago en efectivo o por transferencia también se devuelve; el dinero se entrega a mano y en la web solo se marca como `refunded`.
+- **Concreción de A1:** un pago por transferencia también se devuelve; el dinero se entrega a mano y en la web solo se marca como `refunded`.
 - **A1a.** Intentar devolver un pago que no está `completed`: no se permite.
 
 **Postcondiciones**
@@ -1348,13 +1401,13 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 **Flujos alternativos**
 
-- **A1. Registrar una donación manual** recibida fuera de la web (efectivo o transferencia): importe, fecha, donante (opcional), anónima sí o no y mensaje. El sistema la guarda como `completed` con `recorded_by` = el administrador.
+- **A1. Registrar una donación manual** recibida fuera de la web (siempre por transferencia; no se acepta efectivo): importe, fecha, donante (opcional), anónima sí o no y mensaje. El sistema la guarda como `completed` con `recorded_by` = el administrador.
 - **A2. Devolver** una donación `completed`, con confirmación: pasa a `refunded`.
 - **Concreciones:**
   - Paso 2: el administrador ve «Anónimo» y, debajo, el nombre y el email si se dieron. También hay un buscador por nombre o email del donante.
   - Paso 3: la pestaña «Por meses» usa los filtros «desde» y «hasta» (sin ellos, los últimos 12 meses) y muestra también los meses sin donaciones, a 0 €.
   - A1: la fecha es hoy por defecto y se puede elegir un día anterior, nunca uno futuro. Con email, el donante recibe el agradecimiento con el recibo, como en CU-05.
-  - A2: como en CU-38, una donación en efectivo o por transferencia solo se marca como devuelta. Se avisa al donante por email si lo dio y en la campana si tiene cuenta; si no hay ninguna de las dos cosas, la ventana de confirmación lo dice. El formulario público de donar (CU-05) avisa de esto a quien dona sin cuenta de adoptante.
+  - A2: como en CU-38, una donación por transferencia solo se marca como devuelta. Se avisa al donante por email si lo dio y en la campana si tiene cuenta; si no hay ninguna de las dos cosas, la ventana de confirmación lo dice. El formulario público de donar (CU-05) avisa de esto a quien dona sin cuenta de adoptante.
 
 **Postcondiciones**
 
@@ -1376,12 +1429,12 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 
 1. El administrador entra en «Planes» (`/admin/plans`).
 2. El sistema muestra los planes con su importe mensual, descripción, si es el plan por defecto, si está activo y el número de adopciones activas.
-3. El administrador edita el nombre, el importe o la descripción, o cambia el plan por defecto, y guarda.
-4. El sistema guarda los cambios.
+3. El administrador edita el nombre, el importe o la descripción de uno o varios planes, o cambia el plan por defecto. Cada cambio se ve al momento en las tarjetas: al marcar un plan por defecto, el anterior se desmarca (y si el nuevo estaba desactivado, se activa con un aviso); el plan por defecto no se puede desmarcar ni desactivar (el interruptor no cambia y avisa de que hay que marcar antes otro). Al terminar, pulsa el único botón «Guardar cambios» (o «Descartar cambios» para volver a lo guardado).
+4. El sistema guarda todos los planes a la vez: o se guardan todos o ninguno. Si el administrador sale de la página con cambios sin guardar, se le pide confirmación.
 
 **Flujos alternativos**
 
-- **3a.** Cambio de importe con adopciones activas: el sistema avisa de que el nuevo importe se cobrará a todas las adopciones de ese plan desde su siguiente cuota y pide confirmación.
+- **3a.** Cambio de importe con adopciones activas: el sistema avisa, plan por plan, de que el nuevo importe se cobrará a las adopciones activas de ese plan desde su siguiente cuota y pide una sola confirmación para todos.
 - **3b.** Importe menor o igual a 0: error en el campo.
 - **A1. Desactivar** un plan: deja de ofrecerse en nuevas adopciones; las existentes siguen con él. No se puede desactivar el plan por defecto sin elegir antes otro.
 - **A2. Crear** un plan nuevo: siempre mensual. No se pueden crear otras periodicidades.
@@ -2037,18 +2090,19 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 **Flujo principal**
 
-1. Desde «Incidencias» o «Mi día», pulsa «Comunicar incidencia»: tipo (salud, comportamiento, instalaciones u otra), gravedad (baja, media o alta), zona y/o animal, «Título» (un resumen corto, de 3 a 80 caracteres, que es lo que se ve en el listado, en «Hoy» y en los avisos), «Qué pasa» (la descripción completa) y una foto opcional.
-2. El sistema la guarda como «Abierta». Si se eligió un animal sin zona, toma la del animal.
-3. Si la gravedad es alta, avisa al momento en la campana a los administradores en activo y a quien tiene turno hoy en la zona (sin contar a quien la comunica): «Incidencia grave en «Clínica y recuperación»: …».
+1. Desde «Incidencias» o «Mi día», pulsa «Comunicar incidencia»: tipo (salud, comportamiento, instalaciones u otra), gravedad (baja, media o alta), zona (opcional; «Sin zona» por defecto), animal (opcional), «Título» (un resumen corto, de 3 a 80 caracteres, que es lo que se ve en el listado, en «Hoy» y en los avisos), «Qué pasa» (la descripción completa) y hasta 5 fotos opcionales. Puede no tener ni zona ni animal (p. ej., «La furgoneta no arranca»).
+2. El sistema la guarda como «Abierta». Si se eligió un animal, la zona es la del animal (si la tiene).
+3. Si la gravedad es alta, avisa al momento en la campana a los administradores en activo y a quien tiene turno hoy en la zona (sin contar a quien la comunica): «Incidencia grave en «Clínica y recuperación»: …». Sin zona ni animal, solo a los administradores: «Incidencia grave: …».
 4. Todo el personal ve el listado (por defecto, las pendientes: abiertas y en curso; filtros por estado, gravedad y zona) y la ficha. El menú muestra junto a «Incidencias» cuántas quedan pendientes.
-5. Cualquier trabajador la resuelve («Resolver», explicando cómo) desde el listado o la ficha. No hay que «empezarla»: si existe, ya ha ocurrido; pasa a «En curso» cuando el administrador crea una tarea a partir de ella. Al resolverla deja de estar entre las pendientes; en «Resueltas» se ve cómo se resolvió, quién y cuándo, y se puede reabrir.
-6. El administrador puede crear una tarea puntual a partir de ella (con el tipo, el título, la zona y el animal ya puestos); la incidencia pasa a «En curso».
+5. Cualquier trabajador la resuelve («Resolver», explicando cómo) desde el listado o la ficha. No hay que «empezarla»: si existe, ya ha ocurrido; «En curso» lo pone su tarea. Si tiene una tarea pendiente, la ventana avisa de que se cerrará, y se cierra como «No realizada» con la observación «Ya no hace falta: la incidencia se ha resuelto.». Al resolverla deja de estar entre las pendientes; en «Resueltas» se ve cómo se resolvió, quién y cuándo, y se puede reabrir (vuelve a «Abierta» y admite una tarea nueva).
+6. El administrador puede crear una tarea puntual a partir de ella (con el tipo, el título, la zona y el animal ya puestos) si no está resuelta ni tiene otra pendiente; la incidencia pasa a «En curso». La ficha muestra todas sus tareas con su estado.
+7. **La incidencia sigue a su tarea:** si alguien la hace, la incidencia se resuelve sola, con quien la hizo y, como resolución, su nota o «Resuelta con la tarea «…».»; si «no se ha podido hacer» (o el sistema la cierra al acabar el día, CU-59) o se borra, la incidencia vuelve a «Abierta» y se puede crear otra; si se reabre la tarea, vuelve a «En curso». Cada cambio queda en el registro de actividad, con quien cambió la tarea («Sistema» si fue el cierre automático).
 
 **Flujos alternativos**
 
-- **1a.** Sin descripción, o sin zona ni animal: «Describe lo que pasa.» / «Elige una zona o un animal.».
-- **5a.** Mismo estado: «La incidencia ya está en ese estado.». Resolver sin nota: «Explica cómo se ha resuelto.».
-- **6a.** Si ya tiene tarea o está resuelta: «Esta incidencia ya tiene una tarea.» / «Esta incidencia ya está resuelta.».
+- **1a.** Sin descripción: «Describe lo que pasa.». Más de 5 fotos: «Adjunta como mucho 5 fotos.».
+- **5a.** Mismo estado: «La incidencia ya está en ese estado.». Resolver sin nota: «Explica cómo se ha resuelto.». Reabrir una que no está resuelta: «Solo se puede reabrir una incidencia resuelta.» (409 `INCIDENT_NOT_RESOLVED`).
+- **6a.** Si ya tiene una tarea pendiente o está resuelta: «Esta incidencia ya tiene una tarea pendiente.» / «Esta incidencia ya está resuelta.».
 
 **Postcondiciones:** el alta, los cambios de estado y la tarea quedan en el registro de actividad (`incidents`).
 
