@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 /**
@@ -26,4 +26,20 @@ export const listaAbierta = () => screen.queryByRole('listbox');
 export function opcionesDe(campo: HTMLElement): string[] {
   const lista = document.getElementById(campo.getAttribute('aria-controls') ?? '');
   return Array.from(lista?.querySelectorAll('[role="option"]') ?? [], (o) => o.textContent ?? '');
+}
+
+/**
+ * Elige una hora en un `TimeField` (o en el selector de un `TimesField`): el
+ * desplegable «Horas» y el de «Minutos» dentro del grupo del campo.
+ */
+export async function elegirHora(grupo: HTMLElement, hora: string) {
+  const [h, m] = hora.split(':');
+  await elegirOpcion(within(grupo).getByLabelText('Horas'), h ?? '');
+  await elegirOpcion(within(grupo).getByLabelText('Minutos'), m ?? '');
+}
+
+/** Añade una hora a un `TimesField`. */
+export async function anadirHora(grupo: HTMLElement, hora: string) {
+  await elegirHora(grupo, hora);
+  await userEvent.click(within(grupo).getByRole('button', { name: 'Añadir hora' }));
 }

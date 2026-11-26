@@ -1,6 +1,7 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { elegirHora } from './helpers/select';
 import { admin, caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 
@@ -26,13 +27,8 @@ describe('CU-73 y CU-74 Avisos por email y resumen diario', () => {
     await userEvent.click(visita);
     await userEvent.click(screen.getByRole('checkbox', { name: 'Turno sin personal suficiente' }));
     await userEvent.click(screen.getByRole('checkbox', { name: 'Enviar el resumen del día' }));
-    const hora = screen.getByLabelText('Hora del resumen');
-    await userEvent.clear(hora);
-    await userEvent.type(hora, '7:30');
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
-    expect(await screen.findByText('Escribe la hora como HH:MM.')).toBeInTheDocument();
-    await userEvent.clear(hora);
-    await userEvent.type(hora, '19:30');
+    // La hora se elige en dos desplegables: no se puede escribir mal.
+    await elegirHora(screen.getByRole('group', { name: 'Hora del resumen' }), '19:30');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Ajustes guardados')).toBeInTheDocument();
     expect(enviados('/api/admin/alert-settings').filter(Boolean)).toEqual([

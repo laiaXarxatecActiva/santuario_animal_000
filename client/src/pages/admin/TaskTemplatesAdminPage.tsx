@@ -20,6 +20,8 @@ import { Alert } from '../../components/Alert';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { TimesField } from '../../components/TimeField';
+
 import iconStyles from '../../components/IconButton.module.css';
 import { Modal } from '../../components/Modal';
 import { Switch } from '../../components/Switch';
@@ -199,7 +201,7 @@ interface Campos {
   zoneId: string;
   animalIds: number[];
   qualificationId: string;
-  times: string;
+  times: string[];
   recurrence: TaskRecurrence;
   weekdays: number[];
   intervalDays: string;
@@ -215,7 +217,7 @@ const iniciales = (p: TaskTemplateDto | null): Campos => ({
   zoneId: p?.zone ? String(p.zone.id) : '',
   animalIds: p?.animals.map((a) => a.id) ?? [],
   qualificationId: p?.qualification ? String(p.qualification.id) : '',
-  times: p?.times.join(', ') ?? '',
+  times: p?.times ?? [],
   recurrence: p?.recurrence ?? 'daily',
   weekdays: p?.weekdays ?? [],
   intervalDays: p?.intervalDays ? String(p.intervalDays) : '',
@@ -224,7 +226,7 @@ const iniciales = (p: TaskTemplateDto | null): Campos => ({
   isActive: p?.isActive ?? true,
 });
 
-/** Lo que se envía: las horas escritas separadas por comas pasan a una lista. */
+/** Lo que se envía. */
 const cuerpo = (c: Campos, animalesValidos: Set<number> | null): TaskTemplateBody => ({
   type: c.type,
   title: c.title,
@@ -232,10 +234,7 @@ const cuerpo = (c: Campos, animalesValidos: Set<number> | null): TaskTemplateBod
   zoneId: c.zoneId ? Number(c.zoneId) : null,
   animalIds: animalesValidos ? c.animalIds.filter((id) => animalesValidos.has(id)) : c.animalIds,
   qualificationId: c.qualificationId ? Number(c.qualificationId) : null,
-  times: c.times
-    .split(',')
-    .map((h) => h.trim())
-    .filter(Boolean),
+  times: c.times,
   recurrence: c.recurrence,
   weekdays: c.recurrence === 'weekdays' ? c.weekdays : null,
   intervalDays: c.recurrence === 'every_n_days' && c.intervalDays !== '' ? Number(c.intervalDays) : null,
@@ -380,13 +379,11 @@ function FormularioPlantilla({
             </option>
           ))}
         </SelectField>
-        <TextField
+        <TimesField
           label={t('work.templates.times')}
-          inputMode="numeric"
-          placeholder="09:00, 17:00"
           error={errores.times}
           value={campos.times}
-          onChange={(e) => cambiar('times', e.target.value)}
+          onChange={(v) => cambiar('times', v)}
         />
         <SelectField
           label={t('work.templates.recurrence')}

@@ -10,6 +10,8 @@ import { Alert } from '../../components/Alert';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { FieldError, TextField } from '../../components/FormFields';
+import { TimeField } from '../../components/TimeField';
+
 import iconStyles from '../../components/IconButton.module.css';
 import { Modal } from '../../components/Modal';
 import { Switch } from '../../components/Switch';
@@ -285,19 +287,17 @@ function FormularioTurno({
           onChange={(e) => cambiar('name', e.target.value)}
         />
         <div className={styles.formGrid}>
-          <TextField
-            type="time"
+          <TimeField
             label={t('work.shiftTemplates.startTime')}
             value={campos.startTime}
             error={errores.startTime}
-            onChange={(e) => cambiar('startTime', e.target.value)}
+            onChange={(v) => cambiar('startTime', v)}
           />
-          <TextField
-            type="time"
+          <TimeField
             label={t('work.shiftTemplates.endTime')}
             value={campos.endTime}
             error={errores.endTime}
-            onChange={(e) => cambiar('endTime', e.target.value)}
+            onChange={(v) => cambiar('endTime', v)}
           />
         </div>
         <CheckboxGroup

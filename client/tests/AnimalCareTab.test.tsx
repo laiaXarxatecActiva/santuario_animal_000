@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { adminAnimal, caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { cualificaciones } from './helpers/work-fixtures';
-import { elegirOpcion } from './helpers/select';
+import { anadirHora, elegirHora, elegirOpcion } from './helpers/select';
 
 const pauta = (overrides: Partial<MedicationPlanDto> = {}): MedicationPlanDto => ({
   id: 1,
@@ -160,7 +160,9 @@ describe('CU-69 Gestionar las pautas de medicación', () => {
     await userEvent.type(within(ventana).getByLabelText('Medicamento'), 'Meloxicam');
     await userEvent.type(within(ventana).getByLabelText('Dosis'), '0,5 ml');
     await elegirOpcion(within(ventana).getByLabelText('Vía'), 'Oral');
-    await userEvent.type(within(ventana).getByLabelText('Horas (HH:MM, separadas por comas)'), '20:00, 08:00');
+    const horas = within(ventana).getByRole('group', { name: 'Horas' });
+    await anadirHora(horas, '20:00');
+    await anadirHora(horas, '08:00');
     await elegirOpcion(within(ventana).getByLabelText('Cualificación necesaria'), 'Administrar medicación');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Pauta guardada')).toBeInTheDocument();
@@ -169,7 +171,7 @@ describe('CU-69 Gestionar las pautas de medicación', () => {
         medication: 'Meloxicam',
         dose: '0,5 ml',
         route: 'oral',
-        times: ['20:00', '08:00'],
+        times: ['08:00', '20:00'],
         qualificationId: 1,
       }),
     ]);
@@ -202,7 +204,7 @@ describe('CU-68 Visitas veterinarias', () => {
     const dia = within(ventana).getByLabelText('Día');
     await userEvent.clear(dia);
     await userEvent.type(dia, '2026-12-01');
-    await userEvent.type(within(ventana).getByLabelText('Hora'), '11:00');
+    await elegirHora(within(ventana).getByRole('group', { name: 'Hora' }), '11:00');
     await userEvent.type(within(ventana).getByLabelText('Motivo'), 'Revisión del ala');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Visita programada')).toBeInTheDocument();

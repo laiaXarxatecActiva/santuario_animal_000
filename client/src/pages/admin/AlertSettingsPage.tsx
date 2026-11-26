@@ -12,7 +12,9 @@ import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { Checkbox, TextField } from '../../components/FormFields';
+import { Checkbox } from '../../components/FormFields';
+import { TimeField } from '../../components/TimeField';
+
 import { useAlertSettings, WORK_KEY } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
@@ -120,13 +122,11 @@ function Formulario({ inicial }: { inicial: AlertSettingsDto }) {
           checked={resumen}
           onChange={(e) => setResumen(e.target.checked)}
         />
-        <TextField
+        <TimeField
           label={t('work.alertSettings.summaryTime')}
-          inputMode="numeric"
-          placeholder="HH:MM"
           value={hora}
           error={errores.dailySummaryTime}
-          onChange={(e) => setHora(e.target.value)}
+          onChange={setHora}
         />
       </fieldset>
       <div>
