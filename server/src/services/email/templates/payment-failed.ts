@@ -1,7 +1,7 @@
 import type { Language } from '@sanctuary/shared';
 import { formatEuros } from '../../../utils/format.js';
 import { htmlConEnlace, type EmailContent } from './layout.js';
-import { FIRMA, idiomaDe, PAGO_SIMULADO, saludo } from './textos.js';
+import { FIRMA, idiomaDe, saludo } from './textos.js';
 
 // CU-43 3a: cuota mensual fallida; la adopción queda pausada hasta regularizarla (CU-14).
 export function paymentFailedEmail(datos: {
@@ -36,10 +36,9 @@ export function paymentFailedEmail(datos: {
     },
   }[idioma];
   const hola = saludo(idioma, datos.firstName);
-  const aviso = PAGO_SIMULADO[idioma];
   return {
     subject: t.subject,
-    text: [hola, '', t.cuerpo, '', t.accion, datos.url, '', aviso, '', FIRMA].join('\n'),
-    html: htmlConEnlace([hola, t.cuerpo, t.accion], { url: datos.url, texto: t.boton }, [aviso], undefined, idioma),
+    text: [hola, '', t.cuerpo, '', t.accion, datos.url, '', FIRMA].join('\n'),
+    html: htmlConEnlace([hola, t.cuerpo, t.accion], { url: datos.url, texto: t.boton }, [], undefined, idioma),
   };
 }

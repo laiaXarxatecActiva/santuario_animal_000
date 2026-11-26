@@ -34,6 +34,7 @@ BEGIN;
 DROP TABLE IF EXISTS
     handover_note_reads,
     handover_notes,
+    incident_photos,
     incidents,
     feeding_logs,
     diet_items,
@@ -462,11 +463,11 @@ CREATE TABLE payments (
     amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
     period_start       DATE          NOT NULL,              -- mes cubierto por la cuota
     period_end         DATE          NOT NULL,
-    method             VARCHAR(20)   NOT NULL DEFAULT 'simulated'
-                       CHECK (method IN ('simulated', 'cash', 'bank_transfer', 'card')),
+    method             VARCHAR(20)   NOT NULL                -- card: en la web; bank_transfer: a mano (sin efectivo)
+                       CHECK (method IN ('card', 'bank_transfer')),
     status             VARCHAR(20)   NOT NULL DEFAULT 'pending'
                        CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
-    payment_reference  VARCHAR(100)  NOT NULL UNIQUE,        -- referencia (simulada) de la pasarela
+    payment_reference  VARCHAR(100)  NOT NULL UNIQUE,        -- CARD-… (pasarela) o TRF-… (transferencia)
     failure_reason     VARCHAR(255),
     paid_at            TIMESTAMPTZ,
     refunded_at        TIMESTAMPTZ,
@@ -578,8 +579,8 @@ CREATE TABLE donations (
     amount             NUMERIC(10,2) NOT NULL CHECK (amount > 0),
     is_anonymous       BOOLEAN       NOT NULL DEFAULT FALSE,
     message            VARCHAR(1000),
-    method             VARCHAR(20)   NOT NULL DEFAULT 'simulated'
-                       CHECK (method IN ('simulated', 'cash', 'bank_transfer', 'card')),
+    method             VARCHAR(20)   NOT NULL                -- card: en la web; bank_transfer: a mano (sin efectivo)
+                       CHECK (method IN ('card', 'bank_transfer')),
     status             VARCHAR(20)   NOT NULL DEFAULT 'pending'
                        CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
     payment_reference  VARCHAR(100)  NOT NULL UNIQUE,
@@ -873,6 +874,7 @@ CREATE TABLE task_instances (
     created_by        INTEGER      REFERENCES users (id) ON DELETE RESTRICT, -- admin, si es puntual
     medication_plan_id INTEGER     REFERENCES medication_plans (id) ON DELETE CASCADE, -- dosis de una pauta (CU-69)
     vet_visit_id      INTEGER      REFERENCES vet_visits (id) ON DELETE CASCADE,       -- visita programada (CU-68)
+    incident_id       INTEGER,     -- incidencia de la que sale (CU-70); la clave foránea va tras crear `incidents`
     created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     -- Sale de una plantilla, de una pauta, de una visita o de ninguna (puntual), nunca de dos.
@@ -987,32 +989,49 @@ CREATE TRIGGER feeding_logs_check_task
     BEFORE INSERT OR UPDATE OF task_id ON feeding_logs
     FOR EACH ROW EXECUTE FUNCTION check_feeding_log_task();
 
--- Incidencias (CU-70): un problema que comunica el personal sobre un animal o
--- una zona. Solo el administrador las pasa a «en curso» o «resuelta».
+-- Incidencias (CU-70): un problema que comunica el personal, de un animal, de una
+-- zona o de ninguno (p. ej., la furgoneta). «En curso» quiere decir que tiene una
+-- tarea pendiente (la crea el administrador); la incidencia sigue a su tarea.
 CREATE TABLE incidents (
     id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     category     VARCHAR(20)  NOT NULL CHECK (category IN ('health', 'behavior', 'facilities', 'other')),
     severity     VARCHAR(10)  NOT NULL CHECK (severity IN ('low', 'medium', 'high')),
     title        VARCHAR(80)  NOT NULL CHECK (char_length(btrim(title)) BETWEEN 3 AND 80), -- resumen corto
     description  TEXT         NOT NULL CHECK (char_length(btrim(description)) BETWEEN 1 AND 2000),
-    zone_id      INTEGER      REFERENCES zones (id) ON DELETE RESTRICT,     -- la elegida o la del animal
-    animal_id    INTEGER      REFERENCES animals (id) ON DELETE CASCADE,
-    photo_url    VARCHAR(500),
+    zone_id      INTEGER      REFERENCES zones (id) ON DELETE RESTRICT,     -- la elegida o la del animal (opcional)
+    animal_id    INTEGER      REFERENCES animals (id) ON DELETE CASCADE,    -- opcional
     status       VARCHAR(20)  NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved')),
     reported_by  INTEGER      NOT NULL REFERENCES users (id) ON DELETE RESTRICT,
     resolution   TEXT         CHECK (char_length(resolution) <= 2000),
     resolved_by  INTEGER      REFERENCES users (id) ON DELETE RESTRICT,
     resolved_at  TIMESTAMPTZ,
-    task_id      INTEGER      REFERENCES task_instances (id) ON DELETE SET NULL, -- tarea creada a partir de ella
     created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    CONSTRAINT incidents_place CHECK (zone_id IS NOT NULL OR animal_id IS NOT NULL),
     -- Resuelta ⇔ tiene fecha y explicación de cómo se resolvió.
     CONSTRAINT incidents_resolution CHECK (
         (status = 'resolved') = (resolved_at IS NOT NULL AND resolution IS NOT NULL))
 );
 
 CREATE INDEX incidents_status_idx ON incidents (status, created_at DESC);
+
+-- Fotos de una incidencia (hasta 5, en el orden en que se subieron).
+CREATE TABLE incident_photos (
+    id           INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    incident_id  INTEGER      NOT NULL REFERENCES incidents (id) ON DELETE CASCADE,
+    url          VARCHAR(500) NOT NULL,
+    position     SMALLINT     NOT NULL CHECK (position BETWEEN 1 AND 5),
+    created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    CONSTRAINT incident_photos_position_key UNIQUE (incident_id, position)
+);
+
+-- Tareas de una incidencia (CU-70): puede tener varias a lo largo del tiempo,
+-- pero solo una pendiente a la vez.
+ALTER TABLE task_instances
+    ADD CONSTRAINT task_instances_incident_fk
+    FOREIGN KEY (incident_id) REFERENCES incidents (id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX task_instances_incident_pending_key
+    ON task_instances (incident_id) WHERE incident_id IS NOT NULL AND status = 'pending';
+CREATE INDEX task_instances_incident_idx ON task_instances (incident_id) WHERE incident_id IS NOT NULL;
 
 CREATE TRIGGER incidents_set_updated_at
     BEFORE UPDATE ON incidents

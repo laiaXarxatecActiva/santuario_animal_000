@@ -19,10 +19,8 @@ describe('CU-38 Gestionar pagos: reglas', () => {
     for (const status of ['pending', 'failed', 'refunded'] as const) expect(puedeDevolverse(status)).toBe(false);
   });
 
-  it('A1: la pasarela solo interviene en los pagos hechos en la web', () => {
-    expect(pasaPorPasarela('simulated')).toBe(true);
+  it('A1: la pasarela solo interviene en los pagos hechos en la web (tarjeta)', () => {
     expect(pasaPorPasarela('card')).toBe(true);
-    expect(pasaPorPasarela('cash')).toBe(false);
     expect(pasaPorPasarela('bank_transfer')).toBe(false);
   });
 

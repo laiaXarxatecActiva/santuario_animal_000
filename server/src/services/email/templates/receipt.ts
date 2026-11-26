@@ -1,6 +1,5 @@
 import type { Language } from '@sanctuary/shared';
 import { formatEuros, formatFecha } from '../../../utils/format.js';
-import { PAGO_SIMULADO } from './textos.js';
 
 // Datos del recibo de una cuota, comunes a adoption-welcome y payment-completed.
 export interface ReceiptData {
@@ -42,5 +41,5 @@ export function lineasRecibo(datos: ReceiptData): string[] {
       `Reference: ${datos.reference}`,
     ],
   }[idioma];
-  return [...lineas, PAGO_SIMULADO[idioma]];
+  return lineas;
 }

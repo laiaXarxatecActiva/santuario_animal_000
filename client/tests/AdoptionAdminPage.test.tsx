@@ -26,8 +26,8 @@ describe('CU-37 Gestionar adopciones: ficha', () => {
     expect(screen.getByRole('link', { name: 'Pablo García Esteve' })).toHaveAttribute('href', '/admin/users/7');
     expect(screen.getByText('Creada a mano por Marta Soler Ferrer')).toBeInTheDocument();
     const pagos = screen.getByRole('region', { name: 'Pagos' });
-    expect(within(pagos).getByText('Efectivo')).toBeInTheDocument();
-    expect(within(pagos).getByText('CASH-20260816-ABCDE12345')).toBeInTheDocument();
+    expect(within(pagos).getByText('Transferencia')).toBeInTheDocument();
+    expect(within(pagos).getByText('TRF-20260816-ABCDE12345')).toBeInTheDocument();
     expect(within(pagos).getByText('Cobrado')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Notas internas' })).toHaveTextContent(
       'Alta en la jornada de puertas abiertas.',

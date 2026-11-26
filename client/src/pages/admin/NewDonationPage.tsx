@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { MANUAL_PAYMENT_METHODS, manualDonationSchema, type ManualDonationBody } from '@sanctuary/shared';
+import { MANUAL_PAYMENT_METHOD, manualDonationSchema, type ManualDonationBody } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -9,7 +9,7 @@ import { adminApi } from '../../api/admin';
 import { ApiError } from '../../api/client';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { Checkbox, SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { Checkbox, TextAreaField, TextField } from '../../components/FormFields';
 import { ADMIN_DONATIONS_KEY } from '../../hooks/useAdmin';
 import { applyFieldErrors, errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
@@ -31,7 +31,7 @@ export function NewDonationPage() {
     defaultValues: {
       amount: '',
       date: hoy,
-      method: '' as ManualDonationBody['method'],
+      method: MANUAL_PAYMENT_METHOD,
       donorName: '',
       donorEmail: '',
       isAnonymous: false,
@@ -80,14 +80,8 @@ export function NewDonationPage() {
           error={errors.date?.message}
           {...register('date')}
         />
-        <SelectField label={t('admin.payments.method')} error={errors.method?.message} {...register('method')}>
-          <option value="">{t('form.choose')}</option>
-          {MANUAL_PAYMENT_METHODS.map((m) => (
-            <option key={m} value={m}>
-              {t(`admin.adoptions.methods.${m}`)}
-            </option>
-          ))}
-        </SelectField>
+        {/* Solo se registran a mano las transferencias (no se acepta efectivo). */}
+        <p>{t('admin.common.byTransfer')}</p>
         <TextField
           label={t('form.optional', { label: t('admin.donations.donorName') })}
           autoComplete="off"

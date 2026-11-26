@@ -19,7 +19,9 @@ describe('CU-38 desde la ficha de la adopción', () => {
     expect(importe).toHaveValue('1,00');
     await userEvent.clear(importe);
     await userEvent.type(importe, '2,50');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Forma de pago'), 'Transferencia');
+    // Sin desplegable: solo se registran transferencias.
+    expect(within(ventana).queryByLabelText('Forma de pago')).not.toBeInTheDocument();
+    expect(within(ventana).getByText('Forma de pago: transferencia.')).toBeInTheDocument();
     await userEvent.click(within(ventana).getByRole('button', { name: 'Registrar pago' }));
     expect(await screen.findByText('Pago registrado. Hemos enviado el recibo al adoptante.')).toBeInTheDocument();
     expect(enviados('/api/admin/payments')).toEqual([{ adoptionId: 4, amount: '2,50', method: 'bank_transfer' }]);
@@ -34,11 +36,13 @@ describe('CU-38 desde la ficha de la adopción', () => {
     renderRoute('/admin/adoptions/4');
     await userEvent.click(await screen.findByRole('button', { name: 'Registrar pago' }));
     const ventana = await screen.findByRole('dialog');
+    const importe = within(ventana).getByLabelText('Importe (€)');
+    await userEvent.clear(importe);
     await userEvent.click(within(ventana).getByRole('button', { name: 'Registrar pago' }));
-    expect(await within(ventana).findByText('Elige cómo se ha pagado.')).toBeInTheDocument();
+    expect(importe).toHaveAttribute('aria-invalid', 'true');
     expect(pedidas('/api/admin/payments')).toHaveLength(0);
 
-    await userEvent.selectOptions(within(ventana).getByLabelText('Forma de pago'), 'Efectivo');
+    await userEvent.type(importe, '1,00');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Registrar pago' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Este periodo ya está pagado.');
   });

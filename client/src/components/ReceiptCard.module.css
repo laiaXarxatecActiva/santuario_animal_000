@@ -53,12 +53,6 @@
   font-weight: 600;
 }
 
-.notice {
-  margin-top: var(--space-5);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-}
-
 @media (max-width: 479px) {
   .data {
     grid-template-columns: 1fr;

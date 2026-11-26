@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { sessionUser } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const respuesta = (cambios: Partial<ContributionsResponse> = {}): ContributionsResponse => ({
   payments: [
@@ -16,8 +17,8 @@ const respuesta = (cambios: Partial<ContributionsResponse> = {}): ContributionsR
       periodEnd: '2026-12-04',
       date: '2026-11-05T09:15:00.000Z',
       status: 'completed',
-      method: 'simulated',
-      reference: 'SIM-A0001-20261105',
+      method: 'card',
+      reference: 'CARD-A0001-20261105',
     },
     {
       id: 302,
@@ -28,8 +29,8 @@ const respuesta = (cambios: Partial<ContributionsResponse> = {}): ContributionsR
       periodEnd: '2026-11-24',
       date: '2026-10-25T02:00:00.000Z',
       status: 'failed',
-      method: 'simulated',
-      reference: 'SIM-A0007-20261025-F1',
+      method: 'card',
+      reference: 'CARD-A0007-20261025-F1',
     },
   ],
   donations: [
@@ -38,8 +39,8 @@ const respuesta = (cambios: Partial<ContributionsResponse> = {}): ContributionsR
       amount: '20.00',
       date: '2026-06-17T19:00:00.000Z',
       status: 'completed',
-      method: 'simulated',
-      reference: 'SIM-D0001',
+      method: 'card',
+      reference: 'CARD-D0001',
       isAnonymous: false,
     },
   ],
@@ -89,7 +90,7 @@ describe('CU-19 Consultar mis aportaciones', () => {
     await userEvent.click(await screen.findByRole('tab', { name: 'Donaciones' }));
     const donaciones = screen.getByRole('tabpanel', { name: 'Donaciones' });
     expect(within(donaciones).getByText('Donación')).toBeInTheDocument();
-    expect(within(donaciones).getByText('SIM-D0001')).toBeInTheDocument();
+    expect(within(donaciones).getByText('CARD-D0001')).toBeInTheDocument();
     expect(within(donaciones).getByRole('link', { name: /^Ver el recibo/ })).toHaveAttribute(
       'href',
       '/api/me/donations/1/receipt.pdf',
@@ -103,7 +104,7 @@ describe('CU-19 Consultar mis aportaciones', () => {
   it('el filtro por año pide solo ese año', async () => {
     const { pedidas } = mockApi({ ...conSesion, '/api/me/contributions': { body: respuesta() } });
     renderRoute('/my-contributions');
-    await userEvent.selectOptions(await screen.findByLabelText('Año'), '2025');
+    await elegirOpcion(await screen.findByLabelText('Año'), '2025');
     await waitFor(() =>
       expect(pedidas('/api/me/contributions').map((u) => u.searchParams.get('year'))).toContain('2025'),
     );
@@ -125,8 +126,8 @@ describe('CU-19 Recibo en PDF (Fase 3)', () => {
   it('los enlaces llevan el nombre accesible con la referencia', async () => {
     mockApi({ ...conSesion, '/api/me/contributions': { body: respuesta() } });
     renderRoute('/my-contributions');
-    expect(await screen.findByRole('link', { name: 'Ver el recibo SIM-A0001-20261105 (PDF)' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Descargar el recibo SIM-A0001-20261105 (PDF)' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Ver el recibo CARD-A0001-20261105 (PDF)' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Descargar el recibo CARD-A0001-20261105 (PDF)' })).toBeInTheDocument();
   });
 
   it('la antigua página HTML del recibo ya no existe', async () => {

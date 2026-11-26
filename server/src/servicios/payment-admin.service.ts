@@ -51,10 +51,8 @@ export interface PaymentAdminServiceDeps {
 export type PaymentAdminService = ReturnType<typeof createPaymentAdminService>;
 
 const METODO: Record<PaymentMethod, string> = {
-  simulated: 'Pago simulado',
-  cash: 'Efectivo',
-  bank_transfer: 'Transferencia',
   card: 'Tarjeta',
+  bank_transfer: 'Transferencia',
 };
 const ESTADO: Record<PaymentStatus, string> = {
   pending: 'Pendiente',

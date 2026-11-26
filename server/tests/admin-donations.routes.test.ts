@@ -73,14 +73,14 @@ describe('CU-39 Gestionar donaciones: listado', () => {
     expect(hucha).toEqual({
       id: 6,
       userId: null,
-      donorName: 'Visitantes de la jornada de puertas abiertas',
+      donorName: 'CEIP Els Ports (semana solidaria)',
       donorEmail: null,
       isAnonymous: false,
       amount: '87.40',
-      message: 'Recaudado en la hucha de la jornada de puertas abiertas.',
-      method: 'cash',
+      message: 'Recaudado por el alumnado en la semana solidaria.',
+      method: 'bank_transfer',
       status: 'completed',
-      reference: 'CASH-D0006',
+      reference: 'TRF-D0006',
       date: expect.any(String),
       refundedAt: null,
       failureReason: null,
@@ -104,8 +104,9 @@ describe('CU-39 Gestionar donaciones: listado', () => {
   it('2: filtra por estado y por forma de pago', async () => {
     expect(await ids({ status: 'completed' })).toEqual(await idsSql("status = 'completed'"));
     expect(await ids({ status: 'refunded' })).toEqual([9]);
-    expect(await ids({ method: 'cash' })).toEqual([6]);
-    expect(await ids({ method: 'bank_transfer' })).toEqual([7]);
+    // Las dos registradas a mano son transferencias; las demás, con tarjeta en la web.
+    expect(await ids({ method: 'bank_transfer' })).toEqual([6, 7]);
+    expect(await ids({ method: 'card' })).toEqual(await idsSql("method = 'card'"));
   });
 
   it('2: filtra por fechas (día del cobro o del intento, en la zona del santuario)', async () => {
@@ -132,7 +133,7 @@ describe('CU-39 Gestionar donaciones: listado', () => {
 
   it('suma lo cobrado con los filtros (sin fallidas, pendientes ni devueltas)', async () => {
     expect((await listar()).totalCollected).toBe(await sumaSql('TRUE'));
-    expect((await listar({ method: 'simulated' })).totalCollected).toBe(await sumaSql("method = 'simulated'"));
+    expect((await listar({ method: 'card' })).totalCollected).toBe(await sumaSql("method = 'card'"));
     expect((await listar({ status: 'failed' })).totalCollected).toBe('0.00');
     expect((await listar({ q: 'rapaces' })).totalCollected).toBe('250.00');
   });
@@ -170,12 +171,12 @@ describe('CU-39 Gestionar donaciones: total por mes (paso 3)', () => {
 
   it('respeta «desde», «hasta», la forma de pago y la búsqueda', async () => {
     const desde = restarDias(t.hoy, 70);
-    const { data } = await totales({ from: desde, to: t.hoy, method: 'simulated' });
+    const { data } = await totales({ from: desde, to: t.hoy, method: 'card' });
     expect(data[0]?.month).toBe(desde.slice(0, 7));
     expect(data.at(-1)?.month).toBe(t.hoy.slice(0, 7));
     for (const fila of data) {
       expect(fila.total).toBe(
-        await mesSql(fila.month, `method = 'simulated' AND ${DIA} BETWEEN $1::date AND $2::date`, [desde, t.hoy]),
+        await mesSql(fila.month, `method = 'card' AND ${DIA} BETWEEN $1::date AND $2::date`, [desde, t.hoy]),
       );
     }
 
@@ -190,7 +191,7 @@ describe('CU-39 Gestionar donaciones: total por mes (paso 3)', () => {
 
 describe('CU-39 Gestionar donaciones: exportación CSV (paso 4)', () => {
   it('descarga las donaciones filtradas para hoja de cálculo', async () => {
-    const res = await marta.get('/api/admin/donations/export.csv').query({ method: 'cash' });
+    const res = await marta.get('/api/admin/donations/export.csv').query({ method: 'bank_transfer' });
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toBe('text/csv; charset=utf-8');
     expect(res.headers['content-disposition']).toBe(`attachment; filename="donaciones-${t.hoy}.csv"`);
@@ -200,12 +201,14 @@ describe('CU-39 Gestionar donaciones: exportación CSV (paso 4)', () => {
     );
     const [{ dia }] = (await t.pool.query(`SELECT to_char(${DIA}, 'DD/MM/YYYY') AS dia FROM donations WHERE id = 6`))
       .rows;
-    expect(lineas[1]).toBe(
-      `${dia};CASH-D0006;Visitantes de la jornada de puertas abiertas;;No;87,40;Efectivo;Cobrada;` +
-        'Recaudado en la hucha de la jornada de puertas abiertas.;;Marta Soler Ferrer',
+    // De la más reciente a la más antigua: la 7 y la 6.
+    expect(lineas[1]).toMatch(/^\d{2}\/\d{2}\/\d{4};TRF-D0007;Asociación Amigos de las Rapaces;/);
+    expect(lineas[2]).toBe(
+      `${dia};TRF-D0006;CEIP Els Ports (semana solidaria);;No;87,40;Transferencia;Cobrada;` +
+        'Recaudado por el alumnado en la semana solidaria.;;Marta Soler Ferrer',
     );
-    expect(lineas).toHaveLength(3);
-    expect(lineas[2]).toBe('');
+    expect(lineas).toHaveLength(4);
+    expect(lineas[3]).toBe('');
   });
 
   it('las anónimas y las devueltas', async () => {
@@ -219,7 +222,7 @@ describe('CU-39 Gestionar donaciones: exportación CSV (paso 4)', () => {
     expect(lineas[1]).toMatch(new RegExp(`;Devuelta;;${devuelta};$`));
 
     const anonimas = await marta.get('/api/admin/donations/export.csv').query({ q: 'pablo' });
-    expect(anonimas.text).toContain(';Pablo García Esteve;pablo.garcia@correo.test;Sí;100,00;Pago simulado;Cobrada;');
+    expect(anonimas.text).toContain(';Pablo García Esteve;pablo.garcia@correo.test;Sí;100,00;Tarjeta;Cobrada;');
   });
 });
 
@@ -228,7 +231,7 @@ describe('CU-39 A1 Registrar una donación manual', () => {
     const res = await marta.post('/api/admin/donations').send({
       amount: '25,50',
       date: t.hoy,
-      method: 'cash',
+      method: 'bank_transfer',
       donorName: 'Ana Ruiz',
       donorEmail: 'ana.ruiz@correo.test',
       isAnonymous: false,
@@ -243,11 +246,11 @@ describe('CU-39 A1 Registrar una donación manual', () => {
       isAnonymous: false,
       amount: '25.50',
       message: 'En el mercadillo solidario.',
-      method: 'cash',
+      method: 'bank_transfer',
       status: 'completed',
       recordedBy: { id: 1, name: 'Marta Soler Ferrer' },
     });
-    expect(creada.reference).toMatch(/^CASH-\d{8}-[0-9A-F]{10}$/);
+    expect(creada.reference).toMatch(/^TRF-\d{8}-[0-9A-F]{10}$/);
     expect(await donacion(creada.id)).toMatchObject({ dia: t.hoy, recorded_by: 1, user_id: null });
 
     const [email] = t.mailer.outbox;
@@ -255,8 +258,7 @@ describe('CU-39 A1 Registrar una donación manual', () => {
     expect(email).toMatchObject({ to: 'ana.ruiz@correo.test', subject: '¡Gracias por tu donación!' });
     expect(email?.text).toContain('Importe: 25,50');
     expect(email?.text).toContain(`Referencia: ${creada.reference}`);
-    // Efectivo: no es un pago simulado.
-    expect(email?.text).not.toContain('Pago simulado');
+    expect(email?.text).not.toContain('simulado');
   });
 
   it('con una fecha anterior queda en ese día (una transferencia que llegó tarde)', async () => {
@@ -281,20 +283,28 @@ describe('CU-39 A1 Registrar una donación manual', () => {
   it('no admite una fecha futura ni un día inexistente', async () => {
     const futura = await marta
       .post('/api/admin/donations')
-      .send({ amount: '5', date: '2999-01-01', method: 'cash', isAnonymous: false });
+      .send({ amount: '5', date: '2999-01-01', method: 'bank_transfer', isAnonymous: false });
     expect(futura.status).toBe(400);
     expect(futura.body.error.details).toEqual([{ field: 'date', message: 'La fecha no puede ser posterior a hoy.' }]);
     const inexistente = await marta
       .post('/api/admin/donations')
-      .send({ amount: '5', date: '2025-02-30', method: 'cash', isAnonymous: false });
+      .send({ amount: '5', date: '2025-02-30', method: 'bank_transfer', isAnonymous: false });
     expect(inexistente.status).toBe(400);
     expect(inexistente.body.error.details).toEqual([{ field: 'date', message: 'Esta fecha no existe.' }]);
+  });
+
+  it('no se registran donaciones en efectivo', async () => {
+    const res = await marta
+      .post('/api/admin/donations')
+      .send({ amount: '5', date: t.hoy, method: 'cash', isAnonymous: false });
+    expect(res.status).toBe(400);
+    expect(res.body.error.details).toEqual([expect.objectContaining({ field: 'method' })]);
   });
 
   it('valida importe, forma de pago, fecha y email', async () => {
     const res = await marta
       .post('/api/admin/donations')
-      .send({ amount: '0', date: '', method: 'simulated', donorEmail: 'no-es-un-email' });
+      .send({ amount: '0', date: '', method: 'card', donorEmail: 'no-es-un-email' });
     expect(res.status).toBe(400);
     expect(res.body.error.details.map((d: { field: string }) => d.field).sort()).toEqual([
       'amount',
@@ -338,7 +348,7 @@ describe('CU-39 A2 Devolver una donación', () => {
     expect((await t.pool.query('SELECT count(*)::int AS n FROM notifications')).rows[0].n).toBe(antes);
   });
 
-  it('con email pero sin cuenta: solo el email; en efectivo o transferencia, se devuelve a mano', async () => {
+  it('con email pero sin cuenta: solo el email; por transferencia, se devuelve a mano', async () => {
     const res = await marta.post('/api/admin/donations/7/refund').send({});
     expect(res.status).toBe(200);
     expect(t.mailer.outbox).toHaveLength(1);

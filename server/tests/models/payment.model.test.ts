@@ -16,7 +16,7 @@ describe('payment.model', () => {
     const pago = await create(db.pool, {
       ...cuota,
       status: 'failed',
-      reference: 'SIM-TEST-1',
+      reference: 'CARD-TEST-1',
       failureReason: 'Rechazado',
       paidAt: null,
     });
@@ -30,19 +30,19 @@ describe('payment.model', () => {
     });
   });
 
-  it('guarda un pago completado (método simulado)', async () => {
+  it('guarda un pago completado (con tarjeta, en la web)', async () => {
     const paidAt = new Date('2026-11-12T10:00:00Z');
     const pago = await create(db.pool, {
       ...cuota,
       status: 'completed',
-      reference: 'SIM-TEST-2',
+      reference: 'CARD-TEST-2',
       failureReason: null,
       paidAt,
     });
     const { rows } = await db.pool.query('SELECT method, paid_at, payment_reference FROM payments WHERE id = $1', [
       pago.id,
     ]);
-    expect(rows[0]).toEqual({ method: 'simulated', paid_at: paidAt, payment_reference: 'SIM-TEST-2' });
+    expect(rows[0]).toEqual({ method: 'card', paid_at: paidAt, payment_reference: 'CARD-TEST-2' });
   });
 
   it('no admite dos cuotas válidas del mismo mes', async () => {
@@ -50,7 +50,7 @@ describe('payment.model', () => {
       create(db.pool, {
         ...cuota,
         status: 'completed',
-        reference: 'SIM-TEST-3',
+        reference: 'CARD-TEST-3',
         failureReason: null,
         paidAt: new Date(),
       }),

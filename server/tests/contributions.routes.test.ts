@@ -61,8 +61,8 @@ describe('CU-19 Consultar mis aportaciones', () => {
       periodEnd: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       date: expect.any(String),
       status: 'completed',
-      method: 'simulated',
-      reference: expect.stringMatching(/^SIM-/),
+      method: 'card',
+      reference: expect.stringMatching(/^CARD-/),
     });
     expect(res.donations.map((d) => d.id)).toEqual([12, 1]);
     expect(res.donations[1]).toEqual({
@@ -70,8 +70,8 @@ describe('CU-19 Consultar mis aportaciones', () => {
       amount: '20.00',
       date: expect.any(String),
       status: 'completed',
-      method: 'simulated',
-      reference: 'SIM-D0001',
+      method: 'card',
+      reference: 'CARD-D0001',
       isAnonymous: false,
     });
   });
@@ -130,9 +130,9 @@ describe('CU-19 Recibos', () => {
     expect(res.body as ReceiptDto).toEqual({
       kind: 'payment',
       id,
-      reference: expect.stringMatching(/^SIM-A0001-/),
+      reference: expect.stringMatching(/^CARD-A0001-/),
       amount: expect.any(String),
-      method: 'simulated',
+      method: 'card',
       status: 'completed',
       paidAt: expect.any(String),
       refundedAt: null,
@@ -176,9 +176,9 @@ describe('CU-19 Recibos', () => {
     expect(res.body).toEqual({
       kind: 'donation',
       id: 1,
-      reference: 'SIM-D0001',
+      reference: 'CARD-D0001',
       amount: '20.00',
-      method: 'simulated',
+      method: 'card',
       status: 'completed',
       paidAt: expect.any(String),
       refundedAt: null,

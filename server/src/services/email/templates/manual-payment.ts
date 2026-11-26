@@ -1,7 +1,7 @@
 import type { Language } from '@sanctuary/shared';
 import { formatEuros, formatFecha } from '../../../utils/format.js';
 import { htmlConEnlace, type EmailContent } from './layout.js';
-import { FIRMA, idiomaDe, PAGO_SIMULADO, saludo } from './textos.js';
+import { FIRMA, idiomaDe, saludo } from './textos.js';
 
 interface DatosCuota {
   firstName: string;
@@ -12,18 +12,17 @@ interface DatosCuota {
   language?: Language;
 }
 
-/** Arma el email: saludo, cuerpo, acción con el botón y el aviso de pago simulado. */
+/** Arma el email: saludo, cuerpo y acción con el botón. */
 function componer(
   datos: DatosCuota,
   t: { subject: string; cuerpo: string; accion: string; boton: string },
   idioma: Language,
 ): EmailContent {
   const hola = saludo(idioma, datos.firstName);
-  const aviso = PAGO_SIMULADO[idioma];
   return {
     subject: t.subject,
-    text: [hola, '', t.cuerpo, '', t.accion, datos.url, '', aviso, '', FIRMA].join('\n'),
-    html: htmlConEnlace([hola, t.cuerpo, t.accion], { url: datos.url, texto: t.boton }, [aviso], undefined, idioma),
+    text: [hola, '', t.cuerpo, '', t.accion, datos.url, '', FIRMA].join('\n'),
+    html: htmlConEnlace([hola, t.cuerpo, t.accion], { url: datos.url, texto: t.boton }, [], undefined, idioma),
   };
 }
 

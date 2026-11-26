@@ -13,7 +13,7 @@ describe('SimulatedGateway (TECH_SPEC §11.1)', () => {
       ...cobro,
       simulatedOutcome: 'failure',
     });
-    expect(fallo).toMatchObject({ success: false, failureReason: 'Pago rechazado por la pasarela simulada.' });
+    expect(fallo).toMatchObject({ success: false, failureReason: 'Tarjeta rechazada por el banco emisor.' });
   });
 
   it('sin resultado pedido aplica el modo', async () => {
@@ -33,15 +33,15 @@ describe('SimulatedGateway (TECH_SPEC §11.1)', () => {
     expect((await gateway.charge(cobro)).success).toBe(true);
   });
 
-  it('devuelve una referencia única SIM-<fecha>-<código>', async () => {
+  it('devuelve una referencia única con aspecto real: CARD-<fecha>-<código>', async () => {
     const gateway = createSimulatedGateway({ mode: 'always_succeed', reloj });
     const a = await gateway.charge(cobro);
     const b = await gateway.charge(cobro);
-    expect(a.reference).toMatch(/^SIM-20261112-[0-9A-F]{10}$/);
+    expect(a.reference).toMatch(/^CARD-20261112-[0-9A-F]{10}$/);
     expect(a.reference).not.toBe(b.reference);
   });
 
   it('las devoluciones simuladas siempre salen bien', async () => {
-    expect(await createSimulatedGateway({ mode: 'always_fail', reloj }).refund('SIM-x')).toEqual({ success: true });
+    expect(await createSimulatedGateway({ mode: 'always_fail', reloj }).refund('CARD-x')).toEqual({ success: true });
   });
 });

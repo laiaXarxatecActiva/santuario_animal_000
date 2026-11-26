@@ -25,22 +25,21 @@ export function paymentRefundedEmail(datos: {
       subject: `Te hemos devuelto una cuota de ${a}`,
       cuerpo: `Te hemos devuelto ${importe} de la cuota de ${a} del ${desde} al ${hasta}.`,
       online: 'La devolución se hace por el mismo medio con el que pagaste.',
-      manual: 'Como la pagaste en efectivo o por transferencia, nos pondremos en contacto contigo para devolvértela.',
+      manual: 'Como la pagaste por transferencia, nos pondremos en contacto contigo para devolvértela.',
       boton: 'Ver mis aportaciones',
     },
     ca: {
       subject: `T'hem retornat una quota de ${a}`,
       cuerpo: `T'hem retornat ${importe} de la quota de ${a} del ${desde} al ${hasta}.`,
       online: 'La devolució es fa pel mateix mitjà amb què vas pagar.',
-      manual:
-        'Com que la vas pagar en efectiu o per transferència, ens posarem en contacte amb tu per a retornar-te-la.',
+      manual: 'Com que la vas pagar per transferència, ens posarem en contacte amb tu per a retornar-te-la.',
       boton: 'Veure les meues aportacions',
     },
     en: {
       subject: `We have refunded one of ${a}'s fees`,
       cuerpo: `We have refunded ${importe} of ${a}'s fee for ${desde} to ${hasta}.`,
       online: 'The refund is made through the same method you paid with.',
-      manual: 'As you paid in cash or by bank transfer, we will contact you to return it.',
+      manual: 'As you paid by bank transfer, we will contact you to return it.',
       boton: 'See my contributions',
     },
   }[idioma];

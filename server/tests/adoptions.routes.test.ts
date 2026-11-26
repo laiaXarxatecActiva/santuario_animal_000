@@ -118,8 +118,8 @@ describe('CU-13 Adoptar un animal', () => {
     });
 
     const [pago] = await pagosDe(id);
-    expect(pago).toMatchObject({ method: 'simulated', paid_at: t.reloj.ahora() });
-    expect(pago.payment_reference).toMatch(/^SIM-\d{8}-[0-9A-F]{10}$/);
+    expect(pago).toMatchObject({ method: 'card', paid_at: t.reloj.ahora() });
+    expect(pago.payment_reference).toMatch(/^CARD-\d{8}-[0-9A-F]{10}$/);
 
     // TEST_DATA.sql ya trae la bienvenida de su adopción anterior.
     expect(await notificacionesDe(12, 'adoption_welcome')).toContainEqual({
@@ -150,7 +150,7 @@ describe('CU-13 Adoptar un animal', () => {
     expect(fallo.body.payment).toMatchObject({
       status: 'failed',
       amount: '12.00',
-      failureReason: 'Pago rechazado por la pasarela simulada.',
+      failureReason: 'Tarjeta rechazada por el banco emisor.',
     });
     expect(t.mailer.outbox).toHaveLength(0);
 

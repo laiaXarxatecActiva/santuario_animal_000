@@ -62,14 +62,14 @@ export interface NewDonation {
   paidAt: Date | null;
 }
 
-/** Donación de la pasarela simulada, con el resultado del cobro. */
+/** Donación hecha en la web con tarjeta (pasarela), con el resultado del cobro. */
 export async function create(db: Queryable, d: NewDonation): Promise<Omit<DonationResultDto, 'receiptToken'>> {
   const { rows } = await db.query<DonationRow>(
     `INSERT INTO donations (user_id, donor_name, donor_email, amount, is_anonymous, message,
                             method, status, payment_reference, failure_reason, paid_at,
                             donor_surname, donor_phone, tax_certificate, donor_tax_id, donor_address,
                             donor_postal_code, donor_province, donor_country)
-     VALUES ($1, $2, $3, $4, $5, $6, 'simulated', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+     VALUES ($1, $2, $3, $4, $5, $6, 'card', $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
      RETURNING id, status, amount, method, payment_reference, paid_at, failure_reason,
                donor_name, donor_surname, donor_email, is_anonymous`,
     [

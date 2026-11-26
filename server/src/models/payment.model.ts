@@ -46,14 +46,14 @@ export interface NewPayment {
   paidAt: Date | null;
 }
 
-/** Cuota de la pasarela simulada. Los pagos nunca se borran; un reintento crea otro. */
+/** Cuota cobrada en la web con tarjeta (pasarela). Los pagos nunca se borran; un reintento crea otro. */
 export async function create(db: Queryable, pago: NewPayment): Promise<PaymentDto> {
   try {
     const { rows } = await db.query<PaymentRow>(
       `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status,
                              payment_reference, failure_reason, paid_at)
        VALUES ($1, COALESCE($9::int, (SELECT plan_id FROM adoptions WHERE id = $1)),
-               $2, $3, $4, 'simulated', $5, $6, $7, $8)
+               $2, $3, $4, 'card', $5, $6, $7, $8)
        RETURNING id, status, amount, period_start, period_end, failure_reason`,
       [
         pago.adoptionId,
@@ -85,8 +85,8 @@ export async function existsValidForPeriod(db: Queryable, adoptionId: number, pe
 }
 
 /**
- * CU-37 alta manual (y CU-38 A2): pago cobrado fuera de la web, en efectivo o
- * por transferencia, con el administrador que lo registra.
+ * CU-37 alta manual (y CU-38 A2): pago cobrado fuera de la web, por
+ * transferencia, con el administrador que lo registra.
  */
 export async function createManual(
   db: Queryable,

@@ -64,8 +64,7 @@ describe('CU-37 Gestionar adopciones: reglas', () => {
     });
   });
 
-  it('prefijo de la referencia de un pago manual según el método', () => {
-    expect(prefijoReferenciaManual('cash')).toBe('CASH');
+  it('prefijo de la referencia de un pago manual (solo transferencia)', () => {
     expect(prefijoReferenciaManual('bank_transfer')).toBe('TRF');
   });
 });

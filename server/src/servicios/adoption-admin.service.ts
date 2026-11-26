@@ -154,7 +154,7 @@ export function createAdoptionAdminService({
 
     /**
      * Alta manual, pasos 2-4: la adopción nace activa con su primer pago cobrado
-     * (efectivo o transferencia) y se avisa al adoptante como en CU-13.
+     * (transferencia) y se avisa al adoptante como en CU-13.
      */
     async create(actor: SessionUser, datos: AdminAdoptionCreateInput): Promise<AdminAdoptionDetailDto> {
       await adoptanteDisponible(datos.userId);

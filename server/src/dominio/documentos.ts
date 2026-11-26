@@ -119,8 +119,6 @@ export interface ContenidoRecibo {
   filas: [string, string][];
   /** Posición del importe en `filas` (se dibuja más grande). */
   filaImporte: number;
-  /** «Pago simulado» (solo con la pasarela simulada). */
-  aviso: string | null;
   idioma: Language;
 }
 
@@ -143,8 +141,7 @@ const RECIBO = {
     cuota: (animal: string) => `Cuota de ${animal}`,
     plan: (plan: string) => `Plan ${plan}`,
     periodo: (desde: string, hasta: string) => `del ${desde} al ${hasta}`,
-    formas: { simulated: 'Pago simulado', cash: 'Efectivo', bank_transfer: 'Transferencia', card: 'Tarjeta' },
-    aviso: 'Pago simulado: no se ha realizado ningún cargo real.',
+    formas: { card: 'Tarjeta', bank_transfer: 'Transferencia' },
   },
   ca: {
     titulo: 'Rebut',
@@ -164,8 +161,7 @@ const RECIBO = {
     cuota: (animal: string) => `Quota de ${animal}`,
     plan: (plan: string) => `Pla ${plan}`,
     periodo: (desde: string, hasta: string) => `del ${desde} al ${hasta}`,
-    formas: { simulated: 'Pagament simulat', cash: 'Efectiu', bank_transfer: 'Transferència', card: 'Targeta' },
-    aviso: "Pagament simulat: no s'ha fet cap càrrec real.",
+    formas: { card: 'Targeta', bank_transfer: 'Transferència' },
   },
   en: {
     titulo: 'Receipt',
@@ -185,8 +181,7 @@ const RECIBO = {
     cuota: (animal: string) => `${animal}'s fee`,
     plan: (plan: string) => `${plan} plan`,
     periodo: (desde: string, hasta: string) => `${desde} to ${hasta}`,
-    formas: { simulated: 'Simulated payment', cash: 'Cash', bank_transfer: 'Bank transfer', card: 'Card' },
-    aviso: 'Simulated payment: no real charge has been made.',
+    formas: { card: 'Card', bank_transfer: 'Bank transfer' },
   },
 } satisfies Record<Language, unknown>;
 
@@ -222,7 +217,6 @@ export function contenidoRecibo(r: ReceiptDto, idioma: Language = 'es'): Conteni
       [t.estado, r.refundedAt ? t.devuelto(f.instante(r.refundedAt)) : t.cobrado],
     ],
     filaImporte: 2 + filasFiscales.length,
-    aviso: r.method === 'simulated' ? t.aviso : null,
     idioma,
   };
 }

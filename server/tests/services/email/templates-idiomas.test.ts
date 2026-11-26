@@ -25,7 +25,7 @@ const recibo = {
   amount: '5.00',
   periodStart: '2026-11-12',
   periodEnd: '2026-12-11',
-  reference: 'SIM-1',
+  reference: 'CARD-1',
   url: 'http://localhost:5173/my-animals',
 };
 const url = 'http://localhost:5173/x';
@@ -78,11 +78,11 @@ const PLANTILLAS: Record<string, (language: Language) => EmailContent> = {
       donorName: 'Irene',
       amount: '20.00',
       paidAt: new Date('2026-11-12T10:00:00Z'),
-      reference: 'SIM-D1',
+      reference: 'CARD-D1',
       language,
     }),
   'donation-refunded': (language) =>
-    donationRefundedEmail({ donorName: 'Irene', amount: '20.00', reference: 'SIM-D1', online: true, language }),
+    donationRefundedEmail({ donorName: 'Irene', amount: '20.00', reference: 'CARD-D1', online: true, language }),
 };
 
 describe('Fase 3 Emails en el idioma del destinatario', () => {
@@ -102,11 +102,11 @@ describe('Fase 3 Emails en el idioma del destinatario', () => {
     expect(verifyEmailEmail({ firstName: 'Irene', url }).subject).toBe('Verifica tu email');
   });
 
-  it('el saludo, los importes y el aviso del pago simulado van en el idioma', () => {
+  it('el saludo y los importes van en el idioma (sin aviso de pago simulado)', () => {
     const ca = adoptionWelcomeEmail({ ...recibo, language: 'ca' });
     expect(ca.subject).toBe('Ja adoptes Brisa!');
     expect(ca.text).toContain('Hola, Irene:');
-    expect(ca.text).toContain("Pagament simulat: no s'ha fet cap càrrec real.");
+    expect(ca.text).not.toContain('simulat');
     const en = adoptionWelcomeEmail({ ...recibo, language: 'en' });
     expect(en.text).toContain('Hello Irene,');
     expect(en.text).toContain('Amount: €5.00');

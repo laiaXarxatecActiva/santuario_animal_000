@@ -14,7 +14,8 @@ export interface SimulatedGatewayOptions {
   random?: () => number;
 }
 
-const MOTIVO_FALLO = 'Pago rechazado por la pasarela simulada.';
+/** Como el que devolvería una pasarela real (los datos se muestran como reales). */
+const MOTIVO_FALLO = 'Tarjeta rechazada por el banco emisor.';
 
 /**
  * Pasarela simulada: no mueve dinero ni recibe datos de tarjeta (RN-13). El
@@ -26,7 +27,8 @@ export function createSimulatedGateway({
   reloj,
   random = Math.random,
 }: SimulatedGatewayOptions): PaymentGateway {
-  const referencia = () => `SIM-${reloj.hoy().replaceAll('-', '')}-${randomBytes(5).toString('hex').toUpperCase()}`;
+  // Referencia con aspecto real: `CARD-20261126-1A2B3C4D5E`.
+  const referencia = () => `CARD-${reloj.hoy().replaceAll('-', '')}-${randomBytes(5).toString('hex').toUpperCase()}`;
 
   return {
     async charge({ simulatedOutcome }) {

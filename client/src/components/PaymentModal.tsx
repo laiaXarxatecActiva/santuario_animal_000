@@ -78,7 +78,6 @@ function VentanaPago({ concept, amount, processing, onPay, onClose }: Omit<Payme
       </dl>
       {AVISO_PAGO_SIMULADO && (
         <Alert type="info">
-          <p>{t('payment.notice')}</p>
           <p>{t('payment.cardWarning')}</p>
         </Alert>
       )}

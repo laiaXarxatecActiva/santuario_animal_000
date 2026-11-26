@@ -5,10 +5,10 @@ import { contenidoCertificado, contenidoRecibo, NOTAS_ACADEMICAS, PREFIJOS } fro
 const recibo: ReceiptDto = {
   kind: 'payment',
   id: 1,
-  reference: 'SIM-1',
+  reference: 'CARD-1',
   amount: '10.00',
   paidAt: '2030-01-05T10:00:00.000Z',
-  method: 'simulated',
+  method: 'card',
   refundedAt: null,
   animalName: 'Rufo',
   planName: 'Plata',
@@ -44,7 +44,7 @@ describe('Fase 3 CU-22 y CU-19 PDF en el idioma del usuario', () => {
     const en = contenidoRecibo(recibo, 'en');
     expect(en.titulo).toBe('Receipt');
     expect(en.filas[en.filaImporte]).toEqual(['Amount', '€10.00']);
-    expect(en.aviso).toBe('Simulated payment: no real charge has been made.');
+    expect(en.filas).toContainEqual(['Payment method', 'Card']);
     expect(contenidoRecibo(recibo, 'ca').filas[en.filaImporte]![0]).toBe('Import');
   });
 

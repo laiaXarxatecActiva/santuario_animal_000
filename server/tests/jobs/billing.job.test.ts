@@ -134,7 +134,7 @@ describe('CU-43 Cobrar las cuotas mensuales (tarea billing)', () => {
     const roto: PaymentGateway = {
       charge: async (pedido) => {
         if (pedido.description.includes('Turia')) throw new Error('La pasarela no responde');
-        return { success: true, reference: `SIM-${pedido.description}` };
+        return { success: true, reference: `CARD-${pedido.description}` };
       },
       refund: async () => ({ success: true }),
     };
