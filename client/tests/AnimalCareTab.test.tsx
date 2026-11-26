@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { adminAnimal, caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { cualificaciones } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 const pauta = (overrides: Partial<MedicationPlanDto> = {}): MedicationPlanDto => ({
   id: 1,
@@ -128,7 +129,7 @@ describe('CU-65 Gestionar la dieta', () => {
     const ventana = await screen.findByRole('dialog', { name: 'Nuevo alimento' });
     await userEvent.type(within(ventana).getByLabelText('Alimento'), 'Carne de codorniz');
     await userEvent.type(within(ventana).getByLabelText('Cantidad'), '250,5');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Unidad'), 'g');
+    await elegirOpcion(within(ventana).getByLabelText('Unidad'), 'g');
     await userEvent.type(within(ventana).getByLabelText('Tomas (opcional)'), 'Por la mañana');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Alimento añadido')).toBeInTheDocument();
@@ -158,9 +159,9 @@ describe('CU-69 Gestionar las pautas de medicación', () => {
     const ventana = await screen.findByRole('dialog', { name: 'Nueva pauta' });
     await userEvent.type(within(ventana).getByLabelText('Medicamento'), 'Meloxicam');
     await userEvent.type(within(ventana).getByLabelText('Dosis'), '0,5 ml');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Vía'), 'Oral');
+    await elegirOpcion(within(ventana).getByLabelText('Vía'), 'Oral');
     await userEvent.type(within(ventana).getByLabelText('Horas (HH:MM, separadas por comas)'), '20:00, 08:00');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Cualificación necesaria'), 'Administrar medicación');
+    await elegirOpcion(within(ventana).getByLabelText('Cualificación necesaria'), 'Administrar medicación');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Pauta guardada')).toBeInTheDocument();
     expect(enviados('/api/admin/animals/1/medication-plans')).toEqual([

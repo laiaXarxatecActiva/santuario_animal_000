@@ -1,5 +1,5 @@
 import { correosPara, esperarCorreo } from '../support/mailpit.js';
-import { expect, iniciarSesion, test } from '../support/test.js';
+import { elegirOpcion, expect, iniciarSesion, test } from '../support/test.js';
 import { t } from '../support/textos.js';
 import { ELENA, GRETA, NURIA, PABLO } from '../support/usuarios.js';
 
@@ -11,7 +11,7 @@ test.describe('CU-31 Los avisos por email llegan a Mailpit según las preferenci
 
     await iniciarSesion(page, NURIA);
     await page.goto('/admin/updates/new');
-    await page.getByLabel(t('admin.updates.animal'), { exact: true }).selectOption({ label: GRETA });
+    await elegirOpcion(page.getByLabel(t('admin.updates.animal'), { exact: true }), GRETA);
     await page.getByLabel(t('admin.updates.titleField'), { exact: true }).fill(titulo);
     await page
       .getByLabel(t('admin.updates.body'), { exact: true })

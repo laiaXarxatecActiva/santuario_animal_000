@@ -2,7 +2,10 @@ import { faCircleExclamation, faEye, faEyeSlash } from '@fortawesome/free-solid-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { isLanguage } from '@sanctuary/shared';
 import {
+  useCallback,
   useId,
+  useLayoutEffect,
+  useRef,
   useState,
   type InputHTMLAttributes,
   type ReactNode,
@@ -12,8 +15,8 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { traducirMensaje } from '../i18n/mensajesValidacion';
+import { FilterSelect, type FilterOption } from './FilterSelect';
 import styles from './FormFields.module.css';
-import { SelectArrow } from './SelectArrow';
 
 // Campos de formulario (DESIGN_SYSTEM §8.5): etiqueta siempre visible, ayuda y
 // error debajo, enlazados con aria-describedby. Funcionan con `register()` de react-hook-form.
@@ -132,25 +135,68 @@ interface SelectFieldProps extends SelectHTMLAttributes<HTMLSelectElement> {
   ref?: Ref<HTMLSelectElement>;
 }
 
-/** Desplegable nativo con el mismo aspecto que los campos de texto. */
-export function SelectField({ label, error, help, id, className, children, ...rest }: SelectFieldProps) {
+/**
+ * Desplegable de los formularios: se escribe como un `<select>` (con sus `<option>`
+ * y `register()` de react-hook-form o `value`/`onChange`), pero se ve y se usa como
+ * los filtros de Animales (`FilterSelect`, DESIGN_SYSTEM §8.5). El `<select>` sigue
+ * en la página, oculto, y guarda el valor: al elegir una opción se le cambia y se
+ * avisa con su evento `change`, así que el formulario no nota la diferencia.
+ */
+export function SelectField({ label, error, help, id, className, children, ref, disabled, ...rest }: SelectFieldProps) {
   const { inputId, helpId, errorId, describedBy } = useIds(id, help, error);
+  const select = useRef<HTMLSelectElement | null>(null);
+  const [opciones, setOpciones] = useState<FilterOption<string>[]>([]);
+  const [valor, setValor] = useState('');
+
+  // Las opciones y el valor se leen del <select> tras cada render (así valen
+  // `<option>` sueltas, listas y fragmentos, y los cambios de `reset()`).
+  const leer = useCallback(() => {
+    const campo = select.current;
+    if (!campo) return;
+    const nuevas = Array.from(campo.options, (o) => ({ value: o.value, label: o.text, disabled: o.disabled }));
+    setOpciones((antes) => (mismasOpciones(antes, nuevas) ? antes : nuevas));
+    setValor(campo.value);
+  }, []);
+  useLayoutEffect(leer);
+
+  const unirRef = useCallback(
+    (campo: HTMLSelectElement | null) => {
+      select.current = campo;
+      if (typeof ref === 'function') ref(campo);
+      else if (ref) ref.current = campo;
+    },
+    [ref],
+  );
+
+  const elegir = (nuevo: string) => {
+    const campo = select.current;
+    if (!campo) return;
+    campo.value = nuevo;
+    campo.dispatchEvent(new Event('change', { bubbles: true }));
+    leer();
+  };
+
+  // react-hook-form marca el campo como tocado con el `blur` del <select>.
+  const alSalir = () => select.current?.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+
   return (
     <div className={`${styles.field} ${className ?? ''}`}>
-      <label htmlFor={inputId} className={styles.label}>
-        {label}
-      </label>
-      <SelectArrow>
-        <select
-          id={inputId}
-          className={styles.input}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy}
-          {...rest}
-        >
-          {children}
-        </select>
-      </SelectArrow>
+      <FilterSelect
+        id={inputId}
+        label={label}
+        labelClassName={styles.label}
+        className={styles.select}
+        options={opciones}
+        value={valor}
+        onChange={elegir}
+        onBlur={alSalir}
+        disabled={disabled}
+        invalid={Boolean(error)}
+        describedBy={describedBy}
+      />
+      <select ref={unirRef} hidden tabIndex={-1} aria-hidden="true" disabled={disabled} {...rest}>
+        {children}
+      </select>
       {help && (
         <p id={helpId} className={styles.help}>
           {help}
@@ -160,6 +206,10 @@ export function SelectField({ label, error, help, id, className, children, ...re
     </div>
   );
 }
+
+const mismasOpciones = (a: readonly FilterOption<string>[], b: readonly FilterOption<string>[]) =>
+  a.length === b.length &&
+  a.every((o, i) => o.value === b[i]!.value && o.label === b[i]!.label && o.disabled === b[i]!.disabled);
 
 interface TextAreaFieldProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string;

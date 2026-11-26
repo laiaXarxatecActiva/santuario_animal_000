@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminAnimal, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 function registro(overrides: Partial<VetRecordDto> = {}): VetRecordDto {
   return {
@@ -57,7 +58,7 @@ describe('CU-34 Gestionar el historial veterinario', () => {
     const fecha = within(ventana).getByLabelText('Fecha');
     await userEvent.clear(fecha);
     await userEvent.type(fecha, '2026-11-10');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Tipo'), 'Vacuna');
+    await elegirOpcion(within(ventana).getByLabelText('Tipo'), 'Vacuna');
     await userEvent.type(within(ventana).getByLabelText('Descripción'), 'Vacunación anual.');
     await userEvent.type(within(ventana).getByLabelText(/Peso \(kg\)/), '8,5');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
@@ -118,7 +119,7 @@ describe('CU-34 Gestionar el historial veterinario', () => {
     // El apartado «Animales» empieza cerrado en el escritorio.
     await userEvent.click(await screen.findByRole('button', { name: 'Animales' }));
     await userEvent.click(await screen.findByRole('link', { name: 'Veterinario' }));
-    await userEvent.selectOptions(await screen.findByLabelText('Animal'), 'Rufo');
+    await elegirOpcion(await screen.findByLabelText('Animal'), 'Rufo');
     expect(await screen.findByText('Revisión rutinaria.')).toBeInTheDocument();
   });
 });

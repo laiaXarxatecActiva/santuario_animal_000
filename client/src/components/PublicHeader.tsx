@@ -52,7 +52,7 @@ export function PublicHeader() {
   // CU-17 5: contador de novedades sin leer junto a «Novedades».
   const sinLeer = useUnreadCount(user?.role === 'adopter').data ?? 0;
   const enlaces = user === null ? VISITANTE : trabajador ? TRABAJADOR : ADOPTANTE;
-  // Con más de cuatro enlaces la cabecera va justa: enlaces más juntos e idioma solo con icono.
+  // Con más de cuatro enlaces la cabecera va justa: enlaces más juntos.
   const apretada = enlaces.length > 4;
   const cerrar = () => setAbierto(false);
 
@@ -105,7 +105,7 @@ export function PublicHeader() {
         </nav>
         <div className={styles.actions}>
           {user && <NotificationBell />}
-          <LanguageSelect compact={apretada} />
+          <LanguageSelect />
           <ThemeToggle />
           {!isLoading && (
             <div className={styles.desktopAuth}>

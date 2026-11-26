@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, adminUsers, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { cualificaciones, tarea, zonas } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -66,8 +67,8 @@ describe('CU-55 Tareas del día (administrador)', () => {
     const { pedidas } = api();
     renderRoute('/admin/tasks');
     await fila('Revisión de la clínica');
-    await userEvent.selectOptions(screen.getByLabelText('Zona'), 'Gran voladero');
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Pendiente');
+    await elegirOpcion(screen.getByLabelText('Zona'), 'Gran voladero');
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Pendiente');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/tasks').at(-1);
       expect(ultima?.searchParams.get('zoneId')).toBe('1');
@@ -85,9 +86,9 @@ describe('CU-55 Tareas del día (administrador)', () => {
     renderRoute('/admin/tasks');
     await userEvent.click(await screen.findByRole('button', { name: 'Nueva tarea puntual' }));
     const dialogo = screen.getByRole('dialog', { name: 'Nueva tarea puntual' });
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Tipo'), 'Mantenimiento');
+    await elegirOpcion(within(dialogo).getByLabelText('Tipo'), 'Mantenimiento');
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Cambiar la bombilla');
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Zona'), 'Cocina y almacén');
+    await elegirOpcion(within(dialogo).getByLabelText('Zona'), 'Cocina y almacén');
     await userEvent.clear(within(dialogo).getByLabelText('Día'));
     await userEvent.type(within(dialogo).getByLabelText('Día'), '2026-11-24');
     await userEvent.type(within(dialogo).getByLabelText('Hora'), '10:00');
@@ -116,7 +117,7 @@ describe('CU-55 Tareas del día (administrador)', () => {
     const dialogo = screen.getByRole('dialog', { name: 'Reasignar: Revisión de la clínica' });
     const persona = within(dialogo).getByLabelText('Persona');
     expect(within(persona).queryByRole('option', { name: /Lucía/ })).not.toBeInTheDocument();
-    await userEvent.selectOptions(persona, 'Nuria Peris Gil');
+    await elegirOpcion(persona, 'Nuria Peris Gil');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     expect(
       await within(dialogo).findByText('Esta persona no tiene la cualificación que exige la tarea.'),

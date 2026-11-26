@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { adminAnimal, caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -87,9 +88,9 @@ describe('CU-31 y CU-32: listado de actualizaciones del panel', () => {
     const { pedidas } = api();
     renderRoute('/admin/updates');
     await screen.findByRole('table');
-    await userEvent.selectOptions(await screen.findByLabelText('Animal'), 'Rufo');
-    await userEvent.selectOptions(screen.getByLabelText('Visibilidad'), 'Pública');
-    await userEvent.selectOptions(screen.getByLabelText('Autor'), 'Las mías');
+    await elegirOpcion(await screen.findByLabelText('Animal'), 'Rufo');
+    await elegirOpcion(screen.getByLabelText('Visibilidad'), 'Pública');
+    await elegirOpcion(screen.getByLabelText('Autor'), 'Las mías');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/updates').at(-1)!;
       expect(ultima.searchParams.get('animalId')).toBe('1');

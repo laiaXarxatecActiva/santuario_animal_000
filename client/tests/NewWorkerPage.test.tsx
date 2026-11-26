@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminUserDetail } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const rosa = adminUserDetail({
   id: 20,
@@ -20,7 +21,7 @@ async function rellenar() {
   await userEvent.type(screen.getByLabelText('Apellidos'), 'Gil Martí');
   await userEvent.type(screen.getByLabelText('Email'), 'rosa.gil@santuario.test');
   await userEvent.type(screen.getByLabelText('Teléfono (opcional)'), '612345678');
-  await userEvent.selectOptions(screen.getByLabelText('Rol'), 'Cuidador');
+  await elegirOpcion(screen.getByLabelText('Rol'), 'Cuidador');
   await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 }
 

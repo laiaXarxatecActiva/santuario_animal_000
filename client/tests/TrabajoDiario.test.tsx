@@ -5,6 +5,7 @@ import { admin, adminAnimal, adminSpecies, adminUserDetail, caretaker, dashboard
 import { mockApi, renderRoute } from './helpers/render';
 import { cualificaciones, zonas } from './helpers/work-fixtures';
 import { CARETAKER_HOME, homeFor } from '../src/utils/redirect';
+import { elegirOpcion, opcionesDe } from './helpers/select';
 
 const menuLateral = () => screen.getByRole('navigation', { name: 'Menú del panel' });
 
@@ -48,9 +49,9 @@ describe('CU-52 La zona del animal', () => {
     });
     renderRoute('/admin/animals/1');
     const zona = await screen.findByLabelText('Zona (opcional)');
-    await waitFor(() => expect(within(zona).getByRole('option', { name: 'Gran voladero' })).toBeInTheDocument());
-    expect(within(zona).queryByRole('option', { name: 'Voladero viejo' })).not.toBeInTheDocument();
-    await userEvent.selectOptions(zona, 'Gran voladero');
+    await waitFor(() => expect(opcionesDe(zona)).toContain('Gran voladero'));
+    expect(opcionesDe(zona)).not.toContain('Voladero viejo');
+    await elegirOpcion(zona, 'Gran voladero');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
     await waitFor(() => expect(enviados('/api/admin/animals/1').filter(Boolean)[0]).toMatchObject({ zoneId: 1 }));
   });

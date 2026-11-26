@@ -1,6 +1,6 @@
 /* Selector de idioma de la cabecera (DESIGN_SYSTEM §8.7): botón con el icono
-   `language`, el idioma actual y `chevron-down`, que abre el mismo panel que el
-   menú de usuario. */
+   `language` y `chevron-down` (el nombre del idioma solo para los lectores de
+   pantalla), que abre el mismo panel que el menú de usuario. */
 .menu {
   position: relative;
   flex-shrink: 0;
@@ -94,9 +94,9 @@
   color: var(--color-primary);
 }
 
-/* Por debajo de 480 px, botón redondo de 44 px con solo el icono, como el del tema,
-   para que la cabecera quepa sin desplazamiento lateral (DESIGN_SYSTEM §7). El panel
-   sigue mostrando los nombres completos. */
+/* Por debajo de 480 px, botón redondo de 44 px con el icono y sin la flecha, como el
+   del tema, para que la cabecera quepa sin desplazamiento lateral (DESIGN_SYSTEM §7).
+   El panel sigue mostrando los nombres completos. */
 @media (max-width: 479px) {
   .button {
     justify-content: center;
@@ -104,7 +104,6 @@
     padding: 0;
   }
 
-  .name,
   .chevron {
     display: none;
   }

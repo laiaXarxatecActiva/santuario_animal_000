@@ -1,4 +1,4 @@
-import { expect, iniciarSesion, test } from '../support/test.js';
+import { elegirOpcion, expect, iniciarSesion, test } from '../support/test.js';
 import { t } from '../support/textos.js';
 import { LUCIA, NURIA, RUFO } from '../support/usuarios.js';
 
@@ -9,7 +9,7 @@ test.describe('CU-31, CU-17 Publicar una actualización y verla en el muro', () 
     // CU-31: Nuria (cuidadora) publica desde el panel.
     await iniciarSesion(page, NURIA);
     await page.goto('/admin/updates/new');
-    await page.getByLabel(t('admin.updates.animal'), { exact: true }).selectOption({ label: RUFO });
+    await elegirOpcion(page.getByLabel(t('admin.updates.animal'), { exact: true }), RUFO);
     await page.getByLabel(t('admin.updates.titleField'), { exact: true }).fill(titulo);
     await page
       .getByLabel(t('admin.updates.body'), { exact: true })

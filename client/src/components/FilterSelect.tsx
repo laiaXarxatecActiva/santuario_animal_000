@@ -6,6 +6,8 @@ import styles from './FilterSelect.module.css';
 export interface FilterOption<T extends string> {
   value: T;
   label: string;
+  /** Se ve, pero no se puede elegir (como `<option disabled>`). */
+  disabled?: boolean;
 }
 
 interface PropsComunes<T extends string> {
@@ -14,6 +16,12 @@ interface PropsComunes<T extends string> {
   /** Clase del contenedor (etiqueta + desplegable). */
   className?: string;
   labelClassName?: string;
+  /** Para los formularios (`SelectField`): id del botón, desactivado, error y descripción. */
+  id?: string;
+  disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
+  onBlur?: () => void;
 }
 
 interface PropsUna<T extends string> extends PropsComunes<T> {
@@ -36,7 +44,8 @@ interface PropsVarias<T extends string> extends PropsComunes<T> {
 type FilterSelectProps<T extends string> = PropsUna<T> | PropsVarias<T>;
 
 /**
- * Desplegable de los filtros (catálogo y muro; DESIGN_SYSTEM §8.5). Sustituye al
+ * Desplegable de la web (DESIGN_SYSTEM §8.5): lo usan los filtros y, a través de
+ * `SelectField`, todos los formularios, para que todos se vean igual. Sustituye al
  * `<select>` nativo, cuya lista abierta no se puede colorear ni animar, por el
  * mismo panel que el selector de idioma. Sigue el patrón «combobox de solo
  * selección» de WAI-ARIA: el foco se queda en el botón y la opción activa se
@@ -45,11 +54,11 @@ type FilterSelectProps<T extends string> = PropsUna<T> | PropsVarias<T>;
  * desmarca las demás.
  */
 export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
-  const { label, options, className, labelClassName } = props;
+  const { label, options, className, labelClassName, disabled, invalid, describedBy, onBlur } = props;
   const [abierto, setAbierto] = useState(false);
   const [activa, setActiva] = useState(0);
   const id = useId();
-  const botonId = `${id}-boton`;
+  const botonId = props.id ?? `${id}-boton`;
   const etiquetaId = `${id}-etiqueta`;
   const panelId = `${id}-lista`;
   const opcionId = (i: number) => `${id}-opcion-${i}`;
@@ -57,12 +66,17 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
   const boton = useRef<HTMLButtonElement>(null);
 
   // En modo «varias», la posición 0 es «Todas…» y las opciones van detrás.
-  const filas: { label: string; marcada: boolean }[] = props.multiple
+  const filas: { label: string; value: string; marcada: boolean; disabled?: boolean }[] = props.multiple
     ? [
-        { label: props.allLabel, marcada: props.value.length === 0 },
-        ...options.map((o) => ({ label: o.label, marcada: props.value.includes(o.value) })),
+        { label: props.allLabel, value: '', marcada: props.value.length === 0 },
+        ...options.map((o) => ({
+          label: o.label,
+          value: o.value,
+          marcada: props.value.includes(o.value),
+          disabled: o.disabled,
+        })),
       ]
-    : options.map((o) => ({ label: o.label, marcada: o.value === props.value }));
+    : options.map((o) => ({ label: o.label, value: o.value, marcada: o.value === props.value, disabled: o.disabled }));
 
   const elegida = Math.max(
     0,
@@ -83,6 +97,7 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
   };
 
   const elegir = (i: number) => {
+    if (filas[i]?.disabled) return;
     if (props.multiple) {
       // Marca o desmarca sin cerrar; «Todas…» las desmarca todas.
       const opcion = options[i - 1];
@@ -120,12 +135,13 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
       }
       return;
     }
-    const ultima = filas.length - 1;
+    // Las flechas, Inicio y Fin saltan las opciones desactivadas.
+    const elegibles = filas.flatMap((f, i) => (f.disabled ? [] : [i]));
     const mover: Record<string, number> = {
-      ArrowDown: Math.min(activa + 1, ultima),
-      ArrowUp: Math.max(activa - 1, 0),
-      Home: 0,
-      End: ultima,
+      ArrowDown: elegibles.find((i) => i > activa) ?? activa,
+      ArrowUp: elegibles.findLast((i) => i < activa) ?? activa,
+      Home: elegibles[0] ?? activa,
+      End: elegibles.at(-1) ?? activa,
     };
     if (e.key in mover) {
       e.preventDefault();
@@ -158,8 +174,14 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
           aria-expanded={abierto}
           aria-controls={panelId}
           aria-activedescendant={abierto ? opcionId(activa) : undefined}
+          // El valor elegido, como en un <select> (en «varias», separados por comas).
+          value={props.multiple ? props.value.join(',') : props.value}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          disabled={disabled}
           onClick={() => (abierto ? setAbierto(false) : abrir())}
           onKeyDown={alPulsarTecla}
+          onBlur={onBlur}
         >
           <span className={styles.value}>{textoBoton}</span>
           <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" className={styles.chevron} />
@@ -167,7 +189,9 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
         <ul
           id={panelId}
           role="listbox"
-          aria-labelledby={etiquetaId}
+          // Solo abierta lleva el nombre de la etiqueta: cerrada no hace falta, y así la
+          // etiqueta nombra un único elemento (el botón).
+          aria-labelledby={abierto ? etiquetaId : undefined}
           aria-multiselectable={props.multiple || undefined}
           className={`${styles.panel} dropdown-panel`}
           hidden={!abierto}
@@ -178,6 +202,8 @@ export function FilterSelect<T extends string>(props: FilterSelectProps<T>) {
               id={opcionId(i)}
               role="option"
               aria-selected={fila.marcada}
+              aria-disabled={fila.disabled || undefined}
+              data-value={fila.value}
               className={styles.option}
               data-active={i === activa}
               // Evita que el botón pierda el foco al pulsar la opción.

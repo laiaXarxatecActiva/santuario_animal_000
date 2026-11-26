@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, adminAnimal } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { cualificaciones, plantilla, zonas } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -69,11 +70,11 @@ describe('CU-54 Gestionar plantillas de tareas', () => {
     renderRoute('/admin/task-templates');
     await userEvent.click(await screen.findByRole('button', { name: 'Nueva plantilla' }));
     const dialogo = screen.getByRole('dialog', { name: 'Nueva plantilla' });
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Tipo'), 'Limpieza');
+    await elegirOpcion(within(dialogo).getByLabelText('Tipo'), 'Limpieza');
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Barrer la cocina');
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Zona'), 'Cocina y almacén');
+    await elegirOpcion(within(dialogo).getByLabelText('Zona'), 'Cocina y almacén');
     await userEvent.type(within(dialogo).getByLabelText('Horas (HH:MM, separadas por comas)'), '16:00, 08:00');
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Se repite'), 'Algunos días de la semana');
+    await elegirOpcion(within(dialogo).getByLabelText('Se repite'), 'Algunos días de la semana');
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Lunes' }));
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Jueves' }));
     await userEvent.clear(within(dialogo).getByLabelText('Desde'));
@@ -99,7 +100,7 @@ describe('CU-54 Gestionar plantillas de tareas', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Nueva plantilla' }));
     const dialogo = screen.getByRole('dialog', { name: 'Nueva plantilla' });
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Algo');
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Se repite'), 'Algunos días de la semana');
+    await elegirOpcion(within(dialogo).getByLabelText('Se repite'), 'Algunos días de la semana');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     expect(await within(dialogo).findByText('Añade al menos una hora.')).toBeInTheDocument();
     expect(within(dialogo).getByText('Elige al menos un día de la semana.')).toBeInTheDocument();
