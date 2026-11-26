@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminUsers, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const pagina = { data: adminUsers, meta: { page: 1, pageSize: 20, total: 3, totalPages: 1 } };
 
@@ -31,6 +32,16 @@ describe('CU-35 Gestionar usuarios: listado', () => {
     expect(screen.queryByRole('link', { name: 'Usuarios' })).not.toBeInTheDocument();
   });
 
+  it('la ayuda explica para qué sirve la página y qué se hace en la ficha', async () => {
+    api();
+    renderRoute('/admin/users');
+    expect(
+      await screen.findByText(
+        'Todas las cuentas: adoptantes y personal. Busca a alguien por nombre o email y abre su ficha para ver sus adopciones y pagos, desactivarla, cambiar su rol, cerrar sus sesiones, borrar sus datos personales o eliminarla. Desde aquí también se da de alta a un trabajador nuevo.',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('2: muestra nombre, email, rol, estado, alta y último acceso', async () => {
     api();
     renderRoute('/admin/users');
@@ -53,9 +64,10 @@ describe('CU-35 Gestionar usuarios: listado', () => {
     const { pedidas } = api();
     renderRoute('/admin/users');
     await userEvent.type(await screen.findByLabelText('Buscar por nombre o email'), 'lucia');
-    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }));
-    await userEvent.selectOptions(screen.getByLabelText('Rol'), 'Administrador');
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Inactiva');
+    // Filtra a medida que se escribe: no hay botón «Buscar».
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
+    await elegirOpcion(screen.getByLabelText('Rol'), 'Administrador');
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Inactiva');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/users').at(-1);
       expect(ultima?.searchParams.get('q')).toBe('lucia');

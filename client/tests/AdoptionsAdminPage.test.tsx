@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminAdoptions, adminPlans, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const pagina = { data: adminAdoptions, meta: { page: 1, pageSize: 20, total: 2, totalPages: 1 } };
 
@@ -52,9 +53,10 @@ describe('CU-37 Gestionar adopciones: listado', () => {
     const { pedidas } = api();
     renderRoute('/admin/adoptions');
     await userEvent.type(await screen.findByLabelText('Buscar por adoptante o animal'), 'rufo');
-    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }));
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Pausada');
-    await userEvent.selectOptions(await screen.findByLabelText('Plan'), 'Usual');
+    // Filtra a medida que se escribe: no hay botón «Buscar».
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Pausada');
+    await elegirOpcion(await screen.findByLabelText('Plan'), 'Usual');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/adoptions').at(-1);
       expect(ultima?.searchParams.get('q')).toBe('rufo');

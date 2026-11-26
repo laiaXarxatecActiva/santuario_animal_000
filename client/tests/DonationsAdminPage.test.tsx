@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminDonations, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const pagina = {
   data: adminDonations,
@@ -49,10 +50,10 @@ describe('CU-39 Gestionar donaciones', () => {
     renderRoute('/admin/donations');
     expect(await screen.findByRole('heading', { level: 1, name: 'Donaciones' })).toBeInTheDocument();
     expect(await screen.findByText(/^Recaudado con estos filtros: 187,40\s€$/)).toBeInTheDocument();
-    const hucha = screen.getByText('Visitantes de la jornada').closest('tr') as HTMLElement;
-    expect(within(hucha).getByText('Recaudado en la hucha.')).toBeInTheDocument();
-    expect(within(hucha).getByText('Efectivo')).toBeInTheDocument();
-    expect(within(hucha).getByText('Cobrada')).toBeInTheDocument();
+    const colegio = screen.getByText('CEIP Els Ports').closest('tr') as HTMLElement;
+    expect(within(colegio).getByText('Recaudado en la semana solidaria.')).toBeInTheDocument();
+    expect(within(colegio).getByText('Transferencia')).toBeInTheDocument();
+    expect(within(colegio).getByText('Cobrada')).toBeInTheDocument();
     const marcos = screen.getByText('Marcos').closest('tr') as HTMLElement;
     expect(within(marcos).getByText('Fallida')).toBeInTheDocument();
     expect(within(marcos).queryByRole('button', { name: /Devolver/ })).not.toBeInTheDocument();
@@ -69,16 +70,17 @@ describe('CU-39 Gestionar donaciones', () => {
     const { pedidas } = api();
     renderRoute('/admin/donations');
     await userEvent.type(await screen.findByLabelText('Buscar por nombre o email del donante'), 'pablo');
-    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }));
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Cobrada');
-    await userEvent.selectOptions(screen.getByLabelText('Forma de pago'), 'Efectivo');
+    // Filtra a medida que se escribe: no hay botón «Buscar».
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Cobrada');
+    await elegirOpcion(screen.getByLabelText('Forma de pago'), 'Transferencia');
     await userEvent.type(screen.getByLabelText('Desde'), '2026-09-01');
     await userEvent.type(screen.getByLabelText('Hasta'), '2026-10-31');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/donations').at(-1);
       expect(ultima?.searchParams.get('q')).toBe('pablo');
       expect(ultima?.searchParams.get('status')).toBe('completed');
-      expect(ultima?.searchParams.get('method')).toBe('cash');
+      expect(ultima?.searchParams.get('method')).toBe('bank_transfer');
       expect(ultima?.searchParams.get('from')).toBe('2026-09-01');
       expect(ultima?.searchParams.get('to')).toBe('2026-10-31');
     });
@@ -86,7 +88,7 @@ describe('CU-39 Gestionar donaciones', () => {
 
   it('3: la pestaña «Por meses» muestra lo cobrado cada mes con los mismos filtros (sin el estado)', async () => {
     const { pedidas } = api();
-    renderRoute('/admin/donations?method=simulated&status=failed&from=2026-09-01');
+    renderRoute('/admin/donations?method=card&status=failed&from=2026-09-01');
     await userEvent.click(await screen.findByRole('tab', { name: 'Por meses' }));
     const panel = screen.getByRole('tabpanel');
     const octubre = (await within(panel).findByText('octubre de 2026')).closest('tr') as HTMLElement;
@@ -94,7 +96,7 @@ describe('CU-39 Gestionar donaciones', () => {
     const noviembre = within(panel).getByText('noviembre de 2026').closest('tr') as HTMLElement;
     expect(within(noviembre).getByText(/^0,00\s€$/)).toBeInTheDocument();
     const peticion = pedidas('/api/admin/donations/monthly-totals').at(-1);
-    expect(peticion?.searchParams.get('method')).toBe('simulated');
+    expect(peticion?.searchParams.get('method')).toBe('card');
     expect(peticion?.searchParams.get('from')).toBe('2026-09-01');
     expect(peticion?.searchParams.has('status')).toBe(false);
     expect(within(panel).getByText('Solo cuenta las donaciones cobradas.')).toBeInTheDocument();
@@ -102,9 +104,9 @@ describe('CU-39 Gestionar donaciones', () => {
 
   it('4: «Exportar CSV» descarga con los mismos filtros; «Registrar donación» lleva al formulario', async () => {
     api();
-    renderRoute('/admin/donations?method=cash&status=completed&page=2');
+    renderRoute('/admin/donations?method=bank_transfer&status=completed&page=2');
     const enlace = await screen.findByRole('link', { name: 'Exportar CSV' });
-    expect(enlace).toHaveAttribute('href', '/api/admin/donations/export.csv?status=completed&method=cash');
+    expect(enlace).toHaveAttribute('href', '/api/admin/donations/export.csv?status=completed&method=bank_transfer');
     expect(screen.getByRole('link', { name: 'Registrar donación' })).toHaveAttribute('href', '/admin/donations/new');
   });
 
@@ -125,11 +127,9 @@ describe('CU-39 Gestionar donaciones', () => {
   it('A2: si no dejó email ni tiene cuenta, la ventana avisa de que no le llegará ningún aviso', async () => {
     api();
     renderRoute('/admin/donations');
-    await userEvent.click(
-      await screen.findByRole('button', { name: /^Devolver 87,40\s€ de Visitantes de la jornada$/ }),
-    );
+    await userEvent.click(await screen.findByRole('button', { name: /^Devolver 87,40\s€ de CEIP Els Ports$/ }));
     const ventana = await screen.findByRole('dialog');
-    expect(ventana).toHaveTextContent('Se pagó en efectivo o por transferencia');
+    expect(ventana).toHaveTextContent('Se pagó por transferencia');
     expect(ventana).toHaveTextContent('No dejó email ni tiene cuenta: no recibirá ningún aviso de la devolución.');
   });
 
@@ -138,9 +138,7 @@ describe('CU-39 Gestionar donaciones', () => {
       '/api/admin/donations/6/refund': () => errorApi(422, 'DONATION_NOT_REFUNDABLE', 'x'),
     });
     renderRoute('/admin/donations');
-    await userEvent.click(
-      await screen.findByRole('button', { name: /^Devolver 87,40\s€ de Visitantes de la jornada$/ }),
-    );
+    await userEvent.click(await screen.findByRole('button', { name: /^Devolver 87,40\s€ de CEIP Els Ports$/ }));
     await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Devolver' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Solo se puede devolver una donación cobrada.');
   });
