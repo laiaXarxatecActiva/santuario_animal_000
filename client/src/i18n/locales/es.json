@@ -668,11 +668,21 @@
       "publishUpdate": "Publicar actualización",
       "allUpToDate": "Todos los animales con adoptantes están al día",
       "loadError": "No hemos podido cargar el escritorio",
-      "quickLinks": "Accesos rápidos",
-      "newAnimal": "Nuevo animal",
       "revenueThisMonth": "este mes",
       "revenueDetail": "cuotas {{fees}} · donaciones {{donations}}",
-      "todayLink": "Ver el panel «Hoy» del santuario"
+      "todayLink": "Ver el panel «Hoy» del santuario",
+      "quickLinks": "Accesos rápidos",
+      "quickLinksCustomize": "Personalizar",
+      "quickLinksEmpty": "No tienes accesos rápidos.",
+      "quickLinksDialogTitle": "Personalizar accesos rápidos",
+      "quickLinksDialogHelp": "Marca lo que quieres tener a mano en el escritorio. Se guarda en este navegador.",
+      "quickLinksReset": "Restablecer",
+      "quickLinksSave": "Guardar",
+      "quickActions": "Acciones",
+      "newUpdate": "Nueva actualización",
+      "newAnimal": "Nuevo animal",
+      "newAdoption": "Nueva adopción",
+      "newDonation": "Registrar donación"
     },
     "common": {
       "save": "Guardar",
@@ -1254,11 +1264,11 @@
         "species": "Las especies del santuario. Cada animal pertenece a una.",
         "vet": "El historial veterinario de todos los animales, solo para el personal.",
         "today": "Lo más importante de hoy de un vistazo: tareas, medicación, incidencias, turnos y huecos. Cada bloque lleva a su página.",
-        "myDay": "Tus tareas y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
+        "myDay": "Tus tareas, las que no tienen a nadie asignado y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
         "myShifts": "Cuándo has fichado la entrada y la salida de cada turno y cuántas horas has trabajado. Sin fechas, las últimas 4 semanas.",
         "incidents": "Para comunicar problemas del santuario (un animal herido, una avería…) y seguir cómo se resuelven.",
         "shifts": "Aquí ves quién trabaja cada día de la semana y en qué zonas. Si falta personal en un turno, aparece en amarillo.",
-        "tasks": "Todas las tareas de un día. Puedes crear tareas puntuales, reasignarlas y cambiar los ajustes del trabajo diario.",
+        "tasks": "Aquí se organizan las tareas de un día: crearlas, reasignarlas y cambiar los ajustes del trabajo diario. Cada persona marca las suyas como hechas en «Mi día».",
         "taskTemplates": "Las tareas que se repiten (comidas, limpiezas…). Cada plantilla crea sus tareas solas cada día.",
         "zones": "Las zonas del santuario y las cualificaciones que piden algunas tareas.",
         "shiftTemplates": "Los turnos que se hacen (mañana, tarde…), su horario y cuántas personas necesita cada zona.",
@@ -1377,7 +1387,8 @@
       "deleteTitle": "Cómo borrarlas",
       "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión.",
       "panelMenuPurpose": "Solo en el panel del personal: qué apartados del menú tienes abiertos.",
-      "pageIntroPurpose": "Solo en el panel del personal: en qué páginas has ocultado la explicación."
+      "pageIntroPurpose": "Solo en el panel del personal: en qué páginas has ocultado la explicación.",
+      "quickLinksPurpose": "Solo en el panel del personal: qué accesos rápidos has elegido para el escritorio."
     }
   },
   "notifications": {
@@ -1454,10 +1465,10 @@
     "status": {
       "pending": "Pendiente",
       "completed": "Hecha",
-      "not_done": "No realizada"
+      "not_done": "No realizada",
+      "resolved": "Resuelta"
     },
     "late": "Atrasada",
-    "oneOff": "Puntual",
     "resolvedBy": "{{name}}, a las {{time}}",
     "resolvedBySystem": "Cerrada por el sistema al acabar el día",
     "assignedTo": "Asignada a {{name}}",
@@ -1488,8 +1499,8 @@
     },
     "myDay": {
       "title": "Mi día",
-      "mine": "Asignadas a ti",
-      "rest": "Tareas del día",
+      "mine": "Tus tareas",
+      "rest": "Sin asignar",
       "empty": "No hay tareas para este día.",
       "prevDay": "Día anterior",
       "nextDay": "Día siguiente",
@@ -1510,7 +1521,15 @@
     },
     "tasks": {
       "title": "Tareas del día",
-      "new": "Nueva tarea puntual",
+      "new": "Nueva tarea",
+      "sort": "Ordenar",
+      "sortByTime": "Por hora",
+      "sortRecent": "Más recientes primero",
+      "recentHelp": "Las {{count}} últimas creadas, de cualquier día.",
+      "noZone": "Sin zona",
+      "mineTitle": "Tuyas",
+      "othersTitle": "Del resto del personal",
+      "doInMyDay": "Hacerlas en «Mi día»",
       "created": "Tarea creada",
       "day": "Día",
       "time": "Hora",
@@ -1546,7 +1565,7 @@
       "saved": "Plantilla guardada",
       "deleted": "Plantilla borrada",
       "zoneFromAnimals": "Según sus animales",
-      "times": "Horas (HH:MM, separadas por comas)",
+      "times": "Horas",
       "recurrence": "Se repite",
       "recurrences": {
         "daily": "Cada día",
@@ -1777,7 +1796,7 @@
         "medication": "Medicamento",
         "dose": "Dosis",
         "route": "Vía",
-        "times": "Horas (HH:MM, separadas por comas)",
+        "times": "Horas",
         "qualification": "Cualificación necesaria",
         "qualificationHelp": "Normalmente, «Administrar medicación».",
         "noQualification": "Ninguna",
@@ -1881,7 +1900,7 @@
       "resolve": "Resolver",
       "reopen": "Reabrir",
       "resolveTitle": "Resolver la incidencia",
-      "pendingTaskWillClose": "Su tarea pendiente «{{title}}» se cerrará: ya no hará falta.",
+      "pendingTaskWillClose": "Su tarea pendiente «{{title}}» se marcará como resuelta: ya no hará falta.",
       "resolveSubmit": "Marcar como resuelta",
       "resolveNote": "¿Cómo se ha resuelto?",
       "resolvedOk": "Incidencia resuelta",
@@ -1990,5 +2009,11 @@
     "removeOne": "Quitar {{name}}",
     "chosen": "Fotos elegidas",
     "tooMany": "Como mucho {{count}} fotos."
+  },
+  "time": {
+    "hours": "Horas",
+    "minutes": "Minutos",
+    "add": "Añadir hora",
+    "remove": "Quitar {{time}}"
   }
 }

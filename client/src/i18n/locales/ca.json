@@ -668,11 +668,21 @@
       "publishUpdate": "Publica una actualització",
       "allUpToDate": "Tots els animals amb adoptants estan al dia",
       "loadError": "No hem pogut carregar l'escriptori",
-      "quickLinks": "Accessos ràpids",
-      "newAnimal": "Animal nou",
       "revenueThisMonth": "este mes",
       "revenueDetail": "quotes {{fees}} · donacions {{donations}}",
-      "todayLink": "Vore el panell «Hui» del santuari"
+      "todayLink": "Vore el panell «Hui» del santuari",
+      "quickLinks": "Accessos ràpids",
+      "quickLinksCustomize": "Personalitzar",
+      "quickLinksEmpty": "No tens accessos ràpids.",
+      "quickLinksDialogTitle": "Personalitzar els accessos ràpids",
+      "quickLinksDialogHelp": "Marca el que vols tindre a mà a l'escriptori. Es guarda en este navegador.",
+      "quickLinksReset": "Restablir",
+      "quickLinksSave": "Guardar",
+      "quickActions": "Accions",
+      "newUpdate": "Nova actualització",
+      "newAnimal": "Nou animal",
+      "newAdoption": "Nova adopció",
+      "newDonation": "Registrar una donació"
     },
     "common": {
       "save": "Guarda",
@@ -1254,11 +1264,11 @@
         "species": "Les espècies del santuari. Cada animal pertany a una.",
         "vet": "L’historial veterinari de tots els animals, només per al personal.",
         "today": "El més important de hui d’un colp d’ull: tasques, medicació, incidències, torns i buits. Cada bloc porta a la seua pàgina.",
-        "myDay": "Les teues tasques i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
+        "myDay": "Les teues tasques, les que no tenen ningú assignat i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
         "myShifts": "Quan has fitxat l’entrada i l’eixida de cada torn i quantes hores has treballat. Sense dates, les últimes 4 setmanes.",
         "incidents": "Per a comunicar problemes del santuari (un animal ferit, una avaria…) i seguir com es resolen.",
         "shifts": "Ací veus qui treballa cada dia de la setmana i en quines zones. Si falta personal en un torn, apareix en groc.",
-        "tasks": "Totes les tasques d’un dia. Pots crear tasques puntuals, reassignar-les i canviar els ajustos del treball diari.",
+        "tasks": "Ací s’organitzen les tasques d’un dia: crear-les, reassignar-les i canviar els ajustos del treball diari. Cada persona marca les seues com a fetes en «El meu dia».",
         "taskTemplates": "Les tasques que es repetixen (menjars, neteges…). Cada plantilla crea les seues tasques soles cada dia.",
         "zones": "Les zones del santuari i les qualificacions que demanen algunes tasques.",
         "shiftTemplates": "Els torns que es fan (matí, vesprada…), el seu horari i quantes persones necessita cada zona.",
@@ -1377,7 +1387,8 @@
       "deleteTitle": "Com esborrar-les",
       "deleteText": "Pots esborrar-les quan vulgues des de la configuració del teu navegador, a l'apartat de privadesa o de dades de llocs. Si esborres la galeta de sessió, hauràs de tornar a iniciar la sessió.",
       "panelMenuPurpose": "Només al panell del personal: quins apartats del menú tens oberts.",
-      "pageIntroPurpose": "Només al panell del personal: en quines pàgines has amagat l’explicació."
+      "pageIntroPurpose": "Només al panell del personal: en quines pàgines has amagat l’explicació.",
+      "quickLinksPurpose": "Només al tauler del personal: quins accessos ràpids has triat per a l'escriptori."
     }
   },
   "notifications": {
@@ -1454,10 +1465,10 @@
     "status": {
       "pending": "Pendent",
       "completed": "Feta",
-      "not_done": "No feta"
+      "not_done": "No feta",
+      "resolved": "Resolta"
     },
     "late": "Endarrerida",
-    "oneOff": "Puntual",
     "resolvedBy": "{{name}}, a les {{time}}",
     "resolvedBySystem": "Tancada pel sistema en acabar el dia",
     "assignedTo": "Assignada a {{name}}",
@@ -1488,8 +1499,8 @@
     },
     "myDay": {
       "title": "El meu dia",
-      "mine": "Assignades a tu",
-      "rest": "Tasques del dia",
+      "mine": "Les teues tasques",
+      "rest": "Sense assignar",
       "empty": "No hi ha tasques per a este dia.",
       "prevDay": "Dia anterior",
       "nextDay": "Dia següent",
@@ -1510,7 +1521,15 @@
     },
     "tasks": {
       "title": "Tasques del dia",
-      "new": "Nova tasca puntual",
+      "new": "Nova tasca",
+      "sort": "Ordena",
+      "sortByTime": "Per hora",
+      "sortRecent": "Més recents primer",
+      "recentHelp": "Les {{count}} últimes creades, de qualsevol dia.",
+      "noZone": "Sense zona",
+      "mineTitle": "Teues",
+      "othersTitle": "De la resta del personal",
+      "doInMyDay": "Fes-les en «El meu dia»",
       "created": "Tasca creada",
       "day": "Dia",
       "time": "Hora",
@@ -1546,7 +1565,7 @@
       "saved": "Plantilla guardada",
       "deleted": "Plantilla esborrada",
       "zoneFromAnimals": "Segons els seus animals",
-      "times": "Hores (HH:MM, separades per comes)",
+      "times": "Hores",
       "recurrence": "Es repetix",
       "recurrences": {
         "daily": "Cada dia",
@@ -1777,7 +1796,7 @@
         "medication": "Medicament",
         "dose": "Dosi",
         "route": "Via",
-        "times": "Hores (HH:MM, separades per comes)",
+        "times": "Hores",
         "qualification": "Qualificació necessària",
         "qualificationHelp": "Normalment, «Administrar medicació».",
         "noQualification": "Cap",
@@ -1881,7 +1900,7 @@
       "resolve": "Resoldre",
       "reopen": "Reobrir",
       "resolveTitle": "Resoldre la incidència",
-      "pendingTaskWillClose": "La seua tasca pendent «{{title}}» es tancarà: ja no caldrà.",
+      "pendingTaskWillClose": "La seua tasca pendent «{{title}}» es marcarà com a resolta: ja no caldrà.",
       "resolveSubmit": "Marcar com a resolta",
       "resolveNote": "Com s’ha resolt?",
       "resolvedOk": "Incidència resolta",
@@ -1990,5 +2009,11 @@
     "removeOne": "Lleva {{name}}",
     "chosen": "Fotos triades",
     "tooMany": "Com a màxim {{count}} fotos."
+  },
+  "time": {
+    "hours": "Hores",
+    "minutes": "Minuts",
+    "add": "Afig una hora",
+    "remove": "Lleva {{time}}"
   }
 }

@@ -158,7 +158,7 @@
     "alreadyAdopting": "You already adopt {{name}}",
     "seeFullProfile": "See their full profile",
     "enlargePhoto": "Show photo {{n}} of {{total}} full size",
-    "openInPanel": "View in the panel",
+    "openInPanel": "View in the dashboard",
     "staffCannotAdopt": "Staff accounts cannot adopt."
   },
   "howItWorks": {
@@ -668,11 +668,21 @@
       "publishUpdate": "Publish update",
       "allUpToDate": "All animals with adopters are up to date",
       "loadError": "We could not load the overview",
-      "quickLinks": "Quick links",
-      "newAnimal": "New animal",
       "revenueThisMonth": "this month",
       "revenueDetail": "fees {{fees}} · donations {{donations}}",
-      "todayLink": "See the sanctuary’s «Today» panel"
+      "todayLink": "See the sanctuary’s «Today» panel",
+      "quickLinks": "Quick links",
+      "quickLinksCustomize": "Customise",
+      "quickLinksEmpty": "You have no quick links.",
+      "quickLinksDialogTitle": "Customise quick links",
+      "quickLinksDialogHelp": "Tick what you want to have at hand on the overview. It is saved in this browser.",
+      "quickLinksReset": "Reset",
+      "quickLinksSave": "Save",
+      "quickActions": "Actions",
+      "newUpdate": "New update",
+      "newAnimal": "New animal",
+      "newAdoption": "New adoption",
+      "newDonation": "Record a donation"
     },
     "common": {
       "save": "Save",
@@ -1254,11 +1264,11 @@
         "species": "The sanctuary’s species. Every animal belongs to one.",
         "vet": "The vet history of all the animals, for staff only.",
         "today": "Today’s key points at a glance: tasks, medication, incidents, shifts and gaps. Each block links to its page.",
-        "myDay": "Your tasks and shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
+        "myDay": "Your tasks, the unassigned ones and your shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
         "myShifts": "When you clocked in and out of each shift and how many hours you worked. Without dates, the last 4 weeks.",
         "incidents": "To report problems at the sanctuary (an injured animal, a breakdown…) and follow how they are solved.",
         "shifts": "See who works each day of the week and in which zones. If a shift is short of staff, it shows in yellow.",
-        "tasks": "All the tasks of a day. You can create one-off tasks, reassign them and change the daily work settings.",
+        "tasks": "This is where the day’s tasks are organised: create them, reassign them and change the daily work settings. Each person marks their own as done in “My day”.",
         "taskTemplates": "Recurring tasks (meals, cleaning…). Each template creates its tasks automatically every day.",
         "zones": "The sanctuary’s zones and the qualifications some tasks require.",
         "shiftTemplates": "The shifts worked (morning, afternoon…), their hours and how many people each zone needs.",
@@ -1377,7 +1387,8 @@
       "deleteTitle": "How to delete them",
       "deleteText": "You can delete them whenever you like from your browser settings, in the privacy or site data section. If you delete the session cookie, you will have to log in again.",
       "panelMenuPurpose": "Staff panel only: which menu groups you have open.",
-      "pageIntroPurpose": "Staff panel only: on which pages you have hidden the explanation."
+      "pageIntroPurpose": "Staff panel only: on which pages you have hidden the explanation.",
+      "quickLinksPurpose": "Staff panel only: which quick links you have chosen for the overview."
     }
   },
   "notifications": {
@@ -1454,10 +1465,10 @@
     "status": {
       "pending": "Pending",
       "completed": "Done",
-      "not_done": "Not done"
+      "not_done": "Not done",
+      "resolved": "Resolved"
     },
     "late": "Late",
-    "oneOff": "One-off",
     "resolvedBy": "{{name}}, at {{time}}",
     "resolvedBySystem": "Closed by the system at the end of the day",
     "assignedTo": "Assigned to {{name}}",
@@ -1488,8 +1499,8 @@
     },
     "myDay": {
       "title": "My day",
-      "mine": "Assigned to you",
-      "rest": "The day's tasks",
+      "mine": "Your tasks",
+      "rest": "Unassigned",
       "empty": "There are no tasks for this day.",
       "prevDay": "Previous day",
       "nextDay": "Next day",
@@ -1510,7 +1521,15 @@
     },
     "tasks": {
       "title": "Today's tasks",
-      "new": "New one-off task",
+      "new": "New task",
+      "sort": "Sort",
+      "sortByTime": "By time",
+      "sortRecent": "Newest first",
+      "recentHelp": "The {{count}} most recently created, from any day.",
+      "noZone": "No zone",
+      "mineTitle": "Yours",
+      "othersTitle": "Rest of the staff",
+      "doInMyDay": "Do them in “My day”",
       "created": "Task created",
       "day": "Day",
       "time": "Time",
@@ -1546,7 +1565,7 @@
       "saved": "Template saved",
       "deleted": "Template deleted",
       "zoneFromAnimals": "From its animals",
-      "times": "Times (HH:MM, comma-separated)",
+      "times": "Times",
       "recurrence": "Repeats",
       "recurrences": {
         "daily": "Every day",
@@ -1777,7 +1796,7 @@
         "medication": "Medicine",
         "dose": "Dose",
         "route": "Route",
-        "times": "Times (HH:MM, separated by commas)",
+        "times": "Times",
         "qualification": "Required qualification",
         "qualificationHelp": "Usually, \"Give medication\".",
         "noQualification": "None",
@@ -1881,7 +1900,7 @@
       "resolve": "Resolve",
       "reopen": "Reopen",
       "resolveTitle": "Resolve the incident",
-      "pendingTaskWillClose": "Its pending task “{{title}}” will be closed: it is no longer needed.",
+      "pendingTaskWillClose": "Its pending task “{{title}}” will be marked as resolved: it is no longer needed.",
       "resolveSubmit": "Mark as resolved",
       "resolveNote": "How was it resolved?",
       "resolvedOk": "Incident resolved",
@@ -1990,5 +2009,11 @@
     "removeOne": "Remove {{name}}",
     "chosen": "Chosen photos",
     "tooMany": "At most {{count}} photos."
+  },
+  "time": {
+    "hours": "Hours",
+    "minutes": "Minutes",
+    "add": "Add time",
+    "remove": "Remove {{time}}"
   }
 }

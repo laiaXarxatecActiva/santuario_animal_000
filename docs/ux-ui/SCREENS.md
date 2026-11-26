@@ -366,7 +366,7 @@ Todas las pantallas de autenticación comparten el mismo esquema: **una tarjeta 
 Dos páginas de lectura con el mismo esquema que «Cómo funciona» (§3.4): una columna de 70 caracteres de ancho máximo, título h1, fecha «Última actualización» en `--color-text-muted` y secciones con h2. Sin formularios ni botones, salvo los enlaces del texto. El aviso del pie «Proyecto académico · Los pagos son simulados» se repite al principio como aviso `info`.
 
 - **Privacidad** (enlazada desde el pie y desde la casilla del registro): quién es el responsable, qué datos se guardan (nombre, apellidos, email, teléfono opcional, adopciones y pagos simulados; nunca datos de tarjeta), para qué, cuánto tiempo, con quién se comparten (con nadie: todo en el servidor del santuario) y los derechos (acceso y rectificación desde «Mi perfil»; supresión, oposición y el resto, escribiendo al santuario).
-- **Cookies** (enlazada desde el pie y desde el aviso de cookies, §2.4): una tabla con las cookies y el almacenamiento del navegador que se usan (columnas: nombre, para qué sirve, duración, tipo), todas técnicas: la cookie de sesión `sid` (7 días desde la última visita), y en `localStorage` el tema elegido (`theme`) si se ha cerrado el aviso de cookies (`cookie-notice`) y, solo en el panel del personal, qué apartados del menú están abiertos (`panel-menu`) y en qué páginas se ha ocultado la explicación (`page-intro:<página>`). Explica que no hay cookies de análisis ni de publicidad, y cómo borrarlas desde el navegador. En móvil, la tabla se convierte en una lista de tarjetas, como las del panel.
+- **Cookies** (enlazada desde el pie y desde el aviso de cookies, §2.4): una tabla con las cookies y el almacenamiento del navegador que se usan (columnas: nombre, para qué sirve, duración, tipo), todas técnicas: la cookie de sesión `sid` (7 días desde la última visita), y en `localStorage` el tema elegido (`theme`) si se ha cerrado el aviso de cookies (`cookie-notice`) y, solo en el panel del personal, qué apartados del menú están abiertos (`panel-menu`), en qué páginas se ha ocultado la explicación (`page-intro:<página>`) y qué accesos rápidos ha elegido cada persona para el escritorio (`quick-links:<id del usuario>`). Explica que no hay cookies de análisis ni de publicidad, y cómo borrarlas desde el navegador. En móvil, la tabla se convierte en una lista de tarjetas, como las del panel.
 
 ## 4. Área del adoptante
 
@@ -465,7 +465,7 @@ Página propia (no ventana emergente) con un formulario corto. Al confirmar, se 
 
 - Pulsar la foto de la tarjeta abre la ficha del animal (`/my-animals/:animalId`), igual que «Ver su ficha». Solo la foto: el hueco en blanco que queda debajo no es un enlace. Al pasar el ratón hace el mismo zoom leve que la tarjeta de animal (DESIGN_SYSTEM §8.2). Para el teclado y los lectores de pantalla ese enlace de la foto está oculto, porque ya está el botón «Ver la ficha de…».
 - A la vista, por este orden: [■ Ver su ficha], [Certificado] y [Cambiar plan] (contorno; vuelve a pulsarse para cerrar el desplegable). «Forma de pago», «Descargar certificado» y «Darme de baja» están en el menú «⋯» también en escritorio, para no saturar la tarjeta.
-- **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios.
+- **Darme de baja** abre una ventana de confirmación «Darte de baja de Rufo» que explica qué pasará (activa: «seguirá activa hasta el [último día pagado]…»; pendiente: se cancela sin cobros; pausada: termina y la cuota pendiente no se cobra), con [Volver] y [■ Confirmar la baja]. **Cambiar plan** abre un desplegable en la tarjeta (no una ventana emergente) con «El cambio se aplicará a partir del [fecha]», los planes activos (el actual marcado «(plan actual)») y [■ Guardar] [Cancelar]. Elegir lo que ya estaba cierra el desplegable sin cambios. Los desplegables de «Cambiar plan» y «Forma de pago» se abren **debajo de la fila de botones**, para que los botones no cambien de sitio, y se cierran sin guardar al pulsar fuera de ellos o con Escape (como [Cancelar]; Escape devuelve el foco a [Cambiar plan]). Mientras se guarda no se cierran.
 - [Cambiar plan] solo en las activas sin baja. El menú «⋯» solo aparece si hay acciones: «Forma de pago» y «Darme de baja» en las activas sin baja, pausadas y pendientes; «Descargar certificado» en las activas (también con la baja pedida).
 - Con baja solicitada: aviso `info` «Activa hasta el 29 nov. No se te volverá a cobrar».
 - Sin adopciones: estado vacío + [■ Ver animales].
@@ -574,7 +574,7 @@ Usa `AdminLayout`: más sobrio y compacto (`DESIGN_SYSTEM.md` §8.10).
 - Cada página del menú lleva bajo el título una explicación breve de para qué sirve (`PageIntro`), que se oculta con «Entendido» y se recupera con «¿Para qué sirve esta página?».
 - La sección «Administración» solo aparece para el administrador. En «Trabajo diario», el cuidador solo ve «Mi día»; «Tareas del día», «Plantillas de tareas» y «Zonas y cualificaciones» son del administrador.
 - Las secciones de la Fase 3 (Veterinario, Estadísticas, Actividad) aparecen cuando estén implementadas.
-- **Móvil y tablet:** el menú lateral se oculta. La cabecera muestra ☰ · «Panel» · · , y la hamburguesa despliega el mismo menú a todo el ancho.
+- **Móvil y tablet:** el menú lateral se oculta. La cabecera muestra ☰ · «Panel» · · , y la hamburguesa despliega el mismo menú a todo el ancho, fijo bajo la cabecera aunque se baje por la página; si no cabe, se desplaza por dentro.
 
 ### 5.2 Escritorio del panel (`/admin`) — CU-27
 
@@ -599,10 +599,16 @@ Usa `AdminLayout`: más sobrio y compacto (`DESIGN_SYSTEM.md` §8.10).
   ┃                                      [■ Publicar actualización]    ┃
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-  Accesos rápidos:  [ + Nuevo animal ]  [ + Nueva actualización ]
+  Accesos rápidos (h2)                                      [⚙ Personalizar]
+  [ + Nueva actualización ]  [ + Nuevo animal ]  [ + Nueva adopción ]  [ + Registrar donación ]
 ```
 
-**Móvil:** tarjetas de resumen en dos columnas (una si no caben), seguidas de las alertas y los accesos rápidos a todo el ancho.
+**Móvil:** tarjetas de resumen dos por fila (una si no caben), seguidas de las alertas a todo el ancho y de los accesos rápidos.
+
+- Las tarjetas de resumen miden 160 px como mínimo y se estiran hasta llenar cada fila, sin huecos. La de ingresos (solo admin) es el doble de ancha, porque el importe y el desglose son largos; si no cabe en la fila, baja a la siguiente a todo el ancho. Ningún texto se sale de su tarjeta: si hace falta, se parte.
+- **Accesos rápidos** (h2, tras las alertas), con [Personalizar] (`ghost`, icono `sliders`; ⚙ en el dibujo) a la derecha del título. Los accesos son botones `outline` en fila (bajan de línea si no caben), con el icono de su página del menú o `plus` en las acciones de crear. De serie, las acciones de crear de su rol: [+ Nueva actualización] y [+ Nuevo animal] para todo el personal, y además [+ Nueva adopción] y [+ Registrar donación] para el administrador.
+- **Personalizar** abre una ventana «Personalizar accesos rápidos» con «Marca lo que quieres tener a mano en el escritorio. Se guarda en este navegador.» y casillas por apartados: «Acciones» (las de crear de su rol) y los apartados de su menú lateral («Animales», «Trabajo diario» y, para el administrador, «Administración»), sin el escritorio. Un cuidador nunca ve las páginas ni las acciones del administrador. Pie: [Restablecer] (`ghost`, vuelve a marcar los de serie; no guarda hasta pulsar «Guardar»), [Cancelar] y [■ Guardar]. Los accesos salen siempre en el orden de la lista, no en el que se marcan.
+- Se guardan en el navegador (`localStorage`, `quick-links:<id del usuario>`), aparte para cada persona aunque compartan el ordenador. Si se guardó algo que su rol ya no puede usar, no se muestra; si no hay nada guardado o está dañado, salen los de serie. Sin ninguno marcado: «No tienes accesos rápidos.» (texto secundario) y el botón «Personalizar» sigue en el título.
 
 - Estas alertas son la excepción a la regla de que los avisos se pueden cerrar: **no** llevan ✕, porque desaparecen solas al publicar la actualización.
 - Sin alertas: aviso `success` «Todos los animales con adoptantes están al día».
@@ -750,14 +756,14 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 │ ┃ [Trabajando] Trabajando desde las 06:58    │
 │ ┃ [      Fichar salida (todo el ancho)     ] │
 │                                              │
-│ Asignadas a ti                               │
+│ Tus tareas                                   │
 │ ┌──────────────────────────────────────────┐ │
-│ │ 15:00  Reparar la puerta del almacén     │ │
-│ │ [Mantenimiento] [Puntual]                │ │
+│ │ 15:00  Reparar la puerta del almacén     │ │  ← borde de 2 px terracota: es tuya
+│ │ [Mantenimiento]                          │ │
 │ │ Cocina y almacén                         │ │
 │ │ [■ Hecha] [Con nota] [No se ha…]         │ │
 │ └──────────────────────────────────────────┘ │
-│ Tareas del día                               │
+│ Sin asignar                                  │
 │ ┃08:30  Revisión de los animales en trat.   │  ← borde izquierdo de error si está atrasada
 │ ┃[Revisión de salud] [Atrasada]             │
 │ ┃Clínica y recuperación · Exige: Manejo…    │
@@ -766,13 +772,13 @@ Inicio del cuidador al entrar. Pensada para el móvil: una columna de tarjetas (
 ```
 
 - **Fichaje** (CU-63, h2, al principio; hoy siempre y otro día solo si hay turno): a la derecha, el enlace «Ver mis fichajes». Un bloque de fichaje (DESIGN_SYSTEM §8.9) por turno con el nombre, el horario, las zonas y el estado en grande: insignia «Sin fichar» (`warning`) y «Aún no has fichado la entrada»; «Trabajando» (`success`) y «Trabajando desde las 06:58»; o «Terminado» (`neutral`) y «Turno terminado: de 06:58 a 15:05». En otro día: «No se fichó la entrada» o «Entrada a las 06:58, sin fichar la salida». Hoy ofrece «Fichar entrada» (`primary`, `arrow-right-to-bracket`) o «Fichar salida» (`outline`, `arrow-right-from-bracket`), a todo el ancho; con la salida fichada, ninguno. La salida pide confirmación: «¿Fichar la salida?», «Se guardará la hora de ahora como fin de tu turno. Después no se puede cambiar: si te equivocas, díselo a quien organiza los turnos.», [Cancelar] (con el foco) [■ Fichar salida]. Sin turno hoy: «Hoy no tienes turno». Avisos `success` «Entrada fichada» y «Salida fichada»; los errores del servidor, en un aviso `error`.
-- Cada tarjeta de tarea es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Asignadas a ti» (las asignadas a la persona y las sin asignar de una zona de su turno a una hora del turno) y «Tareas del día» (h2), ordenadas por hora.
+- Cada tarjeta de tarea es un `TaskCard` (DESIGN_SYSTEM §8.9). Grupos «Tus tareas» (las asignadas a la persona y las sin asignar de una zona de su turno a una hora del turno; tarjetas con borde de 2 px `--color-primary`) y «Sin asignar» (h2), ordenadas por hora. Las asignadas a otra persona no se ven (RN-40), tampoco el administrador.
 - **Acciones** (pendiente y de hoy, con la cualificación): «Hecha» (`primary`, un toque), «Con nota» (`outline`: ventana con «Observaciones (opcional)» y [Cancelar] [■ Marcar como hecha]; las tareas no llevan fotos) y «No se ha podido hacer» (`ghost`: ventana con «Motivo» obligatorio). En móvil, los botones ocupan todo el ancho.
 - **Comidas** (CU-66): en una tarea de alimentación, «Hecha» abre siempre la ventana, con el grupo «Lo que ha comido cada animal»: un desplegable por animal (su nombre como etiqueta) con «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada», y debajo las observaciones. No hay botón «Con nota». Resuelta, muestra «Carbón: Nada» por cada animal.
 - **Visitas veterinarias** (CU-68): insignia «Visita veterinaria» (`info`). En lugar de «Hecha», «Registrar la visita» (`primary`), que abre el formulario del historial veterinario (CU-34) con la descripción ya puesta; al guardar, aviso «Visita registrada en el historial veterinario».
 - **Dosis de medicación** (CU-69): título «Doxiciclina · 100 mg», tipo «Medicación» y la cualificación que pida la pauta; se completan como cualquier tarea.
 - **Sin la cualificación:** texto en cursiva «Necesitas la cualificación «…».» y sin botones. **Otro día:** «Se podrá marcar ese mismo día.»
-- **Resuelta:** insignia «Hecha» (`success`) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), y las observaciones. Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
+- **Resuelta:** insignia «Hecha» (`success`; «Resuelta» si es la tarea de una incidencia) o «No realizada» (`warning`), «Nuria Peris, a las 09:12» (o «Cerrada por el sistema al acabar el día»), y las observaciones. Botón «Deshacer» (`ghost`) para quien la resolvió y para el administrador.
 - Navegación de días: botones `ghost` con `chevron-left`/`chevron-right` («Día anterior», «Día siguiente») y, fuera de hoy, «Hoy» (`outline`).
 - Vacío: `EmptyState` con `list-check` y «No hay tareas para este día.». Avisos `success` tras cada acción («Tarea marcada como hecha»…).
 - **Notas de relevo** (CU-71, h2, entre «Tu turno» y las tareas): una tarjeta por nota de las últimas 24 horas con «Carmen Boix Vidal · Clínica y recuperación · 22/11, 21:50», el texto y, si no se ha leído, la insignia «Nueva», borde izquierdo terracota y «Marcar como leída» (`ghost`). «Dejar una nota» (`outline`, `pen-to-square`) solo si tiene turno hoy (el administrador, siempre): ventana «Dejar una nota de relevo» con «Zona» (las de su turno de hoy) y «Nota» (ayuda: «La verán durante 24 horas quienes tengan turno en esta zona.»). Sin notas: «No hay notas de relevo de las últimas 24 horas.».
@@ -783,16 +789,18 @@ Todo el personal; en el menú, en «Trabajo diario» tras «Mi día» (`user-clo
 
 #### Tareas del día (`/admin/tasks`) — CU-55, CU-73
 
-- Cabecera: «Tareas del día» y, a la derecha, «Ajustes» (`outline`, `gear`) y «Nueva tarea puntual» (`primary`, `plus`).
+- Cabecera: «Tareas del día» y, a la derecha, «Ajustes» (`outline`, `gear`) y «Nueva tarea» (`primary`, `plus`).
 - Filtros: «Día» (hoy por defecto), «Zona» y «Estado».
-- Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada», «Puntual» y el estado) · Asignada a · Resultado (quién y cuándo, observaciones) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
-- «Nueva tarea puntual»: ventana con tipo, título, descripción, zona, animales (casillas, solo los que siguen en el santuario), cualificación, día, hora (HH:MM) y persona.
+- Aquí se gestionan las tareas; se hacen en «Mi día» (RN-40). Dos bloques (h2), cada uno con su tabla: «Tuyas» (solo si tiene alguna: recuadro con borde de 2 px `--color-primary`, `--radius-lg` y relleno 16 px, con el enlace «Hacerlas en «Mi día»» a la derecha del título) y «Del resto del personal» (todas las demás, también las sin asignar; sin ninguna, «No hay tareas con estos filtros.»).
+- Tabla: Hora · Tarea · Zona · Estado (insignias de tipo, «Atrasada» y el estado; la tarea de una incidencia hecha dice «Resuelta» en vez de «Hecha») · Asignada a · Resultado (quién y cuándo, observaciones) · acciones. Solo las pendientes tienen «Reasignar» (`user-pen`, ventana con «Persona»: trabajadores activos o «Sin asignar (según la zona)») y «Borrar» (`trash-can`, con confirmación).
+- Filtro «Ordenar»: «Por hora» (por defecto) o «Más recientes primero»: las 50 últimas creadas de cualquier día; se quita el filtro «Día», debajo se lee «Las 50 últimas creadas, de cualquier día.» y cada fila lleva su fecha bajo la hora.
+- «Nueva tarea» (sin plantilla): ventana con tipo, título, descripción, «Zona (opcional)» (empieza en «Sin zona»), animales (opcional; casillas, solo los que siguen en el santuario), cualificación, día, «Hora» (`TimeField`) y persona (opcional). Sin zona ni persona se crea igual.
 - «Ajustes»: ventana «Ajustes del trabajo diario» con «Margen para considerar atrasada una tarea (minutos)» y «Tomas seguidas comiendo poco para avisar» (1-10, con la ayuda «Cuentan «Menos de la mitad» y «Nada».», CU-67). Los avisos por email y el resumen diario están en su propia pantalla, «Avisos por email».
 
 #### Plantillas de tareas (`/admin/task-templates`) — CU-54
 
 - Tabla: Título · Tipo (con «Desactivada» si lo está) · Zona · Cuándo («Cada día · 09:00, 17:00», «Lun, Mié, Vie · 09:00», «Cada 3 días · 13:00») · editar y borrar.
-- Ventana de alta y edición: tipo, título, descripción, zona (o «Según sus animales»), animales (casillas), cualificación necesaria, «Horas (HH:MM, separadas por comas)», «Se repite» (cada día, algunos días de la semana con siete casillas, o cada varios días con «Cada cuántos días»), «Desde», «Hasta» y el interruptor «Activa». Al editar, aviso `info` «Al guardar, las tareas pendientes de hoy en adelante se vuelven a generar.»
+- Ventana de alta y edición: tipo, título, descripción, zona (o «Según sus animales»), animales (casillas), cualificación necesaria, «Horas» (`TimesField`), «Se repite» (cada día, algunos días de la semana con siete casillas, o cada varios días con «Cada cuántos días»), «Desde», «Hasta» y el interruptor «Activa». Al editar, aviso `info` «Al guardar, las tareas pendientes de hoy en adelante se vuelven a generar.»
 - Borrar una plantilla con tareas resueltas no pregunta: aviso `error` «Esta plantilla ya tiene tareas resueltas: desactívala en lugar de borrarla.»
 
 #### Zonas y cualificaciones (`/admin/zones`) — CU-52, CU-53
@@ -830,7 +838,7 @@ Para todo el personal; las acciones de cambio, solo para el administrador.
 #### Plantillas de turno (`/admin/shift-templates`) — CU-60
 
 - Tabla: Nombre (con «Desactivado» si lo está) · Horario («07:00–15:00») · Días («Todos los días» o «Lun, Mar, Mié, Jue, Vie») · Mínimo por zona («Clínica y recuperación (1), Gran voladero (1)» o «Sin mínimos») · editar y borrar.
-- Ventana de alta y edición: «Nombre», «Hora de inicio» y «Hora de fin» (`type="time"`, en dos columnas), «Días» (siete casillas), «Mínimo por zona» (un número de 1 a 20 por cada zona activa, con la ayuda «Deja en blanco las zonas que este turno no tiene que cubrir.») y el interruptor «Activo». Se comprueba en el navegador con el mismo esquema que en el servidor.
+- Ventana de alta y edición: «Nombre», «Hora de inicio» y «Hora de fin» (`TimeField`, en dos columnas), «Días» (siete casillas), «Mínimo por zona» (un número de 1 a 20 por cada zona activa, con la ayuda «Deja en blanco las zonas que este turno no tiene que cubrir.») y el interruptor «Activo». Se comprueba en el navegador con el mismo esquema que en el servidor.
 - Borrar pide confirmación; si tiene personas asignadas, aviso `error` «Este turno tiene personas asignadas: desactívalo en lugar de borrarlo.»
 
 #### Ausencias (`/admin/absences`) — CU-62
@@ -846,7 +854,7 @@ Para todo el personal. Título «Incidencias» y «Comunicar incidencia» (`prim
 - **Filtros:** «Estado» («Pendientes (2)» por defecto, con el número de abiertas y en curso; Abiertas, En curso, Resueltas, Todas), «Gravedad» y «Zona». El enlace «Incidencias» del menú lleva ese mismo número en una píldora terracota (DESIGN_SYSTEM §8.10), con «2 pendientes» como descripción accesible.
 - **Tabla** (cuatro columnas): «Incidencia» (el título en negrita, debajo la descripción recortada a dos líneas y, en gris, «Salud · Pipa · Clínica y recuperación · Nuria Peris Gil, 23 nov»; en las resueltas, el recuadro de la resolución), «Gravedad» y «Estado» (insignias) y las acciones alineadas a la derecha: «Resolver» (`primary`, en las pendientes; ventana «Resolver la incidencia» con la descripción y «¿Cómo se ha resuelto?» obligatorio, botón «Marcar como resuelta») o «Reabrir» (`ghost` con icono, en las resueltas), y «Ver» (`outline`). No hay «Empezar»: una incidencia ya ha ocurrido y solo queda resolverla; «En curso» lo pone la tarea que crea el administrador. Las de gravedad alta sin resolver llevan una franja roja a la izquierda. En móvil, cada incidencia es una tarjeta sin etiquetas: arriba las insignias, luego el texto y abajo los dos botones a lo ancho. Avisos `success` «Incidencia resuelta» e «Incidencia reabierta». Paginada. Vacío: «No hay incidencias con estos filtros.».
 - **Ventana «Comunicar incidencia»:** «Tipo» (Salud, Comportamiento, Instalaciones, Otra), «Gravedad» (Media por defecto; con «Alta», la ayuda «Las incidencias de gravedad alta se avisan al momento…»), «Zona (opcional)» (primera opción «Sin zona», elegida al abrir), «Animal (opcional)», «Título» (con la ayuda «Resume en pocas palabras qué pasa. Quedan 80 caracteres.», que cuenta los que quedan), «Qué pasa» y «Fotos (opcional)» (selector de fotos, DESIGN_SYSTEM §8.9: «Arrastra aquí las fotos o» [Elegir fotos]; con fotos, una fila por foto con su miniatura, nombre, tamaño y «Quitar», y [+ Añadir fotos] mientras no haya 5); [Cancelar] [■ Enviar]. Aviso `success` «Incidencia comunicada».
-- **Ficha:** «Volver a las incidencias», título «Incidencia n.º 2» con las insignias de gravedad y estado debajo; una tarjeta con el título de la incidencia (`h3` visual) y la descripción entera bajo el título pequeño «Qué pasa» (en grande) y los datos (tipo, zona, animal con enlace a sus cuidados, quién la comunicó y la tarea) en columnas que pasan a una en móvil, las fotos bajo el título «Fotos» (miniaturas cuadradas en rejilla, de 120 px como mínimo, que abren la foto entera) y sus tareas bajo el título «Tareas» (una fila por tarea, de la más reciente a la más antigua: el título con enlace a «Tareas del día» de su día, el día y la insignia de estado «Pendiente», «Hecha» o «No realizada»); debajo, la sección «Resolución» en el recuadro de la resolución. Todo el personal ve «Resolver» (`primary`, la misma ventana que el listado; si tiene una tarea pendiente, la ventana avisa en `info`: «Su tarea pendiente «…» se cerrará: ya no hará falta.») si está pendiente o «Reabrir» (`outline`) si está resuelta. Solo el administrador ve además «Crear tarea» (`outline`, si no está resuelta ni tiene una tarea pendiente; abre la ventana de tarea puntual con el tipo, el título, la zona y el animal puestos, titulada «Tarea de la incidencia n.º 2»).
+- **Ficha:** «Volver a las incidencias», título «Incidencia n.º 2» con las insignias de gravedad y estado debajo; una tarjeta con el título de la incidencia (`h3` visual) y la descripción entera bajo el título pequeño «Qué pasa» (en grande) y los datos (tipo, zona, animal con enlace a sus cuidados, quién la comunicó y la tarea) en columnas que pasan a una en móvil, las fotos bajo el título «Fotos» (miniaturas cuadradas en rejilla, de 120 px como mínimo, que abren la foto entera) y sus tareas bajo el título «Tareas» (una fila por tarea, de la más reciente a la más antigua: el título con enlace a «Tareas del día» de su día, el día y la insignia de estado «Pendiente», «Resuelta» o «No realizada»); debajo, la sección «Resolución» en el recuadro de la resolución. Todo el personal ve «Resolver» (`primary`, la misma ventana que el listado; si tiene una tarea pendiente, la ventana avisa en `info`: «Su tarea pendiente «…» se marcará como resuelta: ya no hará falta.») si está pendiente o «Reabrir» (`outline`) si está resuelta. Solo el administrador ve además «Crear tarea» (`outline`, si no está resuelta ni tiene una tarea pendiente; abre la ventana de tarea nueva con el tipo, el título, la zona y el animal puestos, titulada «Tarea de la incidencia n.º 2»).
 
 #### Hoy (`/admin/today`) — CU-72
 
@@ -854,7 +862,7 @@ Solo el administrador; el escritorio enlaza aquí («Ver el panel «Hoy» del sa
 
 #### Avisos por email (`/admin/alert-settings`) — CU-73, CU-74
 
-Solo el administrador. Dos grupos: «Avisos que también se envían por email» (ayuda: «La campana avisa siempre…»; una casilla por aviso: Turno sin personal suficiente, Animal que come poco, Medicación no dada, Visita veterinaria de hoy, Incidencia grave) y «Resumen del día» (casilla «Enviar el resumen del día» y «Hora del resumen», HH:MM). [■ Guardar]; aviso `success` «Ajustes guardados».
+Solo el administrador. Dos grupos: «Avisos que también se envían por email» (ayuda: «La campana avisa siempre…»; una casilla por aviso: Turno sin personal suficiente, Animal que come poco, Medicación no dada, Visita veterinaria de hoy, Incidencia grave) y «Resumen del día» (casilla «Enviar el resumen del día» y «Hora del resumen», `TimeField`). [■ Guardar]; aviso `success` «Ajustes guardados».
 
 #### Pestaña «Cuidados» (`/admin/animals/:id/care`) — CU-65 a CU-69
 
@@ -862,8 +870,8 @@ Pestaña de la ficha del animal en el panel, para cuidadores y administradores. 
 
 - **Dieta** [■ Nuevo alimento]: tabla con alimento (insignia «Terminada» si ya no lo come), cantidad («400 g»), tomas, notas, vigencia («Desde el 10/11/2026» o «Del … al …») y los botones de editar y borrar. Ventana con «Alimento», «Cantidad», «Unidad» (g, kg, unidades, ml), «Tomas (opcional)», «Notas (opcional)», «Desde» y «Hasta (opcional)» (con la ayuda de ponerle fin en lugar de borrarlo).
 - **Comidas de los últimos 14 días**: tabla con día, hora, lo que ha comido (insignia de color) y quién lo anotó.
-- **Medicación** [■ Nueva pauta]: una tarjeta (`TaskCard`) por pauta: medicamento, «100 mg · Oral · 10:00», vigencia, «Exige: Administrar medicación», notas y «Dosis dadas: 2 · No dadas: 1». Botones «Editar», «Terminar» (si ha empezado y no ha terminado; ventana de confirmación) y «Borrar» (solo sin dosis resueltas). Ventana con «Medicamento», «Dosis», «Vía», «Horas (HH:MM, separadas por comas)», «Desde», «Hasta (opcional)», «Cualificación necesaria» y «Notas (opcional)»; al editar, aviso de que se rehacen las dosis pendientes.
-- **Visitas veterinarias** [■ Programar visita]: tabla con día y hora, motivo, veterinario y estado («Programada», «Hecha», «Cancelada»). En las programadas: «Registrar» (`outline`, desde su día; abre el formulario del historial veterinario), «Cambiar» y «Cancelar la visita» (con confirmación). Ventana con «Día», «Hora», «Motivo» y «Veterinario (opcional)».
+- **Medicación** [■ Nueva pauta]: una tarjeta (`TaskCard`) por pauta: medicamento, «100 mg · Oral · 10:00», vigencia, «Exige: Administrar medicación», notas y «Dosis dadas: 2 · No dadas: 1». Botones «Editar», «Terminar» (si ha empezado y no ha terminado; ventana de confirmación) y «Borrar» (solo sin dosis resueltas). Ventana con «Medicamento», «Dosis», «Vía», «Horas» (`TimesField`), «Desde», «Hasta (opcional)», «Cualificación necesaria» y «Notas (opcional)»; al editar, aviso de que se rehacen las dosis pendientes.
+- **Visitas veterinarias** [■ Programar visita]: tabla con día y hora, motivo, veterinario y estado («Programada», «Hecha», «Cancelada»). En las programadas: «Registrar» (`outline`, desde su día; abre el formulario del historial veterinario), «Cambiar» y «Cancelar la visita» (con confirmación). Ventana con «Día», «Hora» (`TimeField`), «Motivo» y «Veterinario (opcional)».
 
 ## 6. Estados generales
 
