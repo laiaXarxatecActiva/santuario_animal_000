@@ -11,6 +11,7 @@ const COOKIES = [
   { name: 'cookie-notice', purpose: 'noticePurpose', duration: 'untilDeleted', type: 'localStorage' },
   { name: 'panel-menu', purpose: 'panelMenuPurpose', duration: 'untilDeleted', type: 'localStorage' },
   { name: 'page-intro:…', purpose: 'pageIntroPurpose', duration: 'untilDeleted', type: 'localStorage' },
+  { name: 'quick-links:…', purpose: 'quickLinksPurpose', duration: 'untilDeleted', type: 'localStorage' },
 ] as const;
 const COLUMNAS = ['purpose', 'duration', 'type'] as const;
 

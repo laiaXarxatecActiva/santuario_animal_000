@@ -13,9 +13,10 @@ FORBIDDEN="localStorage|sessionStorage|Math\.random|jsonwebtoken|['\"]jose['\"]|
 
 # Usos permitidos, que no guardan ni generan secretos:
 # - localStorage: tema, idioma, aviso de cookies, apartados del menú del panel y
-#   explicaciones de página ocultas (CookiesPage los enumera).
+#   explicaciones de página ocultas y accesos rápidos del escritorio (CookiesPage
+#   los enumera).
 # - Math.random: resultado del pago simulado.
-PERMITIDOS='^client/src/(components/ThemeToggle\.tsx|components/CookieNotice\.tsx|i18n/idioma\.ts|pages/public/CookiesPage\.tsx|layouts/AdminLayout\.tsx|components/admin/PageIntro\.tsx):.*localStorage|^server/src/services/payment/simulated\.gateway\.ts:.*Math\.random'
+PERMITIDOS='^client/src/(components/ThemeToggle\.tsx|components/CookieNotice\.tsx|i18n/idioma\.ts|pages/public/CookiesPage\.tsx|layouts/AdminLayout\.tsx|components/admin/PageIntro\.tsx|components/admin/QuickLinks\.tsx):.*localStorage|^server/src/services/payment/simulated\.gateway\.ts:.*Math\.random'
 
 encontrados=$(grep -rnE --include='*.ts' --include='*.tsx' "$FORBIDDEN" server/src client/src shared/src | grep -vE "$PERMITIDOS")
 if [ -n "$encontrados" ]; then

@@ -15,6 +15,7 @@ describe('Política de cookies (SCREENS §3.9)', () => {
       'cookie-notice',
       'panel-menu',
       'page-intro:…',
+      'quick-links:…',
     ]);
     expect(filas[0]).toHaveTextContent('7 días desde tu última visita');
     expect(screen.getByText(/No usamos cookies de análisis ni de publicidad/)).toBeInTheDocument();
