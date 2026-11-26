@@ -881,9 +881,8 @@ CREATE TABLE task_instances (
     CONSTRAINT task_instances_one_origin
         CHECK (num_nonnulls(template_id, medication_plan_id, vet_visit_id) <= 1),
     CONSTRAINT task_instances_resolved_consistent CHECK ((status = 'pending') = (resolved_at IS NULL)),
-    CONSTRAINT task_instances_completed_by CHECK (status <> 'completed' OR resolved_by IS NOT NULL),
-    -- Siempre hay alguien responsable: la gente de la zona o una persona concreta.
-    CONSTRAINT task_instances_has_owner CHECK (zone_id IS NOT NULL OR assigned_to IS NOT NULL)
+    -- Sin zona ni persona, la tarea es de todo el personal (CU-55).
+    CONSTRAINT task_instances_completed_by CHECK (status <> 'completed' OR resolved_by IS NOT NULL)
 );
 
 -- Generación idempotente: una sola tarea por plantilla e instante.

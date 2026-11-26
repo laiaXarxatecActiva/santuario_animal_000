@@ -30,6 +30,8 @@ const enCampo = (field: string, message: string) => new ValidationError([{ field
 export async function resolverZona(
   q: Queryable,
   datos: { zoneId: number | null; qualificationId: number | null; animalIds: readonly number[] },
+  /** Una tarea puntual puede quedarse sin zona (CU-55); una plantilla, no. */
+  { sinZonaPermitida = false }: { sinZonaPermitida?: boolean } = {},
 ): Promise<number | null> {
   if (datos.zoneId !== null) {
     const activa = await zoneModel.isActive(q, datos.zoneId);
@@ -45,7 +47,7 @@ export async function resolverZona(
   if (archivado) throw enCampo('animalIds', `${archivado.name} ya no está en el santuario.`);
   if (datos.zoneId !== null) return datos.zoneId;
   const zona = zonaComun(animales);
-  if (zona === null) {
+  if (zona === null && !sinZonaPermitida) {
     throw enCampo('animalIds', 'Estos animales no viven en la misma zona: elige una zona para la tarea.');
   }
   return zona;

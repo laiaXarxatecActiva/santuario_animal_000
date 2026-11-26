@@ -18,7 +18,12 @@ export function TaskCard({ tarea, acciones }: { tarea: MyDayTaskDto; acciones: R
       : null;
 
   return (
-    <article aria-labelledby={tituloId} className={styles.card} data-late={tarea.late || undefined}>
+    <article
+      aria-labelledby={tituloId}
+      className={styles.card}
+      data-mine={tarea.mine || undefined}
+      data-late={tarea.late || undefined}
+    >
       <div className={styles.top}>
         <time className={styles.time}>{tarea.dueTime}</time>
         <h3 id={tituloId} className={styles.title}>

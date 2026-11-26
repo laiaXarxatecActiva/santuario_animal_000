@@ -7,12 +7,12 @@ const TONO_ESTADO = { pending: 'neutral', completed: 'success', not_done: 'warni
 
 /**
  * Insignias de una tarea (DESIGN_SYSTEM §8.6): tipo, visita veterinaria (CU-68),
- * atrasada, puntual y estado si está resuelta.
+ * atrasada y estado si está resuelta.
  */
 export function TaskBadges({
   tarea,
 }: {
-  tarea: Pick<TaskDto, 'type' | 'late' | 'isOneOff' | 'status' | 'vetVisitId'>;
+  tarea: Pick<TaskDto, 'type' | 'late' | 'status' | 'vetVisitId' | 'incidentId'>;
 }) {
   const { t } = useTranslation();
   return (
@@ -20,14 +20,17 @@ export function TaskBadges({
       <Badge>{t(`work.types.${tarea.type}`)}</Badge>
       {tarea.vetVisitId && <Badge tone="info">{t('work.vetVisit')}</Badge>}
       {tarea.late && <Badge tone="error">{t('work.late')}</Badge>}
-      {tarea.isOneOff && <Badge tone="primary">{t('work.oneOff')}</Badge>}
-      {tarea.status !== 'pending' && <Badge tone={TONO_ESTADO[tarea.status]}>{t(`work.status.${tarea.status}`)}</Badge>}
+      {tarea.status !== 'pending' && <TaskStatusBadge status={tarea.status} deIncidencia={tarea.incidentId != null} />}
     </div>
   );
 }
 
-/** El estado de una tarea, también «Pendiente» (las tareas de una incidencia, CU-70). */
-export function TaskStatusBadge({ status }: { status: TaskStatus }) {
+/**
+ * El estado de una tarea, también «Pendiente» (las tareas de una incidencia, CU-70).
+ * Una tarea de incidencia hecha (o cerrada al resolver la incidencia) se ve «Resuelta».
+ */
+export function TaskStatusBadge({ status, deIncidencia = false }: { status: TaskStatus; deIncidencia?: boolean }) {
   const { t } = useTranslation();
-  return <Badge tone={TONO_ESTADO[status]}>{t(`work.status.${status}`)}</Badge>;
+  const texto = deIncidencia && status === 'completed' ? t('work.status.resolved') : t(`work.status.${status}`);
+  return <Badge tone={TONO_ESTADO[status]}>{texto}</Badge>;
 }

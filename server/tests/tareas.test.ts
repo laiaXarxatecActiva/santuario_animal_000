@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { instanteEnZonaSantuario } from '../src/dominio/reloj.js';
 import {
+  asignadaAOtraPersona,
   comprobarResolucion,
   diaDeLaSemana,
   estaAtrasada,
@@ -110,6 +111,14 @@ describe('CU-56 Tarea atrasada', () => {
   it('una tarea resuelta nunca está atrasada', () => {
     expect(estaAtrasada({ ...tarea, status: 'completed' }, new Date('2026-11-24T00:00:00Z'), 0)).toBe(false);
     expect(estaAtrasada({ ...tarea, status: 'not_done' }, new Date('2026-11-24T00:00:00Z'), 0)).toBe(false);
+  });
+});
+
+describe('RN-40 Cada tarea asignada es de su persona', () => {
+  it('una tarea asignada a otra persona no es tuya; la tuya o la que no tiene a nadie, sí', () => {
+    expect(asignadaAOtraPersona(4, 3)).toBe(true);
+    expect(asignadaAOtraPersona(3, 3)).toBe(false);
+    expect(asignadaAOtraPersona(null, 3)).toBe(false);
   });
 });
 

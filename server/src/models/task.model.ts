@@ -113,6 +113,22 @@ export async function listByDay(db: Queryable, filtros: TaskFilters, contexto: C
   return rows.map((r) => mapRow(r, contexto));
 }
 
+/** CU-55: las últimas creadas, de cualquier día (para encontrar una creada por error). */
+export async function listRecent(
+  db: Queryable,
+  filtros: Omit<TaskFilters, 'date'> & { limit: number },
+  contexto: Contexto,
+): Promise<TaskDto[]> {
+  const { rows } = await db.query<TaskRow>(
+    `${SELECT}
+      WHERE ($1::int IS NULL OR i.zone_id = $1) AND ($2::text IS NULL OR i.status = $2)
+      ORDER BY i.created_at DESC, i.id DESC
+      LIMIT $3`,
+    [filtros.zoneId ?? null, filtros.status ?? null, filtros.limit],
+  );
+  return rows.map((r) => mapRow(r, contexto));
+}
+
 export async function findById(
   db: Queryable,
   id: number,

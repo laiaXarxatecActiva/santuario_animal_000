@@ -183,7 +183,7 @@ export function IncidentPage() {
                 <li key={tarea.id}>
                   <Link to={`/admin/tasks?date=${tarea.dueDate}`}>{tarea.title}</Link>
                   <span className={ficha.taskDate}>{formatShortDate(tarea.dueDate)}</span>
-                  <TaskStatusBadge status={tarea.status} />
+                  <TaskStatusBadge status={tarea.status} deIncidencia />
                 </li>
               ))}
             </ul>

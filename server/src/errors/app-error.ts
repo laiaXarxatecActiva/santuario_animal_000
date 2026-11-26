@@ -615,6 +615,13 @@ export class MissingQualificationError extends AppError {
   }
 }
 
+// RN-40: una tarea asignada solo la resuelve su persona.
+export class TaskNotYoursError extends AppError {
+  constructor() {
+    super(403, 'TASK_NOT_YOURS', 'Esta tarea está asignada a otra persona.');
+  }
+}
+
 // Turnos y ausencias (CU-60 a CU-63).
 
 export class ShiftTemplateNameTakenError extends ConflictError {

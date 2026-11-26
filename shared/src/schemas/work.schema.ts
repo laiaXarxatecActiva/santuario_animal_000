@@ -14,6 +14,7 @@ import {
   MAX_TEMPLATE_TIMES,
   STAFF_EMAIL_ALERT_TYPES,
   TASK_RECURRENCES,
+  TASK_SORTS,
   TASK_STATUSES,
   TASK_TYPES,
 } from '../constants/work.js';
@@ -122,25 +123,23 @@ export const adminTasksQuerySchema = z.object({
   date: fecha('La fecha no es válida.').optional(),
   zoneId: z.coerce.number().int().positive().optional(),
   status: z.enum(TASK_STATUSES).optional(),
+  /** `-createdAt`: las 50 últimas creadas, de cualquier día (sin él, las del día por hora). */
+  sort: z.enum(TASK_SORTS, { error: 'Orden no válido.' }).optional(),
 });
 export type AdminTasksQuery = z.infer<typeof adminTasksQuerySchema>;
 
-export const oneOffTaskBodySchema = z
-  .object({
-    type: z.enum(TASK_TYPES, { error: 'Elige el tipo de tarea.' }),
-    title: textoObligatorio(150, 'Escribe el título.'),
-    description: textoOpcional(2000),
-    zoneId: idOpcional,
-    animalIds: idsUnicos,
-    qualificationId: idOpcional,
-    dueDate: fecha('Elige el día.'),
-    dueTime: hora,
-    assignedTo: idOpcional,
-  })
-  .refine((t) => t.zoneId !== null || t.assignedTo !== null || t.animalIds.length > 0, {
-    path: ['zoneId'],
-    message: 'Elige una zona, un animal o una persona.',
-  });
+export const oneOffTaskBodySchema = z.object({
+  type: z.enum(TASK_TYPES, { error: 'Elige el tipo de tarea.' }),
+  title: textoObligatorio(150, 'Escribe el título.'),
+  description: textoOpcional(2000),
+  zoneId: idOpcional,
+  animalIds: idsUnicos,
+  qualificationId: idOpcional,
+  dueDate: fecha('Elige el día.'),
+  dueTime: hora,
+  // Zona, animales y persona son opcionales: sin ninguno, la tarea es de todo el personal.
+  assignedTo: idOpcional,
+});
 export type OneOffTaskBody = z.input<typeof oneOffTaskBodySchema>;
 export type OneOffTaskData = z.output<typeof oneOffTaskBodySchema>;
 
