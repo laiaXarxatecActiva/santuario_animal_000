@@ -25,6 +25,8 @@ import {
   adminAdoptionStatusSchema,
   adminAnimalsQuerySchema,
   adminUpdatesQuerySchema,
+  adminUserAnonymizeSchema,
+  adminUserDeleteSchema,
   adminUserLogoutAllSchema,
   adminUserPatchSchema,
   adminUsersQuerySchema,
@@ -37,6 +39,7 @@ import {
   photoPatchBodySchema,
   photoUploadBodySchema,
   planCreateBodySchema,
+  plansUpdateBodySchema,
   planUpdateBodySchema,
   speciesBodySchema,
   updateCreateBodySchema,
@@ -216,6 +219,7 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   const planes = createPlanAdminController(deps.plans, deps.activity);
   router.get('/plans', soloAdmin, planes.list);
   router.post('/plans', soloAdmin, validate({ body: planCreateBodySchema }), planes.create);
+  router.put('/plans', soloAdmin, validate({ body: plansUpdateBodySchema }), planes.updateAll);
   router.put('/plans/:id', soloAdmin, validate({ params: idParamsSchema, body: planUpdateBodySchema }), planes.update);
 
   // CU-35 y CU-36: usuarios y cuentas de trabajador (TECH_SPEC §10.7), solo administradores.
@@ -238,6 +242,20 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
     soloAdmin,
     validate({ params: idParamsSchema, body: adminUserLogoutAllSchema }),
     usuarios.logoutAll,
+  );
+  // CU-75 y CU-76: eliminar del todo o anonimizar una cuenta (el motivo es opcional).
+  router.get('/users/:id/linked-data', soloAdmin, conId, usuarios.linkedData);
+  router.delete(
+    '/users/:id',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: adminUserDeleteSchema }),
+    usuarios.remove,
+  );
+  router.post(
+    '/users/:id/anonymize',
+    soloAdmin,
+    validate({ params: idParamsSchema, body: adminUserAnonymizeSchema }),
+    usuarios.anonymize,
   );
 
   // CU-37: adopciones (TECH_SPEC §10.7), solo administradores.

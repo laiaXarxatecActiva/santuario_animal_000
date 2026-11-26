@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminUserDetail } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 type Respuesta = { status?: number; body?: unknown };
 
@@ -89,7 +90,7 @@ describe('CU-35 Gestionar usuarios: ficha', () => {
         p.method === 'PATCH' ? errorApi(422, 'LAST_ACTIVE_ADMIN', 'x') : { body: nuria() },
     });
     renderRoute('/admin/users/3');
-    await userEvent.selectOptions(await screen.findByLabelText('Rol'), 'Administrador');
+    await elegirOpcion(await screen.findByLabelText('Rol'), 'Administrador');
     await userEvent.click(screen.getByRole('button', { name: 'Cambiar rol' }));
     await waitFor(() =>
       expect(enviados('/api/admin/users/3').filter((b) => b !== undefined)).toEqual([{ role: 'admin' }]),
@@ -204,5 +205,118 @@ describe('CU-51 Enviar a un trabajador el enlace para cambiar su contraseña', (
       expect(screen.queryByRole('button', { name: 'Enviar enlace de contraseña' })).not.toBeInTheDocument();
       vista.unmount();
     }
+  });
+});
+
+const sinDatos = {
+  adoptions: 0,
+  payments: 0,
+  donations: 0,
+  incidents: 0,
+  handoverNotes: 0,
+  animalUpdates: 0,
+  tasks: 0,
+  activityLogs: 0,
+  total: 0,
+};
+const listaVacia = { body: { data: [], meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 } } };
+
+describe('CU-75 Eliminar una cuenta desde el panel', () => {
+  it('sin datos enlazados: avisa de que no se puede deshacer, la borra y vuelve al listado', async () => {
+    const { fetchMock } = api(nuria(), {
+      '/api/admin/users/3': (_u, p) => (p.method === 'DELETE' ? { status: 204 } : { body: nuria() }),
+      '/api/admin/users/3/linked-data': () => ({ body: sinDatos }),
+      '/api/admin/users': () => listaVacia,
+    });
+    const { router } = renderRoute('/admin/users/3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar cuenta' }));
+    const ventana = await screen.findByRole('dialog', { name: '¿Eliminar la cuenta de Nuria Peris Gil?' });
+    expect(await within(ventana).findByRole('alert')).toHaveTextContent('No se puede deshacer');
+    expect(within(ventana).queryByRole('button', { name: 'Borrar de todos modos' })).not.toBeInTheDocument();
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Eliminar cuenta' }));
+    expect(await screen.findByText('Se ha eliminado la cuenta de Nuria Peris Gil')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/admin/users');
+    const borrados = fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE');
+    expect(borrados.map(([, init]) => JSON.parse(String(init?.body)))).toEqual([{}]);
+  });
+
+  it('con datos enlazados: los enumera y permite borrar de todos modos, con motivo opcional', async () => {
+    const { fetchMock } = api(adminUserDetail(), {
+      '/api/admin/users/6': (_u, p) => (p.method === 'DELETE' ? { status: 204 } : { body: adminUserDetail() }),
+      '/api/admin/users/6/linked-data': () => ({ body: { ...sinDatos, adoptions: 2, payments: 5, total: 7 } }),
+      '/api/admin/users': () => listaVacia,
+    });
+    renderRoute('/admin/users/6');
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar cuenta' }));
+    const ventana = await screen.findByRole('dialog', { name: '¿Eliminar la cuenta de Lucía Martínez Navarro?' });
+    expect(await within(ventana).findByText('Adopciones: 2')).toBeInTheDocument();
+    expect(within(ventana).getByText('Pagos: 5')).toBeInTheDocument();
+    expect(within(ventana).queryByText(/Donaciones/)).not.toBeInTheDocument();
+    // La advertencia de borrar es roja (aviso de error).
+    expect(within(ventana).getByRole('alert')).toHaveTextContent('se borrará también todo lo relacionado');
+    expect(within(ventana).getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
+    expect(within(ventana).getByRole('button', { name: 'Borrar datos personales' })).toBeInTheDocument();
+
+    await userEvent.type(within(ventana).getByLabelText(/Motivo/), ' Lo pide por escrito ');
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Borrar de todos modos' }));
+    expect(await screen.findByText('Se ha eliminado la cuenta de Lucía Martínez Navarro')).toBeInTheDocument();
+    const borrados = fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE');
+    expect(borrados.map(([, init]) => JSON.parse(String(init?.body)))).toEqual([
+      { force: true, reason: 'Lo pide por escrito' },
+    ]);
+  });
+
+  it('con datos enlazados: «Borrar datos personales» la anonimiza en lugar de borrarla', async () => {
+    const { enviados, fetchMock } = api(adminUserDetail(), {
+      '/api/admin/users/6/linked-data': () => ({ body: { ...sinDatos, donations: 1, total: 1 } }),
+      '/api/admin/users/6/anonymize': () => ({ body: adminUserDetail({ status: 'anonymized' }) }),
+    });
+    renderRoute('/admin/users/6');
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar cuenta' }));
+    const ventana = await screen.findByRole('dialog');
+    await userEvent.click(await within(ventana).findByRole('button', { name: 'Borrar datos personales' }));
+    expect(await screen.findByText('Se han borrado sus datos personales')).toBeInTheDocument();
+    expect(enviados('/api/admin/users/6/anonymize')).toEqual([{}]);
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false);
+  });
+
+  it('«Cancelar» no borra nada; en su propia ficha el administrador no tiene la opción', async () => {
+    const { fetchMock } = api(nuria(), { '/api/admin/users/3/linked-data': () => ({ body: sinDatos }) });
+    const vista = renderRoute('/admin/users/3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Eliminar cuenta' }));
+    await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false);
+    vista.unmount();
+
+    api(adminUserDetail({ id: 1, firstName: 'Marta', lastName: 'Soler Vidal', role: 'admin', adoptions: [] }));
+    renderRoute('/admin/users/1');
+    await screen.findByRole('heading', { level: 1, name: 'Marta Soler Vidal' });
+    expect(screen.queryByRole('button', { name: 'Eliminar cuenta' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Borrar datos personales' })).not.toBeInTheDocument();
+  });
+});
+
+describe('CU-76 Anonimizar una cuenta desde el panel', () => {
+  it('explica qué pasará, envía el motivo opcional y avisa', async () => {
+    const { enviados } = api(nuria(), {
+      '/api/admin/users/3/anonymize': () => ({ body: nuria({ status: 'anonymized' }) }),
+    });
+    renderRoute('/admin/users/3');
+    await userEvent.click(await screen.findByRole('button', { name: 'Borrar datos personales' }));
+    const ventana = await screen.findByRole('dialog', { name: '¿Borrar los datos personales de Nuria Peris Gil?' });
+    // La advertencia es amarilla (aviso de tipo warning, que se anuncia como «status»).
+    expect(within(ventana).getByRole('status')).toHaveTextContent('Se borrarán sus datos personales');
+    await userEvent.type(within(ventana).getByLabelText(/Motivo/), 'Ya no trabaja aquí');
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Borrar datos personales' }));
+    expect(await screen.findByText('Se han borrado sus datos personales')).toBeInTheDocument();
+    expect(enviados('/api/admin/users/3/anonymize')).toEqual([{ reason: 'Ya no trabaja aquí' }]);
+  });
+
+  it('una cuenta ya sin datos personales no tiene «Borrar datos personales», pero sí «Eliminar cuenta»', async () => {
+    api(adminUserDetail({ status: 'anonymized' }));
+    renderRoute('/admin/users/6');
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.queryByRole('button', { name: 'Borrar datos personales' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Eliminar cuenta' })).toBeInTheDocument();
   });
 });

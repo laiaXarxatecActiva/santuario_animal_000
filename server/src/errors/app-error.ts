@@ -419,23 +419,26 @@ export class PlanAlreadyExistsError extends AppError {
 
 /** CU-40 A1: el plan por defecto tiene que estar activo. */
 export class DefaultPlanMustBeActiveError extends FieldRuleError {
-  constructor() {
-    super(
-      'DEFAULT_PLAN_MUST_BE_ACTIVE',
-      'isActive',
-      'No se puede desactivar el plan por defecto sin elegir antes otro.',
-    );
+  constructor(field = 'isActive') {
+    super('DEFAULT_PLAN_MUST_BE_ACTIVE', field, 'No se puede desactivar el plan por defecto sin elegir antes otro.');
   }
 }
 
 /** CU-40 A1: siempre hay un plan por defecto; se cambia marcando otro. */
 export class DefaultPlanNeedsReplacementError extends FieldRuleError {
-  constructor() {
+  constructor(field = 'isDefault') {
     super(
       'DEFAULT_PLAN_NEEDS_REPLACEMENT',
-      'isDefault',
+      field,
       'Siempre tiene que haber un plan por defecto: marca otro plan como plan por defecto.',
     );
+  }
+}
+
+/** CU-40: al guardar todos los planes, solo uno puede ser el de por defecto. */
+export class DefaultPlanNotUniqueError extends FieldRuleError {
+  constructor(field: string) {
+    super('DEFAULT_PLAN_NOT_UNIQUE', field, 'Solo puede haber un plan por defecto.');
   }
 }
 
@@ -717,12 +720,43 @@ export class IncidentSameStatusError extends ConflictError {
 
 export class IncidentHasTaskError extends ConflictError {
   constructor() {
-    super('INCIDENT_HAS_TASK', 'Esta incidencia ya tiene una tarea.');
+    super('INCIDENT_HAS_TASK', 'Esta incidencia ya tiene una tarea pendiente.');
+  }
+}
+
+/** CU-70: solo se reabre una incidencia resuelta (una en curso sigue a su tarea). */
+export class IncidentNotResolvedError extends ConflictError {
+  constructor() {
+    super('INCIDENT_NOT_RESOLVED', 'Solo se puede reabrir una incidencia resuelta.');
   }
 }
 
 export class IncidentResolvedError extends ConflictError {
   constructor() {
     super('INCIDENT_RESOLVED', 'Esta incidencia ya está resuelta.');
+  }
+}
+
+/** CU-75 y CU-76: la propia cuenta no se borra ni se anonimiza desde el panel. */
+export class CannotDeleteSelfError extends BusinessRuleError {
+  constructor() {
+    super('CANNOT_DELETE_SELF', 'No puedes eliminar tu propia cuenta ni borrar sus datos personales.');
+  }
+}
+
+/** CU-76: la cuenta ya no tiene datos personales. */
+export class AlreadyAnonymizedError extends BusinessRuleError {
+  constructor() {
+    super('ALREADY_ANONYMIZED', 'Esta cuenta ya no tiene datos personales.');
+  }
+}
+
+/** CU-75 3a: para borrar una cuenta con datos enlazados hay que confirmarlo (`force`). */
+export class AccountHasDataError extends ConflictError {
+  constructor() {
+    super(
+      'ACCOUNT_HAS_DATA',
+      'Esta cuenta tiene datos enlazados. Borra solo sus datos personales o confirma que quieres borrar también todo lo demás.',
+    );
   }
 }

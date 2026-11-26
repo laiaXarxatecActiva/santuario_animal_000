@@ -23,6 +23,9 @@ import type {
   AdminPlanDto,
   AdminUserDetailDto,
   AdminUserListItemDto,
+  AdminUserAnonymizeBody,
+  AdminUserDeleteBody,
+  AdminUserLinkedDataDto,
   AdminUserLogoutAllBody,
   AdminUserLogoutAllDto,
   AdminUserPatchBody,
@@ -34,7 +37,7 @@ import type {
   PhotoPatchBody,
   PhotoUploadResultDto,
   PlanCreateBody,
-  PlanUpdateBody,
+  PlansUpdateBody,
   WorkerCreateBody,
   AdminAnimalsQuery,
   AnimalBody,
@@ -105,13 +108,21 @@ export const adminApi = {
       apiPost<AdminUserLogoutAllDto>(`/api/admin/users/${id}/logout-all`, body),
     /** CU-51: envía al trabajador un enlace para cambiar su contraseña. */
     sendPasswordReset: (id: number) => apiPost<void>(`/api/admin/users/${id}/password-reset`, {}),
+    /** CU-75: lo que se borraría con la cuenta. */
+    linkedData: (id: number) => apiGet<AdminUserLinkedDataDto>(`/api/admin/users/${id}/linked-data`),
+    /** CU-75: borra la cuenta del todo (con `force`, también sus datos enlazados). */
+    remove: (id: number, body: AdminUserDeleteBody) => apiDelete<void>(`/api/admin/users/${id}`, body),
+    /** CU-76: anonimiza la cuenta. */
+    anonymize: (id: number, body: AdminUserAnonymizeBody) =>
+      apiPost<AdminUserDetailDto>(`/api/admin/users/${id}/anonymize`, body),
   },
 
   // CU-40 (solo administradores).
   plans: {
     list: () => apiGet<{ data: AdminPlanDto[] }>('/api/admin/plans'),
     create: (body: PlanCreateBody) => apiPost<AdminPlanDto>('/api/admin/plans', body),
-    update: (id: number, body: PlanUpdateBody) => apiPut<AdminPlanDto>(`/api/admin/plans/${id}`, body),
+    /** Todos los planes a la vez (un solo «Guardar cambios»). */
+    updateAll: (body: PlansUpdateBody) => apiPut<{ data: AdminPlanDto[] }>('/api/admin/plans', body),
   },
 
   species: {

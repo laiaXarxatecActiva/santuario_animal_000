@@ -59,6 +59,18 @@ export const planUpdateBodySchema = planCreateBodySchema.extend({
 });
 export type PlanUpdateBody = z.input<typeof planUpdateBodySchema>;
 
+/** CU-40: guardar todos los planes a la vez (un solo «Guardar cambios»). */
+export const plansUpdateBodySchema = z.strictObject({
+  plans: z
+    .array(planCreateBodySchema.extend({ id: z.number().int().positive() }))
+    .min(1, 'No hay planes que guardar.')
+    .max(100)
+    .refine((planes) => new Set(planes.map((p) => p.id)).size === planes.length, 'Hay planes repetidos.'),
+  confirmAmountChange: z.boolean().default(false),
+});
+export type PlansUpdateBody = z.input<typeof plansUpdateBodySchema>;
+export type PlansUpdateInput = z.output<typeof plansUpdateBodySchema>;
+
 // CU-35: listado de usuarios. Ordenación con lista blanca.
 export const ADMIN_USER_SORTS = ['name', '-name', 'createdAt', '-createdAt', 'lastLoginAt', '-lastLoginAt'] as const;
 export type AdminUserSort = (typeof ADMIN_USER_SORTS)[number];
@@ -92,6 +104,19 @@ export const adminUserLogoutAllSchema = z.strictObject({
   reason: textoObligatorio(500, 'Escribe el motivo.'),
 });
 export type AdminUserLogoutAllBody = z.input<typeof adminUserLogoutAllSchema>;
+
+/** CU-75: borrar del todo una cuenta. El motivo es opcional; `force` borra también sus datos enlazados. */
+export const adminUserDeleteSchema = z.strictObject({
+  reason: textoOpcional(500),
+  force: z.boolean().optional(),
+});
+export type AdminUserDeleteBody = z.input<typeof adminUserDeleteSchema>;
+
+/** CU-76: anonimizar una cuenta. El motivo es opcional. */
+export const adminUserAnonymizeSchema = z.strictObject({
+  reason: textoOpcional(500),
+});
+export type AdminUserAnonymizeBody = z.input<typeof adminUserAnonymizeSchema>;
 
 /** CU-36 paso 2: nuevo trabajador. El teléfono es opcional. */
 export const workerCreateSchema = z.object({

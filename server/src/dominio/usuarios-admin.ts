@@ -10,7 +10,12 @@ interface Cuenta {
 }
 
 export type ProblemaCuenta =
-  'CANNOT_DEACTIVATE_SELF' | 'ANONYMIZED_CANNOT_REACTIVATE' | 'ROLE_CHANGE_NOT_ALLOWED' | 'LAST_ACTIVE_ADMIN';
+  | 'CANNOT_DEACTIVATE_SELF'
+  | 'ANONYMIZED_CANNOT_REACTIVATE'
+  | 'ROLE_CHANGE_NOT_ALLOWED'
+  | 'LAST_ACTIVE_ADMIN'
+  | 'CANNOT_DELETE_SELF'
+  | 'ALREADY_ANONYMIZED';
 
 /** Estado que se muestra en el panel. */
 export function estadoCuenta(cuenta: { isActive: boolean; anonymizedAt: Date | null }): UserAccountStatus {
@@ -54,4 +59,20 @@ export function puedeReenviarInvitacion(cuenta: { role: Role; isActive: boolean;
  */
 export function puedeEnviarCambioPassword(cuenta: Cuenta, actorId: number): boolean {
   return isWorkerRole(cuenta.role) && cuenta.isActive && cuenta.anonymizedAt === null && cuenta.id !== actorId;
+}
+
+/**
+ * CU-75 1a: el administrador borra del todo cualquier cuenta menos la suya
+ * (también una anonimizada). No hace falta comprobar el «último administrador»:
+ * quien borra ya es un administrador activo.
+ */
+export function comprobarEliminacion(cuenta: Cuenta, actorId: number): ProblemaCuenta | null {
+  return cuenta.id === actorId ? 'CANNOT_DELETE_SELF' : null;
+}
+
+/** CU-76: anonimizar cualquier cuenta menos la propia, y solo una vez. */
+export function comprobarAnonimizacion(cuenta: Cuenta, actorId: number): ProblemaCuenta | null {
+  if (cuenta.id === actorId) return 'CANNOT_DELETE_SELF';
+  if (cuenta.anonymizedAt !== null) return 'ALREADY_ANONYMIZED';
+  return null;
 }

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   comprobarCambioEstado,
+  comprobarAnonimizacion,
   comprobarCambioRol,
+  comprobarEliminacion,
   estadoCuenta,
   puedeEnviarCambioPassword,
   puedeReenviarInvitacion,
@@ -87,5 +89,24 @@ describe('CU-51 Enviar a un trabajador el enlace para cambiar su contraseña', (
     expect(puedeEnviarCambioPassword(cuenta({ isActive: false }), ADMIN)).toBe(false);
     expect(puedeEnviarCambioPassword(cuenta({ anonymizedAt: new Date() }), ADMIN)).toBe(false);
     expect(puedeEnviarCambioPassword(cuenta({ id: ADMIN, role: 'admin' }), ADMIN)).toBe(false);
+  });
+});
+
+describe('CU-75 y CU-76 Eliminar o anonimizar una cuenta desde el panel', () => {
+  it('se puede con cualquier cuenta de otra persona, activa o no', () => {
+    expect(comprobarEliminacion(cuenta(), ADMIN)).toBeNull();
+    expect(comprobarEliminacion(cuenta({ role: 'adopter', isActive: false }), ADMIN)).toBeNull();
+    expect(comprobarAnonimizacion(cuenta({ role: 'admin', id: 2 }), ADMIN)).toBeNull();
+  });
+
+  it('nunca sobre la propia cuenta', () => {
+    expect(comprobarEliminacion(cuenta({ id: ADMIN, role: 'admin' }), ADMIN)).toBe('CANNOT_DELETE_SELF');
+    expect(comprobarAnonimizacion(cuenta({ id: ADMIN, role: 'admin' }), ADMIN)).toBe('CANNOT_DELETE_SELF');
+  });
+
+  it('una cuenta anonimizada se puede borrar, pero no volver a anonimizar', () => {
+    const anonimizada = cuenta({ role: 'adopter', isActive: false, anonymizedAt: new Date() });
+    expect(comprobarEliminacion(anonimizada, ADMIN)).toBeNull();
+    expect(comprobarAnonimizacion(anonimizada, ADMIN)).toBe('ALREADY_ANONYMIZED');
   });
 });

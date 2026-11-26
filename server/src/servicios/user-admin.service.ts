@@ -1,6 +1,7 @@
 import type {
   AdminUserAdoptionDto,
   AdminUserDetailDto,
+  AdminUserLinkedDataDto,
   AdminUserListItemDto,
   AdminUserPatchBody,
   AdminUsersQuery,
@@ -15,29 +16,38 @@ import { bajaAdopcion } from '../dominio/adopcion.js';
 import { paginar } from '../dominio/paginacion.js';
 import type { Reloj } from '../dominio/reloj.js';
 import { caducidadToken } from '../dominio/token.js';
+import { datosAnonimizados } from '../dominio/usuario.js';
 import {
+  comprobarAnonimizacion,
   comprobarCambioEstado,
   comprobarCambioRol,
+  comprobarEliminacion,
   puedeEnviarCambioPassword,
   puedeReenviarInvitacion,
   type ProblemaCuenta,
 } from '../dominio/usuarios-admin.js';
 import {
+  AccountHasDataError,
+  AlreadyAnonymizedError,
   AnonymizedCannotReactivateError,
   CannotDeactivateSelfError,
+  CannotDeleteSelfError,
   InvitationNotPendingError,
   LastActiveAdminError,
   NotFoundError,
   PasswordResetNotAllowedError,
   RoleChangeNotAllowedError,
 } from '../errors/app-error.js';
+import * as accountDeletionModel from '../models/account-deletion.model.js';
 import * as adoptionModel from '../models/adoption.model.js';
 import * as contributionModel from '../models/contribution.model.js';
+import * as donationModel from '../models/donation.model.js';
 import * as sessionModel from '../models/session.model.js';
 import * as shiftAssignmentModel from '../models/shift-assignment.model.js';
 import * as tokenModel from '../models/user-token.model.js';
 import * as userModel from '../models/user.model.js';
 import type { EmailService } from '../services/email/email.service.js';
+import type { StorageService } from '../services/storage/storage.service.js';
 import { adminPasswordResetEmail } from '../services/email/templates/admin-password-reset.js';
 import { workerInvitationEmail } from '../services/email/templates/worker-invitation.js';
 import { hashPassword } from '../utils/passwords.js';
@@ -51,6 +61,10 @@ export interface UserAdminServiceDeps {
   clientUrl: string;
   /** Registra los fallos de envío de email (nunca deshacen la operación). */
   logEmailError?: (error: unknown) => void;
+  /** CU-75: para borrar del disco las fotos de lo que se borra con la cuenta. */
+  storage?: StorageService;
+  /** Registra los archivos que no se han podido borrar (nunca deshacen la operación). */
+  logFileError?: (error: unknown) => void;
 }
 
 export type UserAdminService = ReturnType<typeof createUserAdminService>;
@@ -65,6 +79,10 @@ function lanzar(problema: ProblemaCuenta): never {
       throw new RoleChangeNotAllowedError();
     case 'LAST_ACTIVE_ADMIN':
       throw new LastActiveAdminError();
+    case 'CANNOT_DELETE_SELF':
+      throw new CannotDeleteSelfError();
+    case 'ALREADY_ANONYMIZED':
+      throw new AlreadyAnonymizedError();
   }
 }
 
@@ -77,6 +95,8 @@ export function createUserAdminService({
   email,
   clientUrl,
   logEmailError = () => {},
+  storage,
+  logFileError = () => {},
 }: UserAdminServiceDeps) {
   async function buscar(q: Queryable, id: number, forUpdate = false): Promise<userModel.AdminUser> {
     const user = await userModel.findForAdmin(q, id, forUpdate);
@@ -228,6 +248,58 @@ export function createUserAdminService({
           ? sessionModel.deleteOthersByUserId(client, id, actor.sid)
           : sessionModel.deleteByUserId(client, id);
       });
+    },
+
+    /** CU-75 paso 2: lo que se borraría con la cuenta si se fuerza. */
+    async linkedData(id: number): Promise<AdminUserLinkedDataDto> {
+      await buscar(db, id);
+      return accountDeletionModel.countLinkedData(db, id);
+    },
+
+    /**
+     * CU-75: borra la cuenta del todo. Si tiene datos enlazados, solo con
+     * `force` (3a/3b), y entonces se borran también; lo que es del santuario
+     * se conserva sin autor. Las fotos que se quedan sin uso se borran del
+     * disco después; un fallo ahí no deshace el borrado.
+     */
+    async deleteAccount(actorId: number, id: number, { force = false }: { force?: boolean }): Promise<void> {
+      const archivos = await withTransaction(db, async (client) => {
+        const user = await buscar(client, id, true);
+        const problema = comprobarEliminacion(user, actorId);
+        if (problema) lanzar(problema);
+        const datos = await accountDeletionModel.countLinkedData(client, id);
+        if (datos.total > 0 && !force) throw new AccountHasDataError();
+        const urls = await accountDeletionModel.deleteOwnedData(client, id);
+        await accountDeletionModel.clearAuthorship(client, id);
+        await accountDeletionModel.deleteUser(client, id);
+        return urls;
+      });
+      if (!storage) return;
+      for (const url of archivos) {
+        const ruta = storage.pathFromUrl(url);
+        if (ruta) await storage.delete(ruta).catch(logFileError);
+      }
+    },
+
+    /**
+     * CU-76: lo mismo que la baja del adoptante (CU-25), sin su contraseña y
+     * también para trabajadores: cierra sus adopciones, anonimiza, vacía sus
+     * donaciones y borra lo personal, sus sesiones y sus turnos futuros.
+     */
+    async anonymize(actorId: number, id: number): Promise<AdminUserDetailDto> {
+      const passwordHash = await hashPassword(randomBytes(32).toString('base64url'));
+      await withTransaction(db, async (client) => {
+        const user = await buscar(client, id, true);
+        const problema = comprobarAnonimizacion(user, actorId);
+        if (problema) lanzar(problema);
+        await adoptionModel.closeOpenForUser(client, id, reloj.hoy());
+        await userModel.anonymize(client, id, { ...datosAnonimizados(id), passwordHash, instante: reloj.ahora() });
+        await donationModel.clearDonorData(client, id);
+        await userModel.deletePersonalRecords(client, id);
+        await sessionModel.deleteByUserId(client, id);
+        await shiftAssignmentModel.removeFutureOfUser(client, id, reloj.hoy());
+      });
+      return detalle(id);
     },
 
     /** CU-36 pasos 3-4: cuenta verificada, contraseña aleatoria e invitación de 24 horas. */
