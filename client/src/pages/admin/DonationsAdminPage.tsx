@@ -1,6 +1,7 @@
-import { faFileCsv, faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faFileCsv, faPlus } from '@fortawesome/free-solid-svg-icons';
 import {
   ADMIN_DONATION_SORTS,
+  MANUAL_PAYMENT_METHODS,
   PAYMENT_METHODS,
   PAYMENT_STATUSES,
   type AdminDonationListItemDto,
@@ -21,6 +22,7 @@ import { Pagination } from '../../components/Pagination';
 import { ADMIN_DONATIONS_KEY, useAdminDonationMonthlyTotals, useAdminDonations } from '../../hooks/useAdmin';
 import { errorMessage } from '../../utils/apiErrors';
 import { formatCurrency, formatMonth, formatShortInstant } from '../../utils/format';
+import { useBusquedaDiferida } from '../../hooks/useBusquedaDiferida';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
 
@@ -28,7 +30,8 @@ const PAGE_SIZE = 20;
 // Orden fijo de los parámetros en la URL. La exportación usa los mismos, sin la página.
 const CLAVES = ['q', 'status', 'method', 'from', 'to', 'sort', 'page'] as const;
 const DIA = /^\d{4}-\d{2}-\d{2}$/;
-const MANUALES: readonly PaymentMethod[] = ['cash', 'bank_transfer'];
+// Las transferencias se devuelven a mano; las de tarjeta, por la pasarela.
+const MANUALES: readonly PaymentMethod[] = MANUAL_PAYMENT_METHODS;
 
 const entero = (valor: string | null) => (valor && /^\d+$/.test(valor) ? Number(valor) : undefined);
 const de = <T extends string>(lista: readonly T[], valor: string | null): T | undefined =>
@@ -68,7 +71,8 @@ export function DonationsAdminPage() {
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const filtros = leerFiltros(params);
-  const [busqueda, setBusqueda] = useState(filtros.q ?? '');
+  // Filtra a medida que se escribe (DESIGN_SYSTEM §8.5).
+  const [busqueda, setBusqueda, buscarYa] = useBusquedaDiferida(filtros.q ?? '', (q) => cambiar({ q }));
   const [pestana, setPestana] = useState<Pestana>('list');
   const [aDevolver, setADevolver] = useState<AdminDonationListItemDto | null>(null);
   const [aviso, setAviso] = useState<Aviso | null>(null);
@@ -77,7 +81,14 @@ export function DonationsAdminPage() {
   /** Cambia un filtro y vuelve a la primera página. */
   const cambiar = (cambios: Partial<Record<(typeof CLAVES)[number], string | undefined>>) => {
     const actuales = Object.fromEntries(CLAVES.map((c) => [c, params.get(c) ?? undefined]));
-    const nuevos: Record<string, string | undefined> = { ...actuales, page: undefined, ...cambios };
+    // El texto del buscador va siempre con los demás filtros: si se elige un filtro
+    // justo cuando se aplica la búsqueda, `params` aún no la tiene y se perdería.
+    const nuevos: Record<string, string | undefined> = {
+      ...actuales,
+      q: busqueda.trim() || undefined,
+      page: undefined,
+      ...cambios,
+    };
     const siguiente = new URLSearchParams();
     for (const clave of CLAVES) {
       const valor = nuevos[clave];
@@ -127,7 +138,7 @@ export function DonationsAdminPage() {
           className={styles.search}
           onSubmit={(e) => {
             e.preventDefault();
-            cambiar({ q: busqueda.trim() || undefined });
+            buscarYa();
           }}
         >
           <TextField
@@ -136,9 +147,6 @@ export function DonationsAdminPage() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
-          <Button type="submit" variant="outline" icon={faMagnifyingGlass}>
-            {t('admin.common.search')}
-          </Button>
         </form>
         <SelectField
           label={t('admin.payments.status')}

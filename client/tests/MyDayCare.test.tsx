@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { tareaDelDia } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 const TAREAS: MyDayTaskDto[] = [
   tareaDelDia({
@@ -59,7 +60,7 @@ describe('CU-66 Anotar lo que ha comido cada animal', () => {
     const ventana = await screen.findByRole('dialog', { name: 'Comida de la clínica' });
     expect(within(ventana).getByLabelText('Olmo')).toHaveValue('all');
     expect(within(ventana).queryByRole('button', { name: 'Elegir foto' })).not.toBeInTheDocument();
-    await userEvent.selectOptions(within(ventana).getByLabelText('Carbón'), 'Nada');
+    await elegirOpcion(within(ventana).getByLabelText('Carbón'), 'Nada');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Marcar como hecha' }));
     expect(await screen.findByText('Tarea marcada como hecha')).toBeInTheDocument();
     expect(enviados('/api/admin/tasks/1/complete')).toEqual([

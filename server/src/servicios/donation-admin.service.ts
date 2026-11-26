@@ -41,10 +41,8 @@ export interface DonationAdminServiceDeps {
 export type DonationAdminService = ReturnType<typeof createDonationAdminService>;
 
 const METODO: Record<PaymentMethod, string> = {
-  simulated: 'Pago simulado',
-  cash: 'Efectivo',
-  bank_transfer: 'Transferencia',
   card: 'Tarjeta',
+  bank_transfer: 'Transferencia',
 };
 const ESTADO: Record<PaymentStatus, string> = {
   pending: 'Pendiente',
@@ -178,7 +176,6 @@ export function createDonationAdminService({
             amount: donacion.amount,
             paidAt: new Date(donacion.date),
             reference,
-            simulated: false,
             language: donacion.userId === null ? undefined : await userModel.findLanguage(db, donacion.userId),
           }),
         });
@@ -187,8 +184,8 @@ export function createDonationAdminService({
     },
 
     /**
-     * A2: devolución. Las de la web pasan por la pasarela; las de efectivo o
-     * transferencia se devuelven a mano y solo se marcan. Se avisa al donante
+     * A2: devolución. Las de la web (tarjeta) pasan por la pasarela; las
+     * transferencias se devuelven a mano y solo se marcan. Se avisa al donante
      * en la campana (si tiene cuenta) y por email (si lo dio).
      */
     async refund(id: number): Promise<AdminDonationListItemDto> {

@@ -1,6 +1,7 @@
 import {
   ARCHIVED_ANIMAL_STATUSES,
   INCIDENT_CATEGORIES,
+  INCIDENT_PHOTOS_MAX,
   INCIDENT_SEVERITIES,
   INCIDENT_TITLE_MAX,
   incidentBodySchema,
@@ -44,14 +45,14 @@ export function IncidentFormModal({
     zoneId: '',
     animalId: '',
   });
-  const [foto, setFoto] = useState<File | undefined>(undefined);
+  const [fotos, setFotos] = useState<File[]>([]);
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const cambiar = <K extends keyof typeof campos>(campo: K, valor: (typeof campos)[K]) =>
     setCampos((c) => ({ ...c, [campo]: valor }));
 
   const enviar = useMutation({
-    mutationFn: (datos: IncidentBody) => workApi.incidents.create(datos, foto),
+    mutationFn: (datos: IncidentBody) => workApi.incidents.create(datos, fotos),
     onSuccess: onSaved,
     onError: (e) => {
       if (e instanceof ApiError && e.details.length > 0) setErrores(erroresDeApi(e.details));
@@ -127,12 +128,12 @@ export function IncidentFormModal({
           ))}
         </SelectField>
         <SelectField
-          label={t('work.incidents.zone')}
+          label={t('form.optional', { label: t('work.incidents.zone') })}
           value={campos.zoneId}
           error={errores.zoneId}
           onChange={(e) => cambiar('zoneId', e.target.value)}
         >
-          <option value="">{t('form.choose')}</option>
+          <option value="">{t('work.incidents.noZone')}</option>
           {zonas.data
             ?.filter((z) => z.isActive)
             .map((z) => (
@@ -172,7 +173,12 @@ export function IncidentFormModal({
           error={errores.description}
           onChange={(e) => cambiar('description', e.target.value)}
         />
-        <PhotoPicker label={t('form.optional', { label: t('work.photo') })} value={foto} onChange={setFoto} />
+        <PhotoPicker
+          label={t('form.optional', { label: t('work.photos') })}
+          value={fotos}
+          onChange={setFotos}
+          max={INCIDENT_PHOTOS_MAX}
+        />
       </form>
     </Modal>
   );

@@ -1,4 +1,4 @@
-/* Selector de una foto (DESIGN_SYSTEM §8.9): zona de subida reducida a un solo archivo. */
+/* Selector de fotos (DESIGN_SYSTEM §8.9): zona de subida de varias fotos, con un máximo. */
 .picker {
   container-type: inline-size;
   display: flex;
@@ -51,13 +51,22 @@
   outline-offset: 2px;
 }
 
-/* Foto elegida: miniatura, nombre y tamaño, y los botones. */
+/* Fotos elegidas: una fila por foto con su miniatura, nombre y tamaño, y «Quitar». */
+ul.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .file {
   display: grid;
-  grid-template-columns: 72px 1fr;
+  grid-template-columns: 56px 1fr auto;
   gap: var(--space-3);
   align-items: center;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
@@ -66,8 +75,8 @@
 .thumb {
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
+  width: 56px;
+  height: 56px;
   border-radius: var(--radius-md);
   background: var(--color-surface-alt);
   color: var(--color-text-muted);
@@ -95,32 +104,24 @@
   margin: 0;
 }
 
-.actions {
-  display: grid;
-  grid-column: 1 / -1;
-  gap: var(--space-2);
+/* En una ventana estrecha, «Quitar» se queda solo con la ✕. */
+@container (max-width: 339px) {
+  .remove span {
+    display: none;
+  }
 }
 
-/* Con sitio, los dos botones van uno al lado del otro. */
-@container (min-width: 340px) {
-  .actions {
-    grid-template-columns: 1fr 1fr;
-  }
+/* «Añadir fotos», bajo la lista; la zona de arrastrar sigue siendo todo el grupo. */
+.more {
+  display: flex;
+}
+
+.over .file {
+  border-color: var(--color-primary);
 }
 
 .error {
   margin: 0;
   color: var(--color-error);
   font-size: var(--font-size-sm);
-}
-
-/* Si el selector es ancho (fuera de una ventana), los botones van a la derecha de la foto. */
-@container (min-width: 640px) {
-  .file {
-    grid-template-columns: 72px 1fr auto;
-  }
-
-  .actions {
-    grid-column: auto;
-  }
 }

@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { animal, page, plans, sessionUser, update } from './helpers/fixtures';
+import { admin, animal, caretaker, page, plans, sessionUser, update } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 
 function api(overrides: Parameters<typeof animal>[0] = {}, updates = [update]) {
@@ -192,6 +192,54 @@ describe('CU-03 Ficha del animal: visor de fotos y barra fija (SCREENS §3.3)', 
     api({ isAdoptable: false });
     renderRoute('/animals/1');
     expect(await screen.findByText('Ahora mismo no admite adopciones.')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
+  });
+});
+
+describe('CU-03 Ficha del animal: acceso al panel para el personal', () => {
+  function apiConSesion(user: ReturnType<typeof sessionUser> | null) {
+    mockApi({
+      ...(user ? { '/api/auth/me': { body: { user } } } : {}),
+      '/api/animals/1': { body: animal() },
+      '/api/animals/1/updates': { body: page([]) },
+      '/api/plans': { body: { data: plans } },
+    });
+  }
+
+  it('un cuidador ve «Ver en el panel», que lleva a la ficha del animal en el panel', async () => {
+    apiConSesion(caretaker());
+    renderRoute('/animals/1');
+    expect(await screen.findByRole('link', { name: 'Ver en el panel' })).toHaveAttribute('href', '/admin/animals/1');
+  });
+
+  it('un administrador también lo ve', async () => {
+    apiConSesion(admin());
+    renderRoute('/animals/1');
+    expect(await screen.findByRole('link', { name: 'Ver en el panel' })).toHaveAttribute('href', '/admin/animals/1');
+  });
+
+  it('un adoptante no lo ve', async () => {
+    apiConSesion(sessionUser());
+    renderRoute('/animals/1');
+    expect(await screen.findByRole('link', { name: 'Adoptar a Rufo' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ver en el panel' })).not.toBeInTheDocument();
+  });
+
+  it('sin sesión no se ve', async () => {
+    apiConSesion(null);
+    renderRoute('/animals/1');
+    expect(await screen.findByRole('link', { name: 'Adoptar a Rufo' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ver en el panel' })).not.toBeInTheDocument();
+  });
+
+  it('el personal ve el botón «Adoptar» desactivado, con la explicación y sin barra fija', async () => {
+    tarjetaAdoptar(true);
+    apiConSesion(caretaker());
+    renderRoute('/animals/1');
+    const boton = await screen.findByRole('button', { name: 'Adoptar a Rufo' });
+    expect(boton).toBeDisabled();
+    expect(boton).toHaveAccessibleDescription('Las cuentas del personal no pueden adoptar.');
+    expect(screen.queryByRole('link', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Adoptar a Rufo' })).not.toBeInTheDocument();
   });
 });

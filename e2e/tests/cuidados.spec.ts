@@ -1,4 +1,4 @@
-import { expect, iniciarSesion, test } from '../support/test.js';
+import { elegirOpcion, expect, iniciarSesion, test } from '../support/test.js';
 import { t } from '../support/textos.js';
 import { MARTA, NURIA } from '../support/usuarios.js';
 
@@ -16,8 +16,8 @@ test.describe('CU-66, CU-67 Lo que come cada animal', () => {
       .filter({ has: page.getByRole('button', { name: t('work.myDay.done'), exact: true }) });
     await tarjeta.getByRole('button', { name: t('work.myDay.done'), exact: true }).click();
     const ventana = page.getByRole('dialog', { name: COMIDA });
-    await expect(ventana.getByLabel('Olmo', { exact: true })).toHaveValue('all');
-    await ventana.getByLabel('Carbón', { exact: true }).selectOption({ label: t('work.care.intakes.none') });
+    await expect(ventana.getByLabel('Olmo', { exact: true })).toHaveText(t('work.care.intakes.all'));
+    await elegirOpcion(ventana.getByLabel('Carbón', { exact: true }), t('work.care.intakes.none'));
     await ventana.getByRole('button', { name: t('work.myDay.completeSubmit'), exact: true }).click();
     await expect(page.getByText(t('work.myDay.markedDone'))).toBeVisible();
 

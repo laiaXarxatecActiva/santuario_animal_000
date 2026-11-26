@@ -1,10 +1,12 @@
 import type { AdminPlanDto } from '@sanctuary/shared';
 import type { Pool, PoolClient } from 'pg';
 import { withTransaction } from '../db/transaction.js';
-import { comprobarAltaPlan, comprobarEdicionPlan, type ProblemaPlan } from '../dominio/planes.js';
+import { comprobarAltaPlan, comprobarEdicionPlan, comprobarPlanes, type ProblemaPlan } from '../dominio/planes.js';
 import {
+  AppError,
   DefaultPlanMustBeActiveError,
   DefaultPlanNeedsReplacementError,
+  DefaultPlanNotUniqueError,
   NotFoundError,
   PlanAmountChangeUnconfirmedError,
 } from '../errors/app-error.js';
@@ -17,12 +19,15 @@ export interface PlanAdminServiceDeps {
 
 export type PlanAdminService = ReturnType<typeof createPlanAdminService>;
 
-function lanzar(problema: ProblemaPlan, activeAdoptions: number): never {
+/** `prefijo` sitúa el error en un plan del formulario de todos los planes (`plans.1.`). */
+function lanzar(problema: ProblemaPlan, activeAdoptions: number, prefijo = ''): never {
   switch (problema) {
     case 'DEFAULT_MUST_BE_ACTIVE':
-      throw new DefaultPlanMustBeActiveError();
+      throw new DefaultPlanMustBeActiveError(`${prefijo}isActive`);
     case 'DEFAULT_NEEDS_REPLACEMENT':
-      throw new DefaultPlanNeedsReplacementError();
+      throw new DefaultPlanNeedsReplacementError(`${prefijo}isDefault`);
+    case 'DEFAULT_NOT_UNIQUE':
+      throw new DefaultPlanNotUniqueError(`${prefijo}isDefault`);
     case 'AMOUNT_CHANGE_UNCONFIRMED':
       throw new PlanAmountChangeUnconfirmedError(activeAdoptions);
   }
@@ -59,6 +64,46 @@ export function createPlanAdminService({ db }: PlanAdminServiceDeps) {
         if (datos.isDefault && !actual.isDefault) await planModel.clearDefaultExcept(client, id);
         await planModel.update(client, id, datos);
         return leer(client, id);
+      });
+    },
+
+    /**
+     * Guarda todos los planes a la vez (un solo «Guardar cambios»): o se guardan
+     * todos o ninguno. Devuelve los planes como quedan.
+     */
+    async updateAll(
+      planes: (PlanData & { id: number })[],
+      confirmAmountChange: boolean,
+    ): Promise<{ data: AdminPlanDto[] }> {
+      return withTransaction(db, async (client) => {
+        await client.query('SELECT 1 FROM adoption_plans ORDER BY id FOR UPDATE');
+        const guardados = await planModel.listWithCounts(client);
+        if (planes.some((p) => !guardados.some((g) => g.id === p.id))) throw new NotFoundError('Este plan no existe.');
+        const problema = comprobarPlanes(guardados, planes, confirmAmountChange);
+        if (problema) {
+          const indice = planes.findIndex((p) => p.id === problema.planId);
+          lanzar(problema.problema, problema.activeAdoptions ?? 0, indice >= 0 ? `plans.${indice}.` : '');
+        }
+        // Primero se quita la marca al anterior: solo puede haber un plan por defecto.
+        const nuevoPorDefecto = planes.find((p) => p.isDefault);
+        if (nuevoPorDefecto) await planModel.clearDefaultExcept(client, nuevoPorDefecto.id);
+        for (const [indice, { id, ...datos }] of planes.entries()) {
+          try {
+            await planModel.update(client, id, datos);
+          } catch (error) {
+            // El error del nombre repetido se sitúa en su plan.
+            if (error instanceof AppError) {
+              throw new AppError(
+                error.status,
+                error.code,
+                error.message,
+                error.details.map((d) => ({ ...d, field: `plans.${indice}.${d.field}` })),
+              );
+            }
+            throw error;
+          }
+        }
+        return { data: await planModel.listWithCounts(client) };
       });
     },
   };

@@ -53,12 +53,45 @@
   margin: var(--space-1) 0 0;
 }
 
+/* Fotos: miniaturas cuadradas en rejilla; cada una abre la foto entera. */
+ul.photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .photo {
-  display: inline-block;
+  display: block;
 }
 
 .photo img {
   display: block;
-  max-width: min(100%, 320px);
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
   border-radius: var(--radius-md);
+}
+
+/* Tareas de la incidencia: título (enlace), día y estado, con una línea entre filas. */
+ul.tasks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tasks li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.taskDate {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
 }

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, caretaker } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const entradas: ActivityLogDto[] = [
   {
@@ -81,9 +82,9 @@ describe('CU-42 Consultar el registro de actividad', () => {
     const { pedidas } = api();
     renderRoute('/admin/activity');
     await screen.findByRole('heading', { level: 1 });
-    await userEvent.selectOptions(await screen.findByLabelText('Usuario'), 'Sistema');
-    await userEvent.selectOptions(screen.getByLabelText('Tabla'), 'Adopciones');
-    await userEvent.selectOptions(screen.getByLabelText('Acción'), 'Modificación');
+    await elegirOpcion(await screen.findByLabelText('Usuario'), 'Sistema');
+    await elegirOpcion(screen.getByLabelText('Tabla'), 'Adopciones');
+    await elegirOpcion(screen.getByLabelText('Acción'), 'Modificación');
     await userEvent.type(screen.getByLabelText('Desde'), '2026-11-01');
     await userEvent.type(screen.getByLabelText('Hasta'), '2026-11-30');
     await waitFor(() => {

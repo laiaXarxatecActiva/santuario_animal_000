@@ -50,16 +50,16 @@ describe('CU-15 sucesos del historial de adopciones', () => {
     ]);
   });
 
-  it('el historial suma a esos los que salen de las adopciones y los pagos', async () => {
+  it('el historial suma a esos los que salen de las adopciones (los pagos están en «Mis aportaciones»)', async () => {
     const { ADOPTION_EVENT_TYPES, HISTORY_EVENT_TYPES } = await import('../src/constants/status.js');
-    expect(HISTORY_EVENT_TYPES).toEqual([
-      'adopted',
-      'payment_completed',
-      'payment_failed',
-      'payment_refunded',
-      'cancel_requested',
-      'ended',
-      ...ADOPTION_EVENT_TYPES,
-    ]);
+    expect(HISTORY_EVENT_TYPES).toEqual(['adopted', 'cancel_requested', 'ended', ...ADOPTION_EVENT_TYPES]);
+  });
+});
+
+describe('Formas de pago: solo tarjeta (en la web) y transferencia (apuntada a mano)', () => {
+  it('coinciden con los CHECK de seedsql.sql y no hay efectivo', async () => {
+    const { PAYMENT_METHODS, MANUAL_PAYMENT_METHODS } = await import('../src/constants/status.js');
+    expect(PAYMENT_METHODS).toEqual(['card', 'bank_transfer']);
+    expect(MANUAL_PAYMENT_METHODS).toEqual(['bank_transfer']);
   });
 });

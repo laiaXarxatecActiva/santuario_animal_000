@@ -94,7 +94,7 @@ describe('CU-19 Recibos en PDF', () => {
   it('5: el recibo de una donación', async () => {
     const res = await pdf(lucia, '/api/me/donations/1/receipt.pdf?download=1');
     esPdf(res);
-    expect(res.headers['content-disposition']).toBe('attachment; filename="recibo-sim-d0001.pdf"');
+    expect(res.headers['content-disposition']).toBe('attachment; filename="recibo-card-d0001.pdf"');
   });
 
   it('4a: sin cobrar no hay recibo (422); uno ajeno es 404; un valor de «download» no válido es 400', async () => {

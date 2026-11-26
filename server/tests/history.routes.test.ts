@@ -27,16 +27,20 @@ describe('CU-15 Historial de «Mis animales»', () => {
   it('devuelve los sucesos del último año, de 10 en 10, del más reciente al más antiguo', async () => {
     const { data, meta } = await historial();
     expect(meta).toMatchObject({ page: 1, pageSize: 10 });
-    expect(meta.total).toBeGreaterThan(10);
-    expect(data).toHaveLength(10);
+    // Sin los pagos, Lucía tiene menos de 10 sucesos: salen todos en la primera página.
+    expect(meta.total).toBeGreaterThan(2);
+    expect(data).toHaveLength(Math.min(10, meta.total));
     // Desde el mismo día del año pasado (el reloj de las pruebas es el día de carga de los datos).
     expect(meta.since).toBe(`${Number(t.hoy.slice(0, 4)) - 1}${t.hoy.slice(4)}`);
     expect(data.every((s) => s.date >= meta.since && s.date <= t.hoy)).toBe(true);
     const fechas = data.map((s) => s.date);
     expect([...fechas].sort().reverse()).toEqual(fechas);
 
-    const segunda = await historial('?page=2');
-    expect(segunda.data.map((s) => s.id)).not.toContain(data[0]!.id);
+    // Por páginas (de 2, para tener más de una).
+    const primera = await historial('?pageSize=2');
+    const segunda = await historial('?page=2&pageSize=2');
+    expect(primera.data.map((s) => s.id)).toEqual(data.slice(0, 2).map((s) => s.id));
+    expect(segunda.data.map((s) => s.id)).toEqual(data.slice(2, 4).map((s) => s.id));
   });
 
   it('filtra por animal', async () => {
@@ -83,7 +87,7 @@ describe('CU-15 El historial recoge también lo que hacen el panel y las tareas'
   const vencerHoy = (id: number) =>
     t.pool.query('UPDATE adoptions SET next_billing_date = $2 WHERE id = $1', [id, t.hoy]);
 
-  it('CU-43: al cobrar la cuota se aplica el cambio de plan pedido', async () => {
+  it('CU-43: al cobrar la cuota se aplica el cambio de plan pedido; el cobro no sale', async () => {
     // Rufo (adopción 1, plan Usual): pide pasar a Simbólica y la cuota vence hoy.
     expect((await lucia.patch('/api/me/adoptions/1/plan').send({ planId: 1 })).status).toBe(200);
     await vencerHoy(1);
@@ -91,9 +95,8 @@ describe('CU-15 El historial recoge también lo que hacen el panel y las tareas'
 
     const [ultimo, ...resto] = await tipos(1);
     expect(ultimo).toMatchObject({ type: 'plan_changed', previousPlanName: 'Usual', planName: 'Simbólica' });
-    expect(resto.find((s) => s.type === 'payment_completed' && s.periodStart === t.hoy)).toMatchObject({
-      amount: '1.00',
-    });
+    // El cobro está en «Mis aportaciones» (CU-19), no en el historial.
+    expect(resto.map((s) => s.type)).not.toContain('payment_completed');
     expect(resto.find((s) => s.type === 'plan_change_requested')).toMatchObject({ planName: 'Simbólica' });
     // Al aplicarse no se cuenta como «anulado».
     expect(resto.some((s) => s.type === 'plan_change_cancelled')).toBe(false);
@@ -108,7 +111,8 @@ describe('CU-15 El historial recoge también lo que hacen el panel y las tareas'
     expect((await marta.patch('/api/admin/adoptions/2/status').send({ action: 'resume' })).status).toBe(200);
 
     const sucesos = (await tipos(8)).filter((s) => s.date === t.hoy).map((s) => s.type);
-    expect(sucesos).toEqual(expect.arrayContaining(['payment_failed', 'paused', 'resumed']));
+    expect(sucesos).toEqual(expect.arrayContaining(['paused', 'resumed']));
+    expect(sucesos).not.toContain('payment_failed');
     // La reanudación es lo último que pasó.
     expect(sucesos[0]).toBe('resumed');
   });

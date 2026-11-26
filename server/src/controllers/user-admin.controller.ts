@@ -1,4 +1,6 @@
 import {
+  adminUserAnonymizeSchema,
+  adminUserDeleteSchema,
   adminUserLogoutAllSchema,
   adminUserPatchSchema,
   adminUsersQuerySchema,
@@ -60,5 +62,29 @@ export function createUserAdminController(service: UserAdminService, actividad: 
     res.status(204).end();
   };
 
-  return { list, get, update, create, resendInvitation, logoutAll, sendPasswordReset };
+  /** CU-75 paso 2. */
+  const linkedData: RequestHandler = async (_req, res) => {
+    res.json(await service.linkedData(id(res)));
+  };
+  /** CU-75: el motivo (opcional) queda en el registro de actividad. */
+  const remove: RequestHandler = async (req, res) => {
+    if (!req.user) throw new UnauthorizedError();
+    const { reason, force } = validated(res, 'body', adminUserDeleteSchema);
+    await service.deleteAccount(req.user.id, id(res), { force });
+    await actividad.log(req.user.id, 'delete', 'users', id(res), reason ? { reason } : null);
+    res.status(204).end();
+  };
+  /** CU-76. */
+  const anonymize: RequestHandler = async (req, res) => {
+    if (!req.user) throw new UnauthorizedError();
+    const { reason } = validated(res, 'body', adminUserAnonymizeSchema);
+    const usuario = await service.anonymize(req.user.id, id(res));
+    await actividad.log(req.user.id, 'update', 'users', usuario.id, {
+      anonymized: true,
+      ...(reason ? { reason } : {}),
+    });
+    res.json(usuario);
+  };
+
+  return { list, get, update, create, resendInvitation, logoutAll, sendPasswordReset, linkedData, remove, anonymize };
 }

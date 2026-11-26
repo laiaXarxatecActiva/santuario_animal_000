@@ -1,6 +1,7 @@
 // Reglas de los planes de adopción (CU-40, RN-04).
 
-export type ProblemaPlan = 'DEFAULT_MUST_BE_ACTIVE' | 'DEFAULT_NEEDS_REPLACEMENT' | 'AMOUNT_CHANGE_UNCONFIRMED';
+export type ProblemaPlan =
+  'DEFAULT_MUST_BE_ACTIVE' | 'DEFAULT_NEEDS_REPLACEMENT' | 'DEFAULT_NOT_UNIQUE' | 'AMOUNT_CHANGE_UNCONFIRMED';
 
 /** Importe (`'5'`, `'5.5'`, `'5.00'`) en céntimos, sin pasar por floats. */
 function aCentimos(importe: string): number {
@@ -38,6 +39,58 @@ export function comprobarEdicionPlan(
     cambiaImporte(actual.monthlyAmount, cambios.monthlyAmount)
   ) {
     return 'AMOUNT_CHANGE_UNCONFIRMED';
+  }
+  return null;
+}
+
+export interface PlanGuardado {
+  id: number;
+  isDefault: boolean;
+  isActive: boolean;
+  monthlyAmount: string;
+  activeAdoptions: number;
+}
+export type CambioPlan = Omit<PlanGuardado, 'activeAdoptions'>;
+export interface ProblemaPlanes {
+  problema: ProblemaPlan;
+  /** El plan al que se refiere el problema. */
+  planId: number;
+  /** Solo en AMOUNT_CHANGE_UNCONFIRMED. */
+  activeAdoptions?: number;
+}
+
+/**
+ * 3, 3a y A1 al guardar todos los planes a la vez: se comprueba cómo quedarían
+ * (los que no se envían siguen igual).
+ * - Siempre hay exactamente un plan por defecto, y está activo.
+ * - 3a: un nuevo importe con adopciones activas hay que confirmarlo (una vez para todos).
+ */
+export function comprobarPlanes(
+  guardados: readonly PlanGuardado[],
+  cambios: readonly CambioPlan[],
+  confirmAmountChange: boolean,
+): ProblemaPlanes | null {
+  const final = guardados.map((p) => ({ ...p, ...cambios.find((c) => c.id === p.id) }));
+  const porDefecto = final.filter((p) => p.isDefault);
+  if (porDefecto.length === 0) {
+    const anterior = guardados.find((p) => p.isDefault) ?? guardados[0];
+    return { problema: 'DEFAULT_NEEDS_REPLACEMENT', planId: anterior?.id ?? 0 };
+  }
+  if (porDefecto.length > 1) {
+    // Se señala el que se ha marcado de nuevo (o, si no, el segundo).
+    const nuevo = porDefecto.find((p) => !guardados.find((g) => g.id === p.id)?.isDefault) ?? porDefecto[1]!;
+    return { problema: 'DEFAULT_NOT_UNIQUE', planId: nuevo.id };
+  }
+  const elegido = porDefecto[0]!;
+  if (!elegido.isActive) return { problema: 'DEFAULT_MUST_BE_ACTIVE', planId: elegido.id };
+  if (!confirmAmountChange) {
+    const afectado = guardados.find((g) => {
+      const cambio = cambios.find((c) => c.id === g.id);
+      return g.activeAdoptions > 0 && cambio !== undefined && cambiaImporte(g.monthlyAmount, cambio.monthlyAmount);
+    });
+    if (afectado) {
+      return { problema: 'AMOUNT_CHANGE_UNCONFIRMED', planId: afectado.id, activeAdoptions: afectado.activeAdoptions };
+    }
   }
   return null;
 }

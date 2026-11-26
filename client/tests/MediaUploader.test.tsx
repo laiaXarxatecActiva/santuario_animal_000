@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { MediaUploader, validarPendientes, type PendingMedia } from '../src/components/admin/MediaUploader';
+import { elegirOpcion } from './helpers/select';
 
 const archivo = (nombre: string, tipo = 'image/jpeg') => new File(['contenido'], nombre, { type: tipo });
 
@@ -42,7 +43,7 @@ describe('CU-29 MediaUploader (zona de subida)', () => {
     const foto = screen.getByRole('group', { name: 'turia.jpg' });
     const video = screen.getByRole('group', { name: 'turia.mp4' });
     await userEvent.type(within(foto).getByLabelText('Texto alternativo'), 'Turia al sol');
-    await userEvent.selectOptions(within(video).getByLabelText('Visibilidad'), 'Solo adoptantes');
+    await elegirOpcion(within(video).getByLabelText('Visibilidad'), 'Solo adoptantes');
     const ultimo = onChange.mock.lastCall?.[0] as PendingMedia[];
     expect(ultimo.map((i) => [i.file.name, i.altText, i.visibility])).toEqual([
       ['turia.jpg', 'Turia al sol', 'public'],

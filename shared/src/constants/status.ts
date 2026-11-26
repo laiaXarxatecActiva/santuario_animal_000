@@ -44,26 +44,26 @@ export const ADOPTION_EVENT_TYPES = [
 ] as const;
 export type AdoptionEventType = (typeof ADOPTION_EVENT_TYPES)[number];
 
-// CU-15: todos los sucesos del historial. Los primeros salen de adoptions y payments.
-export const HISTORY_EVENT_TYPES = [
-  'adopted',
-  'payment_completed',
-  'payment_failed',
-  'payment_refunded',
-  'cancel_requested',
-  'ended',
-  ...ADOPTION_EVENT_TYPES,
-] as const;
+// CU-15: todos los sucesos del historial. Los primeros salen de adoptions. Los
+// pagos no salen: están en «Mis aportaciones» (CU-19).
+export const HISTORY_EVENT_TYPES = ['adopted', 'cancel_requested', 'ended', ...ADOPTION_EVENT_TYPES] as const;
 export type HistoryEventType = (typeof HISTORY_EVENT_TYPES)[number];
 
 // Estados comunes a pagos (cuotas) y donaciones.
 export const PAYMENT_STATUSES = ['pending', 'completed', 'failed', 'refunded'] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-export const PAYMENT_METHODS = ['simulated', 'cash', 'bank_transfer', 'card'] as const;
-// CU-37: métodos de un pago registrado a mano por un administrador.
-export const MANUAL_PAYMENT_METHODS = ['cash', 'bank_transfer'] as const satisfies readonly PaymentMethod[];
+// Formas de pago: tarjeta, para todo lo que se paga en la web (la pasarela; nunca
+// en persona), y transferencia, que la apunta a mano un administrador. No se
+// acepta efectivo. Más adelante podría añadirse la domiciliación (SEPA).
+export const PAYMENT_METHODS = ['card', 'bank_transfer'] as const;
+/** Forma de pago de lo que se cobra en la web (CU-05, CU-13, CU-14, CU-43). */
+export const ONLINE_PAYMENT_METHOD = 'card' satisfies PaymentMethod;
+// CU-37, CU-38, CU-39: métodos de un pago registrado a mano por un administrador.
+export const MANUAL_PAYMENT_METHODS = ['bank_transfer'] as const satisfies readonly PaymentMethod[];
 export type ManualPaymentMethod = (typeof MANUAL_PAYMENT_METHODS)[number];
+/** La única forma de pago que se registra a mano hoy (los formularios del panel no la preguntan). */
+export const MANUAL_PAYMENT_METHOD: ManualPaymentMethod = 'bank_transfer';
 
 // CU-37 A1-A3: acciones del administrador sobre una adopción.
 export const ADOPTION_ADMIN_ACTIONS = ['pause', 'resume', 'cancel'] as const;

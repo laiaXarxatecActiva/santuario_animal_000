@@ -1,10 +1,11 @@
 import type { AdoptionEndReason, HistoryEventDto, HistoryEventType, PaymentMode } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 
-// CU-15: historial de «Mis animales». El alta, los pagos, la baja pedida y el
-// cierre salen de adoptions y payments (así se ve también lo anterior a la tabla
-// adoption_events); los cambios de plan y de forma de pago, las pausas y las
-// reanudaciones, de adoption_events (los apunta el trigger adoptions_record_event).
+// CU-15: historial de «Mis animales». El alta, la baja pedida y el cierre salen de
+// adoptions (así se ve también lo anterior a la tabla adoption_events); los cambios
+// de plan y de forma de pago, las pausas y las reanudaciones, de adoption_events
+// (los apunta el trigger adoptions_record_event). Los pagos no salen: están en
+// «Mis aportaciones» (CU-19).
 
 export interface HistoryFilters {
   /** Primer día que se muestra, `YYYY-MM-DD` (zona del santuario). */
@@ -22,7 +23,6 @@ const SUCESOS = `
   sucesos AS (
     -- Alta, con el plan con el que empezó (si después cambió, el de antes del primer cambio).
     SELECT 'adopted-' || m.id AS id, 'adopted' AS type, m.created_at AS at, m.id AS adoption_id,
-           NULL::numeric AS amount, NULL::date AS period_start,
            p.name AS plan_name, NULL::text AS previous_plan_name, NULL::text AS payment_mode,
            NULL::text AS end_status, NULL::text AS end_reason
       FROM mias m
@@ -32,26 +32,10 @@ const SUCESOS = `
                ORDER BY e.created_at, e.id LIMIT 1),
              m.plan_id)
     UNION ALL
-    -- Cuotas cobradas (también las que se devolvieron después).
-    SELECT 'payment-' || pg.id || '-completed', 'payment_completed', pg.paid_at, m.id,
-           pg.amount, pg.period_start, NULL, NULL, NULL, NULL, NULL
-      FROM mias m JOIN payments pg ON pg.adoption_id = m.id
-     WHERE pg.status IN ('completed', 'refunded') AND pg.paid_at IS NOT NULL
-    UNION ALL
-    SELECT 'payment-' || pg.id || '-failed', 'payment_failed', pg.created_at, m.id,
-           pg.amount, pg.period_start, NULL, NULL, NULL, NULL, NULL
-      FROM mias m JOIN payments pg ON pg.adoption_id = m.id
-     WHERE pg.status = 'failed'
-    UNION ALL
-    SELECT 'payment-' || pg.id || '-refunded', 'payment_refunded', pg.refunded_at, m.id,
-           pg.amount, pg.period_start, NULL, NULL, NULL, NULL, NULL
-      FROM mias m JOIN payments pg ON pg.adoption_id = m.id
-     WHERE pg.status = 'refunded' AND pg.refunded_at IS NOT NULL
-    UNION ALL
     -- CU-21: la baja pedida, si la adopción siguió activa después: sigue activa o
     -- terminó otro día. Si se cerró en el acto (pendiente o pausada), ya lo cuenta el cierre.
     SELECT 'cancel-' || m.id, 'cancel_requested', m.cancel_requested_at, m.id,
-           NULL, NULL, NULL, NULL, NULL, NULL, NULL
+           NULL, NULL, NULL, NULL, NULL
       FROM mias m
      WHERE m.cancel_requested_at IS NOT NULL
        AND (m.status = 'active'
@@ -61,12 +45,12 @@ const SUCESOS = `
     SELECT 'ended-' || m.id, 'ended',
            ((COALESCE(m.end_date, (m.updated_at AT TIME ZONE 'Europe/Madrid')::date) + 1)::timestamp
              AT TIME ZONE 'Europe/Madrid') - INTERVAL '1 second',
-           m.id, NULL, NULL, NULL, NULL, NULL, m.status, m.end_reason
+           m.id, NULL, NULL, NULL, m.status, m.end_reason
       FROM mias m
      WHERE m.status IN ('cancelled', 'finished')
     UNION ALL
     SELECT 'event-' || e.id, e.type, e.created_at, m.id,
-           NULL, NULL, hacia.name, desde.name, e.payment_mode, NULL, NULL
+           hacia.name, desde.name, e.payment_mode, NULL, NULL
       FROM mias m
       JOIN adoption_events e ON e.adoption_id = m.id
       LEFT JOIN adoption_plans desde ON desde.id = e.from_plan_id
@@ -81,8 +65,6 @@ interface HistoryRow {
   id: string;
   type: HistoryEventType;
   date: string;
-  amount: string | null;
-  period_start: string | null;
   plan_name: string | null;
   previous_plan_name: string | null;
   payment_mode: PaymentMode | null;
@@ -98,8 +80,6 @@ function mapRow(row: HistoryRow): HistoryEventDto {
     type: row.type,
     date: row.date,
     animal: { id: row.animal_id, name: row.animal_name },
-    amount: row.amount,
-    periodStart: row.period_start,
     planName: row.plan_name,
     previousPlanName: row.previous_plan_name,
     paymentMode: row.payment_mode,
@@ -127,7 +107,7 @@ export async function listHistory(
 ): Promise<HistoryEventDto[]> {
   const { rows } = await db.query<HistoryRow>(
     `SELECT h.id, h.type, to_char(h.at AT TIME ZONE 'Europe/Madrid', 'YYYY-MM-DD') AS date,
-            h.amount, h.period_start, h.plan_name, h.previous_plan_name, h.payment_mode,
+            h.plan_name, h.previous_plan_name, h.payment_mode,
             h.end_status, h.end_reason, h.animal_id, h.animal_name
        FROM (${SUCESOS}) h
       ORDER BY h.at DESC, h.id DESC

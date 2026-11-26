@@ -1,8 +1,7 @@
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   adminAdoptionCreateSchema,
-  MANUAL_PAYMENT_METHODS,
+  MANUAL_PAYMENT_METHOD,
   type AdminAdoptionCreateBody,
   type AdminAdoptionCreateInput,
 } from '@sanctuary/shared';
@@ -20,6 +19,7 @@ import { ADMIN_ADOPTIONS_KEY, ADMIN_USERS_KEY, useAdminAnimals, useAdminPlans } 
 import { errorMessage } from '../../utils/apiErrors';
 import { flashState } from '../../utils/flash';
 import { formatCurrency } from '../../utils/format';
+import { useBusquedaDiferida } from '../../hooks/useBusquedaDiferida';
 import styles from './AdminPage.module.css';
 
 // CU-37 alta manual (SCREENS §5.3): por ejemplo, un pago en efectivo en una
@@ -39,7 +39,7 @@ export function NewAdoptionPage() {
     formState: { errors },
   } = useForm<AdminAdoptionCreateBody, unknown, AdminAdoptionCreateInput>({
     resolver: zodResolver(adminAdoptionCreateSchema),
-    defaultValues: { userId: '', animalId: '', planId: '', method: '' as AdminAdoptionCreateBody['method'], notes: '' },
+    defaultValues: { userId: '', animalId: '', planId: '', method: MANUAL_PAYMENT_METHOD, notes: '' },
   });
 
   const crear = useMutation({
@@ -92,14 +92,8 @@ export function NewAdoptionPage() {
             ))}
         </SelectField>
 
-        <SelectField label={t('admin.adoptions.firstPayment')} error={errors.method?.message} {...register('method')}>
-          <option value="">{t('form.choose')}</option>
-          {MANUAL_PAYMENT_METHODS.map((metodo) => (
-            <option key={metodo} value={metodo}>
-              {t(`admin.adoptions.methods.${metodo}`)}
-            </option>
-          ))}
-        </SelectField>
+        {/* El primer pago de un alta manual siempre es por transferencia (no se acepta efectivo). */}
+        <p>{t('admin.adoptions.firstPaymentTransfer')}</p>
 
         <TextAreaField
           label={t('form.optional', { label: t('admin.adoptions.notes') })}
@@ -130,17 +124,14 @@ function BuscarAdoptante({
 }) {
   const { t } = useTranslation();
   const errorId = useId();
-  const [texto, setTexto] = useState('');
   const [buscado, setBuscado] = useState<string | null>(null);
+  // Busca a medida que se escribe (DESIGN_SYSTEM §8.5).
+  const [texto, setTexto, buscarYa] = useBusquedaDiferida(buscado ?? '', (q) => setBuscado(q ?? null));
   const resultados = useQuery({
     queryKey: [...ADMIN_USERS_KEY, 'adopters', buscado],
     queryFn: () => adminApi.users.list({ role: 'adopter', status: 'active', q: buscado ?? '', pageSize: 10 }),
     enabled: buscado !== null,
   });
-
-  const buscar = () => {
-    if (texto.trim() !== '') setBuscado(texto.trim());
-  };
 
   return (
     <div className={styles.page}>
@@ -154,13 +145,10 @@ function BuscarAdoptante({
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              buscar();
+              buscarYa();
             }
           }}
         />
-        <Button type="button" variant="outline" icon={faMagnifyingGlass} onClick={buscar}>
-          {t('admin.adoptions.searchAdopterButton')}
-        </Button>
       </div>
       {resultados.data &&
         (resultados.data.data.length === 0 ? (

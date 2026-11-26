@@ -78,7 +78,7 @@ describe('CU-15 Consultar «Mis animales»', () => {
     expect(within(rufo).getByText('Pendiente de pago')).toBeInTheDocument();
     expect(within(rufo).getByText('Tu adopción de Rufo está pendiente de pago.')).toBeInTheDocument();
     await userEvent.click(within(rufo).getByRole('button', { name: 'Pagar ahora' }));
-    const dialogo = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    const dialogo = await screen.findByRole('dialog', { name: 'Pago con tarjeta' });
     await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago correcto' }));
     expect(await screen.findByText('¡Ya adoptas a Rufo! Te hemos enviado un email de bienvenida.')).toBeInTheDocument();
@@ -136,8 +136,6 @@ describe('CU-15 Consultar «Mis animales»', () => {
             type: 'ended',
             date: '2026-10-23',
             animal: { id: 12, name: 'Faro' },
-            amount: null,
-            periodStart: null,
             endStatus: 'finished',
             endReason: 'animal_deceased',
           }),

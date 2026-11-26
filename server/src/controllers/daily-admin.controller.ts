@@ -1,4 +1,5 @@
 import {
+  INCIDENT_PHOTOS_MAX,
   alertSettingsBodySchema,
   handoverNoteBodySchema,
   idParamsSchema,
@@ -53,12 +54,10 @@ export function createDailyAdminController(s: DailyAdminServices, actividad: Act
     }) satisfies RequestHandler,
     createIncident: (async (req, res) => {
       const archivos = archivosSubidos(req);
-      if (archivos.length > 1) throw new ValidationError([{ field: 'files', message: 'Adjunta una sola foto.' }]);
-      const incidencia = await s.incidents.create(
-        validated(res, 'body', incidentBodySchema),
-        req.user!.id,
-        archivos[0],
-      );
+      if (archivos.length > INCIDENT_PHOTOS_MAX) {
+        throw new ValidationError([{ field: 'files', message: `Adjunta como mucho ${INCIDENT_PHOTOS_MAX} fotos.` }]);
+      }
+      const incidencia = await s.incidents.create(validated(res, 'body', incidentBodySchema), req.user!.id, archivos);
       await actividad.log(req.user!.id, 'create', 'incidents', incidencia.id, {
         severity: incidencia.severity,
         zone: incidencia.zone?.name ?? null,

@@ -59,18 +59,19 @@ describe('plantillas de pagos (CU-13, CU-14)', () => {
     amount: '5.00',
     periodStart: '2026-11-12',
     periodEnd: '2026-12-11',
-    reference: 'SIM-20261112-ABCDEF0123',
+    reference: 'CARD-20261112-ABCDEF0123',
     url: 'http://localhost:5173/my-animals',
   };
 
   it('adoption-welcome incluye el recibo de la primera cuota', () => {
     const email = adoptionWelcomeEmail(recibo);
     expect(email.subject).toBe('¡Ya adoptas a Brisa!');
-    for (const texto of ['Hola, Irene', 'Plan Usual', '5,00', '12/11/2026', '11/12/2026', 'SIM-20261112-ABCDEF0123']) {
+    for (const texto of ['Hola, Irene', 'Plan Usual', '5,00', '12/11/2026', '11/12/2026', 'CARD-20261112-ABCDEF0123']) {
       expect(email.text).toContain(texto);
       expect(email.html).toContain(texto);
     }
-    expect(email.text).toContain('Pago simulado');
+    // Como un recibo real: sin el aviso de «pago simulado».
+    expect(email.text).not.toContain('simulado');
   });
 
   it('CU-22: adoption-welcome indica dónde descargar el certificado', () => {
@@ -82,7 +83,7 @@ describe('plantillas de pagos (CU-13, CU-14)', () => {
   it('payment-completed confirma la cuota cobrada', () => {
     const email = paymentCompletedEmail(recibo);
     expect(email.subject).toBe('Cuota cobrada: Brisa');
-    expect(email.text).toContain('SIM-20261112-ABCDEF0123');
+    expect(email.text).toContain('CARD-20261112-ABCDEF0123');
     expect(email.html).toContain('href="http://localhost:5173/my-animals"');
   });
 });
@@ -142,14 +143,14 @@ describe('CU-05 donation-thanks', () => {
       donorName: 'Marta',
       amount: '12.50',
       paidAt: new Date('2026-11-17T10:00:00Z'),
-      reference: 'SIM-20261117-ABC',
+      reference: 'CARD-20261117-ABC',
     });
     expect(email.subject).toBe('¡Gracias por tu donación!');
     expect(email.text).toContain('Hola, Marta:');
     expect(email.text).toMatch(/12,50\s€/);
     expect(email.text).toContain('17/11/2026');
-    expect(email.text).toContain('SIM-20261117-ABC');
-    expect(email.text).toContain('Pago simulado');
+    expect(email.text).toContain('CARD-20261117-ABC');
+    expect(email.text).not.toContain('simulado');
   });
 
   it('sin nombre saluda sin él', () => {

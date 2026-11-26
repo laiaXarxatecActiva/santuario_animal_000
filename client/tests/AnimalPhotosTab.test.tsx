@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { adminAnimal, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -85,7 +86,7 @@ describe('CU-29 Gestionar fotos y vídeos: pestaña «Fotos»', () => {
     );
     const falsa = screen.getByRole('group', { name: 'falsa.png' });
     await userEvent.type(within(falsa).getByLabelText('Texto alternativo'), 'Falsa');
-    await userEvent.selectOptions(within(falsa).getByLabelText('Visibilidad'), 'Solo adoptantes');
+    await elegirOpcion(within(falsa).getByLabelText('Visibilidad'), 'Solo adoptantes');
     await userEvent.click(screen.getByRole('button', { name: 'Subir 2 archivos' }));
 
     expect(await screen.findByText('Se ha subido 1 archivo.')).toBeInTheDocument();
@@ -142,7 +143,7 @@ describe('CU-29 Gestionar fotos y vídeos: pestaña «Fotos»', () => {
     const alt = within(ventana).getByLabelText('Texto alternativo');
     await userEvent.clear(alt);
     await userEvent.type(alt, 'Rufo comiendo con otros buitres');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Visibilidad'), 'Solo adoptantes');
+    await elegirOpcion(within(ventana).getByLabelText('Visibilidad'), 'Solo adoptantes');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Foto guardada.')).toBeInTheDocument();
     expect(enviados('/api/admin/photos/16')).toEqual([
@@ -151,7 +152,7 @@ describe('CU-29 Gestionar fotos y vídeos: pestaña «Fotos»', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Editar Rufo en su rampa' }));
     const otra = await screen.findByRole('dialog', { name: 'Editar foto' });
-    await userEvent.selectOptions(within(otra).getByLabelText('Visibilidad'), 'Solo adoptantes');
+    await elegirOpcion(within(otra).getByLabelText('Visibilidad'), 'Solo adoptantes');
     await userEvent.click(within(otra).getByRole('button', { name: 'Guardar' }));
     expect(
       await within(otra).findByText('La portada no puede ser solo para adoptantes. Elige antes otra portada.'),

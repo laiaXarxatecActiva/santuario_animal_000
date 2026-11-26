@@ -70,7 +70,6 @@ export function ReceiptCard({
           )}
         </dd>
       </dl>
-      {method === 'simulated' && <p className={styles.notice}>{t('receipt.simulated')}</p>}
     </article>
   );
 }

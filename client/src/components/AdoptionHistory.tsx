@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { useForgetHistoryPages, useHistory } from '../hooks/useHistory';
-import { formatCurrency, formatShortDate } from '../utils/format';
+import { formatShortDate } from '../utils/format';
 import { Alert } from './Alert';
 import { Button } from './Button';
 import { FilterSelect } from './FilterSelect';
@@ -18,18 +18,9 @@ interface AdoptionHistoryProps {
 /** Texto de un suceso (SCREENS §4.2). */
 function texto(t: TFunction, suceso: HistoryEventDto): string {
   const name = suceso.animal.name;
-  const cuota = {
-    name,
-    amount: suceso.amount ? formatCurrency(suceso.amount) : '',
-    date: suceso.periodStart ? formatShortDate(suceso.periodStart) : '',
-  };
   switch (suceso.type) {
     case 'adopted':
       return t('history.events.adopted', { name, plan: suceso.planName });
-    case 'payment_completed':
-    case 'payment_failed':
-    case 'payment_refunded':
-      return t(`history.events.${suceso.type}`, cuota);
     case 'plan_change_requested':
     case 'plan_changed':
       return t(`history.events.${suceso.type}`, { name, from: suceso.previousPlanName, to: suceso.planName });

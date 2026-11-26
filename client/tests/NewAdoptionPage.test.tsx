@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminAdoptionDetail, adminAnimal, adminPlans, adminUsers } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion, opcionesDe } from './helpers/select';
 
 const animales = {
   data: [adminAnimal({ id: 1, name: 'Rufo' }), adminAnimal({ id: 5, name: 'Brisa' })],
@@ -28,19 +29,18 @@ function api(
 
 async function elegirAdoptante() {
   await userEvent.type(await screen.findByLabelText('Buscar adoptante por nombre o email'), 'lucia');
-  await userEvent.click(screen.getByRole('button', { name: 'Buscar adoptante' }));
+  // Busca a medida que se escribe, sin pulsar ningún botón.
   const opciones = await screen.findByRole('group', { name: 'Adoptante' });
   await userEvent.click(within(opciones).getByRole('radio', { name: /Lucía Martínez Navarro/ }));
 }
 
 async function rellenarResto() {
-  await userEvent.selectOptions(await screen.findByLabelText('Animal'), 'Brisa');
-  await userEvent.selectOptions(screen.getByLabelText('Plan'), '2');
-  await userEvent.selectOptions(screen.getByLabelText('Forma del primer pago'), 'Efectivo');
+  await elegirOpcion(await screen.findByLabelText('Animal'), 'Brisa');
+  await elegirOpcion(screen.getByLabelText('Plan'), '2');
 }
 
 describe('CU-37 Gestionar adopciones: alta manual', () => {
-  it('2-3: busca el adoptante, elige animal, plan y pago, y lleva a la ficha', async () => {
+  it('2-3: busca el adoptante, elige animal y plan (primer pago por transferencia), y lleva a la ficha', async () => {
     const { enviados, pedidas } = api();
     const { router } = renderRoute('/admin/adoptions/new');
     expect(await screen.findByRole('heading', { level: 1, name: 'Nueva adopción' })).toBeInTheDocument();
@@ -50,13 +50,16 @@ describe('CU-37 Gestionar adopciones: alta manual', () => {
     expect(busqueda?.searchParams.get('status')).toBe('active');
     expect(busqueda?.searchParams.get('q')).toBe('lucia');
     await rellenarResto();
+    // Sin desplegable de forma de pago: el primer pago siempre es por transferencia.
+    expect(screen.queryByLabelText('Forma del primer pago')).not.toBeInTheDocument();
+    expect(screen.getByText('Primer pago: por transferencia.')).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Notas internas (opcional)'), 'Puertas abiertas.');
     await userEvent.click(screen.getByRole('button', { name: 'Crear adopción' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/admin/adoptions/30'));
     expect(await screen.findByText('Adopción creada. Hemos avisado al adoptante.')).toBeInTheDocument();
     expect(enviados('/api/admin/adoptions')).toEqual([
-      { userId: 6, animalId: 5, planId: 2, method: 'cash', notes: 'Puertas abiertas.' },
+      { userId: 6, animalId: 5, planId: 2, method: 'bank_transfer', notes: 'Puertas abiertas.' },
     ]);
   });
 
@@ -68,8 +71,9 @@ describe('CU-37 Gestionar adopciones: alta manual', () => {
     expect(peticion?.searchParams.get('adoptable')).toBe('true');
     expect(peticion?.searchParams.get('published')).toBe('true');
     // «Extraordinaria» está desactivado en los datos de ejemplo.
-    expect(await screen.findByRole('option', { name: /^Usual \(5,00\s€\/mes\)$/ })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: /Extraordinaria/ })).not.toBeInTheDocument();
+    const plan = screen.getByLabelText('Plan');
+    await waitFor(() => expect(opcionesDe(plan)).toContainEqual(expect.stringMatching(/^Usual \(5,00\s€\/mes\)$/)));
+    expect(opcionesDe(plan).some((o) => o.includes('Extraordinaria'))).toBe(false);
   });
 
   it('valida antes de enviar', async () => {
@@ -78,7 +82,6 @@ describe('CU-37 Gestionar adopciones: alta manual', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Crear adopción' }));
     expect(await screen.findByText('Elige el adoptante.')).toBeInTheDocument();
     expect(screen.getByText('Elige el animal.')).toBeInTheDocument();
-    expect(screen.getByText('Elige cómo se ha pagado.')).toBeInTheDocument();
     expect(pedidas('/api/admin/adoptions')).toHaveLength(0);
   });
 

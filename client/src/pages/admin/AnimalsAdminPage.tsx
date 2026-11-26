@@ -1,7 +1,6 @@
-import { faMagnifyingGlass, faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPen, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ADMIN_ANIMAL_SORTS, ANIMAL_STATUSES, type AdminAnimalSort, type AnimalStatus } from '@sanctuary/shared';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import type { AdminAnimalsParams } from '../../api/admin';
@@ -13,6 +12,7 @@ import { SelectField, TextField } from '../../components/FormFields';
 import iconStyles from '../../components/IconButton.module.css';
 import { Pagination } from '../../components/Pagination';
 import { useAdminAnimals, useAdminSpecies } from '../../hooks/useAdmin';
+import { useBusquedaDiferida } from '../../hooks/useBusquedaDiferida';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
 
@@ -45,12 +45,20 @@ export function AnimalsAdminPage() {
   const filtros = leerFiltros(params);
   const animales = useAdminAnimals({ ...filtros, pageSize: PAGE_SIZE });
   const especies = useAdminSpecies();
-  const [busqueda, setBusqueda] = useState(filtros.q ?? '');
+  // Filtra a medida que se escribe (DESIGN_SYSTEM §8.5).
+  const [busqueda, setBusqueda, buscarYa] = useBusquedaDiferida(filtros.q ?? '', (q) => cambiar({ q }));
 
   /** Cambia un filtro y vuelve a la primera página. */
   const cambiar = (cambios: Partial<Record<(typeof CLAVES)[number], string | undefined>>) => {
     const actuales = Object.fromEntries(CLAVES.map((c) => [c, params.get(c) ?? undefined]));
-    const nuevos: Record<string, string | undefined> = { ...actuales, page: undefined, ...cambios };
+    // El texto del buscador va siempre con los demás filtros: si se elige un filtro
+    // justo cuando se aplica la búsqueda, `params` aún no la tiene y se perdería.
+    const nuevos: Record<string, string | undefined> = {
+      ...actuales,
+      q: busqueda.trim() || undefined,
+      page: undefined,
+      ...cambios,
+    };
     const siguiente = new URLSearchParams();
     for (const clave of CLAVES) {
       const valor = nuevos[clave];
@@ -87,7 +95,7 @@ export function AnimalsAdminPage() {
           className={styles.search}
           onSubmit={(e) => {
             e.preventDefault();
-            cambiar({ q: busqueda.trim() || undefined });
+            buscarYa();
           }}
         >
           <TextField
@@ -97,9 +105,6 @@ export function AnimalsAdminPage() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
-          <Button type="submit" variant="outline" icon={faMagnifyingGlass}>
-            {t('admin.common.search')}
-          </Button>
         </form>
         <SelectField
           label={t('admin.animals.species')}

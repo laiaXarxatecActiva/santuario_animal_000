@@ -6,16 +6,16 @@ import { rellenarTarjeta } from './helpers/tarjeta';
 
 function abrir(onPay = vi.fn()) {
   render(<PaymentModal open concept="Donación" amount="20.00" processing={false} onPay={onPay} onClose={() => {}} />);
-  return { onPay, dialogo: screen.getByRole('dialog', { name: 'Pago simulado' }) };
+  return { onPay, dialogo: screen.getByRole('dialog', { name: 'Pago con tarjeta' }) };
 }
 
 describe('CU-05, CU-13, CU-14 Ventana de pago simulado con tarjeta', () => {
-  it('pide la tarjeta y avisa de que es una simulación', () => {
+  it('pide la tarjeta y avisa de que no se escriba una real (sin el aviso de «pago simulado»)', () => {
     const { dialogo } = abrir();
     for (const etiqueta of ['Titular de la tarjeta', 'Número de tarjeta', 'Caducidad (MM/AA)', 'CVC']) {
       expect(within(dialogo).getByLabelText(etiqueta)).toBeInTheDocument();
     }
-    expect(within(dialogo).getByText('Pago simulado: no se realizará ningún cargo real.')).toBeInTheDocument();
+    expect(within(dialogo).queryByText(/Pago simulado/)).not.toBeInTheDocument();
     expect(
       within(dialogo).getByText(
         'No escribas los datos de una tarjeta real. Se comprueba solo su formato y no se envían ni se guardan.',

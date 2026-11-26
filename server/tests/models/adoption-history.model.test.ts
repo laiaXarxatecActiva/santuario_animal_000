@@ -82,12 +82,12 @@ describe('CU-15 adoption_events: el trigger apunta lo que no queda guardado en l
 });
 
 describe('CU-15 listHistory: el historial del adoptante', () => {
-  it('junta adopciones, pagos y sucesos guardados, del más reciente al más antiguo', async () => {
+  it('junta adopciones y sucesos guardados, del más reciente al más antiguo', async () => {
     const desde = await hoyMenos('1 year');
     const total = await countHistory(db.pool, LUCIA, { since: desde });
     const lista = await listHistory(db.pool, LUCIA, { since: desde }, { limit: 100, offset: 0 });
     expect(lista).toHaveLength(total);
-    expect(total).toBeGreaterThan(5);
+    expect(total).toBeGreaterThan(3);
 
     const fechas = lista.map((s) => s.date);
     expect([...fechas].sort().reverse()).toEqual(fechas);
@@ -100,10 +100,6 @@ describe('CU-15 listHistory: el historial del adoptante', () => {
       date: await hoyMenos('20 days'),
       planName: 'Simbólica',
     });
-    expect(adopcion18.find((s) => s.type === 'payment_completed')).toMatchObject({
-      amount: '1.00',
-      periodStart: await hoyMenos('20 days'),
-    });
 
     // Adopción 3: terminó hace 20 días porque el animal murió.
     expect(lista.find((s) => s.type === 'ended')).toMatchObject({
@@ -113,10 +109,9 @@ describe('CU-15 listHistory: el historial del adoptante', () => {
       endReason: 'animal_deceased',
     });
 
-    // La adopción de Rufo empezó hace más de un año: no sale, pero sí sus cuotas recientes.
+    // La adopción de Rufo empezó hace más de un año: no sale.
     const rufo = lista.filter((s) => s.animal.id === 1);
     expect(rufo.some((s) => s.type === 'adopted')).toBe(false);
-    expect(rufo.some((s) => s.type === 'payment_completed')).toBe(true);
   });
 
   it('solo trae lo del propio adoptante', async () => {
@@ -139,20 +134,28 @@ describe('CU-15 listHistory: el historial del adoptante', () => {
     expect(siguiente.map((s) => s.id)).not.toContain(lista[0]!.id);
   });
 
-  it('las cuotas fallidas y devueltas también salen, y los cambios de plan con sus nombres', async () => {
+  it('los cambios de plan salen con sus nombres', async () => {
     const desde = await hoyMenos('1 year');
-    // Pablo (7): cuota devuelta de la adopción 20 y cambio de plan programado en la 5.
+    // Pablo (7): cambio de plan programado en la adopción 5.
     await db.pool.query('UPDATE adoptions SET next_plan_id = NULL WHERE id = 5');
     await db.pool.query('UPDATE adoptions SET next_plan_id = 3 WHERE id = 5');
     const pablo = await listHistory(db.pool, 7, { since: desde }, { limit: 100, offset: 0 });
-    expect(pablo.find((s) => s.type === 'payment_refunded')).toMatchObject({ amount: '5.00' });
     expect(pablo.find((s) => s.type === 'plan_change_requested')).toMatchObject({
       previousPlanName: 'Usual',
       planName: 'Extraordinaria',
     });
-    // Elena (8): la cuota fallida de la adopción 7.
-    const elena = await listHistory(db.pool, 8, { since: desde }, { limit: 100, offset: 0 });
-    expect(elena.find((s) => s.type === 'payment_failed')).toMatchObject({ amount: '5.00' });
+  });
+
+  it('los pagos no salen: cobrados, fallidos y devueltos ya están en «Mis aportaciones» (CU-19)', async () => {
+    const desde = await hoyMenos('1 year');
+    // Lucía tiene cuotas cobradas; Pablo (7), una devuelta; Elena (8), una fallida.
+    for (const usuario of [LUCIA, 7, 8]) {
+      const lista = await listHistory(db.pool, usuario, { since: desde }, { limit: 100, offset: 0 });
+      expect(lista.length).toBeGreaterThan(0);
+      expect(lista.filter((s) => s.id.startsWith('payment-'))).toEqual([]);
+      const tipos: string[] = lista.map((s) => s.type);
+      expect(tipos.filter((tipo) => /^payment_(completed|failed|refunded)$/.test(tipo))).toEqual([]);
+    }
   });
 
   it('CU-21: la baja pedida sale; una baja que cierra la adopción el mismo día, solo como cierre', async () => {

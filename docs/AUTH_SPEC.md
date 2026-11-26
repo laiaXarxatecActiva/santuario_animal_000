@@ -71,6 +71,8 @@ En la columna «Acceso», «autenticado» significa que hace falta haber iniciad
 | DELETE | `/api/me` | Adoptante (con límite y contraseña) | `204`; anonimiza y cierra todas las sesiones | CU-25 |
 | POST | `/api/admin/users/:id/logout-all` | **Solo administrador** | `200 { closedSessions }` | CU-48 |
 | POST | `/api/admin/users/:id/password-reset` | **Solo administrador** | `204`; envía al trabajador el enlace para elegir otra contraseña. Adoptante, cuenta desactivada o propia: 422 `PASSWORD_RESET_NOT_ALLOWED` | CU-51 |
+| DELETE | `/api/admin/users/:id` | **Solo administrador** (nunca la propia) | `204`; borra la cuenta del todo y sus sesiones. Con datos enlazados exige `force` (si no, 409 `ACCOUNT_HAS_DATA`) | CU-75 |
+| POST | `/api/admin/users/:id/anonymize` | **Solo administrador** (nunca la propia) | `200`; anonimiza como CU-25 y cierra todas sus sesiones | CU-76 |
 
 No existe un «cerrar sesión en todos mis dispositivos» al alcance de cualquier usuario. Quien sospeche que alguien usa su cuenta cambia la contraseña (CU-24), que cierra sus demás sesiones, o pide ayuda al santuario (CU-48).
 
@@ -88,7 +90,7 @@ No existe un «cerrar sesión en todos mis dispositivos» al alcance de cualquie
 | Límites de intentos | `server/src/middlewares/rate-limit.ts` |
 | Casos de uso de la cuenta (registro, login, verificación y recuperación) | `server/src/servicios/auth.service.ts`, `server/src/controllers/auth.controller.ts`, `server/src/routes/auth.routes.ts` |
 | Cambio de contraseña (CU-24) y baja de la cuenta (CU-25) | `server/src/servicios/profile.service.ts` |
-| Usuarios del panel: desactivar, invitar y cerrar sesiones (CU-35, CU-36, CU-48) | `server/src/servicios/user-admin.service.ts`, `server/src/controllers/user-admin.controller.ts`, `server/src/routes/admin.routes.ts` |
+| Usuarios del panel: desactivar, invitar, cerrar sesiones, eliminar y anonimizar (CU-35, CU-36, CU-48, CU-75, CU-76) | `server/src/servicios/user-admin.service.ts`, `server/src/models/account-deletion.model.ts`, `server/src/controllers/user-admin.controller.ts`, `server/src/routes/admin.routes.ts` |
 | Cabeceras HTTP (`helmet`) y orden de los middlewares | `server/src/app.ts` |
 | Validación de entradas (Zod, compartida con el cliente) | `shared/src/schemas/` (contraseñas en `fields.ts`), `server/src/middlewares/validate.ts` |
 | Errores (sin trazas ni SQL para el cliente) | `server/src/errors/app-error.ts`, `server/src/middlewares/error-handler.ts` |
@@ -134,6 +136,7 @@ Decisión: **sesiones guardadas en el servidor** (PostgreSQL), no JWT (TECH_SPEC
   | Darse de baja (CU-25) | Todas |
   | Un administrador desactiva la cuenta (CU-35) | Todas |
   | Un administrador cierra sus sesiones (CU-48) | Todas; si lo hace sobre su propia cuenta, todas menos la actual |
+  | Un administrador elimina o anonimiza la cuenta (CU-75, CU-76) | Todas (nunca sobre la propia cuenta) |
 
 - El registro **no** abre sesión (§6.4).
 
@@ -391,6 +394,7 @@ Es lo único que devuelven `login` y `me` (`toSessionUser` en `auth.service.ts`)
 | Enlace para que un trabajador cambie su contraseña: solo el administrador, solo a trabajadores activos que no sean él, 30 minutos, anula el anterior, cierra las sesiones al usarse y queda en el registro de actividad | `server/tests/admin-users.routes.test.ts`, `server/tests/usuarios-admin.test.ts`, `server/tests/admin.routes.test.ts`, `client/tests/UserAdminPage.test.tsx` (CU-51) |
 | El cambio de contraseña cierra las demás sesiones | `server/tests/profile.routes.test.ts` (CU-24) |
 | Eliminar la cuenta pide la contraseña, solo la puede usar un adoptante, anonimiza los datos y cierra todas sus sesiones | `server/tests/account-deletion.routes.test.ts` (CU-25) |
+| El administrador elimina del todo una cuenta (con datos enlazados, solo con `force`) o la anonimiza, nunca la suya; se cierran sus sesiones y queda en el registro de actividad | `server/tests/admin-user-deletion.routes.test.ts`, `server/tests/admin-user-anonymize.routes.test.ts`, `server/tests/usuarios-admin.test.ts`, `client/tests/UserAdminPage.test.tsx` (CU-75, CU-76) |
 | Rutas privadas sin sesión o sin rol | `server/tests/admin.routes.test.ts`, `server/tests/auth.middleware.test.ts` y los tests de cada router |
 | Recursos ajenos → 404 | Tests de cada router (`adoptions.routes`, `feed.routes`…) |
 | Origen no permitido y solo JSON | `server/tests/require-same-origin.test.ts`, `server/tests/require-json.test.ts`, `server/tests/app.test.ts` |

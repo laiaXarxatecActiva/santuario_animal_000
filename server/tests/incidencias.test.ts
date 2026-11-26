@@ -4,6 +4,8 @@ import {
   comprobarCambioDeEstado,
   datosDeResolucion,
   destinatariosDeLaIncidencia,
+  incidenciaTrasLaTarea,
+  resolucionPorLaTarea,
 } from '../src/dominio/incidencias.js';
 import { desdeDelRelevo, puedeEscribirRelevo, zonasDelRelevo } from '../src/dominio/relevo.js';
 import { debeIrPorEmail, tocaElResumen } from '../src/dominio/avisos-personal.js';
@@ -21,11 +23,33 @@ describe('CU-70 Incidencias', () => {
     expect(destinatariosDeLaIncidencia([1, 2], [], 1)).toEqual([2]);
   });
 
-  it('el estado cambia a cualquier otro (también se puede reabrir), pero no al mismo', () => {
-    expect(comprobarCambioDeEstado('open', 'in_progress')).toBeNull();
+  it('a mano solo se resuelve una pendiente o se reabre una resuelta; «en curso» lo pone su tarea', () => {
+    expect(comprobarCambioDeEstado('open', 'resolved')).toBeNull();
     expect(comprobarCambioDeEstado('in_progress', 'resolved')).toBeNull();
     expect(comprobarCambioDeEstado('resolved', 'open')).toBeNull();
     expect(comprobarCambioDeEstado('open', 'open')).toBe('SAME_STATUS');
+    expect(comprobarCambioDeEstado('resolved', 'resolved')).toBe('SAME_STATUS');
+    expect(comprobarCambioDeEstado('in_progress', 'open')).toBe('NOT_RESOLVED');
+    expect(comprobarCambioDeEstado('open', 'in_progress')).toBe('BY_TASK');
+  });
+
+  it('la incidencia sigue a su tarea: hecha la resuelve, no hecha o borrada la abre y reabierta la pone en curso', () => {
+    expect(incidenciaTrasLaTarea('in_progress', 'completed')).toBe('resolved');
+    expect(incidenciaTrasLaTarea('in_progress', 'not_done')).toBe('open');
+    expect(incidenciaTrasLaTarea('in_progress', 'removed')).toBe('open');
+    expect(incidenciaTrasLaTarea('resolved', 'reopened')).toBe('in_progress');
+    expect(incidenciaTrasLaTarea('open', 'reopened')).toBe('in_progress');
+    // Si ya se resolvió a mano (su tarea se cerró después) o no estaba en curso, no cambia.
+    expect(incidenciaTrasLaTarea('resolved', 'not_done')).toBeNull();
+    expect(incidenciaTrasLaTarea('resolved', 'completed')).toBeNull();
+    expect(incidenciaTrasLaTarea('open', 'not_done')).toBeNull();
+    expect(incidenciaTrasLaTarea('in_progress', 'reopened')).toBeNull();
+  });
+
+  it('resuelta por su tarea: la nota de la tarea o, sin nota, el título de la tarea', () => {
+    expect(resolucionPorLaTarea('Malla cosida.', 'Coser la malla')).toBe('Malla cosida.');
+    expect(resolucionPorLaTarea(null, 'Coser la malla')).toBe('Resuelta con la tarea «Coser la malla».');
+    expect(resolucionPorLaTarea('  ', 'Coser la malla')).toBe('Resuelta con la tarea «Coser la malla».');
   });
 
   it('al resolverla se guarda cómo, quién y cuándo; al reabrirla se borra', () => {

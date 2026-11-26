@@ -2,7 +2,7 @@ import type { Language } from '@sanctuary/shared';
 import { fechaEnZonaSantuario } from '../../../dominio/reloj.js';
 import { formatEuros, formatFecha } from '../../../utils/format.js';
 import { htmlConEnlace, htmlParrafos, type EmailContent } from './layout.js';
-import { FIRMA, idiomaDe, PAGO_SIMULADO, saludo } from './textos.js';
+import { FIRMA, idiomaDe, saludo } from './textos.js';
 
 // CU-05 paso 7: agradecimiento con el recibo de la donación.
 export function donationThanksEmail(datos: {
@@ -10,8 +10,6 @@ export function donationThanksEmail(datos: {
   amount: string;
   paidAt: Date;
   reference: string;
-  /** CU-39 A1: una donación registrada a mano no es un pago simulado. */
-  simulated?: boolean;
   language?: Language;
   /** CU-05: enlace para ver o descargar el recibo (o el certificado) en PDF. */
   receiptUrl?: string;
@@ -40,7 +38,7 @@ export function donationThanksEmail(datos: {
     },
   }[idioma];
   const hola = saludo(idioma, datos.donorName);
-  const recibo = [...t.recibo, ...(datos.simulated === false ? [] : [PAGO_SIMULADO[idioma]])];
+  const recibo = t.recibo;
   if (datos.receiptUrl) {
     const enlace = { url: datos.receiptUrl, texto: t.enlace };
     return {

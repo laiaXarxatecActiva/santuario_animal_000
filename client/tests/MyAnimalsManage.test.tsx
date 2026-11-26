@@ -245,6 +245,6 @@ describe('CU-49 Cambiar la forma de pago (Mis animales)', () => {
       ),
     ).toBeInTheDocument();
     await userEvent.click(within(rufo).getByRole('button', { name: 'Pagar la cuota' }));
-    expect(await screen.findByRole('dialog', { name: 'Pago simulado' })).toBeInTheDocument();
+    expect(await screen.findByRole('dialog', { name: 'Pago con tarjeta' })).toBeInTheDocument();
   });
 });

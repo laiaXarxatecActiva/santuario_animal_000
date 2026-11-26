@@ -102,3 +102,11 @@
   padding: 0;
   border: 0;
 }
+
+/* Etiqueta y desplegable (`SelectField`, con el botón de `FilterSelect`), con la
+   misma separación que los demás campos. */
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}

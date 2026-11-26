@@ -10,8 +10,8 @@ const resultado = (cambios: Partial<DonationResultDto> = {}): DonationResultDto 
   id: 50,
   status: 'completed',
   amount: '20.00',
-  method: 'simulated',
-  reference: 'SIM-20261117-ABCDEF',
+  method: 'card',
+  reference: 'CARD-20261117-ABCDEF',
   paidAt: '2026-11-17T10:00:00.000Z',
   failureReason: null,
   donorName: 'Marta',
@@ -53,7 +53,7 @@ describe('CU-05 Hacer una donación', () => {
     await rellenarDonante();
     await userEvent.click(screen.getByRole('button', { name: 'Continuar con el pago' }));
 
-    const dialogo = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    const dialogo = await screen.findByRole('dialog', { name: 'Pago con tarjeta' });
     expect(within(dialogo).getByText('Donación')).toBeInTheDocument();
     expect(within(dialogo).getByText('50,00 €')).toBeInTheDocument();
     await rellenarTarjeta();
@@ -75,7 +75,7 @@ describe('CU-05 Hacer una donación', () => {
         simulatedOutcome: 'success',
       },
     ]);
-    expect(screen.getByText('SIM-20261117-ABCDEF')).toBeInTheDocument();
+    expect(screen.getByText('CARD-20261117-ABCDEF')).toBeInTheDocument();
     // El recibo se ve o se descarga en PDF, en lugar de imprimir la página.
     const pdf = '/api/donations/50/receipt.pdf?token=firma-del-recibo&lang=es';
     expect(screen.getByRole('link', { name: 'Ver recibo' })).toHaveAttribute('href', pdf);

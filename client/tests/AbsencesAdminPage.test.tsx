@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, adminUsers, page } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { asignacion, ausencia } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -49,10 +50,10 @@ describe('CU-62 Ausencias', () => {
     renderRoute('/admin/absences');
     await userEvent.click(await screen.findByRole('button', { name: 'Registrar ausencia' }));
     const dialogo = screen.getByRole('dialog', { name: 'Registrar ausencia' });
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
+    await elegirOpcion(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
     await userEvent.type(within(dialogo).getByLabelText('Primer día'), '2026-11-24');
     await userEvent.type(within(dialogo).getByLabelText('Último día'), '2026-11-25');
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Motivo'), 'Baja médica');
+    await elegirOpcion(within(dialogo).getByLabelText('Motivo'), 'Baja médica');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     await waitFor(() =>
       expect(enviados('/api/admin/absences').filter(Boolean)).toEqual([

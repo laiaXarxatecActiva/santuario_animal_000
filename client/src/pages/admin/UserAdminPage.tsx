@@ -1,8 +1,14 @@
-import { isWorkerRole, WORKER_ROLES, type AdminUserDetailDto, type AdminUserPatchBody } from '@sanctuary/shared';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  isWorkerRole,
+  WORKER_ROLES,
+  type AdminUserDetailDto,
+  type AdminUserLinkedDataDto,
+  type AdminUserPatchBody,
+} from '@sanctuary/shared';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { adminApi } from '../../api/admin';
 import { AdoptionStatusBadge } from '../../components/AdoptionStatusBadge';
 import { Alert } from '../../components/Alert';
@@ -12,9 +18,10 @@ import { Modal } from '../../components/Modal';
 import { ActivityLogTable } from '../../components/admin/ActivityLogTable';
 import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
 import { UserQualifications } from '../../components/work/UserQualifications';
-import { ADMIN_USERS_KEY, useAdminActivityLogs, useAdminUser } from '../../hooks/useAdmin';
+import { ADMIN_USERS_KEY, adminUserKey, useAdminActivityLogs, useAdminUser } from '../../hooks/useAdmin';
 import { useSession } from '../../hooks/useSession';
 import { errorMessage } from '../../utils/apiErrors';
+import { flashState } from '../../utils/flash';
 import { formatCurrency, formatShortDate, formatShortInstant } from '../../utils/format';
 import { formatPhone } from '../../utils/phone';
 import { parseId } from '../../utils/routeParams';
@@ -23,7 +30,8 @@ import styles from './AdminPage.module.css';
 type Aviso = { type: 'success' | 'error'; message: string };
 type RolTrabajador = (typeof WORKER_ROLES)[number];
 
-// CU-35 paso 3 (ficha), CU-36 4a (reenviar la invitación) y CU-48 (cerrar sesiones). SCREENS §5.6.
+// CU-35 paso 3 (ficha), CU-36 4a (reenviar la invitación), CU-48 (cerrar sesiones)
+// y CU-75/CU-76 (eliminar o anonimizar la cuenta). SCREENS §5.6.
 export function UserAdminPage() {
   const { t } = useTranslation();
   const id = parseId(useParams().id);
@@ -51,6 +59,10 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
   const [confirmando, setConfirmando] = useState(false);
   const [cerrandoSesiones, setCerrandoSesiones] = useState(false);
   const [enviandoEnlace, setEnviandoEnlace] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [anonimizando, setAnonimizando] = useState(false);
+  const navigate = useNavigate();
+  const propia = usuario.id === yo?.id;
   const [rol, setRol] = useState<RolTrabajador>(usuario.role === 'admin' ? 'admin' : 'caretaker');
   const nombre = `${usuario.firstName} ${usuario.lastName}`;
   const esAdoptante = usuario.role === 'adopter';
@@ -110,6 +122,42 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
     },
   });
 
+  // CU-75: al borrarla, la ficha deja de existir y se vuelve al listado.
+  const borrar = useMutation({
+    mutationFn: (datos: { force: boolean; reason: string }) =>
+      adminApi.users.remove(usuario.id, {
+        ...(datos.force ? { force: true } : {}),
+        ...(datos.reason ? { reason: datos.reason } : {}),
+      }),
+    onSuccess: async () => {
+      queryClient.removeQueries({ queryKey: adminUserKey(usuario.id) });
+      await refrescar();
+      await navigate('/admin/users', {
+        state: flashState({ type: 'success', message: t('admin.users.deleted', { name: nombre }) }),
+      });
+    },
+    onError: (error) => {
+      setEliminando(false);
+      fallo(error);
+    },
+  });
+
+  // CU-76.
+  const anonimizar = useMutation({
+    mutationFn: (reason: string) => adminApi.users.anonymize(usuario.id, reason ? { reason } : {}),
+    onSuccess: async () => {
+      setEliminando(false);
+      setAnonimizando(false);
+      setAviso({ type: 'success', message: t('admin.users.anonymized') });
+      await refrescar();
+    },
+    onError: (error) => {
+      setEliminando(false);
+      setAnonimizando(false);
+      fallo(error);
+    },
+  });
+
   return (
     <div className={styles.page}>
       <nav aria-label={t('animalPage.breadcrumb')} className={styles.count}>
@@ -145,6 +193,18 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
           {usuario.status === 'inactive' && (
             <Button disabled={cambiar.isPending} onClick={() => cambiar.mutate({ isActive: true })}>
               {t('admin.users.reactivate')}
+            </Button>
+          )}
+          {/* CU-76: la propia cuenta no se anonimiza, ni una ya anonimizada (el servidor también lo impide). */}
+          {!propia && usuario.status !== 'anonymized' && (
+            <Button variant="outline" onClick={() => setAnonimizando(true)}>
+              {t('admin.users.anonymizeAccount')}
+            </Button>
+          )}
+          {/* CU-75 1a: la propia cuenta no se borra. */}
+          {!propia && (
+            <Button variant="danger" onClick={() => setEliminando(true)}>
+              {t('admin.users.deleteAccount')}
             </Button>
           )}
         </div>
@@ -242,10 +302,30 @@ function Ficha({ usuario }: { usuario: AdminUserDetailDto }) {
         <p>{t('admin.users.passwordResetExplain')}</p>
       </Modal>
 
+      {eliminando && (
+        <VentanaEliminar
+          usuario={usuario}
+          nombre={nombre}
+          enviando={borrar.isPending || anonimizar.isPending}
+          onCerrar={() => setEliminando(false)}
+          onBorrar={(force, reason) => borrar.mutate({ force, reason })}
+          onAnonimizar={(reason) => anonimizar.mutate(reason)}
+        />
+      )}
+
+      {anonimizando && (
+        <VentanaAnonimizar
+          nombre={nombre}
+          enviando={anonimizar.isPending}
+          onCerrar={() => setAnonimizando(false)}
+          onConfirmar={(reason) => anonimizar.mutate(reason)}
+        />
+      )}
+
       {cerrandoSesiones && (
         <VentanaCerrarSesiones
           nombre={nombre}
-          propia={usuario.id === yo?.id}
+          propia={propia}
           enviando={cerrarSesiones.isPending}
           onCerrar={() => setCerrandoSesiones(false)}
           onConfirmar={(motivo) => cerrarSesiones.mutate(motivo)}
@@ -310,6 +390,143 @@ function VentanaCerrarSesiones({
           setMotivo(e.target.value);
           setError(null);
         }}
+      />
+    </Modal>
+  );
+}
+
+const DATOS_ENLAZADOS = [
+  'adoptions',
+  'payments',
+  'donations',
+  'incidents',
+  'handoverNotes',
+  'animalUpdates',
+  'tasks',
+  'activityLogs',
+] as const satisfies readonly (keyof AdminUserLinkedDataDto)[];
+
+/**
+ * CU-75 pasos 2-3: sin datos enlazados, solo confirma; con datos, los enumera y
+ * ofrece cancelar, anonimizar o borrar de todos modos (3a/3b). El motivo es opcional.
+ */
+function VentanaEliminar({
+  usuario,
+  nombre,
+  enviando,
+  onCerrar,
+  onBorrar,
+  onAnonimizar,
+}: {
+  usuario: AdminUserDetailDto;
+  nombre: string;
+  enviando: boolean;
+  onCerrar: () => void;
+  onBorrar: (force: boolean, motivo: string) => void;
+  onAnonimizar: (motivo: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [motivo, setMotivo] = useState('');
+  const datos = useQuery({
+    queryKey: [...adminUserKey(usuario.id), 'linked-data'],
+    queryFn: () => adminApi.users.linkedData(usuario.id),
+    staleTime: 0,
+  });
+  const conDatos = (datos.data?.total ?? 0) > 0;
+  const puedeAnonimizar = usuario.status !== 'anonymized';
+
+  return (
+    <Modal
+      open
+      title={t('admin.users.confirmDelete', { name: nombre })}
+      onClose={onCerrar}
+      footer={
+        <>
+          <Button variant="outline" data-autofocus onClick={onCerrar}>
+            {t('admin.common.cancel')}
+          </Button>
+          {datos.data && conDatos && puedeAnonimizar && (
+            <Button variant="outline" disabled={enviando} onClick={() => onAnonimizar(motivo.trim())}>
+              {t('admin.users.anonymizeConfirm')}
+            </Button>
+          )}
+          {datos.data && (
+            <Button variant="danger" disabled={enviando} onClick={() => onBorrar(conDatos, motivo.trim())}>
+              {conDatos ? t('admin.users.deleteForce') : t('admin.users.deleteConfirm')}
+            </Button>
+          )}
+        </>
+      }
+    >
+      {datos.isError ? (
+        <p>{errorMessage(t, datos.error)}</p>
+      ) : !datos.data ? (
+        <p aria-busy="true">{t('common.loading')}</p>
+      ) : (
+        <>
+          {conDatos && (
+            <>
+              <p>{t('admin.users.deleteHasData')}</p>
+              <ul>
+                {DATOS_ENLAZADOS.filter((clave) => datos.data[clave] > 0).map((clave) => (
+                  <li key={clave}>{t(`admin.users.linkedData.${clave}`, { count: datos.data[clave] })}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {/* Borrar no se puede deshacer: la advertencia es roja. */}
+          <Alert type="error">{conDatos ? t('admin.users.deleteForceWarning') : t('admin.users.deleteExplain')}</Alert>
+          <TextAreaField
+            label={t('admin.users.deleteReason')}
+            rows={3}
+            maxLength={500}
+            value={motivo}
+            onChange={(e) => setMotivo(e.target.value)}
+          />
+        </>
+      )}
+    </Modal>
+  );
+}
+
+/** CU-76 «Borrar datos personales»: explica qué pasará; el motivo es opcional. */
+function VentanaAnonimizar({
+  nombre,
+  enviando,
+  onCerrar,
+  onConfirmar,
+}: {
+  nombre: string;
+  enviando: boolean;
+  onCerrar: () => void;
+  onConfirmar: (motivo: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [motivo, setMotivo] = useState('');
+  return (
+    <Modal
+      open
+      title={t('admin.users.confirmAnonymize', { name: nombre })}
+      onClose={onCerrar}
+      footer={
+        <>
+          <Button variant="outline" data-autofocus onClick={onCerrar}>
+            {t('admin.common.cancel')}
+          </Button>
+          <Button variant="danger" disabled={enviando} onClick={() => onConfirmar(motivo.trim())}>
+            {t('admin.users.anonymizeConfirm')}
+          </Button>
+        </>
+      }
+    >
+      {/* Se conservan los pagos, pero los datos personales no se recuperan: advertencia amarilla. */}
+      <Alert type="warning">{t('admin.users.anonymizeExplain')}</Alert>
+      <TextAreaField
+        label={t('admin.users.deleteReason')}
+        rows={3}
+        maxLength={500}
+        value={motivo}
+        onChange={(e) => setMotivo(e.target.value)}
       />
     </Modal>
   );

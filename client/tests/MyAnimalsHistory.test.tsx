@@ -28,15 +28,11 @@ describe('CU-15 Historial de «Mis animales»', () => {
             id: 'cancel-1',
             type: 'cancel_requested',
             date: '2026-11-20',
-            amount: null,
-            periodStart: null,
           }),
           historyEvent({
             id: 'event-3',
             type: 'plan_change_requested',
             date: '2026-11-12',
-            amount: null,
-            periodStart: null,
             previousPlanName: 'Usual',
             planName: 'Extraordinaria',
           }),
@@ -44,24 +40,13 @@ describe('CU-15 Historial de «Mis animales»', () => {
             id: 'event-2',
             type: 'payment_mode_changed',
             date: '2026-11-08',
-            amount: null,
-            periodStart: null,
             paymentMode: 'manual',
           }),
-          historyEvent({ date: '2026-11-05' }),
-          historyEvent({
-            id: 'payment-2-failed',
-            type: 'payment_failed',
-            date: '2026-10-05',
-            periodStart: '2026-10-05',
-          }),
-          historyEvent({ id: 'event-1', type: 'paused', date: '2026-10-05', amount: null, periodStart: null }),
+          historyEvent({ id: 'event-1', type: 'paused', date: '2026-10-05' }),
           historyEvent({
             id: 'adopted-1',
             type: 'adopted',
             date: '2026-01-09',
-            amount: null,
-            periodStart: null,
             planName: 'Usual',
           }),
         ]),
@@ -73,13 +58,11 @@ describe('CU-15 Historial de «Mis animales»', () => {
       within(historial).getByText('Lo que ha pasado en tus adopciones durante el último año.'),
     ).toBeInTheDocument();
     const sucesos = await within(historial).findAllByRole('listitem');
-    // El importe lleva un espacio sin salto antes del «€».
-    expect(sucesos.map((s) => s.textContent?.replace(/\u00a0/g, ' '))).toEqual([
+    // Las cuotas no salen: están en «Mis aportaciones» (CU-19).
+    expect(sucesos.map((s) => s.textContent)).toEqual([
       '20 nov 2026Pediste la baja de la adopción de Rufo.',
       '12 nov 2026Pediste cambiar el plan de Rufo de Usual a Extraordinaria desde la próxima cuota.',
       '8 nov 2026Cambiaste la forma de pago de Rufo a «Manual».',
-      '5 nov 2026Cuota de Rufo pagada: 5,00 € (desde el 5 nov 2026).',
-      '5 oct 2026No se pudo cobrar la cuota de Rufo: 5,00 € (desde el 5 oct 2026).',
       '5 oct 2026La adopción de Rufo se pausó.',
       '9 ene 2026Empezaste a adoptar a Rufo con el plan Usual.',
     ]);
@@ -97,8 +80,6 @@ describe('CU-15 Historial de «Mis animales»', () => {
             type: 'ended',
             date: '2026-10-23',
             animal: { id: 12, name: 'Faro' },
-            amount: null,
-            periodStart: null,
             endStatus: 'finished',
             endReason: 'animal_deceased',
           }),
@@ -126,7 +107,7 @@ describe('CU-15 Historial de «Mis animales»', () => {
     expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['Rufo', 'Historial']);
   });
 
-  it('se carga de 10 en 10 con «Ver más» y avisa de que solo muestra el último año', async () => {
+  it('se carga de 10 en 10 con «Ver más» y avisa de que los pagos están en «Mis aportaciones»', async () => {
     const { pedidas } = mockApi(
       conHistorial((url: URL) => {
         const pagina = Number(url.searchParams.get('page') ?? '1');
@@ -144,7 +125,7 @@ describe('CU-15 Historial de «Mis animales»', () => {
     await waitFor(() => expect(within(historial).getAllByRole('listitem')).toHaveLength(10));
     expect(pedidas('/api/me/history')[0]!.searchParams.get('pageSize')).toBe('10');
     expect(within(historial).getByText(/Solo se muestra el último año/)).toBeInTheDocument();
-    expect(within(historial).getByRole('link', { name: /Mis aportaciones/ })).toHaveAttribute(
+    expect(within(historial).getByRole('link', { name: 'Tus pagos están en «Mis aportaciones».' })).toHaveAttribute(
       'href',
       '/my-contributions',
     );
@@ -173,7 +154,7 @@ describe('CU-15 Historial de «Mis animales»', () => {
     mockApi(conHistorial({ body: historyPage([historyEvent()]) }));
     renderRoute('/my-animals');
     const historial = await seccion();
-    await within(historial).findByText(/Cuota de Rufo pagada/);
+    await within(historial).findByText(/La adopción de Rufo se pausó/);
     expect(within(historial).queryByRole('combobox', { name: 'Animal' })).not.toBeInTheDocument();
   });
 
@@ -233,13 +214,13 @@ describe('CU-15 Historial de «Mis animales»', () => {
     const titulo = await screen.findByRole('heading', { level: 2, name: 'Historial' });
     const historial = titulo.closest('section') as HTMLElement;
     expect(historial.querySelector('details')).not.toHaveAttribute('open');
-    expect(within(historial).queryByText(/Cuota de Rufo pagada/)).not.toBeInTheDocument();
+    expect(within(historial).queryByText(/La adopción de Rufo se pausó/)).not.toBeInTheDocument();
     expect(within(historial).queryByText('Lo que ha pasado en tus adopciones durante el último año.')).toBeNull();
     expect(pedidas('/api/me/history')).toHaveLength(0);
 
     await userEvent.click(titulo);
     expect(historial.querySelector('details')).toHaveAttribute('open');
-    expect(await within(historial).findByText(/Cuota de Rufo pagada/)).toBeInTheDocument();
+    expect(await within(historial).findByText(/La adopción de Rufo se pausó/)).toBeInTheDocument();
   });
 
   it('al plegarlo se esconde todo; al volver a desplegarlo, solo los 10 últimos y de todos los animales', async () => {

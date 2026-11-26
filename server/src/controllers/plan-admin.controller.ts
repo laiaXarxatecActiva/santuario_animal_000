@@ -1,4 +1,4 @@
-import { idParamsSchema, planCreateBodySchema, planUpdateBodySchema } from '@sanctuary/shared';
+import { idParamsSchema, planCreateBodySchema, plansUpdateBodySchema, planUpdateBodySchema } from '@sanctuary/shared';
 import type { RequestHandler } from 'express';
 import { diferencias } from '../dominio/actividad.js';
 import { validated } from '../middlewares/validate.js';
@@ -25,5 +25,19 @@ export function createPlanAdminController(service: PlanAdminService, actividad: 
     await actividad.log(req.user!.id, 'update', 'adoption_plans', id, antes ? diferencias(antes, plan) : null);
     res.json(plan);
   };
-  return { list, create, update };
+  /** Todos los planes a la vez: se anota cada plan que ha cambiado. */
+  const updateAll: RequestHandler = async (req, res) => {
+    const { plans, confirmAmountChange } = validated(res, 'body', plansUpdateBodySchema);
+    const antes = (await service.list()).data;
+    const resultado = await service.updateAll(plans, confirmAmountChange);
+    for (const plan of resultado.data) {
+      const previo = antes.find((p) => p.id === plan.id);
+      const cambios = previo ? diferencias(previo, plan) : {};
+      if (Object.keys(cambios).length > 0) {
+        await actividad.log(req.user!.id, 'update', 'adoption_plans', plan.id, cambios);
+      }
+    }
+    res.json(resultado);
+  };
+  return { list, create, update, updateAll };
 }

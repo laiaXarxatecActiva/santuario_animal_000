@@ -1,4 +1,4 @@
-import { faMagnifyingGlass, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import {
   ADMIN_USER_SORTS,
   ROLES,
@@ -7,7 +7,6 @@ import {
   type Role,
   type UserAccountStatus,
 } from '@sanctuary/shared';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router';
 import type { AdminUsersParams } from '../../api/admin';
@@ -18,6 +17,7 @@ import { Pagination } from '../../components/Pagination';
 import { UserStatusBadge } from '../../components/admin/UserStatusBadge';
 import { useAdminUsers } from '../../hooks/useAdmin';
 import { formatShortInstant } from '../../utils/format';
+import { useBusquedaDiferida } from '../../hooks/useBusquedaDiferida';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
 
@@ -46,12 +46,20 @@ export function UsersAdminPage() {
   const [params, setParams] = useSearchParams();
   const filtros = leerFiltros(params);
   const usuarios = useAdminUsers({ ...filtros, pageSize: PAGE_SIZE });
-  const [busqueda, setBusqueda] = useState(filtros.q ?? '');
+  // Filtra a medida que se escribe (DESIGN_SYSTEM §8.5).
+  const [busqueda, setBusqueda, buscarYa] = useBusquedaDiferida(filtros.q ?? '', (q) => cambiar({ q }));
 
   /** Cambia un filtro y vuelve a la primera página. */
   const cambiar = (cambios: Partial<Record<(typeof CLAVES)[number], string | undefined>>) => {
     const actuales = Object.fromEntries(CLAVES.map((c) => [c, params.get(c) ?? undefined]));
-    const nuevos: Record<string, string | undefined> = { ...actuales, page: undefined, ...cambios };
+    // El texto del buscador va siempre con los demás filtros: si se elige un filtro
+    // justo cuando se aplica la búsqueda, `params` aún no la tiene y se perdería.
+    const nuevos: Record<string, string | undefined> = {
+      ...actuales,
+      q: busqueda.trim() || undefined,
+      page: undefined,
+      ...cambios,
+    };
     const siguiente = new URLSearchParams();
     for (const clave of CLAVES) {
       const valor = nuevos[clave];
@@ -76,7 +84,7 @@ export function UsersAdminPage() {
           className={styles.search}
           onSubmit={(e) => {
             e.preventDefault();
-            cambiar({ q: busqueda.trim() || undefined });
+            buscarYa();
           }}
         >
           <TextField
@@ -86,9 +94,6 @@ export function UsersAdminPage() {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
-          <Button type="submit" variant="outline" icon={faMagnifyingGlass}>
-            {t('admin.common.search')}
-          </Button>
         </form>
         <SelectField
           label={t('admin.users.role')}

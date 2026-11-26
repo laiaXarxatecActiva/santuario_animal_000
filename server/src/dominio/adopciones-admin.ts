@@ -43,7 +43,13 @@ export function anotar(
   return previas ? `${previas}\n${linea}` : linea;
 }
 
-/** Prefijo de la referencia de un pago manual (como en TEST_DATA.sql). */
-export function prefijoReferenciaManual(metodo: ManualPaymentMethod): 'CASH' | 'TRF' {
-  return metodo === 'cash' ? 'CASH' : 'TRF';
+/**
+ * Prefijo de la referencia de un pago manual (como en TEST_DATA.sql). Hoy solo
+ * hay transferencia; si se añade otra forma de pago, tendrá su prefijo.
+ */
+export function prefijoReferenciaManual(metodo: ManualPaymentMethod): 'TRF' {
+  switch (metodo) {
+    case 'bank_transfer':
+      return 'TRF';
+  }
 }

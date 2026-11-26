@@ -97,19 +97,19 @@ describe('CU-37 Gestionar adopciones: consulta', () => {
 
   it('3: la ficha incluye las notas internas, quién la creó y los pagos (los más recientes primero)', async () => {
     const adopcion = await ficha(14);
-    expect(adopcion.notes).toBe('Alta en la jornada de puertas abiertas; primera cuota pagada en efectivo.');
+    expect(adopcion.notes).toBe('Alta pedida por teléfono; primera cuota pagada por transferencia.');
     expect(adopcion.createdBy).toEqual({ id: 1, name: 'Marta Soler Ferrer' });
     expect(adopcion.endReason).toBeNull();
     expect(adopcion.payments).toHaveLength(2);
-    expect(adopcion.payments[0]?.method).toBe('simulated');
+    expect(adopcion.payments[0]?.method).toBe('card');
     expect(adopcion.payments[1]).toEqual({
       id: expect.any(Number),
       amount: '12.00',
       periodStart: adopcion.startDate,
       periodEnd: expect.any(String),
-      method: 'cash',
+      method: 'bank_transfer',
       status: 'completed',
-      reference: 'CASH-A0014-' + (adopcion.startDate ?? '').replaceAll('-', ''),
+      reference: 'TRF-A0014-' + (adopcion.startDate ?? '').replaceAll('-', ''),
       paidAt: expect.any(String),
       refundedAt: null,
       failureReason: null,
@@ -124,7 +124,7 @@ describe('CU-37 Gestionar adopciones: consulta', () => {
 
 describe('CU-37 Gestionar adopciones: alta manual', () => {
   const alta = (body: object) => marta.post('/api/admin/adoptions').send(body);
-  const base = { userId: 13, animalId: 5, planId: 2, method: 'cash' };
+  const base = { userId: 13, animalId: 5, planId: 2, method: 'bank_transfer' };
 
   it('3-4: crea la adopción activa con su primer pago cobrado y avisa al adoptante', async () => {
     const res = await alta({ ...base, notes: '  Pagó en la caseta de la entrada.  ' });
@@ -146,9 +146,9 @@ describe('CU-37 Gestionar adopciones: alta manual', () => {
       expect.objectContaining({
         amount: '5.00',
         periodStart: t.hoy,
-        method: 'cash',
+        method: 'bank_transfer',
         status: 'completed',
-        reference: expect.stringMatching(/^CASH-/),
+        reference: expect.stringMatching(/^TRF-/),
         recordedBy: { id: 1, name: 'Marta Soler Ferrer' },
       }),
     ]);
@@ -192,11 +192,13 @@ describe('CU-37 Gestionar adopciones: alta manual', () => {
     expect((await alta({ ...base, animalId: 14 })).body.error.code).toBe('ANIMAL_NOT_AVAILABLE');
   });
 
-  it('el plan debe estar disponible y el método ser efectivo o transferencia', async () => {
+  it('el plan debe estar disponible y el primer pago, por transferencia (ni efectivo ni tarjeta)', async () => {
     expect((await alta({ ...base, planId: 999 })).body.error.code).toBe('PLAN_NOT_AVAILABLE');
-    const res = await alta({ ...base, method: 'simulated' });
-    expect(res.status).toBe(400);
-    expect(res.body.error.details).toEqual([expect.objectContaining({ field: 'method' })]);
+    for (const method of ['card', 'cash']) {
+      const res = await alta({ ...base, method });
+      expect(res.status).toBe(400);
+      expect(res.body.error.details).toEqual([expect.objectContaining({ field: 'method' })]);
+    }
   });
 });
 

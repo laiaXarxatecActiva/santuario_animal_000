@@ -397,25 +397,21 @@ export const medicationPlanBodySchema = z
 export type MedicationPlanBody = z.input<typeof medicationPlanBodySchema>;
 export type MedicationPlanData = z.output<typeof medicationPlanBodySchema>;
 
-// CU-70: comunicar una incidencia (JSON o multipart con una foto en `files`).
-export const incidentBodySchema = z
-  .object({
-    category: z.enum(INCIDENT_CATEGORIES, { error: 'Elige el tipo de incidencia.' }),
-    severity: z.enum(INCIDENT_SEVERITIES, { error: 'Elige la gravedad.' }),
-    // Resumen corto que se ve en el listado, en «Hoy» y en los avisos.
-    title: z
-      .string({ error: 'Escribe un título corto.' })
-      .trim()
-      .min(3, { error: 'Escribe un título corto.' })
-      .max(INCIDENT_TITLE_MAX, { error: `El título no puede pasar de ${INCIDENT_TITLE_MAX} caracteres.` }),
-    description: textoObligatorio(2000, 'Describe lo que pasa.'),
-    zoneId: idOpcional,
-    animalId: idOpcional,
-  })
-  .refine((i) => i.zoneId !== null || i.animalId !== null, {
-    path: ['zoneId'],
-    message: 'Elige una zona o un animal.',
-  });
+// CU-70: comunicar una incidencia (JSON o multipart con hasta 5 fotos en `files`).
+// La zona y el animal son opcionales: puede no tener ninguno.
+export const incidentBodySchema = z.object({
+  category: z.enum(INCIDENT_CATEGORIES, { error: 'Elige el tipo de incidencia.' }),
+  severity: z.enum(INCIDENT_SEVERITIES, { error: 'Elige la gravedad.' }),
+  // Resumen corto que se ve en el listado, en «Hoy» y en los avisos.
+  title: z
+    .string({ error: 'Escribe un título corto.' })
+    .trim()
+    .min(3, { error: 'Escribe un título corto.' })
+    .max(INCIDENT_TITLE_MAX, { error: `El título no puede pasar de ${INCIDENT_TITLE_MAX} caracteres.` }),
+  description: textoObligatorio(2000, 'Describe lo que pasa.'),
+  zoneId: idOpcional,
+  animalId: idOpcional,
+});
 export type IncidentBody = z.input<typeof incidentBodySchema>;
 export type IncidentData = z.output<typeof incidentBodySchema>;
 
@@ -427,10 +423,11 @@ export const incidentsQuerySchema = paginationQuerySchema.extend({
 });
 export type IncidentsQuery = z.infer<typeof incidentsQuerySchema>;
 
-// CU-70: el administrador cambia el estado; resolverla pide cómo se resolvió.
+// CU-70: el personal la resuelve (con cómo se resolvió) o la reabre. «En curso» no
+// se pone a mano: lo pone su tarea.
 export const incidentStatusBodySchema = z
   .object({
-    status: z.enum(INCIDENT_STATUSES, { error: 'Elige el estado.' }),
+    status: z.enum(['open', 'resolved'], { error: 'Elige el estado.' }),
     note: textoONulo(2000),
   })
   .refine((b) => b.status !== 'resolved' || b.note !== null, {

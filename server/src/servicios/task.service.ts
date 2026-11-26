@@ -26,6 +26,7 @@ import {
   TaskNotPendingError,
   ValidationError,
   VetVisitNeedsRecordError,
+  IncidentHasTaskError,
 } from '../errors/app-error.js';
 import * as feedingModel from '../models/feeding-log.model.js';
 import * as qualificationModel from '../models/qualification.model.js';
@@ -34,7 +35,15 @@ import * as taskModel from '../models/task.model.js';
 import * as userModel from '../models/user.model.js';
 import * as settingsModel from '../models/work-settings.model.js';
 import { avisarSiComePoco } from './avisos-cuidados.js';
+import { seguirALaTarea, type TareaQueCambia } from './incidencia-tarea.js';
 import { resolverZona } from './task-template-admin.service.js';
+
+/** CU-70: lo que necesita su incidencia para seguir a la tarea. */
+const tareaQueCambia = (tarea: TaskDto, observations: string | null): TareaQueCambia => ({
+  incidentId: tarea.incidentId ?? null,
+  title: tarea.title,
+  observations,
+});
 
 export interface TaskServiceDeps {
   db: Pool;
@@ -122,6 +131,8 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
         resolvedAt: reloj.ahora(),
         observations: datos.observations,
       });
+      // CU-70: hecha, resuelve su incidencia; no hecha, la vuelve a abrir.
+      await seguirALaTarea(client, tareaQueCambia(tarea, datos.observations), datos.status, user.id, reloj.ahora());
       if (ingestas.length === 0) return;
       // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
       await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
@@ -192,12 +203,13 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
           fechaEnZonaSantuario(new Date(tarea.resolvedAt)) === reloj.hoy();
         if (user.role !== 'admin' && !esSuya) throw new ForbiddenError('Solo quien la resolvió puede deshacerlo.');
         await taskModel.reopen(client, id);
+        await seguirALaTarea(client, tareaQueCambia(tarea, null), 'reopened', user.id, reloj.ahora());
       });
       return buscar(db, id);
     },
 
-    /** CU-55 pasos 1-2: tarea puntual (sin plantilla). */
-    async createOneOff(datos: OneOffTaskData, autorId: number): Promise<TaskDto> {
+    /** CU-55 pasos 1-2: tarea puntual (sin plantilla); con `incidentId`, la de una incidencia (CU-70). */
+    async createOneOff(datos: OneOffTaskData, autorId: number, incidentId: number | null = null): Promise<TaskDto> {
       if (datos.dueDate < reloj.hoy()) throw enCampo('dueDate', 'No se pueden crear tareas de días pasados.');
       const zona = datos.zoneId === null && datos.animalIds.length === 0 ? null : await resolverZona(db, datos);
       if (datos.assignedTo !== null) await validarPersona('assignedTo', datos.assignedTo, datos.qualificationId);
@@ -215,9 +227,12 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
           assignedTo: datos.assignedTo,
           createdBy: autorId,
           animalIds: datos.animalIds,
+          incidentId,
         }),
       );
-      return buscar(db, id!);
+      // Solo choca con otra tarea pendiente de la misma incidencia.
+      if (id === null) throw new IncidentHasTaskError();
+      return buscar(db, id);
     },
 
     /** CU-55 paso 3: reasignar a una persona (o quitar la reasignación). */
@@ -235,6 +250,7 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
         const tarea = await buscar(client, id, true);
         if (tarea.status !== 'pending') throw new TaskNotPendingError();
         await taskModel.remove(client, id);
+        await seguirALaTarea(client, tareaQueCambia(tarea, null), 'removed', null, reloj.ahora());
         return tarea;
       });
     },

@@ -1,6 +1,7 @@
 import { withTransaction } from '../db/transaction.js';
 import { sumarDias } from '../dominio/tareas.js';
 import * as staffAlertModel from '../models/staff-alert.model.js';
+import { seguirALaTarea } from '../servicios/incidencia-tarea.js';
 import * as taskModel from '../models/task.model.js';
 import * as vetVisitModel from '../models/vet-visit.model.js';
 import * as settingsModel from '../models/work-settings.model.js';
@@ -64,6 +65,13 @@ export async function runTaskAlerts({ db, reloj }: JobDeps): Promise<TaskAlertsR
     if (nuevo) vetVisitsToday += 1;
   }
 
-  const closed = await taskModel.closePastPending(db, hoy, ahora);
+  // Las pendientes de días pasados se cierran, y sus incidencias vuelven a «abierta» (CU-70).
+  const closed = await withTransaction(db, async (client) => {
+    const cerradas = await taskModel.closePastPending(client, hoy, ahora);
+    for (const tarea of cerradas) {
+      await seguirALaTarea(client, { ...tarea, observations: null }, 'not_done', null, ahora);
+    }
+    return cerradas.length;
+  });
   return { closed, medicationMissed, vetVisitsToday };
 }

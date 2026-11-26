@@ -9,11 +9,11 @@ export function puedeDevolverse(status: PaymentStatus): boolean {
 }
 
 /**
- * A1: los pagos hechos en la web se devuelven a través de la pasarela; los de
- * efectivo o transferencia se devuelven a mano y solo se marcan como devueltos.
+ * A1: los pagos con tarjeta (hechos en la web) se devuelven a través de la
+ * pasarela; las transferencias se devuelven a mano y solo se marcan como devueltas.
  */
 export function pasaPorPasarela(metodo: PaymentMethod): boolean {
-  return metodo === 'simulated' || metodo === 'card';
+  return metodo === 'card';
 }
 
 interface PlanCuota {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cambiaImporte, comprobarAltaPlan, comprobarEdicionPlan } from '../src/dominio/planes.js';
+import { cambiaImporte, comprobarAltaPlan, comprobarEdicionPlan, comprobarPlanes } from '../src/dominio/planes.js';
 
 const usual = { isDefault: true, monthlyAmount: '5.00', activeAdoptions: 4 };
 const simbolica = { isDefault: false, monthlyAmount: '1.00', activeAdoptions: 0 };
@@ -55,5 +55,60 @@ describe('CU-40 Reglas de los planes', () => {
     expect(comprobarAltaPlan({ isDefault: false, isActive: false })).toBeNull();
     expect(comprobarAltaPlan({ isDefault: true, isActive: true })).toBeNull();
     expect(comprobarAltaPlan({ isDefault: true, isActive: false })).toBe('DEFAULT_MUST_BE_ACTIVE');
+  });
+});
+
+describe('CU-40 Guardar todos los planes a la vez: reglas', () => {
+  const guardados = [
+    { id: 1, isDefault: false, isActive: true, monthlyAmount: '1.00', activeAdoptions: 0 },
+    { id: 2, isDefault: true, isActive: true, monthlyAmount: '5.00', activeAdoptions: 4 },
+    { id: 3, isDefault: false, isActive: false, monthlyAmount: '12.00', activeAdoptions: 1 },
+  ];
+  const sin = ({ activeAdoptions: _a, ...resto }: (typeof guardados)[number]) => resto;
+  const todos = (cambios: Record<number, Partial<ReturnType<typeof sin>>> = {}) =>
+    guardados.map((p) => ({ ...sin(p), ...cambios[p.id] }));
+
+  it('sin cambios, o cambiando el plan por defecto a otro activo, no hay problemas', () => {
+    expect(comprobarPlanes(guardados, todos(), false)).toBeNull();
+    expect(comprobarPlanes(guardados, todos({ 1: { isDefault: true }, 2: { isDefault: false } }), false)).toBeNull();
+    // Solo se envía una parte: los demás siguen como están.
+    expect(comprobarPlanes(guardados, [{ ...sin(guardados[0]!), monthlyAmount: '2.00' }], false)).toBeNull();
+  });
+
+  it('siempre tiene que haber un plan por defecto', () => {
+    expect(comprobarPlanes(guardados, todos({ 2: { isDefault: false } }), false)).toEqual({
+      problema: 'DEFAULT_NEEDS_REPLACEMENT',
+      planId: 2,
+    });
+  });
+
+  it('solo puede haber un plan por defecto', () => {
+    expect(comprobarPlanes(guardados, todos({ 1: { isDefault: true } }), false)).toEqual({
+      problema: 'DEFAULT_NOT_UNIQUE',
+      planId: 1,
+    });
+  });
+
+  it('el plan por defecto tiene que estar activo', () => {
+    expect(comprobarPlanes(guardados, todos({ 2: { isActive: false } }), false)).toEqual({
+      problema: 'DEFAULT_MUST_BE_ACTIVE',
+      planId: 2,
+    });
+    expect(comprobarPlanes(guardados, todos({ 2: { isDefault: false }, 3: { isDefault: true } }), false)).toEqual({
+      problema: 'DEFAULT_MUST_BE_ACTIVE',
+      planId: 3,
+    });
+  });
+
+  it('3a: un nuevo importe con adopciones activas se confirma una vez para todos', () => {
+    const cambios = todos({ 2: { monthlyAmount: '6' }, 3: { monthlyAmount: '12' } });
+    expect(comprobarPlanes(guardados, cambios, false)).toEqual({
+      problema: 'AMOUNT_CHANGE_UNCONFIRMED',
+      planId: 2,
+      activeAdoptions: 4,
+    });
+    expect(comprobarPlanes(guardados, cambios, true)).toBeNull();
+    // Sin adopciones activas no hace falta.
+    expect(comprobarPlanes(guardados, todos({ 1: { monthlyAmount: '3' } }), false)).toBeNull();
   });
 });

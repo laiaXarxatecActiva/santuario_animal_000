@@ -8,9 +8,9 @@ const plano = (texto: string) => texto.replace(/\u00a0/g, ' ');
 const cuota: ReceiptDto = {
   kind: 'payment',
   id: 301,
-  reference: 'SIM-A0001-20261105',
+  reference: 'CARD-A0001-20261105',
   amount: '5.00',
-  method: 'simulated',
+  method: 'card',
   status: 'completed',
   paidAt: '2026-11-05T09:15:00.000Z',
   refundedAt: null,
@@ -48,7 +48,7 @@ describe('CU-22 Contenido del certificado de adopción', () => {
 });
 
 describe('CU-19 Contenido del recibo en PDF', () => {
-  it('5: datos del santuario, del pagador, concepto, importe, fecha, referencia y «Pago simulado»', () => {
+  it('5: datos del santuario, del pagador, concepto, importe, fecha, referencia y forma de pago, como un recibo real', () => {
     const r = contenidoRecibo(cuota);
     expect(r.titulo).toBe('Recibo');
     expect(r.filas.map(([k, v]) => [k, plano(v)])).toEqual([
@@ -56,18 +56,19 @@ describe('CU-19 Contenido del recibo en PDF', () => {
       ['Concepto', 'Cuota de Rufo · Plan Usual · del 5 nov 2026 al 4 dic 2026'],
       ['Importe', '5,00 €'],
       ['Fecha del pago', '5 de noviembre de 2026'],
-      ['Forma de pago', 'Pago simulado'],
-      ['Referencia', 'SIM-A0001-20261105'],
+      ['Forma de pago', 'Tarjeta'],
+      ['Referencia', 'CARD-A0001-20261105'],
       ['Estado', 'Cobrado'],
     ]);
-    expect(r.aviso).toBe('Pago simulado: no se ha realizado ningún cargo real.');
+    // Sin el aviso de «pago simulado»: los datos se muestran como reales.
+    expect(r).not.toHaveProperty('aviso');
   });
 
-  it('4b: un recibo devuelto indica la fecha de la devolución; una donación en efectivo no lleva el aviso', () => {
+  it('4b: un recibo devuelto indica la fecha de la devolución; una donación por transferencia', () => {
     const r = contenidoRecibo({
       ...cuota,
       kind: 'donation',
-      method: 'cash',
+      method: 'bank_transfer',
       status: 'refunded',
       refundedAt: '2026-11-06T23:30:00.000Z',
       animalName: null,
@@ -76,10 +77,9 @@ describe('CU-19 Contenido del recibo en PDF', () => {
       periodEnd: null,
     });
     expect(r.filas).toContainEqual(['Concepto', 'Donación']);
-    expect(r.filas).toContainEqual(['Forma de pago', 'Efectivo']);
+    expect(r.filas).toContainEqual(['Forma de pago', 'Transferencia']);
     // 23:30 UTC ya es el día 7 en Madrid.
     expect(r.filas).toContainEqual(['Estado', 'Devuelto el 7 de noviembre de 2026']);
-    expect(r.aviso).toBeNull();
   });
 });
 
@@ -87,7 +87,7 @@ describe('Nombres de los archivos PDF', () => {
   it('sin tildes, espacios ni signos', () => {
     expect(nombreArchivo('certificado', 'Ébano')).toBe('certificado-ebano.pdf');
     expect(nombreArchivo('certificado', 'Señor Pío II')).toBe('certificado-senor-pio-ii.pdf');
-    expect(nombreArchivo('recibo', 'SIM-A0001-20261105')).toBe('recibo-sim-a0001-20261105.pdf');
+    expect(nombreArchivo('recibo', 'CARD-A0001-20261105')).toBe('recibo-card-a0001-20261105.pdf');
     expect(nombreArchivo('certificado', '¡¿?!')).toBe('certificado.pdf');
   });
 });

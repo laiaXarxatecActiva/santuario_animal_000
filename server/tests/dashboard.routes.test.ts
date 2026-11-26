@@ -79,16 +79,16 @@ describe('CU-27 Consultar el escritorio del panel', () => {
     const ahora = t.reloj.ahora();
     const haceUnMes = new Date(ahora.getTime() - 40 * 24 * 60 * 60 * 1000);
     await t.pool.query(
-      `INSERT INTO donations (amount, status, payment_reference, paid_at, refunded_at) VALUES
-         (2.50, 'completed', 'TEST-DASH-1', $1, NULL),
-         (7.00, 'refunded',  'TEST-DASH-2', $1, $1),
-         (9.00, 'completed', 'TEST-DASH-3', $2, NULL),
-         (4.00, 'pending',   'TEST-DASH-4', NULL, NULL)`,
+      `INSERT INTO donations (amount, method, status, payment_reference, paid_at, refunded_at) VALUES
+         (2.50, 'card', 'completed', 'TEST-DASH-1', $1, NULL),
+         (7.00, 'card', 'refunded',  'TEST-DASH-2', $1, $1),
+         (9.00, 'card', 'completed', 'TEST-DASH-3', $2, NULL),
+         (4.00, 'card', 'pending',   'TEST-DASH-4', NULL, NULL)`,
       [ahora, haceUnMes],
     );
     await t.pool.query(
-      `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, status, payment_reference, paid_at)
-       VALUES (1, 2, 5.00, '2000-01-01', '2000-01-31', 'completed', 'TEST-DASH-5', $1)`,
+      `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status, payment_reference, paid_at)
+       VALUES (1, 2, 5.00, '2000-01-01', '2000-01-31', 'card', 'completed', 'TEST-DASH-5', $1)`,
       [ahora],
     );
     const despues: DashboardDto = (await marta.get('/api/admin/dashboard')).body;

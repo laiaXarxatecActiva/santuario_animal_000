@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { admin, adminPayments, caretaker } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const pagina = {
   data: adminPayments,
@@ -45,7 +46,7 @@ describe('CU-38 Gestionar pagos', () => {
     expect(raquel).toHaveAttribute('href', '/admin/adoptions/14');
     const fila = raquel.closest('tr') as HTMLElement;
     expect(within(fila).getByText('Ébano')).toBeInTheDocument();
-    expect(within(fila).getByText('Efectivo')).toBeInTheDocument();
+    expect(within(fila).getByText('Transferencia')).toBeInTheDocument();
     expect(within(fila).getByText('Cobrado')).toBeInTheDocument();
     const elena = screen.getByRole('link', { name: 'Elena Rubio Sanz' }).closest('tr') as HTMLElement;
     expect(within(elena).getByText('Fallido')).toBeInTheDocument();
@@ -56,16 +57,17 @@ describe('CU-38 Gestionar pagos', () => {
     const { pedidas } = api();
     renderRoute('/admin/payments');
     await userEvent.type(await screen.findByLabelText('Buscar por adoptante o animal'), 'raquel');
-    await userEvent.click(screen.getByRole('button', { name: 'Buscar' }));
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Cobrado');
-    await userEvent.selectOptions(screen.getByLabelText('Forma de pago'), 'Efectivo');
+    // Filtra a medida que se escribe: no hay botón «Buscar».
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Cobrado');
+    await elegirOpcion(screen.getByLabelText('Forma de pago'), 'Transferencia');
     await userEvent.type(screen.getByLabelText('Desde'), '2026-10-01');
     await userEvent.type(screen.getByLabelText('Hasta'), '2026-10-31');
     await waitFor(() => {
       const ultima = pedidas('/api/admin/payments').at(-1);
       expect(ultima?.searchParams.get('q')).toBe('raquel');
       expect(ultima?.searchParams.get('status')).toBe('completed');
-      expect(ultima?.searchParams.get('method')).toBe('cash');
+      expect(ultima?.searchParams.get('method')).toBe('bank_transfer');
       expect(ultima?.searchParams.get('from')).toBe('2026-10-01');
       expect(ultima?.searchParams.get('to')).toBe('2026-10-31');
     });
@@ -73,9 +75,9 @@ describe('CU-38 Gestionar pagos', () => {
 
   it('3: «Exportar CSV» descarga con los mismos filtros', async () => {
     api();
-    renderRoute('/admin/payments?method=cash&status=completed&page=2');
+    renderRoute('/admin/payments?method=bank_transfer&status=completed&page=2');
     const enlace = await screen.findByRole('link', { name: 'Exportar CSV' });
-    expect(enlace).toHaveAttribute('href', '/api/admin/payments/export.csv?status=completed&method=cash');
+    expect(enlace).toHaveAttribute('href', '/api/admin/payments/export.csv?status=completed&method=bank_transfer');
   });
 
   it('A1: devolver pide confirmación y avisa del resultado', async () => {
@@ -86,7 +88,7 @@ describe('CU-38 Gestionar pagos', () => {
     await userEvent.click(await screen.findByRole('button', { name: /^Devolver 12,00\s€ a Raquel Font Escrivà$/ }));
     const ventana = await screen.findByRole('dialog', { name: '¿Devolver este pago?' });
     expect(ventana).toHaveTextContent('Raquel Font Escrivà');
-    expect(ventana).toHaveTextContent('Se pagó en efectivo o por transferencia');
+    expect(ventana).toHaveTextContent('Se pagó por transferencia');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Devolver' }));
     expect(await screen.findByText('Pago devuelto. Hemos avisado al adoptante.')).toBeInTheDocument();
     expect(pedidas('/api/admin/payments/70/refund')).toHaveLength(1);

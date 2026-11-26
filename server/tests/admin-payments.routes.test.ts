@@ -71,8 +71,8 @@ describe('CU-38 Gestionar pagos: listado', () => {
     const { data, meta } = await listar();
     const [{ total }] = (await t.pool.query('SELECT count(*)::int AS total FROM payments')).rows;
     expect(meta.total).toBe(total);
-    const efectivo = data.find((p) => p.method === 'cash') as AdminPaymentListItemDto;
-    expect(efectivo).toEqual({
+    const transferencia = data.find((p) => p.method === 'bank_transfer') as AdminPaymentListItemDto;
+    expect(transferencia).toEqual({
       id: expect.any(Number),
       adoptionId: 14,
       adopter: { id: 12, firstName: 'Raquel', lastName: 'Font Escrivà', email: 'raquel.font@correo.test' },
@@ -81,9 +81,9 @@ describe('CU-38 Gestionar pagos: listado', () => {
       amount: '12.00',
       periodStart: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       periodEnd: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-      method: 'cash',
+      method: 'bank_transfer',
       status: 'completed',
-      reference: expect.stringMatching(/^CASH-/),
+      reference: expect.stringMatching(/^TRF-/),
       date: expect.any(String),
       refundedAt: null,
       failureReason: null,
@@ -100,7 +100,7 @@ describe('CU-38 Gestionar pagos: listado', () => {
   it('2: filtra por estado, método y adopción', async () => {
     expect(await ids({ status: 'refunded' })).toEqual(await idsSql("pa.status = 'refunded'"));
     expect(await ids({ status: 'failed' })).toEqual(await idsSql("pa.status = 'failed'"));
-    expect(await ids({ method: 'cash' })).toEqual(await idsSql("pa.method = 'cash'"));
+    expect(await ids({ method: 'bank_transfer' })).toEqual(await idsSql("pa.method = 'bank_transfer'"));
     expect(await ids({ adoptionId: 14 })).toEqual(await idsSql('pa.adoption_id = 14'));
   });
 
@@ -141,7 +141,7 @@ describe('CU-38 Gestionar pagos: listado', () => {
 
 describe('CU-38 Gestionar pagos: exportar CSV', () => {
   it('3: descarga los pagos filtrados en CSV para hoja de cálculo', async () => {
-    const res = await marta.get('/api/admin/payments/export.csv').query({ method: 'cash' });
+    const res = await marta.get('/api/admin/payments/export.csv').query({ method: 'bank_transfer' });
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toBe('text/csv; charset=utf-8');
     expect(res.headers['content-disposition']).toBe(`attachment; filename="pagos-${t.hoy}.csv"`);
@@ -153,7 +153,7 @@ describe('CU-38 Gestionar pagos: exportar CSV', () => {
     const campos = (lineas[1] ?? '').split(';');
     expect(campos[0]).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
     expect(campos.slice(2, 6)).toEqual(['Raquel Font Escrivà', 'raquel.font@correo.test', 'Ébano', 'Extraordinaria']);
-    expect(campos.slice(8)).toEqual(['12,00', 'Efectivo', 'Cobrado', '', 'Marta Soler Ferrer']);
+    expect(campos.slice(8)).toEqual(['12,00', 'Transferencia', 'Cobrado', '', 'Marta Soler Ferrer']);
   });
 
   it('una cuenta eliminada sale como «Usuario eliminado», sin email', async () => {
@@ -184,8 +184,8 @@ describe('CU-38 Gestionar pagos: devolver (A1)', () => {
     expect(email?.subject).toBe('Te hemos devuelto una cuota de Rufo');
   });
 
-  it('un pago en efectivo también se puede devolver', async () => {
-    const [id] = await idsSql("pa.method = 'cash'");
+  it('un pago por transferencia también se puede devolver', async () => {
+    const [id] = await idsSql("pa.method = 'bank_transfer'");
     expect((await marta.post(`/api/admin/payments/${id}/refund`).send({})).body.status).toBe('refunded');
   });
 
@@ -226,21 +226,21 @@ describe('CU-38 Gestionar pagos: pago manual (A2)', () => {
 
   it('adelanta la cuota de una activa; el importe lo decide el administrador', async () => {
     const antes = await adopcion(4);
-    const res = await registrar({ adoptionId: 4, amount: '3.50', method: 'cash' });
+    const res = await registrar({ adoptionId: 4, amount: '3.50', method: 'bank_transfer' });
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({ periodStart: antes.next_billing_date, amount: '3.50' });
     expect((await adopcion(4)).next_billing_date).toBe(sumarMeses(antes.next_billing_date, 1));
   });
 
   it('con un cambio de plan programado, la cuota ya es del plan nuevo', async () => {
-    const res = await registrar({ adoptionId: 5, amount: '12.00', method: 'cash' });
+    const res = await registrar({ adoptionId: 5, amount: '12.00', method: 'bank_transfer' });
     expect(res.status).toBe(201);
     expect(res.body.plan).toMatchObject({ id: 3 });
     expect(await adopcion(5)).toMatchObject({ plan_id: 3, next_plan_id: null });
   });
 
   it('activa una pendiente: el primer mes empieza hoy y se da la bienvenida', async () => {
-    const res = await registrar({ adoptionId: 11, amount: '5.00', method: 'cash' });
+    const res = await registrar({ adoptionId: 11, amount: '5.00', method: 'bank_transfer' });
     expect(res.status).toBe(201);
     expect(res.body.periodStart).toBe(t.hoy);
     expect(await adopcion(11)).toMatchObject({
@@ -252,25 +252,25 @@ describe('CU-38 Gestionar pagos: pago manual (A2)', () => {
   });
 
   it('sin cuota que pagar: pendiente caducada, baja solicitada o cerrada', async () => {
-    const res = await registrar({ adoptionId: 12, amount: '5.00', method: 'cash' });
+    const res = await registrar({ adoptionId: 12, amount: '5.00', method: 'bank_transfer' });
     expect(res.status).toBe(422);
     expect(res.body.error.code).toBe('ADOPTION_PAYMENT_EXPIRED');
     for (const adoptionId of [9, 3, 13]) {
-      const r = await registrar({ adoptionId, amount: '5.00', method: 'cash' });
+      const r = await registrar({ adoptionId, amount: '5.00', method: 'bank_transfer' });
       expect(r.status).toBe(422);
       expect(r.body.error.code).toBe('MANUAL_PAYMENT_NOT_ALLOWED');
     }
-    expect((await registrar({ adoptionId: 999, amount: '5.00', method: 'cash' })).status).toBe(404);
+    expect((await registrar({ adoptionId: 999, amount: '5.00', method: 'bank_transfer' })).status).toBe(404);
   });
 
   it('A2a: ese periodo ya está pagado', async () => {
     const { next_billing_date: inicio } = await adopcion(6);
     await t.pool.query(
       `INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, method, status, payment_reference, paid_at)
-       VALUES (6, 1, 1.00, $1, ($1::date + INTERVAL '1 month' - INTERVAL '1 day')::date, 'simulated', 'completed', 'SIM-PRUEBA-A2A', NOW())`,
+       VALUES (6, 1, 1.00, $1, ($1::date + INTERVAL '1 month' - INTERVAL '1 day')::date, 'card', 'completed', 'CARD-PRUEBA-A2A', NOW())`,
       [inicio],
     );
-    const res = await registrar({ adoptionId: 6, amount: '1.00', method: 'cash' });
+    const res = await registrar({ adoptionId: 6, amount: '1.00', method: 'bank_transfer' });
     expect(res.status).toBe(409);
     expect(res.body.error).toMatchObject({
       code: 'PAYMENT_ALREADY_COMPLETED',
@@ -278,10 +278,12 @@ describe('CU-38 Gestionar pagos: pago manual (A2)', () => {
     });
   });
 
-  it('valida el importe y el método', async () => {
-    const res = await registrar({ adoptionId: 6, amount: '0', method: 'simulated' });
-    expect(res.status).toBe(400);
-    expect(res.body.error.details.map((d: { field: string }) => d.field).sort()).toEqual(['amount', 'method']);
+  it('valida el importe y el método (solo transferencia: ni tarjeta ni efectivo)', async () => {
+    for (const method of ['card', 'cash']) {
+      const res = await registrar({ adoptionId: 6, amount: '0', method });
+      expect(res.status).toBe(400);
+      expect(res.body.error.details.map((d: { field: string }) => d.field).sort()).toEqual(['amount', 'method']);
+    }
   });
 });
 

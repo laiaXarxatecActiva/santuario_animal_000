@@ -184,14 +184,14 @@ export function incidencia(overrides: Partial<IncidentDto> = {}): IncidentDto {
     description: 'Pipa cojea de la pata derecha desde esta mañana.',
     zone: clinica,
     animal: { id: 14, name: 'Pipa' },
-    photoUrl: null,
+    photos: [],
     status: 'open',
     reportedBy: { id: 3, name: 'Nuria Peris Gil' },
     createdAt: '2026-11-23T07:40:00.000Z',
     resolution: null,
     resolvedBy: null,
     resolvedAt: null,
-    taskId: null,
+    tasks: [],
     ...overrides,
   };
 }

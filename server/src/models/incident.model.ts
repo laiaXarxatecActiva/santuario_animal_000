@@ -3,12 +3,14 @@ import type {
   IncidentDto,
   IncidentSeverity,
   IncidentStatus,
+  IncidentTaskDto,
   IncidentsQuery,
 } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
 import type { Resolucion } from '../dominio/incidencias.js';
 
-// CU-70: incidencias del personal.
+// CU-70: incidencias del personal, con sus fotos (`incident_photos`) y sus tareas
+// (`task_instances.incident_id`).
 
 interface IncidentRow {
   id: number;
@@ -20,7 +22,7 @@ interface IncidentRow {
   zone_name: string | null;
   animal_id: number | null;
   animal_name: string | null;
-  photo_url: string | null;
+  photos: string[];
   status: IncidentStatus;
   reported_by: number;
   reported_name: string;
@@ -29,7 +31,7 @@ interface IncidentRow {
   resolved_by: number | null;
   resolved_name: string | null;
   resolved_at: Date | null;
-  task_id: number | null;
+  tasks: IncidentTaskDto[];
 }
 
 function mapRow(r: IncidentRow): IncidentDto {
@@ -41,23 +43,28 @@ function mapRow(r: IncidentRow): IncidentDto {
     description: r.description,
     zone: r.zone_id === null ? null : { id: r.zone_id, name: r.zone_name ?? '' },
     animal: r.animal_id === null ? null : { id: r.animal_id, name: r.animal_name ?? '' },
-    photoUrl: r.photo_url,
+    photos: r.photos,
     status: r.status,
     reportedBy: { id: r.reported_by, name: r.reported_name },
     createdAt: r.created_at.toISOString(),
     resolution: r.resolution,
     resolvedBy: r.resolved_by === null ? null : { id: r.resolved_by, name: r.resolved_name ?? '' },
     resolvedAt: r.resolved_at?.toISOString() ?? null,
-    taskId: r.task_id,
+    tasks: r.tasks,
   };
 }
 
 const SELECT = `
   SELECT i.id, i.category, i.severity, i.title, i.description, i.zone_id, z.name AS zone_name,
-         i.animal_id, a.name AS animal_name, i.photo_url, i.status,
+         i.animal_id, a.name AS animal_name, i.status,
          i.reported_by, ur.first_name || ' ' || ur.last_name AS reported_name, i.created_at,
          i.resolution, i.resolved_by, uv.first_name || ' ' || uv.last_name AS resolved_name, i.resolved_at,
-         i.task_id
+         COALESCE((SELECT json_agg(p.url ORDER BY p.position) FROM incident_photos p WHERE p.incident_id = i.id),
+                  '[]'::json) AS photos,
+         COALESCE((SELECT json_agg(json_build_object('id', t.id, 'title', t.title, 'dueDate', t.due_date,
+                                                     'status', t.status)
+                                   ORDER BY t.created_at DESC, t.id DESC)
+                     FROM task_instances t WHERE t.incident_id = i.id), '[]'::json) AS tasks
     FROM incidents i
     LEFT JOIN zones z ON z.id = i.zone_id
     LEFT JOIN animals a ON a.id = i.animal_id
@@ -137,14 +144,13 @@ export async function create(
     description: string;
     zoneId: number | null;
     animalId: number | null;
-    photoUrl: string | null;
     reportedBy: number;
     createdAt: Date;
   },
 ): Promise<number> {
   const { rows } = await db.query<{ id: number }>(
-    `INSERT INTO incidents (category, severity, title, description, zone_id, animal_id, photo_url, reported_by, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+    `INSERT INTO incidents (category, severity, title, description, zone_id, animal_id, reported_by, created_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
     [
       datos.category,
       datos.severity,
@@ -152,7 +158,6 @@ export async function create(
       datos.description,
       datos.zoneId,
       datos.animalId,
-      datos.photoUrl,
       datos.reportedBy,
       datos.createdAt,
     ],
@@ -167,6 +172,12 @@ export async function setStatus(db: Queryable, id: number, status: IncidentStatu
   );
 }
 
-export async function setTask(db: Queryable, id: number, taskId: number): Promise<void> {
-  await db.query('UPDATE incidents SET task_id = $2 WHERE id = $1', [id, taskId]);
+/** Sus fotos, en el orden en que se subieron. */
+export async function addPhotos(db: Queryable, id: number, urls: readonly string[]): Promise<void> {
+  if (urls.length === 0) return;
+  await db.query(
+    `INSERT INTO incident_photos (incident_id, url, position)
+     SELECT $1, u.url, u.position FROM unnest($2::text[]) WITH ORDINALITY AS u(url, position)`,
+    [id, urls],
+  );
 }

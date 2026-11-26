@@ -1,8 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { card, page, sessionUser } from './helpers/fixtures';
+import { card, caretaker, dashboard, page, sessionUser } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const portada = { featured: [card()], stats: { animalCount: 1 } };
 
@@ -125,27 +126,48 @@ describe('Fase 3 Idioma en el registro, el perfil y los errores', () => {
     const seccion = (await screen.findByRole('heading', { level: 2, name: 'Idioma' })).closest(
       'section',
     ) as HTMLElement;
-    await userEvent.selectOptions(within(seccion).getByLabelText('Idioma de la web y de los emails'), 'English');
+    await elegirOpcion(within(seccion).getByLabelText('Idioma de la web y de los emails'), 'English');
     await userEvent.click(within(seccion).getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(enviados('/api/me/profile')).toContainEqual({ preferredLanguage: 'en' }));
   });
 
-  it('en la cabecera del adoptante (seis enlaces) solo muestra el icono, y sigue nombrándose «Idioma Castellano»', async () => {
+  // El botón muestra solo el icono y la flecha en todas las cabeceras; el nombre
+  // del idioma sigue en su nombre accesible («Idioma Castellano»).
+  const soloIcono = (boton: HTMLElement) => {
+    expect(within(boton).getByText('Castellano')).toHaveClass('visually-hidden');
+    expect(boton.querySelector('svg[data-icon="language"]')).not.toBeNull();
+    expect(boton.querySelector('svg[data-icon="chevron-down"]')).not.toBeNull();
+  };
+
+  it('sin sesión, el botón de idioma muestra solo el icono', async () => {
+    mockApi({ '/api/home': { body: portada } });
+    renderRoute('/');
+    soloIcono(await screen.findByRole('button', { name: 'Idioma Castellano' }));
+  });
+
+  it('en la cabecera del adoptante, solo el icono', async () => {
     mockApi({
       '/api/auth/me': { body: { user: sessionUser({ preferredLanguage: 'es' }) } },
       '/api/home': { body: portada },
     });
     renderRoute('/');
     await screen.findByRole('button', { name: 'Menú de Lucía' });
-    const boton = screen.getByRole('button', { name: 'Idioma Castellano' });
-    expect(boton).toHaveAttribute('data-compact', 'true');
+    soloIcono(screen.getByRole('button', { name: 'Idioma Castellano' }));
   });
 
-  it('sin sesión, el botón de idioma muestra el nombre del idioma', async () => {
-    mockApi({ '/api/home': { body: portada } });
-    renderRoute('/');
-    const boton = await screen.findByRole('button', { name: 'Idioma Castellano' });
-    expect(boton).not.toHaveAttribute('data-compact');
+  it('un trabajador, en la web y en el panel, también ve solo el icono', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: caretaker({ preferredLanguage: 'es' }) } },
+      '/api/home': { body: portada },
+      '/api/admin/dashboard': { body: dashboard() },
+    });
+    const { router } = renderRoute('/');
+    await screen.findByRole('button', { name: /^Menú de/ });
+    soloIcono(screen.getByRole('button', { name: 'Idioma Castellano' }));
+
+    await router.navigate('/admin');
+    await screen.findByRole('navigation', { name: 'Menú del panel' });
+    soloIcono(screen.getByRole('button', { name: 'Idioma Castellano' }));
   });
 
   it('la flecha apunta hacia arriba mientras el panel está abierto y vuelve abajo al cerrarlo', async () => {

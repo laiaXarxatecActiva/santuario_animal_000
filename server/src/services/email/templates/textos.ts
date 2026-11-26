@@ -10,12 +10,6 @@ export const saludo = (idioma: Language, nombre: string | null): string =>
     ? { es: `Hola, ${nombre}:`, ca: `Hola, ${nombre}:`, en: `Hello ${nombre},` }[idioma]
     : { es: 'Hola:', ca: 'Hola:', en: 'Hello,' }[idioma];
 
-export const PAGO_SIMULADO: Record<Language, string> = {
-  es: 'Pago simulado: no se ha realizado ningún cargo real.',
-  ca: "Pagament simulat: no s'ha fet cap càrrec real.",
-  en: 'Simulated payment: no real charge has been made.',
-};
-
 export const VER_MIS_ANIMALES: Record<Language, string> = {
   es: 'Ver mis animales',
   ca: 'Veure els meus animals',

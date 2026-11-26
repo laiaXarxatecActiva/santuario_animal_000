@@ -40,7 +40,7 @@
 --   9   sergio.llorens@correo.test      Sergio#Vuela7     baja solicitada en una adopción
 --   10  irene.dominguez@correo.test     Irene2025ok       adopción pendiente reciente (< 7 días)
 --   11  hector.benet@correo.test        Hector1234        adopción pendiente antigua (> 7 días); sin emails
---   12  raquel.font@correo.test         RaquelFont!       adopción creada a mano por un admin (efectivo)
+--   12  raquel.font@correo.test         RaquelFont!       adopción creada a mano por un admin (transferencia)
 --   13  adrian.moreno@correo.test       Adrian_99         email sin verificar; sin adopciones
 --   14  teresa.vicent@correo.test       Teresa*55         cuenta desactivada por un admin
 --   15  (anonimizado)                   —                 pidió la baja; se conservan sus pagos
@@ -54,6 +54,7 @@ BEGIN;
 TRUNCATE TABLE
     handover_note_reads,
     handover_notes,
+    incident_photos,
     incidents,
     feeding_logs,
     diet_items,
@@ -397,10 +398,10 @@ INSERT INTO adoptions (
 (10, 10, 3,  2, NULL, 'active',
      pg_temp.ago('11 months 4 days'), NULL, pg_temp.ago('11 months 4 days') + INTERVAL '12 months', NULL, NULL,
      NULL, NULL, pg_temp.ago_ts('11 months 4 days', '10:20')),
--- Creada a mano por un admin: pago en efectivo en una jornada de puertas abiertas.
+-- Creada a mano por un admin: la primera cuota la pagó por transferencia.
 (14, 12, 9,  3, NULL, 'active',
      pg_temp.ago('1 month 3 days'), NULL, pg_temp.ago('1 month 3 days') + INTERVAL '2 months', NULL, NULL,
-     1, 'Alta en la jornada de puertas abiertas; primera cuota pagada en efectivo.', pg_temp.ago_ts('1 month 3 days', '12:15')),
+     1, 'Alta pedida por teléfono; primera cuota pagada por transferencia.', pg_temp.ago_ts('1 month 3 days', '12:15')),
 (18, 6,  10, 1, NULL, 'active',
      pg_temp.ago('20 days'), NULL, pg_temp.ago('20 days') + INTERVAL '1 month', NULL, NULL,
      NULL, NULL, pg_temp.ago_ts('20 days', '22:05')),
@@ -457,9 +458,9 @@ SELECT
     p.monthly_amount,
     s.period_start,
     (s.period_start + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
-    CASE WHEN a.id = 14 AND s.n = 0 THEN 'cash' ELSE 'simulated' END,
+    CASE WHEN a.id = 14 AND s.n = 0 THEN 'bank_transfer' ELSE 'card' END,
     'completed',
-    CASE WHEN a.id = 14 AND s.n = 0 THEN 'CASH-' ELSE 'SIM-' END
+    CASE WHEN a.id = 14 AND s.n = 0 THEN 'TRF-' ELSE 'CARD-' END
         || 'A' || LPAD(a.id::TEXT, 4, '0') || '-' || TO_CHAR(s.period_start, 'YYYYMMDD'),
     s.period_start + TIME '10:15',
     CASE WHEN a.id = 14 AND s.n = 0 THEN 1 END
@@ -484,16 +485,16 @@ INSERT INTO payments (adoption_id, plan_id, amount, period_start, period_end, me
 -- Adopción 7 (pausada): falló la cuota del mes actual.
 (7,  2, 5.00, pg_temp.ago('4 months 15 days') + INTERVAL '4 months',
            (pg_temp.ago('4 months 15 days') + INTERVAL '5 months' - INTERVAL '1 day')::DATE,
-     'simulated', 'failed', 'SIM-A0007-' || TO_CHAR(pg_temp.ago('4 months 15 days') + INTERVAL '4 months', 'YYYYMMDD') || '-F1',
-     'Pago rechazado (simulado)', (pg_temp.ago('4 months 15 days') + INTERVAL '4 months')::DATE + TIME '03:00'),
+     'card', 'failed', 'CARD-A0007-' || TO_CHAR(pg_temp.ago('4 months 15 days') + INTERVAL '4 months', 'YYYYMMDD') || '-F1',
+     'Tarjeta rechazada por el banco emisor', (pg_temp.ago('4 months 15 days') + INTERVAL '4 months')::DATE + TIME '03:00'),
 -- Adopción 11 (pendiente reciente): el primer intento de pago falló.
 (11, 2, 5.00, pg_temp.ago('2 days'), (pg_temp.ago('2 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
-     'simulated', 'failed', 'SIM-A0011-' || TO_CHAR(pg_temp.ago('2 days'), 'YYYYMMDD') || '-F1',
-     'Pago rechazado (simulado)', pg_temp.ago_ts('2 days', '11:02')),
+     'card', 'failed', 'CARD-A0011-' || TO_CHAR(pg_temp.ago('2 days'), 'YYYYMMDD') || '-F1',
+     'Tarjeta rechazada por el banco emisor', pg_temp.ago_ts('2 days', '11:02')),
 -- Adopción 13 (cancelada): el pago nunca se completó.
 (13, 1, 1.00, pg_temp.ago('40 days'), (pg_temp.ago('40 days') + INTERVAL '1 month' - INTERVAL '1 day')::DATE,
-     'simulated', 'failed', 'SIM-A0013-' || TO_CHAR(pg_temp.ago('40 days'), 'YYYYMMDD') || '-F1',
-     'Pago rechazado (simulado)', pg_temp.ago_ts('40 days', '16:01'));
+     'card', 'failed', 'CARD-A0013-' || TO_CHAR(pg_temp.ago('40 days'), 'YYYYMMDD') || '-F1',
+     'Tarjeta rechazada por el banco emisor', pg_temp.ago_ts('40 days', '16:01'));
 
 -- La adopción 12 (pendiente antigua) no tiene ningún intento de pago:
 -- el adoptante abandonó la pasarela.
@@ -517,29 +518,29 @@ INSERT INTO donations (
     method, status, payment_reference, failure_reason, paid_at, refunded_at, recorded_by, created_at
 ) OVERRIDING SYSTEM VALUE VALUES
 (1,  6,    'Lucía Martínez Navarro', 'lucia.martinez@correo.test', 20.00,  FALSE, '¡Para la comida de este invierno!',
-     'simulated',     'completed', 'SIM-D0001', NULL, pg_temp.ago_ts('5 months', '21:00'), NULL, NULL, pg_temp.ago_ts('5 months', '21:00')),
+     'card',          'completed', 'CARD-D0001', NULL, pg_temp.ago_ts('5 months', '21:00'), NULL, NULL, pg_temp.ago_ts('5 months', '21:00')),
 (2,  NULL, NULL,                     NULL,                         50.00,  TRUE,  NULL,
-     'simulated',     'completed', 'SIM-D0002', NULL, pg_temp.ago_ts('4 months 10 days', '10:30'), NULL, NULL, pg_temp.ago_ts('4 months 10 days', '10:30')),
+     'card',          'completed', 'CARD-D0002', NULL, pg_temp.ago_ts('4 months 10 days', '10:30'), NULL, NULL, pg_temp.ago_ts('4 months 10 days', '10:30')),
 (3,  NULL, 'Familia Roig',           'familia.roig@correo.test',   15.00,  FALSE, 'Gracias por cuidar de ellos.',
-     'simulated',     'completed', 'SIM-D0003', NULL, pg_temp.ago_ts('3 months 3 days', '18:20'), NULL, NULL, pg_temp.ago_ts('3 months 3 days', '18:20')),
+     'card',          'completed', 'CARD-D0003', NULL, pg_temp.ago_ts('3 months 3 days', '18:20'), NULL, NULL, pg_temp.ago_ts('3 months 3 days', '18:20')),
 (4,  NULL, 'Jordi',                  NULL,                          3.50,  FALSE, 'Poquito, pero con cariño.',
-     'simulated',     'completed', 'SIM-D0004', NULL, pg_temp.ago_ts('2 months 15 days', '12:00'), NULL, NULL, pg_temp.ago_ts('2 months 15 days', '12:00')),
+     'card',          'completed', 'CARD-D0004', NULL, pg_temp.ago_ts('2 months 15 days', '12:00'), NULL, NULL, pg_temp.ago_ts('2 months 15 days', '12:00')),
 (5,  7,    'Pablo García Esteve',    'pablo.garcia@correo.test',  100.00,  TRUE,  NULL,
-     'simulated',     'completed', 'SIM-D0005', NULL, pg_temp.ago_ts('2 months', '20:45'), NULL, NULL, pg_temp.ago_ts('2 months', '20:45')),
-(6,  NULL, 'Visitantes de la jornada de puertas abiertas', NULL,   87.40,  FALSE, 'Recaudado en la hucha de la jornada de puertas abiertas.',
-     'cash',          'completed', 'CASH-D0006', NULL, pg_temp.ago_ts('1 month 3 days', '19:00'), NULL, 1, pg_temp.ago_ts('1 month 3 days', '19:00')),
+     'card',          'completed', 'CARD-D0005', NULL, pg_temp.ago_ts('2 months', '20:45'), NULL, NULL, pg_temp.ago_ts('2 months', '20:45')),
+(6,  NULL, 'CEIP Els Ports (semana solidaria)', NULL,   87.40,  FALSE, 'Recaudado por el alumnado en la semana solidaria.',
+     'bank_transfer', 'completed', 'TRF-D0006', NULL, pg_temp.ago_ts('1 month 3 days', '19:00'), NULL, 1, pg_temp.ago_ts('1 month 3 days', '19:00')),
 (7,  NULL, 'Asociación Amigos de las Rapaces', 'contacto@amigosrapaces.test', 250.00, FALSE, 'Aportación anual de la asociación.',
      'bank_transfer', 'completed', 'TRF-D0007', NULL, pg_temp.ago_ts('25 days', '09:00'), NULL, 2, pg_temp.ago_ts('24 days', '10:00')),
 (8,  NULL, 'Marcos',                 'marcos.donante@correo.test', 10.00,  FALSE, NULL,
-     'simulated',     'failed',    'SIM-D0008', 'Pago rechazado (simulado)', NULL, NULL, NULL, pg_temp.ago_ts('15 days', '22:10')),
+     'card',          'failed',    'CARD-D0008', 'Tarjeta rechazada por el banco emisor', NULL, NULL, NULL, pg_temp.ago_ts('15 days', '22:10')),
 (9,  9,    'Sergio Llorens Puig',    'sergio.llorens@correo.test', 30.00,  FALSE, NULL,
-     'simulated',     'refunded',  'SIM-D0009', NULL, pg_temp.ago_ts('12 days', '14:00'), pg_temp.ago_ts('11 days', '09:30'), NULL, pg_temp.ago_ts('12 days', '14:00')),
+     'card',          'refunded',  'CARD-D0009', NULL, pg_temp.ago_ts('12 days', '14:00'), pg_temp.ago_ts('11 days', '09:30'), NULL, pg_temp.ago_ts('12 days', '14:00')),
 (10, 10,   'Irene Domínguez Prats',  'irene.dominguez@correo.test', 5.00,  FALSE, NULL,
-     'simulated',     'pending',   'SIM-D0010', NULL, NULL, NULL, NULL, NOW()),
+     'card',          'pending',   'CARD-D0010', NULL, NULL, NULL, NULL, NOW()),
 (11, NULL, NULL,                     NULL,                          0.50,  TRUE,  'Sin mínimo: ¡cada céntimo cuenta!',
-     'simulated',     'completed', 'SIM-D0011', NULL, pg_temp.ago_ts('3 days', '08:30'), NULL, NULL, pg_temp.ago_ts('3 days', '08:30')),
+     'card',          'completed', 'CARD-D0011', NULL, pg_temp.ago_ts('3 days', '08:30'), NULL, NULL, pg_temp.ago_ts('3 days', '08:30')),
 (12, 6,    'Lucía Martínez Navarro', 'lucia.martinez@correo.test', 10.00,  FALSE, 'Por Faro.',
-     'simulated',     'completed', 'SIM-D0012', NULL, pg_temp.ago_ts('19 days', '21:15'), NULL, NULL, pg_temp.ago_ts('19 days', '21:15'));
+     'card',          'completed', 'CARD-D0012', NULL, pg_temp.ago_ts('19 days', '21:15'), NULL, NULL, pg_temp.ago_ts('19 days', '21:15'));
 
 -- -----------------------------------------------------------------------------
 -- 10. Lecturas del muro de actualizaciones
@@ -601,7 +602,7 @@ INSERT INTO activity_logs (user_id, action, table_name, record_id, details, crea
 (3,    'create',  'animals',        14, '{"name": "Pipa"}',                                             pg_temp.ago_ts('10 days', '09:00')),
 (1,    'update',  'animals',        12, '{"status": ["in_sanctuary", "deceased"]}',                    pg_temp.ago_ts('20 days', '17:50')),
 (2,    'update',  'animals',        13, '{"status": ["in_sanctuary", "transferred"]}',                 pg_temp.ago_ts('2 months', '11:50')),
-(1,    'create',  'adoptions',      14, '{"manual": true, "method": "cash"}',                           pg_temp.ago_ts('1 month 3 days', '12:15')),
+(1,    'create',  'adoptions',      14, '{"manual": true, "method": "bank_transfer"}',                  pg_temp.ago_ts('1 month 3 days', '12:15')),
 (2,    'update',  'adoptions',      20, '{"status": ["active", "cancelled"], "refund": true}',          pg_temp.ago_ts('5 months 26 days', '10:00')),
 (2,    'create',  'donations',       7, '{"method": "bank_transfer"}',                                  pg_temp.ago_ts('24 days', '10:00')),
 (NULL, 'update',  'adoptions',       7, '{"status": ["active", "paused"], "reason": "payment_failed"}', pg_temp.ago_ts('15 days', '03:00')),
@@ -866,6 +867,13 @@ OVERRIDING SYSTEM VALUE VALUES
 (3, 3, 5, 'Lupe se lo ha comido todo y está activa.',                 pg_temp.ago_ts('1 day', '21:45'));
 
 INSERT INTO handover_note_reads (note_id, user_id, read_at) VALUES (3, 3, pg_temp.ago_ts('0 days', '07:05'));
+
+-- La incidencia 2 está «en curso» porque tiene su tarea pendiente (para mañana).
+INSERT INTO task_instances (type, title, description, zone_id, due_date, due_time, due_at, created_by, incident_id)
+VALUES ('health_check', 'Revisar la pata de Pipa', 'Mirar si sigue cojeando.', 4,
+        CURRENT_DATE + 1, '10:00', ((CURRENT_DATE + 1) + TIME '10:00') AT TIME ZONE 'Europe/Madrid', 1, 2);
+INSERT INTO task_instance_animals (task_id, animal_id)
+SELECT id, 14 FROM task_instances WHERE incident_id = 2;
 
 -- -----------------------------------------------------------------------------
 -- 14. Ajustar los contadores de id tras insertar ids explícitos

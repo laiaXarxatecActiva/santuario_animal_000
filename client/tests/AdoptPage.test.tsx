@@ -21,7 +21,7 @@ function apiAdoptante(extra: Parameters<typeof mockApi>[0] = {}) {
 
 async function continuar() {
   await userEvent.click(await screen.findByRole('button', { name: 'Continuar con el pago' }));
-  return screen.findByRole('dialog', { name: 'Pago simulado' });
+  return screen.findByRole('dialog', { name: 'Pago con tarjeta' });
 }
 
 describe('CU-13 Adoptar un animal', () => {
@@ -55,7 +55,7 @@ describe('CU-13 Adoptar un animal', () => {
     expect(screen.getByText('12,00 € al mes. Primer cobro hoy.')).toBeInTheDocument();
   });
 
-  it('crea la adopción con el plan elegido y abre el pago simulado', async () => {
+  it('crea la adopción con el plan elegido y abre el pago con tarjeta', async () => {
     const { enviados } = apiAdoptante({
       '/api/adoptions': { status: 201, body: adoption({ plan: { id: 1, name: 'Simbólica', monthlyAmount: '1.00' } }) },
     });
@@ -65,7 +65,6 @@ describe('CU-13 Adoptar un animal', () => {
     expect(enviados('/api/adoptions')).toEqual([{ animalId: 1, planId: 1 }]);
     expect(within(dialogo).getByText('Adopción de Rufo · Plan Simbólica')).toBeInTheDocument();
     expect(within(dialogo).getByText('1,00 €')).toBeInTheDocument();
-    expect(within(dialogo).getByText('Pago simulado: no se realizará ningún cargo real.')).toBeInTheDocument();
     expect(within(dialogo).getByRole('button', { name: 'Simular pago correcto' })).toBeInTheDocument();
     expect(within(dialogo).getByRole('button', { name: 'Simular pago fallido' })).toBeInTheDocument();
   });
@@ -109,11 +108,11 @@ describe('CU-13 Adoptar un animal', () => {
     expect(within(aviso).getByRole('alert')).toHaveTextContent(
       'El pago no se ha completado. Puedes intentarlo de nuevo ahora o desde «Mis animales» durante 7 días.',
     );
-    expect(screen.queryByRole('dialog', { name: 'Pago simulado' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'Pago con tarjeta' })).not.toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/adopt/1');
 
     await userEvent.click(within(aviso).getByRole('button', { name: 'Volver a intentarlo' }));
-    const otra = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    const otra = await screen.findByRole('dialog', { name: 'Pago con tarjeta' });
     await rellenarTarjeta();
     await userEvent.click(within(otra).getByRole('button', { name: 'Simular pago correcto' }));
     await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));
@@ -154,7 +153,7 @@ describe('CU-13 Adoptar un animal', () => {
     expect(await screen.findByText('Tu adopción de Rufo está pendiente de pago.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continuar con el pago' })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: 'Pagar ahora' }));
-    const dialogo = await screen.findByRole('dialog', { name: 'Pago simulado' });
+    const dialogo = await screen.findByRole('dialog', { name: 'Pago con tarjeta' });
     await rellenarTarjeta();
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Simular pago correcto' }));
     await waitFor(() => expect(router.state.location.pathname).toBe(ADOPTER_HOME));

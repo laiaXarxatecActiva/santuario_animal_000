@@ -1,5 +1,6 @@
-/* Desplegable de los filtros (DESIGN_SYSTEM §8.5): el botón tiene el aspecto de
-   un campo y abre el mismo panel que el selector de idioma (§8.7), con su animación
+/* Desplegable de la web (DESIGN_SYSTEM §8.5), el de los filtros y el de los
+   formularios (`SelectField`): el botón tiene el aspecto de un campo y abre el
+   mismo panel que el selector de idioma (§8.7), con su animación
    (`dropdown-panel`, §9) y sus colores en lugar del azul del navegador. */
 .wrapper {
   position: relative;
@@ -20,6 +21,16 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+/* En los formularios: error y desactivado, como los demás campos (§8.5). */
+.button[aria-invalid='true'] {
+  border-color: var(--color-error);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .value {
@@ -76,6 +87,12 @@
   padding-inline: var(--space-4);
   color: var(--color-text);
   cursor: pointer;
+}
+
+/* Una opción desactivada se ve más clara y no se puede elegir. */
+.option[aria-disabled='true'] {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
 }
 
 /* La opción bajo el ratón o elegida con las flechas. */

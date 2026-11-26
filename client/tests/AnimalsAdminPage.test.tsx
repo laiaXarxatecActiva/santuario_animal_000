@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { adminAnimal, adminSpecies, caretaker, page } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
+import { elegirOpcion } from './helpers/select';
 
 const animales = [
   adminAnimal(),
@@ -45,10 +46,10 @@ describe('CU-28 Gestionar animales: listado', () => {
     const { router } = renderRoute('/admin/animals');
     await screen.findByRole('link', { name: 'Rufo' });
     await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), 'ebano{Enter}');
-    await userEvent.selectOptions(screen.getByLabelText('Especie'), 'Buitre leonado');
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Fallecido');
-    await userEvent.selectOptions(screen.getByLabelText('Publicado'), 'No');
-    await userEvent.selectOptions(screen.getByLabelText('Adoptable'), 'Sí');
+    await elegirOpcion(screen.getByLabelText('Especie'), 'Buitre leonado');
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Fallecido');
+    await elegirOpcion(screen.getByLabelText('Publicado'), 'No');
+    await elegirOpcion(screen.getByLabelText('Adoptable'), 'Sí');
     await waitFor(() =>
       expect(router.state.location.search).toBe('?q=ebano&speciesId=1&status=deceased&published=false&adoptable=true'),
     );
@@ -60,6 +61,16 @@ describe('CU-28 Gestionar animales: listado', () => {
       published: 'false',
       adoptable: 'true',
     });
+  });
+
+  it('filtra a medida que se escribe, sin pulsar Enter ni ningún botón', async () => {
+    const { pedidas } = api();
+    const { router } = renderRoute('/admin/animals');
+    await screen.findByRole('link', { name: 'Rufo' });
+    expect(screen.queryByRole('button', { name: 'Buscar' })).not.toBeInTheDocument();
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar por nombre' }), 'ruf');
+    await waitFor(() => expect(router.state.location.search).toBe('?q=ruf'));
+    await waitFor(() => expect(pedidas('/api/admin/animals').at(-1)?.searchParams.get('q')).toBe('ruf'));
   });
 
   it('sin resultados, lo dice', async () => {

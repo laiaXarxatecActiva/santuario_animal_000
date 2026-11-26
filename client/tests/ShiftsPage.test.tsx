@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { admin, adminUsers, caretaker, page } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { asignacion, ausencia, calendarioSemana, zonas } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -86,7 +87,7 @@ describe('CU-61 Asignar turnos (administrador)', () => {
     const jueves = await dia(/jueves, 26/);
     await userEvent.click(within(jueves).getByRole('button', { name: 'Asignar a alguien al turno de Tarde' }));
     const dialogo = screen.getByRole('dialog', { name: 'Asignar al turno de Tarde' });
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
+    await elegirOpcion(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
     expect(within(dialogo).getByRole('checkbox', { name: 'Clínica y recuperación' })).toBeChecked();
     expect(within(dialogo).getByRole('checkbox', { name: 'Gran voladero' })).toBeChecked();
     expect(within(dialogo).getByRole('checkbox', { name: 'Cocina y almacén' })).not.toBeChecked();
@@ -110,7 +111,7 @@ describe('CU-61 Asignar turnos (administrador)', () => {
     const jueves = await dia(/jueves, 26/);
     await userEvent.click(within(jueves).getByRole('button', { name: 'Asignar a alguien al turno de Tarde' }));
     const dialogo = screen.getByRole('dialog', { name: 'Asignar al turno de Tarde' });
-    await userEvent.selectOptions(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
+    await elegirOpcion(within(dialogo).getByLabelText('Persona'), 'Nuria Peris Gil');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Asignar' }));
     expect(await within(dialogo).findByText('Esta persona está ausente ese día.')).toBeInTheDocument();
   });

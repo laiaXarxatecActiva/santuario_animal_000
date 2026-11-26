@@ -2,7 +2,7 @@ import type { MemorialAnimalDto } from '@sanctuary/shared';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { adminAnimal, caretaker, card, update } from './helpers/fixtures';
+import { adminAnimal, caretaker, card, sessionUser, update } from './helpers/fixtures';
 import { mockApi, renderRoute } from './helpers/render';
 
 const faro: MemorialAnimalDto = {
@@ -102,5 +102,26 @@ describe('CU-12 en el panel: marcar un fallecido para «En memoria»', () => {
     renderRoute('/admin/animals/1');
     await screen.findByRole('switch', { name: /Publicado/ });
     expect(screen.queryByRole('switch', { name: 'Mostrar en «En memoria»' })).not.toBeInTheDocument();
+  });
+});
+
+describe('CU-12 Ficha de «En memoria»: acceso al panel para el personal', () => {
+  it('un trabajador ve «Ver en el panel», que lleva a la ficha del animal en el panel', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: caretaker() } },
+      '/api/animals/memorial': { body: { data: [faro] } },
+    });
+    renderRoute('/memorial/12');
+    expect(await screen.findByRole('link', { name: 'Ver en el panel' })).toHaveAttribute('href', '/admin/animals/12');
+  });
+
+  it('un adoptante no lo ve', async () => {
+    mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/animals/memorial': { body: { data: [faro] } },
+    });
+    renderRoute('/memorial/12');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Faro' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Ver en el panel' })).not.toBeInTheDocument();
   });
 });

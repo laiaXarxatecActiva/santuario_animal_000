@@ -201,17 +201,6 @@ export function createPdfService(): PdfService {
           doc.y = Math.max(doc.y, finEtiqueta) + 10;
         }
 
-        if (contenido.aviso) {
-          doc.moveDown(0.8);
-          const y = doc.y;
-          const alto = 30;
-          doc.rect(MARGEN, y, ancho, alto).fill(COLOR.fondoSuave);
-          doc
-            .font('Helvetica')
-            .fontSize(10)
-            .fillColor(COLOR.texto)
-            .text(contenido.aviso, MARGEN + 12, y + 10, { width: ancho - 24 });
-        }
         pie(doc, contenido.idioma);
       });
     },

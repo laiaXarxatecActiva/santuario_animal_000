@@ -12,10 +12,11 @@ import { Button } from '../../components/Button';
 import { IncidentStatusBadge, SeverityBadge } from '../../components/work/IncidentBadges';
 import { IncidentResolution } from '../../components/work/IncidentResolution';
 import { ResolveIncidentModal } from '../../components/work/ResolveIncidentModal';
+import { TaskStatusBadge } from '../../components/work/TaskBadges';
 import { useSession } from '../../hooks/useSession';
 import { INCIDENTS_KEY, TASKS_KEY, TODAY_KEY, useIncident } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
-import { formatShortInstant } from '../../utils/format';
+import { formatShortDate, formatShortInstant } from '../../utils/format';
 import styles from './AdminPage.module.css';
 import ficha from './IncidentPage.module.css';
 import { NuevaTarea } from './TasksAdminPage';
@@ -72,6 +73,8 @@ export function IncidentPage() {
   if (!incidencia.data) return <p aria-busy="true">{t('common.loading')}</p>;
   const i = incidencia.data;
   const resuelta = i.status === 'resolved';
+  // CU-70: solo una tarea pendiente a la vez.
+  const conTareaPendiente = i.tasks.some((tarea) => tarea.status === 'pending');
 
   return (
     <div className={styles.page}>
@@ -85,7 +88,7 @@ export function IncidentPage() {
           </div>
         </div>
         <div className={styles.headerActions}>
-          {esAdmin && !resuelta && i.taskId === null && (
+          {esAdmin && !resuelta && !conTareaPendiente && (
             <Button variant="outline" onClick={() => setVentana('tarea')}>
               {t('work.incidents.createTask')}
             </Button>
@@ -153,22 +156,38 @@ export function IncidentPage() {
               {t('work.incidents.reportedBy', { name: i.reportedBy.name, date: formatShortInstant(i.createdAt) })}
             </dd>
           </div>
-          {i.taskId !== null && (
-            <div>
-              <dt>{t('work.incidents.task')}</dt>
-              <dd>
-                <Link to="/admin/tasks">{t('work.incidents.taskLink', { id: i.taskId })}</Link>
-              </dd>
-            </div>
-          )}
         </dl>
-        {i.photoUrl && (
-          <div>
-            <h3 className={ficha.sectionTitle}>{t('work.photo')}</h3>
-            <a href={i.photoUrl} target="_blank" rel="noreferrer" className={ficha.photo}>
-              <img src={i.photoUrl} alt={t('work.incidents.photoAlt')} />
-            </a>
-          </div>
+        {i.photos.length > 0 && (
+          <section aria-labelledby="incidencia-fotos">
+            <h3 id="incidencia-fotos" className={ficha.sectionTitle}>
+              {t('work.photos')}
+            </h3>
+            <ul className={ficha.photos}>
+              {i.photos.map((url, n) => (
+                <li key={url}>
+                  <a href={url} target="_blank" rel="noreferrer" className={ficha.photo}>
+                    <img src={url} alt={t('work.incidents.photoAlt', { n: n + 1 })} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {i.tasks.length > 0 && (
+          <section aria-labelledby="incidencia-tareas">
+            <h3 id="incidencia-tareas" className={ficha.sectionTitle}>
+              {t('work.incidents.tasks')}
+            </h3>
+            <ul className={ficha.tasks}>
+              {i.tasks.map((tarea) => (
+                <li key={tarea.id}>
+                  <Link to={`/admin/tasks?date=${tarea.dueDate}`}>{tarea.title}</Link>
+                  <span className={ficha.taskDate}>{formatShortDate(tarea.dueDate)}</span>
+                  <TaskStatusBadge status={tarea.status} />
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
       </section>
 

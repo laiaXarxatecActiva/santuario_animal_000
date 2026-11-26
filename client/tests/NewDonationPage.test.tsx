@@ -25,7 +25,9 @@ describe('CU-39 A1 Registrar una donación manual', () => {
     await userEvent.type(screen.getByLabelText('Importe (€)'), '25,50');
     await userEvent.clear(fecha);
     await userEvent.type(fecha, '2026-11-02');
-    await userEvent.selectOptions(screen.getByLabelText('Forma de pago'), 'Transferencia');
+    // Sin desplegable: solo se registran transferencias.
+    expect(screen.queryByLabelText('Forma de pago')).not.toBeInTheDocument();
+    expect(screen.getByText('Forma de pago: transferencia.')).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Nombre del donante (opcional)'), 'Ana Ruiz');
     await userEvent.type(screen.getByLabelText('Email del donante (opcional)'), 'ana@correo.test');
     await userEvent.click(screen.getByRole('checkbox', { name: 'Donación anónima' }));
@@ -52,8 +54,7 @@ describe('CU-39 A1 Registrar una donación manual', () => {
     renderRoute('/admin/donations/new');
     await userEvent.type(await screen.findByLabelText('Email del donante (opcional)'), 'no-es-email');
     await userEvent.click(screen.getByRole('button', { name: 'Registrar donación' }));
-    expect(await screen.findByText('Elige cómo se ha pagado.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Importe (€)')).toHaveAccessibleDescription(/importe válido/);
+    await waitFor(() => expect(screen.getByLabelText('Importe (€)')).toHaveAccessibleDescription(/importe válido/));
     expect(screen.getByLabelText('Email del donante (opcional)')).toHaveAttribute('aria-invalid', 'true');
     expect(pedidas('/api/admin/donations')).toHaveLength(0);
   });
@@ -66,7 +67,6 @@ describe('CU-39 A1 Registrar una donación manual', () => {
     });
     renderRoute('/admin/donations/new');
     await userEvent.type(await screen.findByLabelText('Importe (€)'), '5');
-    await userEvent.selectOptions(screen.getByLabelText('Forma de pago'), 'Efectivo');
     await userEvent.click(screen.getByRole('button', { name: 'Registrar donación' }));
     await waitFor(() =>
       expect(screen.getByLabelText('Fecha')).toHaveAccessibleDescription(/La fecha no puede ser posterior a hoy\./),

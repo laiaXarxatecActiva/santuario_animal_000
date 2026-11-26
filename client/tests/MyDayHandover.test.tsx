@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { caretaker, page } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { asignacion, notaDeRelevo, zonas } from './helpers/work-fixtures';
+import { opcionesDe } from './helpers/select';
 
 function api(extra: Record<string, (u: URL, p: Peticion) => { status?: number; body?: unknown }> = {}) {
   return mockApi({
@@ -68,11 +69,7 @@ describe('CU-71 Notas de relevo en «Mi día»', () => {
     const ventana = screen.getByRole('dialog', { name: 'Dejar una nota de relevo' });
     const zona = within(ventana).getByLabelText('Zona');
     // Solo las zonas de su turno de hoy.
-    expect(
-      within(zona)
-        .getAllByRole('option')
-        .map((o) => o.textContent),
-    ).toEqual(['Clínica y recuperación', 'Voladero de alimoches']);
+    expect(opcionesDe(zona)).toEqual(['Clínica y recuperación', 'Voladero de alimoches']);
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await within(ventana).findByText('Escribe la nota.')).toBeInTheDocument();
     await userEvent.type(within(ventana).getByLabelText('Nota'), 'Pipa no ha querido comer.');

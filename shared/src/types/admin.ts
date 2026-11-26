@@ -177,6 +177,23 @@ export interface AdminUserLogoutAllDto {
   closedSessions: number;
 }
 
+/**
+ * CU-75 paso 2: lo que es de la cuenta y se borraría con ella al forzar.
+ * Lo que es del santuario (historial veterinario, plantillas, pagos de otras
+ * personas…) no cuenta: solo se queda sin autor.
+ */
+export interface AdminUserLinkedDataDto {
+  adoptions: number;
+  payments: number;
+  donations: number;
+  incidents: number;
+  handoverNotes: number;
+  animalUpdates: number;
+  tasks: number;
+  activityLogs: number;
+  total: number;
+}
+
 /** CU-37: persona que creó una adopción o registró un pago a mano. */
 export interface AdminPersonRef {
   id: number;

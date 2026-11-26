@@ -42,3 +42,15 @@ export async function rellenarTarjeta(pago: Locator): Promise<void> {
   await pago.getByLabel(t('payment.cardExpiry'), { exact: true }).fill('12/40');
   await pago.getByLabel(t('payment.cardCvc'), { exact: true }).fill('123');
 }
+
+/**
+ * Elige una opción de un desplegable de la web (`SelectField` o `FilterSelect`,
+ * DESIGN_SYSTEM §8.5): no es un `<select>` del navegador, así que se abre la
+ * lista pulsando el campo y se pulsa la opción por su texto.
+ */
+export async function elegirOpcion(campo: Locator, opcion: string) {
+  // Antes de abrirla: abierta, la etiqueta nombra también la lista.
+  const lista = campo.page().locator(`[id="${await campo.getAttribute('aria-controls')}"]`);
+  await campo.click();
+  await lista.getByRole('option', { name: opcion, exact: true }).click();
+}

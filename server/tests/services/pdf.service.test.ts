@@ -35,9 +35,9 @@ describe('PdfService (CU-22, CU-19)', () => {
       contenidoRecibo({
         kind: 'donation',
         id: 1,
-        reference: 'SIM-D0001',
+        reference: 'CARD-D0001',
         amount: '20.00',
-        method: 'simulated',
+        method: 'card',
         status: 'completed',
         paidAt: '2026-11-05T09:15:00.000Z',
         refundedAt: null,

@@ -1,9 +1,8 @@
 import {
-  MANUAL_PAYMENT_METHODS,
+  MANUAL_PAYMENT_METHOD,
   manualPaymentSchema,
   type AdminAdoptionDetailDto,
   type AdoptionAdminAction,
-  type ManualPaymentMethod,
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -14,7 +13,7 @@ import { AdoptionStatusBadge } from '../../components/AdoptionStatusBadge';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
 import { ApiError } from '../../api/client';
-import { Checkbox, SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { Checkbox, TextAreaField, TextField } from '../../components/FormFields';
 import { Modal } from '../../components/Modal';
 import { ADMIN_ADOPTIONS_KEY, ADMIN_PAYMENTS_KEY, useAdminAdoption } from '../../hooks/useAdmin';
 import { errorMessage } from '../../utils/apiErrors';
@@ -274,8 +273,7 @@ function VentanaPago({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [importe, setImporte] = useState(importeEditable(cuota.amount));
-  const [metodo, setMetodo] = useState<ManualPaymentMethod | ''>('');
-  const [errores, setErrores] = useState<Partial<Record<'amount' | 'method', string>>>({});
+  const [errores, setErrores] = useState<Partial<Record<'amount', string>>>({});
 
   const registrar = useMutation({
     mutationFn: adminApi.payments.create,
@@ -292,14 +290,15 @@ function VentanaPago({
   });
 
   const enviar = () => {
-    const body = { adoptionId: adopcion.id, amount: importe, method: metodo };
+    // Solo se registran a mano las transferencias (no se acepta efectivo).
+    const body = { adoptionId: adopcion.id, amount: importe, method: MANUAL_PAYMENT_METHOD };
     // Las mismas reglas que el servidor (esquema compartido), para avisar antes de enviar.
     const resultado = manualPaymentSchema.safeParse(body);
     if (!resultado.success) {
       const nuevos: typeof errores = {};
       for (const issue of resultado.error.issues) {
         const campo = issue.path[0];
-        if ((campo === 'amount' || campo === 'method') && !nuevos[campo]) nuevos[campo] = issue.message;
+        if (campo === 'amount' && !nuevos[campo]) nuevos[campo] = issue.message;
       }
       setErrores(nuevos);
       return;
@@ -340,22 +339,7 @@ function VentanaPago({
           setErrores((previos) => ({ ...previos, amount: undefined }));
         }}
       />
-      <SelectField
-        label={t('admin.payments.method')}
-        value={metodo}
-        error={errores.method}
-        onChange={(e) => {
-          setMetodo(e.target.value as ManualPaymentMethod | '');
-          setErrores((previos) => ({ ...previos, method: undefined }));
-        }}
-      >
-        <option value="">{t('form.choose')}</option>
-        {MANUAL_PAYMENT_METHODS.map((m) => (
-          <option key={m} value={m}>
-            {t(`admin.adoptions.methods.${m}`)}
-          </option>
-        ))}
-      </SelectField>
+      <p>{t('admin.common.byTransfer')}</p>
     </Modal>
   );
 }

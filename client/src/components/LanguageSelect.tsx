@@ -11,10 +11,11 @@ import styles from './LanguageSelect.module.css';
 /**
  * Selector de idioma de la cabecera (DESIGN_SYSTEM §8.7): botón con su panel,
  * igual que el menú de usuario. Con sesión, el idioma se guarda también en la
- * cuenta (emails y PDF) y, al entrar, se aplica el suyo. Con `compact` (cabecera
- * del adoptante, que no tiene sitio) el botón muestra solo el icono y la flecha.
+ * cuenta (emails y PDF) y, al entrar, se aplica el suyo. En todas las cabeceras
+ * (con o sin sesión, sea cual sea el rol) el botón muestra solo el icono y la
+ * flecha; el nombre del idioma queda en su nombre accesible.
  */
-export function LanguageSelect({ compact = false }: { compact?: boolean }) {
+export function LanguageSelect() {
   const { t } = useTranslation();
   const [abierto, setAbierto] = useState(false);
   const panelId = useId();
@@ -68,7 +69,6 @@ export function LanguageSelect({ compact = false }: { compact?: boolean }) {
         ref={boton}
         type="button"
         className={styles.button}
-        data-compact={compact || undefined}
         aria-labelledby={`${etiquetaId} ${nombreId}`}
         aria-haspopup="menu"
         aria-expanded={abierto}
@@ -79,7 +79,7 @@ export function LanguageSelect({ compact = false }: { compact?: boolean }) {
           {t('language.label')}
         </span>
         <FontAwesomeIcon icon={faLanguage} aria-hidden="true" className={styles.icon} />
-        <span id={nombreId} lang={actual} className={compact ? 'visually-hidden' : styles.name}>
+        <span id={nombreId} lang={actual} className="visually-hidden">
           {t(`language.names.${actual}`)}
         </span>
         {/* La flecha apunta hacia arriba mientras el panel está abierto. */}
