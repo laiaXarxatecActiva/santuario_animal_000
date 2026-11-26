@@ -248,3 +248,93 @@ describe('CU-49 Cambiar la forma de pago (Mis animales)', () => {
     expect(await screen.findByRole('dialog', { name: 'Pago con tarjeta' })).toBeInTheDocument();
   });
 });
+
+describe('CU-20 y CU-49: el desplegable de la tarjeta no mueve los botones y se cierra al pulsar fuera', () => {
+  function api() {
+    return mockApi({
+      '/api/auth/me': { body: { user: sessionUser() } },
+      '/api/plans': { body: { data: plans } },
+      '/api/me/adoptions': { body: { data: [activeAdoption()] } },
+    });
+  }
+
+  it('«Cambiar plan» se abre debajo de la fila de botones', async () => {
+    api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    const boton = within(rufo).getByRole('button', { name: 'Cambiar plan' });
+    await userEvent.click(boton);
+    const formulario = within(rufo).getByRole('group', { name: 'Cambiar plan' });
+    const ficha = within(rufo).getByRole('link', { name: 'Ver la ficha de Rufo' });
+    expect(ficha.compareDocumentPosition(formulario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(boton.compareDocumentPosition(formulario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('pulsar fuera cierra «Cambiar plan» sin guardar', async () => {
+    const { pedidas } = api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Cambiar plan' }));
+    const formulario = within(rufo).getByRole('group', { name: 'Cambiar plan' });
+    await userEvent.click(within(formulario).getByRole('radio', { name: /Extraordinaria/ }));
+    await userEvent.click(screen.getByRole('heading', { level: 1, name: 'Mis animales' }));
+    expect(within(rufo).queryByRole('group', { name: 'Cambiar plan' })).not.toBeInTheDocument();
+    expect(pedidas('/api/me/adoptions/1/plan')).toEqual([]);
+  });
+
+  it('pulsar dentro del desplegable no lo cierra', async () => {
+    api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    await userEvent.click(within(rufo).getByRole('button', { name: 'Cambiar plan' }));
+    const formulario = within(rufo).getByRole('group', { name: 'Cambiar plan' });
+    await userEvent.click(within(formulario).getByText('El cambio se aplicará a partir del 5 de diciembre de 2026.'));
+    expect(within(rufo).getByRole('group', { name: 'Cambiar plan' })).toBeInTheDocument();
+  });
+
+  it('volver a pulsar «Cambiar plan» lo cierra (no se vuelve a abrir)', async () => {
+    api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    const boton = within(rufo).getByRole('button', { name: 'Cambiar plan' });
+    await userEvent.click(boton);
+    await userEvent.click(boton);
+    expect(within(rufo).queryByRole('group', { name: 'Cambiar plan' })).not.toBeInTheDocument();
+    expect(boton).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('Escape cierra «Cambiar plan» y devuelve el foco a su botón', async () => {
+    api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    const boton = within(rufo).getByRole('button', { name: 'Cambiar plan' });
+    await userEvent.click(boton);
+    await userEvent.click(within(rufo).getByRole('radio', { name: /Extraordinaria/ }));
+    await userEvent.keyboard('{Escape}');
+    expect(within(rufo).queryByRole('group', { name: 'Cambiar plan' })).not.toBeInTheDocument();
+    expect(boton).toHaveFocus();
+  });
+
+  it('«Forma de pago» se abre debajo de los botones y pulsar fuera la cierra sin guardar', async () => {
+    const { pedidas } = api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Forma de pago' }));
+    const formulario = within(rufo).getByRole('group', { name: 'Forma de pago' });
+    const boton = within(rufo).getByRole('button', { name: 'Cambiar plan' });
+    expect(boton.compareDocumentPosition(formulario) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await userEvent.click(within(formulario).getByRole('radio', { name: /Manual/ }));
+    await userEvent.click(screen.getByRole('heading', { level: 1, name: 'Mis animales' }));
+    expect(within(rufo).queryByRole('group', { name: 'Forma de pago' })).not.toBeInTheDocument();
+    expect(pedidas('/api/me/adoptions/1/payment-mode')).toEqual([]);
+  });
+
+  it('Escape cierra «Forma de pago»', async () => {
+    api();
+    renderRoute('/my-animals');
+    const rufo = await tarjeta('Rufo');
+    await userEvent.click(within(await abrirMenu(rufo)).getByRole('menuitem', { name: 'Forma de pago' }));
+    await userEvent.keyboard('{Escape}');
+    expect(within(rufo).queryByRole('group', { name: 'Forma de pago' })).not.toBeInTheDocument();
+  });
+});
