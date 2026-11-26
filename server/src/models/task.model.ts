@@ -2,6 +2,7 @@ import type { IntakeLevel, NamedRef, TaskDto, TaskStatus, TaskType } from '@sanc
 import type { Queryable } from '../db/pool.js';
 import { animalesDeLaComida } from '../dominio/cuidados.js';
 import { estaAtrasada } from '../dominio/tareas.js';
+import { IncidentHasTaskError } from '../errors/app-error.js';
 
 // CU-55 a CU-59: tareas concretas de cada día.
 
@@ -27,6 +28,7 @@ interface TaskRow {
   observations: string | null;
   medication_plan_id: number | null;
   vet_visit_id: number | null;
+  incident_id: number | null;
   animals: NamedRef[];
   /** Solo en las de alimentación: los animales que viven ahora en su zona. */
   zone_animals: NamedRef[];
@@ -64,6 +66,7 @@ export function mapRow(row: TaskRow, contexto: Contexto): TaskDto {
     isOneOff: row.template_id === null && row.medication_plan_id === null && row.vet_visit_id === null,
     medicationPlanId: row.medication_plan_id,
     vetVisitId: row.vet_visit_id,
+    incidentId: row.incident_id,
     feedingAnimals: row.type === 'feeding' ? animalesDeLaComida(row.animals, row.zone_animals) : [],
     intakes: row.intakes,
   };
@@ -74,7 +77,7 @@ const SELECT = `
          i.qualification_id, q.name AS qualification_name, i.due_date, to_char(i.due_time, 'HH24:MI') AS due_time,
          i.due_at, i.status, i.assigned_to, ua.first_name || ' ' || ua.last_name AS assigned_name,
          i.resolved_by, ur.first_name || ' ' || ur.last_name AS resolved_name, i.resolved_at,
-         i.observations, i.medication_plan_id, i.vet_visit_id,
+         i.observations, i.medication_plan_id, i.vet_visit_id, i.incident_id,
          COALESCE((SELECT json_agg(json_build_object('id', a.id, 'name', a.name) ORDER BY a.name, a.id)
                      FROM task_instance_animals ta JOIN animals a ON a.id = ta.animal_id
                     WHERE ta.task_id = i.id), '[]'::json) AS animals,
@@ -140,15 +143,36 @@ export async function resolve(
   );
 }
 
-/** CU-57 A2: vuelve a pendiente (sin lo anotado de la comida, CU-66). */
+/**
+ * CU-57 A2: vuelve a pendiente (sin lo anotado de la comida, CU-66). Si es de una
+ * incidencia que ya tiene otra tarea pendiente, 409 (índice
+ * `task_instances_incident_pending_key`).
+ */
 export async function reopen(db: Queryable, id: number): Promise<void> {
   await db.query('DELETE FROM feeding_logs WHERE task_id = $1', [id]);
-  await db.query(
-    `UPDATE task_instances
-        SET status = 'pending', resolved_by = NULL, resolved_at = NULL, observations = NULL
-      WHERE id = $1`,
-    [id],
+  try {
+    await db.query(
+      `UPDATE task_instances
+          SET status = 'pending', resolved_by = NULL, resolved_at = NULL, observations = NULL
+        WHERE id = $1`,
+      [id],
+    );
+  } catch (error) {
+    if (esDuplicado(error)) throw new IncidentHasTaskError();
+    throw error;
+  }
+}
+
+const esDuplicado = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
+
+/** CU-70: la tarea pendiente de una incidencia, si la tiene. */
+export async function findPendingOfIncident(db: Queryable, incidentId: number): Promise<number | null> {
+  const { rows } = await db.query<{ id: number }>(
+    "SELECT id FROM task_instances WHERE incident_id = $1 AND status = 'pending' FOR UPDATE",
+    [incidentId],
   );
+  return rows[0]?.id ?? null;
 }
 
 export async function setAssignee(db: Queryable, id: number, userId: number | null): Promise<void> {
@@ -176,6 +200,8 @@ export interface NuevaTarea {
   medicationPlanId?: number | null;
   /** CU-68: tarea de una visita programada. */
   vetVisitId?: number | null;
+  /** CU-70: tarea de una incidencia. */
+  incidentId?: number | null;
 }
 
 /**
@@ -186,8 +212,9 @@ export interface NuevaTarea {
 export async function insert(db: Queryable, t: NuevaTarea): Promise<number | null> {
   const { rows } = await db.query<{ id: number }>(
     `INSERT INTO task_instances (template_id, type, title, description, zone_id, qualification_id,
-                                 due_date, due_time, due_at, assigned_to, created_by, medication_plan_id, vet_visit_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                                 due_date, due_time, due_at, assigned_to, created_by, medication_plan_id, vet_visit_id,
+                                 incident_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
      ON CONFLICT DO NOTHING
      RETURNING id`,
     [
@@ -204,6 +231,7 @@ export async function insert(db: Queryable, t: NuevaTarea): Promise<number | nul
       t.createdBy,
       t.medicationPlanId ?? null,
       t.vetVisitId ?? null,
+      t.incidentId ?? null,
     ],
   );
   const id = rows[0]?.id ?? null;
@@ -244,13 +272,22 @@ export async function withdrawAnimal(db: Queryable, animalId: number, desde: Dat
   );
 }
 
-/** CU-59: lo que sigue pendiente de días anteriores pasa a «no realizada» por el sistema. */
-export async function closePastPending(db: Queryable, hoy: string, ahora: Date): Promise<number> {
-  const { rowCount } = await db.query(
-    "UPDATE task_instances SET status = 'not_done', resolved_by = NULL, resolved_at = $2 WHERE status = 'pending' AND due_date < $1",
+/**
+ * CU-59: lo que sigue pendiente de días anteriores pasa a «no realizada» por el
+ * sistema. Devuelve las cerradas, para que sus incidencias las sigan (CU-70).
+ */
+export async function closePastPending(
+  db: Queryable,
+  hoy: string,
+  ahora: Date,
+): Promise<{ id: number; incidentId: number | null; title: string }[]> {
+  const { rows } = await db.query<{ id: number; incident_id: number | null; title: string }>(
+    `UPDATE task_instances SET status = 'not_done', resolved_by = NULL, resolved_at = $2
+      WHERE status = 'pending' AND due_date < $1
+      RETURNING id, incident_id, title`,
     [hoy, ahora],
   );
-  return rowCount ?? 0;
+  return rows.map((r) => ({ id: r.id, incidentId: r.incident_id, title: r.title }));
 }
 
 /** CU-69: al editar o terminar una pauta, sus dosis pendientes desde ahora desaparecen. */

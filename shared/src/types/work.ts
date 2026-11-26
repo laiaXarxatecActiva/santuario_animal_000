@@ -100,6 +100,8 @@ export interface TaskDto {
   medicationPlanId?: number | null;
   /** CU-68: la visita veterinaria de la que sale. */
   vetVisitId?: number | null;
+  /** CU-70: la incidencia de la que sale. */
+  incidentId?: number | null;
   /**
    * CU-66: en las de alimentación, los animales cuya comida se anota (los de la
    * tarea o, si no tiene, los que viven en su zona). Vacío en las demás.
@@ -311,7 +313,8 @@ export interface IncidentDto {
   /** La zona elegida o, si se eligió un animal, la suya. */
   zone: NamedRef | null;
   animal: NamedRef | null;
-  photoUrl: string | null;
+  /** Direcciones de sus fotos (hasta 5), en el orden en que se subieron. */
+  photos: string[];
   status: IncidentStatus;
   reportedBy: AdminPersonRef;
   createdAt: string;
@@ -319,8 +322,16 @@ export interface IncidentDto {
   resolution: string | null;
   resolvedBy: AdminPersonRef | null;
   resolvedAt: string | null;
-  /** La tarea puntual creada a partir de ella. */
-  taskId: number | null;
+  /** Sus tareas, de la más reciente a la más antigua; como mucho una pendiente. */
+  tasks: IncidentTaskDto[];
+}
+
+/** CU-70: una tarea creada a partir de una incidencia. */
+export interface IncidentTaskDto {
+  id: number;
+  title: string;
+  dueDate: string;
+  status: TaskStatus;
 }
 
 /** CU-71: nota de relevo de una zona. */

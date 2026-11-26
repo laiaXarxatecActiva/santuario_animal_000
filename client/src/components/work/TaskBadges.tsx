@@ -1,4 +1,4 @@
-import type { TaskDto } from '@sanctuary/shared';
+import type { TaskDto, TaskStatus } from '@sanctuary/shared';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '../Badge';
 import styles from './TaskCard.module.css';
@@ -24,4 +24,10 @@ export function TaskBadges({
       {tarea.status !== 'pending' && <Badge tone={TONO_ESTADO[tarea.status]}>{t(`work.status.${tarea.status}`)}</Badge>}
     </div>
   );
+}
+
+/** El estado de una tarea, también «Pendiente» (las tareas de una incidencia, CU-70). */
+export function TaskStatusBadge({ status }: { status: TaskStatus }) {
+  const { t } = useTranslation();
+  return <Badge tone={TONO_ESTADO[status]}>{t(`work.status.${status}`)}</Badge>;
 }

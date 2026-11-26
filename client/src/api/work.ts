@@ -158,14 +158,14 @@ export const workApi = {
     list: (params: IncidentsParams = {}) => apiGet<Paginated<IncidentDto>>('/api/admin/incidents', params),
     summary: () => apiGet<IncidentSummaryDto>('/api/admin/incidents/summary'),
     get: (id: number) => apiGet<IncidentDto>(`/api/admin/incidents/${id}`),
-    /** Con foto va en multipart (`files`). */
-    create: (body: IncidentBody, photo?: File) => {
-      if (!photo) return apiPost<IncidentDto>('/api/admin/incidents', body);
+    /** Con fotos va en multipart (todas en `files`, en orden). */
+    create: (body: IncidentBody, photos: readonly File[] = []) => {
+      if (photos.length === 0) return apiPost<IncidentDto>('/api/admin/incidents', body);
       const form = new FormData();
       for (const [clave, valor] of Object.entries(body)) {
         if (valor !== null && valor !== undefined && valor !== '') form.append(clave, String(valor));
       }
-      form.append('files', photo);
+      for (const foto of photos) form.append('files', foto);
       return apiUpload<IncidentDto>('/api/admin/incidents', form);
     },
     setStatus: (id: number, body: IncidentStatusBody) =>

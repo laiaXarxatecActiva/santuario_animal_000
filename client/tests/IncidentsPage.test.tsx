@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, caretaker, page } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { incidencia, tarea, zonas } from './helpers/work-fixtures';
+import { elegirOpcion } from './helpers/select';
 
 const ABIERTA = incidencia({
   id: 1,
@@ -44,7 +45,7 @@ describe('CU-70 Incidencias', () => {
     expect(within(fila).getByText('Salud')).toBeInTheDocument();
     expect(within(fila).getByText('Cojera de Pipa')).toBeInTheDocument();
     expect(within(fila).getByRole('link', { name: 'Ver' })).toHaveAttribute('href', '/admin/incidents/2');
-    await userEvent.selectOptions(screen.getByLabelText('Estado'), 'Resueltas');
+    await elegirOpcion(screen.getByLabelText('Estado'), 'Resueltas');
     await waitFor(() => expect(pedidas('/api/admin/incidents').at(-1)?.searchParams.get('status')).toBe('resolved'));
     expect(await screen.findByText('No hay incidencias con estos filtros.')).toBeInTheDocument();
   });
@@ -57,11 +58,11 @@ describe('CU-70 Incidencias', () => {
     await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
     expect(await within(ventana).findByText('Escribe un título corto.')).toBeInTheDocument();
     expect(within(ventana).getByText('Describe lo que pasa.')).toBeInTheDocument();
-    expect(within(ventana).getByText('Elige una zona o un animal.')).toBeInTheDocument();
+    expect(within(ventana).queryByText('Elige una zona o un animal.')).not.toBeInTheDocument();
 
-    await userEvent.selectOptions(within(ventana).getByLabelText('Tipo'), 'Instalaciones');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Gravedad'), 'Alta');
-    await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Gran voladero');
+    await elegirOpcion(within(ventana).getByLabelText('Tipo'), 'Instalaciones');
+    await elegirOpcion(within(ventana).getByLabelText('Gravedad'), 'Alta');
+    await elegirOpcion(within(ventana).getByLabelText('Zona (opcional)'), 'Gran voladero');
     await userEvent.type(within(ventana).getByLabelText('Título'), 'Puerta rota');
     await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'La puerta no cierra.');
     expect(within(ventana).getByText(/se avisan al momento/)).toBeInTheDocument();
@@ -78,20 +79,36 @@ describe('CU-70 Incidencias', () => {
       },
     ]);
   });
+
+  it('la zona es opcional: empieza en «Sin zona» y se envía sin zona ni animal', async () => {
+    const { enviados } = api();
+    renderRoute('/admin/incidents');
+    await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
+    const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
+    expect(within(ventana).getByLabelText('Zona (opcional)')).toHaveTextContent('Sin zona');
+    await userEvent.type(within(ventana).getByLabelText('Título'), 'La furgoneta no arranca');
+    await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'No arranca.');
+    await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
+    expect(await screen.findByText('Incidencia comunicada')).toBeInTheDocument();
+    expect(enviados('/api/admin/incidents').filter(Boolean)).toEqual([
+      expect.objectContaining({ title: 'La furgoneta no arranca', zoneId: null, animalId: null }),
+    ]);
+  });
 });
 
-describe('CU-70 Foto de la incidencia', () => {
-  it('la foto elegida se envía con la incidencia', async () => {
+describe('CU-70 Fotos de la incidencia', () => {
+  it('las fotos elegidas se envían todas con la incidencia', async () => {
     const { fetchMock } = api();
     renderRoute('/admin/incidents');
     await userEvent.click(await screen.findByRole('button', { name: 'Comunicar incidencia' }));
     const ventana = screen.getByRole('dialog', { name: 'Comunicar incidencia' });
-    await userEvent.selectOptions(within(ventana).getByLabelText('Zona'), 'Gran voladero');
+    expect(within(ventana).getByRole('group', { name: 'Fotos (opcional)' })).toBeInTheDocument();
     await userEvent.type(within(ventana).getByLabelText('Título'), 'Malla rota');
     await userEvent.type(within(ventana).getByLabelText('Qué pasa'), 'La malla está rota.');
-    const archivo = new File([new Uint8Array(10)], 'malla.jpg', { type: 'image/jpeg' });
-    await userEvent.upload(within(ventana).getByLabelText('Elegir foto'), archivo);
-    expect(within(ventana).getByText('malla.jpg')).toBeInTheDocument();
+    const malla = new File([new Uint8Array(10)], 'malla.jpg', { type: 'image/jpeg' });
+    const techo = new File([new Uint8Array(10)], 'techo.jpg', { type: 'image/jpeg' });
+    await userEvent.upload(within(ventana).getByLabelText('Elegir fotos'), [malla, techo]);
+    expect(within(ventana).getByText('techo.jpg')).toBeInTheDocument();
     await userEvent.click(within(ventana).getByRole('button', { name: 'Enviar' }));
     expect(await screen.findByText('Incidencia comunicada')).toBeInTheDocument();
     const envio = fetchMock.mock.calls.find(
@@ -99,7 +116,7 @@ describe('CU-70 Foto de la incidencia', () => {
     );
     const cuerpo = envio?.[1]?.body;
     expect(cuerpo).toBeInstanceOf(FormData);
-    expect((cuerpo as FormData).get('files')).toBe(archivo);
+    expect((cuerpo as FormData).getAll('files')).toEqual([malla, techo]);
   });
 });
 
@@ -150,7 +167,13 @@ describe('CU-70 Ficha de una incidencia', () => {
       }),
       '/api/admin/incidents/2/task': () => ({
         status: 201,
-        body: { incident: incidencia({ status: 'in_progress', taskId: 77 }), task: tarea({ id: 77 }) },
+        body: {
+          incident: incidencia({
+            status: 'in_progress',
+            tasks: [{ id: 77, title: 'Cojera de Pipa', dueDate: '2026-11-23', status: 'pending' }],
+          }),
+          task: tarea({ id: 77 }),
+        },
       }),
     });
     renderRoute('/admin/incidents/2');
@@ -193,6 +216,50 @@ describe('CU-70 Ficha de una incidencia', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Cojera de Pipa' })).toBeInTheDocument();
     const descripcion = within(await screen.findByRole('region', { name: 'Qué pasa' }));
     expect(descripcion.getByText('Pipa cojea de la pata derecha desde esta mañana.')).toBeInTheDocument();
+  });
+
+  it('muestra todas sus fotos; cada una abre la foto entera', async () => {
+    api(caretaker(), {
+      '/api/admin/incidents/2': () => ({
+        body: incidencia({ photos: ['/uploads/incidents/a.webp', '/uploads/incidents/b.webp'] }),
+      }),
+    });
+    renderRoute('/admin/incidents/2');
+    const fotos = within(await screen.findByRole('region', { name: 'Fotos' }));
+    const imagenes = fotos.getAllByRole('img');
+    expect(imagenes.map((i) => i.getAttribute('alt'))).toEqual(['Foto 1 de la incidencia', 'Foto 2 de la incidencia']);
+    expect(fotos.getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual([
+      '/uploads/incidents/a.webp',
+      '/uploads/incidents/b.webp',
+    ]);
+  });
+
+  it('muestra sus tareas con su estado; con una pendiente no deja crear otra y «Resolver» avisa de que se cerrará', async () => {
+    const enCurso = incidencia({
+      status: 'in_progress',
+      tasks: [
+        { id: 78, title: 'Revisar la pata de Pipa', dueDate: '2026-11-24', status: 'pending' },
+        { id: 77, title: 'Vendar la pata', dueDate: '2026-11-23', status: 'not_done' },
+      ],
+    });
+    api(admin(), { '/api/admin/incidents/2': () => ({ body: enCurso }) });
+    renderRoute('/admin/incidents/2');
+    const tareas = within(await screen.findByRole('region', { name: 'Tareas' }));
+    const filas = tareas.getAllByRole('listitem');
+    expect(filas).toHaveLength(2);
+    expect(within(filas[0]!).getByRole('link', { name: 'Revisar la pata de Pipa' })).toHaveAttribute(
+      'href',
+      '/admin/tasks?date=2026-11-24',
+    );
+    expect(within(filas[0]!).getByText('Pendiente')).toBeInTheDocument();
+    expect(within(filas[1]!).getByText('No realizada')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Crear tarea' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Resolver' }));
+    const ventana = screen.getByRole('dialog', { name: 'Resolver la incidencia' });
+    expect(
+      within(ventana).getByText('Su tarea pendiente «Revisar la pata de Pipa» se cerrará: ya no hará falta.'),
+    ).toBeInTheDocument();
   });
 
   it('una que no existe', async () => {

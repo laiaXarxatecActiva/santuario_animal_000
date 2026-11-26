@@ -1,9 +1,10 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { caretaker, page } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { incidencia, zonas } from './helpers/work-fixtures';
+import { elegirOpcion, opcionesDe } from './helpers/select';
 
 const ABIERTA = incidencia({ id: 1, severity: 'medium', status: 'open', description: 'La malla tiene un agujero.' });
 const EN_CURSO = incidencia({ id: 2, status: 'in_progress' });
@@ -66,7 +67,7 @@ describe('CU-70 Revisar y resolver incidencias desde el listado', () => {
   it('en «Resueltas» se ve cómo y quién la resolvió, y se puede reabrir', async () => {
     const { enviados } = api();
     renderRoute('/admin/incidents');
-    await userEvent.selectOptions(await screen.findByLabelText('Estado'), 'Resueltas');
+    await elegirOpcion(await screen.findByLabelText('Estado'), 'Resueltas');
     const resuelta = await fila('El termómetro no marca bien.');
     expect(resuelta.getByText('Termómetro cambiado por uno nuevo.')).toBeInTheDocument();
     expect(resuelta.getByText(/Marta Soler Ferrer/)).toBeInTheDocument();
@@ -79,7 +80,8 @@ describe('CU-70 Revisar y resolver incidencias desde el listado', () => {
   it('el filtro y el menú dicen cuántas quedan pendientes', async () => {
     api();
     renderRoute('/admin/incidents');
-    expect(await screen.findByRole('option', { name: 'Pendientes (2)' })).toBeInTheDocument();
+    const estado = await screen.findByLabelText('Estado');
+    await waitFor(() => expect(opcionesDe(estado)).toContain('Pendientes (2)'));
     const menu = within(screen.getByRole('navigation', { name: 'Menú del panel' }));
     const enlace = menu.getByRole('link', { name: 'Incidencias' });
     expect(enlace).toHaveAccessibleDescription('2 pendientes');

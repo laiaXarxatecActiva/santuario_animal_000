@@ -91,6 +91,8 @@ export const INCIDENT_SEVERITIES = ['low', 'medium', 'high'] as const;
 export type IncidentSeverity = (typeof INCIDENT_SEVERITIES)[number];
 /** Largo máximo de incidents.title (CHECK en seedsql.sql). */
 export const INCIDENT_TITLE_MAX = 80;
+/** CU-70: fotos de una incidencia, como mucho (`incident_photos.position`). */
+export const INCIDENT_PHOTOS_MAX = 5;
 
 /** CU-70: estados de una incidencia. */
 export const INCIDENT_STATUSES = ['open', 'in_progress', 'resolved'] as const;

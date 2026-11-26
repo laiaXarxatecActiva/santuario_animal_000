@@ -23,6 +23,8 @@ export function ResolveIncidentModal({
   onSaved: () => Promise<void> | void;
 }) {
   const { t } = useTranslation();
+  // CU-70: al resolverla, su tarea pendiente se cierra sola.
+  const pendiente = incidencia.tasks.find((tarea) => tarea.status === 'pending');
   const [nota, setNota] = useState('');
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export function ResolveIncidentModal({
           <strong>{incidencia.title}</strong>
         </p>
         <p className={styles.preWrap}>{incidencia.description}</p>
+        {pendiente && <Alert type="info">{t('work.incidents.pendingTaskWillClose', { title: pendiente.title })}</Alert>}
         <TextAreaField
           label={t('work.incidents.resolveNote')}
           rows={3}

@@ -1,5 +1,5 @@
 import { esperarCorreo } from '../support/mailpit.js';
-import { expect, iniciarSesion, test } from '../support/test.js';
+import { elegirOpcion, expect, iniciarSesion, test } from '../support/test.js';
 import { t } from '../support/textos.js';
 import { MARTA, NURIA } from '../support/usuarios.js';
 
@@ -39,11 +39,12 @@ test.describe('CU-70, CU-71, CU-72, CU-73 Incidencias, relevo y panel «Hoy»', 
       .click();
     await page.getByRole('button', { name: t('work.incidents.report') }).click();
     const ventana = page.getByRole('dialog', { name: t('work.incidents.report') });
-    await ventana
-      .getByLabel(t('work.incidents.category'))
-      .selectOption({ label: t('work.incidents.categories.facilities') });
-    await ventana.getByLabel(t('work.incidents.severity')).selectOption({ label: t('work.incidents.severities.high') });
-    await ventana.getByLabel(t('work.incidents.zone'), { exact: true }).selectOption({ label: CLINICA });
+    await elegirOpcion(ventana.getByLabel(t('work.incidents.category')), t('work.incidents.categories.facilities'));
+    await elegirOpcion(ventana.getByLabel(t('work.incidents.severity')), t('work.incidents.severities.high'));
+    await elegirOpcion(
+      ventana.getByLabel(t('form.optional', { label: t('work.incidents.zone') }), { exact: true }),
+      CLINICA,
+    );
     await ventana.getByLabel(t('work.incidents.titleField')).fill(titulo);
     await ventana.getByLabel(t('work.incidents.description')).fill(descripcion);
     await ventana.getByRole('button', { name: t('work.incidents.send') }).click();

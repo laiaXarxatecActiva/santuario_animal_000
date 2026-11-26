@@ -212,6 +212,10 @@ export function createApp(options: AppOptions): Express {
         email: options.email,
         clientUrl: options.clientUrl,
         logEmailError,
+        storage,
+        logFileError: logger
+          ? (error) => logger.error({ err: error }, 'No se ha podido borrar un archivo de una cuenta eliminada')
+          : undefined,
       }),
       donations: createDonationAdminService({
         db,
@@ -272,7 +276,7 @@ export function createApp(options: AppOptions): Express {
           db,
           reloj,
           media,
-          crearTarea: (datos, autorId) => tasks.createOneOff(datos, autorId),
+          crearTarea: (datos, autorId, incidentId) => tasks.createOneOff(datos, autorId, incidentId),
         }),
         handover: createHandoverService({ db, reloj }),
         today: createTodayService({ db, reloj }),

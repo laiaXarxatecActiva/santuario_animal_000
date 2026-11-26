@@ -16,6 +16,7 @@ import {
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
@@ -65,7 +66,12 @@ export function TasksAdminPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const zonas = useZones();
-  const [fecha, setFecha] = useState(todayInSanctuary());
+  // `?date=` abre otro día (p. ej., desde las tareas de una incidencia, CU-70).
+  const [params] = useSearchParams();
+  const [fecha, setFecha] = useState(() => {
+    const pedida = params.get('date');
+    return pedida && /^\d{4}-\d{2}-\d{2}$/.test(pedida) ? pedida : todayInSanctuary();
+  });
   const [zona, setZona] = useState('');
   const [estado, setEstado] = useState<TaskStatus | ''>('');
   const tareas = useAdminTasks({

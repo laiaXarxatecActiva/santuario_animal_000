@@ -38,11 +38,15 @@ export const avisos = {
     en: `Today at ${hora}, vet visit for ${a}: ${motivo}`,
   }),
   /** CU-70: `lugar` es la zona o, si se eligió, el animal. */
-  incidenciaGrave: (lugar: string, titulo: string): Textos => ({
-    es: `Incidencia grave en «${lugar}»: ${titulo}`,
-    ca: `Incidència greu a «${lugar}»: ${titulo}`,
-    en: `Serious incident in "${lugar}": ${titulo}`,
-  }),
+  /** Sin zona ni animal, sin el lugar. */
+  incidenciaGrave: (lugar: string | null, titulo: string): Textos =>
+    lugar === null
+      ? { es: `Incidencia grave: ${titulo}`, ca: `Incidència greu: ${titulo}`, en: `Serious incident: ${titulo}` }
+      : {
+          es: `Incidencia grave en «${lugar}»: ${titulo}`,
+          ca: `Incidència greu a «${lugar}»: ${titulo}`,
+          en: `Serious incident in "${lugar}": ${titulo}`,
+        },
   adopcionActiva: (a: string): Textos => ({
     es: `¡Ya adoptas a ${a}! Gracias por tu apoyo.`,
     ca: `Ja adoptes ${a}! Gràcies pel teu suport.`,
