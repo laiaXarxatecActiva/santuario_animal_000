@@ -274,7 +274,7 @@ Página de lectura, en una columna de 70 caracteres de ancho máximo:
 2. Aviso `info`: «Es una adopción simbólica: el animal sigue viviendo en el santuario».
 3. Tres pasos con icono (elige, adopta, recibe noticias), a todo el ancho como en el inicio: centrados y unidos por flechas `right-long` (hacia abajo en móvil). La explicación de cada paso va a `--space-2` de su título.
 4. Los tres planes como tarjetas en fila (en columna en móvil), con nombre, importe al mes y descripción. La Usual lleva la insignia «La más habitual». Son informativas, no seleccionables.
-5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece? Cada pregunta lleva a la derecha un `chevron-down` (en `--font-size-sm`, sin el triángulo del navegador) que gira 180° al desplegarla, para indicar que se puede volver a plegar.
+5. Preguntas frecuentes en desplegables (`<details>`): ¿Puede tener varios adoptantes? ¿Puedo cambiar de plan? ¿Cómo me doy de baja? ¿Qué pasa si el animal fallece? Cada pregunta lleva a la derecha un `chevron-down` (en `--font-size-sm`, sin el triángulo del navegador) que gira 180° al desplegarla, para indicar que se puede volver a plegar. La respuesta se despliega y se pliega con una animación breve (DESIGN_SYSTEM §9).
 6. [■ Ver animales].
 
 ### 3.5 Donar (`/donate`) — CU-05

@@ -599,6 +599,7 @@ Animaciones **mínimas y suaves**: ayudan a entender un cambio, nunca decoran.
 | Hover de tarjeta | Cambio de color del borde + zoom leve de la foto | 200 ms |
 | Menú de hamburguesa, desplegables, filtros | Aparición con deslizamiento corto (8 px) y fundido | 200 ms |
 | Paneles desplegables (menú de usuario, idioma, «⋯» y campana) | Al abrir, bajan 8 px con fundido (`ease-out`); al cerrar, lo mismo al revés (`ease-in`). Clase global `dropdown-panel`: el panel se oculta con `hidden`, sin quitarlo de la página, para que dé tiempo a animar el cierre. Los paneles de opciones (idioma, menú de usuario, filtros) llevan `overflow: hidden` para que el fondo de la primera y la última opción siga la curva de las esquinas, y el contorno de foco de las opciones va por dentro (`outline-offset: -3px`) | 200 ms |
+| Preguntas frecuentes (`<details>` de «Cómo funciona») | Al desplegar, la respuesta baja 8 px con fundido (`ease-out`) y, donde el navegador lo permite (`::details-content` con `interpolate-size`), el bloque crece hasta su altura; al plegar, encoge y se desvanece (`ease-in`). Sin ese soporte se pliega al instante | 200 ms |
 | Ventana emergente | Fundido del velo y de la caja | 200 ms |
 | Aviso de éxito al desaparecer | Fundido | 200 ms |
 | Cambio de tema | Transición de colores de fondo y texto | 200 ms |
