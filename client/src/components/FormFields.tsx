@@ -25,6 +25,8 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'childr
   label: string;
   error?: string;
   help?: ReactNode;
+  /** Insignia junto a la etiqueta (p. ej. «Modificado»); también forma parte de la descripción. */
+  badge?: ReactNode;
   ref?: Ref<HTMLInputElement>;
 }
 
@@ -40,22 +42,36 @@ export function FieldError({ id, children }: { id: string; children: ReactNode }
   );
 }
 
-function useIds(id: string | undefined, help: unknown, error: unknown) {
+function useIds(id: string | undefined, help: unknown, error: unknown, badge?: unknown) {
   const auto = useId();
   const inputId = id ?? auto;
   const helpId = `${inputId}-help`;
   const errorId = `${inputId}-error`;
-  const describedBy = [help ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined;
-  return { inputId, helpId, errorId, describedBy };
+  const badgeId = `${inputId}-badge`;
+  const describedBy =
+    [badge ? badgeId : '', help ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined;
+  return { inputId, helpId, errorId, badgeId, describedBy };
 }
 
-function Field({ label, error, help, id, className, adornment, ...rest }: FieldProps & { adornment?: ReactNode }) {
-  const { inputId, helpId, errorId, describedBy } = useIds(id, help, error);
+function Field({
+  label,
+  error,
+  help,
+  badge,
+  id,
+  className,
+  adornment,
+  ...rest
+}: FieldProps & { adornment?: ReactNode }) {
+  const { inputId, helpId, errorId, badgeId, describedBy } = useIds(id, help, error, badge);
   return (
     <div className={`${styles.field} ${className ?? ''}`}>
-      <label htmlFor={inputId} className={styles.label}>
-        {label}
-      </label>
+      <div className={styles.labelRow}>
+        <label htmlFor={inputId} className={styles.label}>
+          {label}
+        </label>
+        {badge && <span id={badgeId}>{badge}</span>}
+      </div>
       <div className={styles.control}>
         <input
           id={inputId}

@@ -69,3 +69,73 @@
 .radio input {
   accent-color: var(--color-primary);
 }
+
+/* La insignia «Modificado» junto al título del grupo de opciones. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Barra de guardar (DESIGN_SYSTEM §8.9): fija abajo, solo con cambios. */
+.saveBar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 15;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Hueco al final de la página para que la barra no tape el pie. */
+:global(body):has(.saveBar) {
+  padding-bottom: calc(var(--size-touch) * 2 + 3 * var(--space-3));
+}
+
+.saveBarContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+.saveBarText {
+  font-weight: 600;
+}
+
+.saveBarContent > [role='alert'],
+.saveBarContent > [role='status'] {
+  flex-basis: 100%;
+}
+
+.saveBarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* En móvil, los dos botones a todo el ancho, uno al lado del otro. */
+@media (max-width: 639px) {
+  .saveBarActions {
+    flex-basis: 100%;
+  }
+
+  .saveBarActions > * {
+    flex: 1;
+  }
+}
+
+.changes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-left: var(--space-5);
+  list-style: disc;
+}

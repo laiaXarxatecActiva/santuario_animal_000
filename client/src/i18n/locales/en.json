@@ -566,7 +566,6 @@
     "title": "My profile",
     "saved": "Changes saved",
     "saving": "Saving…",
-    "save": "Save",
     "errorLoading": "We could not load your profile",
     "data": {
       "title": "Your details",
@@ -575,8 +574,7 @@
       "phone": "Phone (optional)",
       "phoneHelp": "Spanish mobile number with 9 digits, without the +34 prefix.",
       "email": "Email",
-      "emailHelp": "If you need to change it, write to us and we will do it for you.",
-      "submit": "Save changes"
+      "emailHelp": "If you need to change it, write to us and we will do it for you."
     },
     "notifications": {
       "title": "Notifications",
@@ -610,10 +608,34 @@
       "submit": "Delete account",
       "submitting": "Deleting…"
     },
-    "language": {
-      "title": "Language",
-      "label": "Language of the website and emails",
-      "help": "Also for the PDF certificates and receipts."
+    "saveChanges": "Save changes",
+    "discard": "Discard changes",
+    "modified": "Changed",
+    "saveBar": {
+      "label": "Profile changes",
+      "unsaved": "You have unsaved changes"
+    },
+    "review": {
+      "title": "Review your changes",
+      "intro": "You are about to save these changes:",
+      "back": "Go back",
+      "confirm": "Confirm and save",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "No phone",
+      "fields": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "phone": "Phone",
+        "emailNotifications": "Receive emails",
+        "emailFrequency": "Email frequency",
+        "showPublicName": "Show my name on the animal's page"
+      }
+    },
+    "unsaved": {
+      "title": "You have unsaved changes",
+      "text": "If you leave now, the changes to your profile will be lost.",
+      "stay": "Keep editing",
+      "leave": "Leave without saving"
     }
   },
   "admin": {

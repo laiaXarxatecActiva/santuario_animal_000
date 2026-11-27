@@ -5,6 +5,8 @@ import styles from './Switch.module.css';
 interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'role' | 'children'> {
   label: ReactNode;
   help?: ReactNode;
+  /** Insignia junto a la etiqueta (p. ej. «Modificado»); también forma parte de la descripción. */
+  badge?: ReactNode;
   ref?: Ref<HTMLInputElement>;
 }
 
@@ -12,11 +14,13 @@ interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'
  * Interruptor sí/no para las preferencias (DESIGN_SYSTEM §8.5): una casilla
  * nativa con `role="switch"`, en forma de píldora y con el estado escrito al lado.
  */
-export function Switch({ label, help, id, checked, defaultChecked, onChange, className, ...rest }: SwitchProps) {
+export function Switch({ label, help, badge, id, checked, defaultChecked, onChange, className, ...rest }: SwitchProps) {
   const { t } = useTranslation();
   const auto = useId();
   const inputId = id ?? auto;
   const helpId = `${inputId}-help`;
+  const badgeId = `${inputId}-badge`;
+  const describedBy = [badge ? badgeId : '', help ? helpId : ''].filter(Boolean).join(' ') || undefined;
   const [interno, setInterno] = useState(Boolean(defaultChecked));
   const activo = checked ?? interno;
 
@@ -28,9 +32,12 @@ export function Switch({ label, help, id, checked, defaultChecked, onChange, cla
   return (
     <div className={`${styles.field} ${className ?? ''}`}>
       <div className={styles.row}>
-        <label htmlFor={inputId} className={styles.label}>
-          {label}
-        </label>
+        <span className={styles.labelRow}>
+          <label htmlFor={inputId} className={styles.label}>
+            {label}
+          </label>
+          {badge && <span id={badgeId}>{badge}</span>}
+        </span>
         <span className={styles.control}>
           <input
             id={inputId}
@@ -40,7 +47,7 @@ export function Switch({ label, help, id, checked, defaultChecked, onChange, cla
             checked={checked}
             defaultChecked={checked === undefined ? defaultChecked : undefined}
             onChange={alCambiar}
-            aria-describedby={help ? helpId : undefined}
+            aria-describedby={describedBy}
             {...rest}
           />
           <span className={styles.state} aria-hidden="true">

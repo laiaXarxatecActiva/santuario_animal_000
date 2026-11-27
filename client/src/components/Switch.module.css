@@ -18,6 +18,14 @@
   cursor: pointer;
 }
 
+/* Etiqueta y, si la hay, su insignia («Modificado») al lado. */
+.labelRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 .control {
   display: inline-flex;
   align-items: center;

@@ -517,16 +517,28 @@ Una sola columna centrada (máximo 720 px), igual en móvil y en escritorio:
 
 ### 4.6 Mi perfil (`/profile`) — CU-23, CU-24, CU-25
 
-Una columna (máximo 560 px), con secciones separadas por títulos h2 y cada una con su propio botón de guardar y sus propios avisos:
+Una columna (máximo 560 px), con secciones separadas por títulos h2:
 
-1. **Tus datos:** nombre, apellidos, teléfono; el email solo se muestra. [■ Guardar cambios].
-2. **Idioma** (Fase 3): «Idioma de la web y de los emails», con la ayuda «También el de los certificados y recibos en PDF». [■ Guardar]. Al guardar, la web cambia a ese idioma.
-3. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes». [■ Guardar].
-4. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
-5. **Contraseña:** actual, nueva, repetir. [■ Cambiar contraseña].
-6. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
+1. **Tus datos:** nombre, apellidos, teléfono; el email solo se muestra.
+2. **Notificaciones:** interruptor «Recibir emails», opciones «Un email por cada novedad» / «Un resumen al mes».
+3. **Privacidad:** interruptor «Mostrar mi nombre en la ficha de los animales que adopto», con un texto de ayuda que explica qué se verá.
+4. **Contraseña:** actual, nueva, repetir. [Cambiar contraseña] (`outline`, desactivado hasta que se escribe en algún campo), con sus propios avisos.
+5. **Eliminar cuenta:** sección final con borde `--color-error` y explicación; el botón `outline` [Eliminar mi cuenta] abre la ventana de confirmación con contraseña.
 
-Los trabajadores ven solo las secciones 1, 2 y 5.
+Los trabajadores ven solo las secciones 1 y 4. El idioma no está en el perfil: se elige en la cabecera, que también lo guarda en la cuenta.
+
+**Un solo «Guardar cambios»** para las secciones 1 a 3, en la barra de guardar (DESIGN_SYSTEM §8.9), que solo aparece cuando algo ha cambiado (deshacer el cambio a mano la quita):
+
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│ Tienes cambios sin guardar   [Descartar cambios] [■ Guardar cambios] │
+└──────────────────────────────────────────────────────────────────────┘ ← fija abajo
+```
+
+- Cada campo, interruptor u opción cambiado lleva la insignia «Modificado» junto a su etiqueta hasta que se guarda o se descarta.
+- [Descartar cambios] vuelve a lo guardado. [Guardar cambios] primero valida (errores en su campo y foco en el primero) y luego abre la ventana «Revisa los cambios» con una línea por cambio («Teléfono: 611-22-20-06 → 622-33-44-55», «Recibir emails: Sí → No»; un teléfono vaciado es «Sin teléfono») y [Volver] (con el foco, para que pulsar Intro sin leer no guarde) [■ Confirmar y guardar].
+- Se envía una sola petición con lo que ha cambiado. Al guardar, la barra muestra «Cambios guardados» y se va sola; si falla, el error general queda en la barra y los de cada campo junto al campo.
+- **Salir con cambios sin guardar** (también si hay algo escrito en los campos de la contraseña) abre la ventana «Tienes cambios sin guardar» con [Seguir editando] (con el foco) [■ Salir sin guardar], como en Planes; al cerrar o recargar la pestaña, el aviso del navegador. Tras eliminar la cuenta se va a la portada sin preguntar.
 
 ### 4.7 Notificaciones (`/notifications`) — CU-18
 

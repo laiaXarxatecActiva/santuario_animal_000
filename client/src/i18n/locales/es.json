@@ -566,7 +566,6 @@
     "title": "Mi perfil",
     "saved": "Cambios guardados",
     "saving": "Guardando…",
-    "save": "Guardar",
     "errorLoading": "No hemos podido cargar tu perfil",
     "data": {
       "title": "Tus datos",
@@ -575,8 +574,7 @@
       "phone": "Teléfono (opcional)",
       "phoneHelp": "Móvil español de 9 dígitos, sin el prefijo +34.",
       "email": "Email",
-      "emailHelp": "Si necesitas cambiarlo, escríbenos y lo haremos por ti.",
-      "submit": "Guardar cambios"
+      "emailHelp": "Si necesitas cambiarlo, escríbenos y lo haremos por ti."
     },
     "notifications": {
       "title": "Notificaciones",
@@ -610,10 +608,34 @@
       "submit": "Eliminar cuenta",
       "submitting": "Eliminando…"
     },
-    "language": {
-      "title": "Idioma",
-      "label": "Idioma de la web y de los emails",
-      "help": "También el de los certificados y recibos en PDF."
+    "saveChanges": "Guardar cambios",
+    "discard": "Descartar cambios",
+    "modified": "Modificado",
+    "saveBar": {
+      "label": "Cambios del perfil",
+      "unsaved": "Tienes cambios sin guardar"
+    },
+    "review": {
+      "title": "Revisa los cambios",
+      "intro": "Vas a guardar estos cambios:",
+      "back": "Volver",
+      "confirm": "Confirmar y guardar",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "Sin teléfono",
+      "fields": {
+        "firstName": "Nombre",
+        "lastName": "Apellidos",
+        "phone": "Teléfono",
+        "emailNotifications": "Recibir emails",
+        "emailFrequency": "Frecuencia de los emails",
+        "showPublicName": "Mostrar mi nombre en la ficha"
+      }
+    },
+    "unsaved": {
+      "title": "Tienes cambios sin guardar",
+      "text": "Si sales ahora, se perderán los cambios de tu perfil.",
+      "stay": "Seguir editando",
+      "leave": "Salir sin guardar"
     }
   },
   "admin": {

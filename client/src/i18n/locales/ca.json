@@ -566,7 +566,6 @@
     "title": "El meu perfil",
     "saved": "Canvis guardats",
     "saving": "Guardant…",
-    "save": "Guarda",
     "errorLoading": "No hem pogut carregar el teu perfil",
     "data": {
       "title": "Les teues dades",
@@ -575,8 +574,7 @@
       "phone": "Telèfon (opcional)",
       "phoneHelp": "Mòbil espanyol de 9 xifres, sense el prefix +34.",
       "email": "Correu electrònic",
-      "emailHelp": "Si necessites canviar-lo, escriu-nos i ho farem per tu.",
-      "submit": "Guarda els canvis"
+      "emailHelp": "Si necessites canviar-lo, escriu-nos i ho farem per tu."
     },
     "notifications": {
       "title": "Notificacions",
@@ -610,10 +608,34 @@
       "submit": "Elimina el compte",
       "submitting": "Eliminant…"
     },
-    "language": {
-      "title": "Idioma",
-      "label": "Idioma de la web i dels correus",
-      "help": "També el dels certificats i els rebuts en PDF."
+    "saveChanges": "Guardar els canvis",
+    "discard": "Descartar els canvis",
+    "modified": "Modificat",
+    "saveBar": {
+      "label": "Canvis del perfil",
+      "unsaved": "Tens canvis sense guardar"
+    },
+    "review": {
+      "title": "Revisa els canvis",
+      "intro": "Guardaràs estos canvis:",
+      "back": "Tornar",
+      "confirm": "Confirmar i guardar",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "Sense telèfon",
+      "fields": {
+        "firstName": "Nom",
+        "lastName": "Cognoms",
+        "phone": "Telèfon",
+        "emailNotifications": "Rebre correus",
+        "emailFrequency": "Freqüència dels correus",
+        "showPublicName": "Mostrar el meu nom en la fitxa"
+      }
+    },
+    "unsaved": {
+      "title": "Tens canvis sense guardar",
+      "text": "Si ixes ara, es perdran els canvis del teu perfil.",
+      "stay": "Continuar editant",
+      "leave": "Eixir sense guardar"
     }
   },
   "admin": {

@@ -765,14 +765,16 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
    - recibir emails: sí o no (`email_notifications`);
    - frecuencia: un email por actualización o un resumen mensual (`email_frequency`);
    - aparecer como adoptante en la ficha pública de sus animales (`show_public_name`);
-   - idioma de la web, de los emails y de los PDF: castellano, valenciano o inglés (`preferred_language`, Fase 3; también para los trabajadores).
-3. El usuario modifica los datos y guarda.
-4. El sistema valida y guarda los cambios y muestra «Cambios guardados».
+   - el idioma de la web, de los emails y de los PDF (`preferred_language`, Fase 3; también para los trabajadores) no está en el perfil: se elige con el selector de la cabecera, que lo guarda en la cuenta.
+3. El usuario modifica los datos y pulsa «Guardar cambios» (uno solo para datos y preferencias, que solo aparece si hay cambios; lo cambiado se marca «Modificado»).
+4. El sistema valida, muestra un resumen de los cambios («antes → después») y, al confirmarlo, guarda solo lo cambiado y muestra «Cambios guardados».
 
 **Flujos alternativos**
 
 - **3a.** Datos no válidos (teléfono con formato incorrecto, nombre vacío): errores en los campos.
 - **3b.** El email no se puede cambiar desde aquí en esta versión. Si hace falta, se pide al santuario.
+- **3c.** El usuario descarta los cambios o vuelve desde el resumen: no se guarda nada.
+- **3d.** El usuario sale de la página con cambios sin guardar (o con algo escrito en la contraseña): se le pregunta si quiere seguir editando o salir sin guardar.
 
 **Postcondiciones**
 

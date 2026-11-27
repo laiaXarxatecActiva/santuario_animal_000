@@ -10,8 +10,17 @@ const apellidos = textoObligatorio(150, 'Introduce tus apellidos.');
 export const profileDataSchema = z.object({ firstName: nombre, lastName: apellidos, phone: telefono });
 export type ProfileDataInput = z.infer<typeof profileDataSchema>;
 
-// CU-23. Cada sección del perfil se guarda por separado, así que todo es
-// opcional. El email no se puede cambiar (3b): un campo desconocido es un error.
+// CU-23 en el formulario: datos y preferencias se guardan con un solo botón.
+export const profileFormSchema = profileDataSchema.extend({
+  emailNotifications: z.boolean(),
+  emailFrequency: z.enum(EMAIL_FREQUENCIES),
+  showPublicName: z.boolean(),
+});
+export type ProfileFormInput = z.input<typeof profileFormSchema>;
+export type ProfileFormOutput = z.output<typeof profileFormSchema>;
+
+// CU-23. Solo se envía lo que ha cambiado (y el idioma, desde la cabecera),
+// así que todo es opcional. El email no se puede cambiar (3b): un campo desconocido es un error.
 export const updateProfileSchema = z
   .strictObject({
     firstName: nombre.optional(),
