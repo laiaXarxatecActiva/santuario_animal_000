@@ -69,6 +69,20 @@ describe('CU-42 Consultar el registro de actividad', () => {
     expect(within(sistema).getByText('Modificación')).toBeInTheDocument();
   });
 
+  it('2: la columna con la tabla afectada se llama «Tabla», como su filtro (no «Registro»)', async () => {
+    api();
+    renderRoute('/admin/activity');
+    await screen.findByText('Nuria Peris Gil', { selector: 'td *, td' });
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      'Fecha',
+      'Usuario',
+      'Acción',
+      'Tabla',
+      'Detalles',
+    ]);
+    expect(screen.queryByRole('columnheader', { name: 'Registro' })).not.toBeInTheDocument();
+  });
+
   it('3: al abrir una entrada se ven los detalles del cambio', async () => {
     api();
     renderRoute('/admin/activity');

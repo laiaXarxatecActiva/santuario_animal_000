@@ -1167,7 +1167,6 @@
       "system": "System",
       "action": "Action",
       "table": "Table",
-      "record": "Record",
       "details": "Details",
       "showDetails": "Show details",
       "empty": "No activity matches these filters",

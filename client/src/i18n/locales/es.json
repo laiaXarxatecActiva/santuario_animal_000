@@ -1167,7 +1167,6 @@
       "system": "Sistema",
       "action": "Acción",
       "table": "Tabla",
-      "record": "Registro",
       "details": "Detalles",
       "showDetails": "Ver detalles",
       "empty": "No hay actividad con estos filtros",
