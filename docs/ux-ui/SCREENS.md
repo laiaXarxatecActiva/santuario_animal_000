@@ -54,7 +54,7 @@ Contenido según quién navega:
 | Usuario | Enlaces | Derecha |
 | --- | --- | --- |
 | Visitante | Animales · Cómo funciona · Donar · Sobre el santuario | Idioma ·  · [Entrar] · [■ Registrarse] (en escritorio) |
-| Adoptante | Animales · Cómo funciona · Mis animales · Novedades (con contador de no leídas) · Mis aportaciones · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mi perfil, Cerrar sesión |
+| Adoptante | Animales · Mis animales · Novedades (con contador de no leídas) · Mis aportaciones · Donar | · Idioma ·  · menú de usuario (nombre ▼): Mi perfil, Cerrar sesión |
 | Trabajador | Animales · Cómo funciona · Donar · **Panel** | · Idioma ·  · menú de usuario: Mi perfil, Cerrar sesión |
 
 **Menú de hamburguesa (móvil y tablet)** desplegado bajo la cabecera:
@@ -64,7 +64,6 @@ Contenido según quién navega:
 │ Santuario                ✕ │
 ├────────────────────────────────────┤
 │  Animales                          │
-│  Cómo funciona                     │
 │  Mis animales                      │
 │  Novedades                    (3)  │
 │  Mis aportaciones                  │
@@ -77,7 +76,7 @@ Contenido según quién navega:
 
 Para el visitante, el final del menú son los botones [Entrar] y [■ Registrarse] a todo el ancho.
 
-El menú de usuario solo tiene lo de la cuenta (Mi perfil y Cerrar sesión); todo lo demás va en los enlaces principales, que nunca se parten en dos líneas. Como el adoptante tiene seis enlaces, que no caben junto a la campana, el idioma, el tema y su menú por debajo de `xl` (1280 px), hasta ese ancho sigue con la hamburguesa; desde `xl`, sus enlaces van a `--space-4` entre sí (los demás, a `--space-5`) y el selector de idioma muestra solo su icono, para que el menú de usuario conserve su relleno. El visitante y el trabajador pasan al menú de escritorio en `lg`.
+El menú de usuario solo tiene lo de la cuenta (Mi perfil y Cerrar sesión); todo lo demás va en los enlaces principales, que nunca se parten en dos líneas. Como el adoptante tiene cinco enlaces, que no caben junto a la campana, el idioma, el tema y su menú por debajo de `xl` (1280 px), hasta ese ancho sigue con la hamburguesa; desde `xl`, sus enlaces van a `--space-4` entre sí (los demás, a `--space-5`) y el selector de idioma muestra solo su icono, para que el menú de usuario conserve su relleno. El visitante y el trabajador pasan al menú de escritorio en `lg`.
 
 ### 2.2 Aviso de página
 

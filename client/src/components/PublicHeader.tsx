@@ -24,7 +24,6 @@ const VISITANTE: readonly MenuLink[] = [
 ];
 const ADOPTANTE: readonly MenuLink[] = [
   { to: '/animals', key: 'nav.animals' },
-  { to: '/how-it-works', key: 'nav.howItWorks' },
   { to: '/my-animals', key: 'nav.myAnimals' },
   { to: '/feed', key: 'nav.feed' },
   { to: '/my-contributions', key: 'nav.myContributions' },

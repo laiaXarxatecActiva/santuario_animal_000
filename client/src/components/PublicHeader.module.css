@@ -127,7 +127,7 @@ ul.mobileLinks {
   }
 }
 
-/* Menú de escritorio desde `lg`. El adoptante tiene seis enlaces, que no caben
+/* Menú de escritorio desde `lg`. El adoptante tiene cinco enlaces, que no caben
    junto a la campana, el idioma, el tema y su menú hasta `xl`: hasta entonces
    sigue con la hamburguesa; en escritorio los enlaces van algo más juntos y el idioma, solo con su icono. */
 @media (min-width: 1024px) {
