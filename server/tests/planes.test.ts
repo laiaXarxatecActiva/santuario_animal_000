@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { cambiaImporte, comprobarAltaPlan, comprobarEdicionPlan, comprobarPlanes } from '../src/dominio/planes.js';
+import {
+  cambiaImporte,
+  comprobarAltaPlan,
+  comprobarBorradoPlan,
+  comprobarEdicionPlan,
+  comprobarPlanes,
+} from '../src/dominio/planes.js';
 
 const usual = { isDefault: true, monthlyAmount: '5.00', activeAdoptions: 4 };
 const simbolica = { isDefault: false, monthlyAmount: '1.00', activeAdoptions: 0 };
@@ -110,5 +116,14 @@ describe('CU-40 Guardar todos los planes a la vez: reglas', () => {
     expect(comprobarPlanes(guardados, cambios, true)).toBeNull();
     // Sin adopciones activas no hace falta.
     expect(comprobarPlanes(guardados, todos({ 1: { monthlyAmount: '3' } }), false)).toBeNull();
+  });
+});
+
+describe('CU-40 A3 Borrar un plan: reglas', () => {
+  it('solo se borra un plan que nunca se ha usado y que no es el de por defecto', () => {
+    expect(comprobarBorradoPlan({ isDefault: false, enUso: false })).toBeNull();
+    expect(comprobarBorradoPlan({ isDefault: false, enUso: true })).toBe('HAS_HISTORY');
+    expect(comprobarBorradoPlan({ isDefault: true, enUso: false })).toBe('DEFAULT_CANNOT_BE_DELETED');
+    expect(comprobarBorradoPlan({ isDefault: true, enUso: true })).toBe('DEFAULT_CANNOT_BE_DELETED');
   });
 });

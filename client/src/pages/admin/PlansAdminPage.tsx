@@ -1,4 +1,5 @@
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   planCreateBodySchema,
@@ -24,6 +25,7 @@ import { useBlocker } from 'react-router';
 import { adminApi } from '../../api/admin';
 import { ApiError } from '../../api/client';
 import { Alert } from '../../components/Alert';
+import iconStyles from '../../components/IconButton.module.css';
 import { Button } from '../../components/Button';
 import { Switch } from '../../components/Switch';
 import { TextAreaField, TextField } from '../../components/FormFields';
@@ -59,8 +61,23 @@ export function PlansAdminPage() {
   const { t } = useTranslation();
   const planes = useAdminPlans();
   const queryClient = useQueryClient();
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [creando, setCreando] = useState(false);
+  const [aBorrar, setABorrar] = useState<AdminPlanDto | null>(null);
+
+  // A3: borrar para siempre un plan que nunca se ha usado.
+  const borrar = useMutation({
+    mutationFn: (plan: AdminPlanDto) => adminApi.plans.remove(plan.id),
+    onSuccess: async () => {
+      setABorrar(null);
+      setAviso({ type: 'success', message: t('admin.plans.deleted') });
+      await queryClient.invalidateQueries({ queryKey: ADMIN_PLANS_KEY });
+    },
+    onError: (error) => {
+      setABorrar(null);
+      setAviso({ type: 'error', message: errorMessage(t, error) });
+    },
+  });
 
   return (
     <div className={styles.page}>
@@ -72,8 +89,8 @@ export function PlansAdminPage() {
       </div>
       <PageIntro pagina="plans" />
       {aviso && (
-        <Alert type="success" onClose={() => setAviso(null)}>
-          {aviso}
+        <Alert type={aviso.type} onClose={() => setAviso(null)}>
+          {aviso.message}
         </Alert>
       )}
 
@@ -94,10 +111,14 @@ export function PlansAdminPage() {
         <FormularioPlanes
           planes={planes.data}
           onCambio={() => setAviso(null)}
+          onBorrar={(plan) => {
+            setAviso(null);
+            setABorrar(plan);
+          }}
           onSaved={async (guardados) => {
             // `useAdminPlans` guarda la lista tal cual (sin `{ data }`).
             queryClient.setQueryData<AdminPlanDto[]>(ADMIN_PLANS_KEY, guardados);
-            setAviso(t('admin.plans.savedAll'));
+            setAviso({ type: 'success', message: t('admin.plans.savedAll') });
             // La respuesta ya trae los planes guardados: se vuelven a pedir sin esperar
             // (el botón no se queda en «Guardando…» si el servidor tarda).
             void queryClient.invalidateQueries({ queryKey: ADMIN_PLANS_KEY });
@@ -110,11 +131,29 @@ export function PlansAdminPage() {
           onClose={() => setCreando(false)}
           onSaved={async () => {
             setCreando(false);
-            setAviso(t('admin.plans.created'));
+            setAviso({ type: 'success', message: t('admin.plans.created') });
             await queryClient.invalidateQueries({ queryKey: ADMIN_PLANS_KEY });
           }}
         />
       )}
+
+      <Modal
+        open={aBorrar !== null}
+        title={t('admin.plans.confirmDelete', { name: aBorrar?.name })}
+        onClose={() => setABorrar(null)}
+        footer={
+          <>
+            <Button variant="outline" data-autofocus onClick={() => setABorrar(null)}>
+              {t('admin.common.cancel')}
+            </Button>
+            <Button disabled={borrar.isPending} onClick={() => aBorrar && borrar.mutate(aBorrar)}>
+              {borrar.isPending ? t('admin.common.deleting') : t('admin.common.delete')}
+            </Button>
+          </>
+        }
+      >
+        <p>{t('admin.plans.confirmDeleteText')}</p>
+      </Modal>
     </div>
   );
 }
@@ -123,10 +162,12 @@ export function PlansAdminPage() {
 function FormularioPlanes({
   planes,
   onCambio,
+  onBorrar,
   onSaved,
 }: {
   planes: AdminPlanDto[];
   onCambio: () => void;
+  onBorrar: (plan: AdminPlanDto) => void;
   onSaved: (guardados: AdminPlanDto[]) => Promise<void>;
 }) {
   const { t } = useTranslation();
@@ -146,6 +187,8 @@ function FormularioPlanes({
     reset,
     getValues,
     setValue,
+    clearErrors,
+    setFocus,
     formState: { errors, isDirty },
   } = form;
   const actuales = useWatch({ control, name: 'plans' });
@@ -210,6 +253,62 @@ function FormularioPlanes({
     guardar.mutate({ ...datos, confirmAmountChange: false });
   };
 
+  // Nombre de cada plan tal como se está escribiendo, para el título de sus avisos.
+  const nombreDe = (indice: number) => actuales?.[indice]?.name?.trim() || planes[indice]!.name;
+  // El título del aviso lleva a la tarjeta: foco en el interruptor y la tarjeta a la vista.
+  const titulo = (indice: number, campo: 'isDefault' | 'isActive') => (
+    <button
+      type="button"
+      className={planStyles.planLink}
+      onClick={() => {
+        setFocus(`plans.${indice}.${campo}`);
+        if (document.activeElement instanceof HTMLElement) document.activeElement.scrollIntoView?.({ block: 'center' });
+      }}
+    >
+      {nombreDe(indice)}
+    </button>
+  );
+  const avisos = [
+    ...planes.flatMap((plan, indice) =>
+      (['isDefault', 'isActive'] as const).flatMap((campo) => {
+        const mensaje = errors.plans?.[indice]?.[campo]?.message;
+        return mensaje
+          ? [
+              <Alert
+                key={`${plan.id}-${campo}`}
+                type="error"
+                title={titulo(indice, campo)}
+                onClose={() => clearErrors(`plans.${indice}.${campo}`)}
+              >
+                {mensaje}
+              </Alert>,
+            ]
+          : [];
+      }),
+    ),
+    ...(avisoPlan
+      ? [
+          // Los informativos se cierran solos; las advertencias, con su ✕.
+          <Alert
+            key={`aviso-${avisoPlan.indice}-${avisoPlan.tipo}`}
+            type={AVISO_TIPO[avisoPlan.tipo]}
+            title={titulo(avisoPlan.indice, CAMPO_AVISO[avisoPlan.tipo])}
+            autoClose={AVISO_TIPO[avisoPlan.tipo] === 'info'}
+            onClose={() => setAvisoPlan(null)}
+          >
+            {t(`admin.plans.${avisoPlan.tipo}`)}
+          </Alert>,
+        ]
+      : []),
+    ...(error
+      ? [
+          <Alert key="error" type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>,
+        ]
+      : []),
+  ];
+
   return (
     <form noValidate className={planStyles.form} onSubmit={handleSubmit(enviar)}>
       <div className={planStyles.list}>
@@ -222,60 +321,68 @@ function FormularioPlanes({
             control={control}
             register={register}
             errors={errors}
-            aviso={avisoPlan?.indice === indice ? avisoPlan.tipo : null}
             onInterruptor={interruptor}
+            borrable={plan.deletable}
+            hayCambios={isDirty}
+            onBorrar={() => onBorrar(plan)}
           />
         ))}
       </div>
 
-      {error && <Alert type="error">{error}</Alert>}
-      {pendiente ? (
-        <Alert
-          type="warning"
-          action={
+      {/* Siempre a la vista y pegada abajo mientras se recorren las tarjetas (SCREENS §5.6, DESIGN_SYSTEM §8.9). */}
+      <div role="region" aria-label={t('admin.plans.saveBarLabel')} className={planStyles.saveBar}>
+        {pendiente ? (
+          <Alert
+            type="warning"
+            action={
+              <div className={planStyles.actions}>
+                <Button variant="outline" onClick={() => setPendiente(null)}>
+                  {t('admin.common.cancel')}
+                </Button>
+                <Button
+                  disabled={guardar.isPending}
+                  onClick={() => {
+                    guardar.mutate({ ...pendiente.datos, confirmAmountChange: true });
+                    setPendiente(null);
+                  }}
+                >
+                  {t('admin.plans.confirmAndSave')}
+                </Button>
+              </div>
+            }
+          >
+            {pendiente.afectados.map((plan) => (
+              <p key={plan.id}>
+                {t('admin.plans.amountChangePlan', {
+                  name: actuales?.[planes.indexOf(plan)]?.name || plan.name,
+                  count: plan.activeAdoptions,
+                })}
+              </p>
+            ))}
+          </Alert>
+        ) : (
+          // Los avisos, fuera de las tarjetas: a la izquierda de los botones.
+          <div className={planStyles.footer}>
+            {avisos.length > 0 && <div className={planStyles.messages}>{avisos}</div>}
             <div className={planStyles.actions}>
-              <Button variant="outline" onClick={() => setPendiente(null)}>
-                {t('admin.common.cancel')}
-              </Button>
               <Button
-                disabled={guardar.isPending}
+                variant="outline"
+                disabled={!isDirty || guardar.isPending}
                 onClick={() => {
-                  guardar.mutate({ ...pendiente.datos, confirmAmountChange: true });
-                  setPendiente(null);
+                  reset(borradores(planes));
+                  setAvisoPlan(null);
+                  setError(null);
                 }}
               >
-                {t('admin.plans.confirmAndSave')}
+                {t('admin.plans.discard')}
+              </Button>
+              <Button type="submit" disabled={!isDirty || guardar.isPending}>
+                {guardar.isPending ? t('admin.common.saving') : t('admin.plans.saveAll')}
               </Button>
             </div>
-          }
-        >
-          {pendiente.afectados.map((plan) => (
-            <p key={plan.id}>
-              {t('admin.plans.amountChangePlan', {
-                name: actuales?.[planes.indexOf(plan)]?.name || plan.name,
-                count: plan.activeAdoptions,
-              })}
-            </p>
-          ))}
-        </Alert>
-      ) : (
-        <div className={planStyles.actions}>
-          <Button
-            variant="outline"
-            disabled={!isDirty || guardar.isPending}
-            onClick={() => {
-              reset(borradores(planes));
-              setAvisoPlan(null);
-              setError(null);
-            }}
-          >
-            {t('admin.plans.discard')}
-          </Button>
-          <Button type="submit" disabled={!isDirty || guardar.isPending}>
-            {guardar.isPending ? t('admin.common.saving') : t('admin.plans.saveAll')}
-          </Button>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       <Modal
         open={bloqueo.state === 'blocked'}
@@ -296,6 +403,13 @@ function FormularioPlanes({
   );
 }
 
+// Interruptor al que se refiere cada aviso (al que lleva su título).
+const CAMPO_AVISO: Record<AvisoPlan, 'isDefault' | 'isActive'> = {
+  defaultRequired: 'isDefault',
+  defaultMustBeActive: 'isActive',
+  activatedAsDefault: 'isActive',
+};
+
 const AVISO_TIPO: Record<AvisoPlan, 'warning' | 'info'> = {
   defaultRequired: 'warning',
   defaultMustBeActive: 'warning',
@@ -310,8 +424,10 @@ function TarjetaPlan({
   control,
   register,
   errors,
-  aviso,
   onInterruptor,
+  borrable,
+  hayCambios,
+  onBorrar,
 }: {
   plan: AdminPlanDto;
   indice: number;
@@ -319,17 +435,41 @@ function TarjetaPlan({
   control: Control<PlansUpdateBody>;
   register: UseFormRegister<PlansUpdateBody>;
   errors: FieldErrors<PlansUpdateBody>;
-  aviso: AvisoPlan | null;
   onInterruptor: (indice: number, campo: 'isDefault' | 'isActive', valor: boolean) => void;
+  /** A3: nunca se ha usado y no es el de por defecto; los demás se desactivan con «Activo». */
+  borrable: boolean;
+  hayCambios: boolean;
+  onBorrar: () => void;
 }) {
   const { t } = useTranslation();
   const tituloId = useId();
+  const ayudaBorrarId = useId();
   const fallos = errors.plans?.[indice];
   return (
     <section className={planStyles.card} aria-labelledby={tituloId}>
       <div className={planStyles.cardHeader}>
-        <h2 id={tituloId}>{nombre.trim() || plan.name}</h2>
+        <div className={planStyles.cardTitle}>
+          <h2 id={tituloId}>{nombre.trim() || plan.name}</h2>
+          {borrable && (
+            // Con cambios sin guardar no se borra: las tarjetas se descolocarían.
+            <button
+              type="button"
+              className={iconStyles.iconButton}
+              aria-label={t('admin.common.deleteNamed', { name: plan.name })}
+              aria-describedby={hayCambios ? ayudaBorrarId : undefined}
+              disabled={hayCambios}
+              onClick={onBorrar}
+            >
+              <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+            </button>
+          )}
+        </div>
         <span className={planStyles.count}>{t('admin.plans.activeAdoptions', { count: plan.activeAdoptions })}</span>
+        {borrable && hayCambios && (
+          <span id={ayudaBorrarId} className={planStyles.count}>
+            {t('admin.plans.deleteBlocked')}
+          </span>
+        )}
       </div>
       <TextField label={t('admin.plans.name')} error={fallos?.name?.message} {...register(`plans.${indice}.name`)} />
       <TextField
@@ -344,25 +484,26 @@ function TarjetaPlan({
         error={fallos?.description?.message}
         {...register(`plans.${indice}.description`)}
       />
-      {(['isDefault', 'isActive'] as const).map((campo) => (
-        <Controller
-          key={campo}
-          control={control}
-          name={`plans.${indice}.${campo}`}
-          render={({ field }) => (
-            <Switch
-              label={t(`admin.plans.${campo}`)}
-              name={field.name}
-              checked={Boolean(field.value)}
-              onChange={(e) => onInterruptor(indice, campo, e.target.checked)}
-              onBlur={field.onBlur}
-            />
-          )}
-        />
-      ))}
-      {fallos?.isDefault?.message && <Alert type="error">{fallos.isDefault.message}</Alert>}
-      {fallos?.isActive?.message && <Alert type="error">{fallos.isActive.message}</Alert>}
-      {aviso && <Alert type={AVISO_TIPO[aviso]}>{t(`admin.plans.${aviso}`)}</Alert>}
+      {/* Al fondo de la tarjeta, para que queden al mismo nivel en toda la fila. */}
+      <div className={planStyles.switches}>
+        {(['isDefault', 'isActive'] as const).map((campo) => (
+          <Controller
+            key={campo}
+            control={control}
+            name={`plans.${indice}.${campo}`}
+            render={({ field }) => (
+              <Switch
+                label={t(`admin.plans.${campo}`)}
+                name={field.name}
+                ref={field.ref}
+                checked={Boolean(field.value)}
+                onChange={(e) => onInterruptor(indice, campo, e.target.checked)}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
+        ))}
+      </div>
     </section>
   );
 }

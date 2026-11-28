@@ -442,6 +442,20 @@ export class DefaultPlanNotUniqueError extends FieldRuleError {
   }
 }
 
+/** CU-40 A3: un plan con adopciones, pagos o historial no se borra (RN-17). */
+export class PlanHasHistoryError extends ConflictError {
+  constructor() {
+    super('PLAN_HAS_HISTORY', 'Este plan ya se ha usado en adopciones o pagos: desactívalo en lugar de borrarlo.');
+  }
+}
+
+/** CU-40 A3: siempre tiene que haber un plan por defecto. */
+export class DefaultPlanCannotBeDeletedError extends BusinessRuleError {
+  constructor() {
+    super('DEFAULT_PLAN_CANNOT_BE_DELETED', 'El plan por defecto no se puede borrar: marca antes otro plan como plan por defecto.');
+  }
+}
+
 /** CU-40 3a: el nuevo importe afecta a adopciones activas y no se ha confirmado. */
 export class PlanAmountChangeUnconfirmedError extends ConflictError {
   constructor(adopciones: number) {

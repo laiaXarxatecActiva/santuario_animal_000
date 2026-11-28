@@ -15,12 +15,27 @@
   background: var(--color-surface);
 }
 
+/* El nombre con «Borrar» a su derecha (solo en los planes que nunca se han usado). */
+.cardTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* El número de adopciones activas, siempre debajo del nombre. */
 .cardHeader {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: baseline;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Las tarjetas de una fila miden lo mismo: los interruptores, al fondo, quedan al mismo nivel. */
+.switches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto;
 }
 
 .count {
@@ -41,9 +56,65 @@
   justify-content: flex-end;
 }
 
+/*
+ * Barra de guardar del panel (DESIGN_SYSTEM §8.9): al final del formulario y pegada
+ * al borde inferior de la pantalla mientras se recorren las tarjetas, sin tapar el menú.
+ */
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* El título del aviso (nombre del plan) lleva a su tarjeta. */
+.planLink {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.planLink:hover {
+  color: var(--color-primary);
+}
+
+/* Bajo los planes: avisos a la izquierda y botones a la derecha (en móvil, avisos encima). */
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 /* Desde `md` (768 px), más aire entre tarjetas (DESIGN_SYSTEM §7). */
 @media (min-width: 768px) {
   .list {
     gap: var(--space-5);
+  }
+
+  .footer {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .messages {
+    flex: 1;
+  }
+
+  .footer .actions {
+    flex-shrink: 0;
+    margin-left: auto;
   }
 }

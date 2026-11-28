@@ -221,6 +221,7 @@ export function createAdminRoutes(deps: AdminRoutesDeps): Router {
   router.post('/plans', soloAdmin, validate({ body: planCreateBodySchema }), planes.create);
   router.put('/plans', soloAdmin, validate({ body: plansUpdateBodySchema }), planes.updateAll);
   router.put('/plans/:id', soloAdmin, validate({ params: idParamsSchema, body: planUpdateBodySchema }), planes.update);
+  router.delete('/plans/:id', soloAdmin, validate({ params: idParamsSchema }), planes.remove);
 
   // CU-35 y CU-36: usuarios y cuentas de trabajador (TECH_SPEC §10.7), solo administradores.
   const usuarios = createUserAdminController(deps.users, deps.activity);
