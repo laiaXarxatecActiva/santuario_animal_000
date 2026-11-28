@@ -44,6 +44,32 @@ describe('Alert', () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it('con autoClose, un aviso informativo también se cierra solo a los 6 segundos', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    render(
+      <Alert type="info" autoClose onClose={onClose}>
+        Para que lo sepas
+      </Alert>,
+    );
+    act(() => vi.advanceTimersByTime(5999));
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('sin autoClose, un aviso informativo no se cierra solo', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    render(
+      <Alert type="info" onClose={onClose}>
+        Para que lo sepas
+      </Alert>,
+    );
+    act(() => vi.advanceTimersByTime(60000));
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('la cuenta atrás se detiene mientras el ratón está encima', () => {
     vi.useFakeTimers();
     const onClose = vi.fn();
