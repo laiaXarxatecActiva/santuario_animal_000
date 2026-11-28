@@ -1,66 +1,32 @@
 import { faPlus, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useId, useState } from 'react';
+import { useId, useState, type InputHTMLAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
-import { FilterSelect } from './FilterSelect';
 import { FieldError } from './FormFields';
 import fieldStyles from './FormFields.module.css';
 import styles from './TimeField.module.css';
 
-const HORAS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, '0'));
-const MINUTOS = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
-const VACIO = { value: '', label: '--' };
-
-/** Las opciones, con la que ya está elegida aunque no sea de la lista (p. ej., 08:07). */
-const opciones = (lista: readonly string[], actual: string) => [
-  VACIO,
-  ...[...new Set([...lista, ...(actual ? [actual] : [])])].sort().map((v) => ({ value: v, label: v })),
-];
-
-/** Hora y minutos sueltos de una hora `HH:MM` (vacíos si no lo es). */
-function partes(valor: string): [string, string] {
-  const m = /^(\d{2}):(\d{2})$/.exec(valor);
-  return m ? [m[1] ?? '', m[2] ?? ''] : ['', ''];
-}
-
-interface SelectorProps {
-  value: string;
-  onChange: (value: string) => void;
-  invalid?: boolean;
-  describedBy?: string;
-}
-
-/** Los dos desplegables, «Horas» y «Minutos» (minutos de 5 en 5). */
-function Selector({ value, onChange, invalid, describedBy }: SelectorProps) {
-  const { t } = useTranslation();
-  const [h, m] = partes(value);
-  // Elegida la hora sin minutos, los minutos pasan a 00; sin hora, no hay hora.
-  const cambiar = (hora: string, minutos: string) => onChange(hora ? `${hora}:${minutos || '00'}` : '');
+/**
+ * El campo de hora del navegador (`<input type="time">`): en móvil abre el selector
+ * del sistema y en el ordenador se teclea por partes (hora y minutos), sin poder
+ * escribir una hora imposible. El valor es `HH:MM` o vacío.
+ */
+function CampoHora(
+  props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> & {
+    value: string;
+    onChange: (value: string) => void;
+  },
+) {
+  const { value, onChange, className, ...rest } = props;
   return (
-    <div className={styles.selector}>
-      <FilterSelect
-        label={t('time.hours')}
-        labelClassName="visually-hidden"
-        className={styles.part}
-        options={opciones(HORAS, h)}
-        value={h}
-        onChange={(hora) => cambiar(hora, m)}
-        invalid={invalid}
-        describedBy={describedBy}
-      />
-      <span aria-hidden="true">:</span>
-      <FilterSelect
-        label={t('time.minutes')}
-        labelClassName="visually-hidden"
-        className={styles.part}
-        options={opciones(MINUTOS, m)}
-        value={m}
-        onChange={(minutos) => cambiar(h || '00', minutos)}
-        invalid={invalid}
-        describedBy={describedBy}
-      />
-    </div>
+    <input
+      type="time"
+      className={`${fieldStyles.input} ${styles.time} ${className ?? ''}`}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      {...rest}
+    />
   );
 }
 
@@ -73,24 +39,29 @@ interface TimeFieldProps {
   help?: string;
 }
 
-/**
- * Campo de hora (DESIGN_SYSTEM §8.5): la hora se elige con dos desplegables, sin
- * escribirla, para no equivocarse con el formato.
- */
+/** Campo de una hora (DESIGN_SYSTEM §8.5), con su etiqueta, ayuda y error. */
 export function TimeField({ label, value, onChange, error, help }: TimeFieldProps) {
   const id = useId();
   const describedBy = [help && `${id}-help`, error && `${id}-error`].filter(Boolean).join(' ') || undefined;
   return (
-    <fieldset className={styles.field}>
-      <legend className={fieldStyles.label}>{label}</legend>
-      <Selector value={value} onChange={onChange} invalid={Boolean(error)} describedBy={describedBy} />
+    <div className={styles.field}>
+      <label htmlFor={id} className={fieldStyles.label}>
+        {label}
+      </label>
+      <CampoHora
+        id={id}
+        value={value}
+        onChange={onChange}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+      />
       {help && (
         <p id={`${id}-help`} className={fieldStyles.help}>
           {help}
         </p>
       )}
       {error && <FieldError id={`${id}-error`}>{error}</FieldError>}
-    </fieldset>
+    </div>
   );
 }
 
@@ -103,7 +74,7 @@ interface TimesFieldProps {
   help?: string;
 }
 
-/** Varias horas (plantillas de tareas, pautas de medicación): cada una con ✕ y «Añadir hora». */
+/** Varias horas (plantillas de tareas, pautas de medicación): cada una con ✕, y «Nueva hora» con «Añadir hora». */
 export function TimesField({ label, value, onChange, error, help }: TimesFieldProps) {
   const { t } = useTranslation();
   const id = useId();
@@ -135,7 +106,23 @@ export function TimesField({ label, value, onChange, error, help }: TimesFieldPr
         </ul>
       )}
       <div className={styles.add}>
-        <Selector value={nueva} onChange={setNueva} invalid={Boolean(error)} describedBy={describedBy} />
+        <label htmlFor={`${id}-nueva`} className="visually-hidden">
+          {t('time.new')}
+        </label>
+        <CampoHora
+          id={`${id}-nueva`}
+          value={nueva}
+          onChange={setNueva}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          // Intro añade la hora en lugar de enviar el formulario.
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              anadir();
+            }
+          }}
+        />
         <Button type="button" variant="outline" icon={faPlus} disabled={!nueva} onClick={anadir}>
           {t('time.add')}
         </Button>

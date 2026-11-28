@@ -180,7 +180,7 @@ describe('CU-70 Ficha de una incidencia', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Crear tarea' }));
     const ventana = screen.getByRole('dialog', { name: 'Tarea de la incidencia n.º 2' });
     expect(within(ventana).getByLabelText('Título')).toHaveValue('Cojera de Pipa');
-    await elegirHora(within(ventana).getByRole('group', { name: 'Hora' }), '16:00');
+    await elegirHora(within(ventana).getByLabelText('Hora'), '16:00');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Tarea creada')).toBeInTheDocument();
     expect(enviados('/api/admin/incidents/2/task')).toEqual([

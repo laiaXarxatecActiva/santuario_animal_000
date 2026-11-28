@@ -29,13 +29,15 @@ export function opcionesDe(campo: HTMLElement): string[] {
 }
 
 /**
- * Elige una hora en un `TimeField` (o en el selector de un `TimesField`): el
- * desplegable «Horas» y el de «Minutos» dentro del grupo del campo.
+ * Escribe una hora en un campo de hora nativo (`<input type="time">`): el de un
+ * `TimeField` (se pasa el campo) o el de «Nueva hora» de un `TimesField` (se pasa su grupo).
  */
-export async function elegirHora(grupo: HTMLElement, hora: string) {
-  const [h, m] = hora.split(':');
-  await elegirOpcion(within(grupo).getByLabelText('Horas'), h ?? '');
-  await elegirOpcion(within(grupo).getByLabelText('Minutos'), m ?? '');
+export async function elegirHora(campo: HTMLElement, hora: string) {
+  const entrada =
+    campo instanceof HTMLInputElement ? campo : campo.querySelector<HTMLInputElement>('input[type="time"]');
+  if (!entrada) throw new Error('No hay ningún campo de hora');
+  await userEvent.clear(entrada);
+  await userEvent.type(entrada, hora);
 }
 
 /** Añade una hora a un `TimesField`. */

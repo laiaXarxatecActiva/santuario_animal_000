@@ -42,8 +42,8 @@ describe('CU-60 Plantillas de turno', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Nuevo turno' }));
     const dialogo = screen.getByRole('dialog', { name: 'Nuevo turno' });
     await userEvent.type(within(dialogo).getByLabelText('Nombre'), 'Noche');
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora de inicio' }), '22:00');
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora de fin' }), '23:30');
+    await elegirHora(within(dialogo).getByLabelText('Hora de inicio'), '22:00');
+    await elegirHora(within(dialogo).getByLabelText('Hora de fin'), '23:30');
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Viernes' }));
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Sábado' }));
     await userEvent.type(within(dialogo).getByLabelText('Personas en Clínica y recuperación'), '1');
@@ -68,8 +68,8 @@ describe('CU-60 Plantillas de turno', () => {
     renderRoute('/admin/shift-templates');
     await userEvent.click(await screen.findByRole('button', { name: 'Nuevo turno' }));
     const dialogo = screen.getByRole('dialog', { name: 'Nuevo turno' });
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora de inicio' }), '15:00');
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora de fin' }), '09:00');
+    await elegirHora(within(dialogo).getByLabelText('Hora de inicio'), '15:00');
+    await elegirHora(within(dialogo).getByLabelText('Hora de fin'), '09:00');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     expect(await within(dialogo).findByText('Escribe el nombre del turno.')).toBeInTheDocument();
     expect(within(dialogo).getByText('La hora de fin debe ser posterior a la de inicio.')).toBeInTheDocument();

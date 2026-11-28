@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { TimeField, TimesField } from '../src/components/TimeField';
-import { anadirHora, elegirHora, opcionesDe } from './helpers/select';
+import { anadirHora, elegirHora } from './helpers/select';
 
 function UnaHora({ inicial = '' }: { inicial?: string }) {
   const [hora, setHora] = useState(inicial);
@@ -25,32 +25,29 @@ function VariasHoras({ inicial = [] }: { inicial?: string[] }) {
   );
 }
 
-describe('TimeField: la hora se elige, no se escribe (DESIGN_SYSTEM §8.5)', () => {
-  it('dos desplegables, horas de 00 a 23 y minutos de 5 en 5', async () => {
+describe('TimeField: el campo de hora del navegador (DESIGN_SYSTEM §8.5)', () => {
+  it('es un <input type="time"> con su etiqueta: en móvil abre el selector del sistema', async () => {
     render(<UnaHora />);
-    const grupo = screen.getByRole('group', { name: 'Hora' });
-    expect(opcionesDe(within(grupo).getByLabelText('Horas'))).toHaveLength(25);
-    expect(opcionesDe(within(grupo).getByLabelText('Minutos'))).toEqual([
-      '--',
-      ...['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'],
-    ]);
-    expect(screen.getByText('Elige la hora.')).toBeInTheDocument();
-    await elegirHora(grupo, '09:30');
+    const campo = screen.getByLabelText('Hora');
+    expect(campo).toHaveAttribute('type', 'time');
+    expect(campo).toHaveAccessibleDescription('Elige la hora.');
+    expect(campo).toHaveAttribute('aria-invalid', 'true');
+    await elegirHora(campo, '09:30');
     expect(screen.getByRole('status')).toHaveTextContent('09:30');
   });
 
-  it('elegida solo la hora, los minutos pasan a 00', async () => {
-    render(<UnaHora />);
-    await userEvent.click(within(screen.getByRole('group', { name: 'Hora' })).getByLabelText('Horas'));
-    await userEvent.click(screen.getByRole('option', { name: '17' }));
-    expect(screen.getByRole('status')).toHaveTextContent('17:00');
+  it('admite cualquier minuto y muestra la hora guardada', async () => {
+    render(<UnaHora inicial="08:07" />);
+    const campo = screen.getByLabelText('Hora');
+    expect(campo).toHaveValue('08:07');
+    await elegirHora(campo, '17:42');
+    expect(screen.getByRole('status')).toHaveTextContent('17:42');
   });
 
-  it('una hora guardada que no es de 5 en 5 no se pierde', () => {
-    render(<UnaHora inicial="08:07" />);
-    const minutos = within(screen.getByRole('group', { name: 'Hora' })).getByLabelText('Minutos');
-    expect(opcionesDe(minutos)).toContain('07');
-    expect(minutos).toHaveTextContent('07');
+  it('vaciarlo deja sin hora', async () => {
+    render(<UnaHora inicial="08:00" />);
+    await userEvent.clear(screen.getByLabelText('Hora'));
+    expect(screen.getByRole('status')).toHaveTextContent('vacía');
   });
 });
 
@@ -58,10 +55,33 @@ describe('TimesField: varias horas', () => {
   it('añade horas en orden, sin repetirlas, y las quita', async () => {
     render(<VariasHoras inicial={['17:00']} />);
     const grupo = screen.getByRole('group', { name: 'Horas de la tarea' });
+    expect(within(grupo).getByLabelText('Nueva hora')).toHaveAttribute('type', 'time');
+    expect(within(grupo).getByRole('button', { name: 'Añadir hora' })).toBeDisabled();
     await anadirHora(grupo, '09:00');
     await anadirHora(grupo, '17:00');
     expect(screen.getByRole('status')).toHaveTextContent('09:00 17:00');
+    // Tras añadir, el campo se vacía para la siguiente.
+    expect(within(grupo).getByLabelText('Nueva hora')).toHaveValue('');
     await userEvent.click(within(grupo).getByRole('button', { name: 'Quitar 17:00' }));
     expect(screen.getByRole('status')).toHaveTextContent('09:00');
+  });
+
+  it('Intro en «Nueva hora» la añade sin enviar el formulario', async () => {
+    let enviado = false;
+    render(
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          enviado = true;
+        }}
+      >
+        <VariasHoras />
+      </form>,
+    );
+    const campo = within(screen.getByRole('group', { name: 'Horas de la tarea' })).getByLabelText('Nueva hora');
+    await elegirHora(campo, '08:15');
+    await userEvent.type(campo, '{Enter}');
+    expect(screen.getByRole('status')).toHaveTextContent('08:15');
+    expect(enviado).toBe(false);
   });
 });
