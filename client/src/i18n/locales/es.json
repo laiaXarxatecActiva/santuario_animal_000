@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "Este animal ya no está en el santuario.",
     "ANIMAL_WITHOUT_ZONE": "Este animal no tiene zona: asígnale una en «Datos» para que sus tareas salgan en «Mi día».",
     "MEDICATION_PLAN_HAS_HISTORY": "Esta pauta ya tiene dosis resueltas: termínala en lugar de borrarla.",
+    "PLAN_HAS_HISTORY": "Este plan ya se ha usado en adopciones o pagos: desactívalo en lugar de borrarlo.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "El plan por defecto no se puede borrar: marca antes otro plan como plan por defecto.",
     "MEDICATION_PLAN_NOT_STARTED": "Esta pauta aún no ha empezado: bórrala en lugar de terminarla.",
     "MEDICATION_PLAN_ENDED": "Esta pauta ya ha terminado.",
     "VET_VISIT_NOT_SCHEDULED": "Esta visita ya está registrada o cancelada.",
@@ -668,7 +670,7 @@
       "absences": "Ausencias",
       "today": "Hoy",
       "incidents": "Incidencias",
-      "alertSettings": "Avisos por email",
+      "alertSettings": "Avisos",
       "pending_one": "{{count}} pendiente",
       "pending_other": "{{count}} pendientes"
     },
@@ -918,7 +920,12 @@
       "unsavedTitle": "Tienes cambios sin guardar",
       "unsavedText": "Si sales ahora, se perderán los cambios de los planes.",
       "unsavedStay": "Seguir editando",
-      "unsavedLeave": "Salir sin guardar"
+      "unsavedLeave": "Salir sin guardar",
+      "saveBarLabel": "Cambios de los planes",
+      "deleted": "Plan borrado",
+      "confirmDelete": "¿Borrar el plan {{name}}?",
+      "confirmDeleteText": "Se borrará para siempre. Esta acción no se puede deshacer.",
+      "deleteBlocked": "Guarda o descarta los cambios antes de borrar un plan."
     },
     "users": {
       "title": "Usuarios",
@@ -1166,7 +1173,7 @@
       "user": "Usuario",
       "system": "Sistema",
       "action": "Acción",
-      "table": "Tabla",
+      "table": "Registro",
       "details": "Detalles",
       "showDetails": "Ver detalles",
       "empty": "No hay actividad con estos filtros",
@@ -1294,7 +1301,7 @@
         "zones": "Las zonas del santuario y las cualificaciones que piden algunas tareas.",
         "shiftTemplates": "Los turnos que se hacen (mañana, tarde…), su horario y cuántas personas necesita cada zona.",
         "absences": "Vacaciones, bajas y otras ausencias. Al registrar una, se quitan los turnos de esa persona en esos días.",
-        "alertSettings": "Elige qué avisos del personal llegan también por email y si se envía un resumen del día.",
+        "alertSettings": "Elige qué avisos del personal llegan también por email, si se envía un resumen del día y cuándo se avisa de que un animal come poco.",
         "users": "Todas las cuentas: adoptantes y personal. Busca a alguien por nombre o email y abre su ficha para ver sus adopciones y pagos, desactivarla, cambiar su rol, cerrar sus sesiones, borrar sus datos personales o eliminarla. Desde aquí también se da de alta a un trabajador nuevo.",
         "adoptions": "Todas las adopciones, con sus pagos y notas. Puedes pausarlas, reanudarlas o darlas de alta a mano.",
         "payments": "Los cobros de las cuotas. Puedes filtrarlos, exportarlos y devolver un pago.",
@@ -1642,10 +1649,11 @@
     },
     "settings": {
       "title": "Ajustes del trabajo diario",
-      "lateMargin": "Margen para considerar atrasada una tarea (minutos)",
       "saved": "Ajustes guardados",
-      "lowIntakeMeals": "Tomas seguidas comiendo poco para avisar",
-      "lowIntakeMealsHelp": "Cuentan «Menos de la mitad» y «Nada»."
+      "lateMarginBefore": "Una tarea pasa a «Atrasada» si sigue sin hacerse",
+      "lateMarginAfter": "minutos después de su hora",
+      "lateMarginLabel": "Minutos de margen antes de marcar una tarea como «Atrasada»",
+      "lateMarginHelp": "Con 0, en cuanto pasa su hora."
     },
     "absenceTypes": {
       "vacation": "Vacaciones",
@@ -1754,8 +1762,8 @@
     "care": {
       "title": "Cuidados de {{name}}",
       "loadError": "No se han podido cargar los cuidados.",
-      "lowIntakeWarning_one": "Ha comido poco en su última toma.",
-      "lowIntakeWarning_other": "Ha comido poco en sus {{count}} últimas tomas.",
+      "lowIntakeWarning_one": "Ha comido poco en su última comida.",
+      "lowIntakeWarning_other": "Ha comido poco en sus {{count}} últimas comidas.",
       "period": "Vigencia",
       "from": "Desde",
       "until": "Hasta",
@@ -1966,12 +1974,12 @@
       "gaps": "Zonas sin cubrir",
       "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
       "lowIntake": "Animales que comen poco",
-      "streak_one": "{{count}} toma comiendo poco",
-      "streak_other": "{{count}} tomas comiendo poco",
+      "streak_one": "{{count}} comida comiendo poco",
+      "streak_other": "{{count}} comidas seguidas comiendo poco",
       "vetVisits": "Visitas veterinarias de hoy"
     },
     "alertSettings": {
-      "title": "Avisos por email",
+      "title": "Avisos",
       "loadError": "No se han podido cargar los ajustes de los avisos.",
       "saved": "Ajustes guardados",
       "emailLegend": "Avisos que también se envían por email",
@@ -1986,7 +1994,12 @@
       "summaryLegend": "Resumen del día",
       "summaryHelp": "Un email a la administración con las tareas, la medicación, las incidencias y los huecos del día.",
       "summaryEnabled": "Enviar el resumen del día",
-      "summaryTime": "Hora del resumen"
+      "summaryTime": "Hora del resumen",
+      "lowIntakeLegend": "Animales que comen poco",
+      "lowIntakeBefore": "Avisar si un animal come poco en",
+      "lowIntakeAfter": "comidas seguidas",
+      "lowIntakeLabel": "Comidas seguidas comiendo poco antes de avisar",
+      "lowIntakeHelp": "«Comer poco» es anotar «Menos de la mitad» o «Nada». Ejemplo: con 2, si un animal come poco en el desayuno y en la comida, la campana avisa a los administradores y a quien tenga turno en su zona."
     },
     "clock": {
       "title": "Fichaje",
@@ -2032,8 +2045,7 @@
     "tooMany": "Como mucho {{count}} fotos."
   },
   "time": {
-    "hours": "Horas",
-    "minutes": "Minutos",
+    "new": "Nueva hora",
     "add": "Añadir hora",
     "remove": "Quitar {{time}}"
   }

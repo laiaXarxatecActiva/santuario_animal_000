@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "Aquest animal ja no és al santuari.",
     "ANIMAL_WITHOUT_ZONE": "Aquest animal no té zona: assigna-li’n una a «Dades» perquè les seues tasques isquen a «El meu dia».",
     "MEDICATION_PLAN_HAS_HISTORY": "Aquesta pauta ja té dosis resoltes: acaba-la en lloc d’esborrar-la.",
+    "PLAN_HAS_HISTORY": "Aquest pla ja s'ha fet servir en adopcions o pagaments: desactiva'l en lloc d'esborrar-lo.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "El pla per defecte no es pot esborrar: marca abans un altre pla com a pla per defecte.",
     "MEDICATION_PLAN_NOT_STARTED": "Aquesta pauta encara no ha començat: esborra-la en lloc d’acabar-la.",
     "MEDICATION_PLAN_ENDED": "Aquesta pauta ja ha acabat.",
     "VET_VISIT_NOT_SCHEDULED": "Aquesta visita ja està registrada o cancel·lada.",
@@ -668,7 +670,7 @@
       "absences": "Absències",
       "today": "Hui",
       "incidents": "Incidències",
-      "alertSettings": "Avisos per correu",
+      "alertSettings": "Avisos",
       "pending_one": "{{count}} pendent",
       "pending_other": "{{count}} pendents"
     },
@@ -918,7 +920,12 @@
       "unsavedTitle": "Tens canvis sense desar",
       "unsavedText": "Si ixes ara, es perdran els canvis dels plans.",
       "unsavedStay": "Continuar editant",
-      "unsavedLeave": "Eixir sense desar"
+      "unsavedLeave": "Eixir sense desar",
+      "saveBarLabel": "Canvis dels plans",
+      "deleted": "Pla esborrat",
+      "confirmDelete": "Vols esborrar el pla {{name}}?",
+      "confirmDeleteText": "S'esborrarà per sempre. Aquesta acció no es pot desfer.",
+      "deleteBlocked": "Guarda o descarta els canvis abans d'esborrar un pla."
     },
     "users": {
       "title": "Usuaris",
@@ -1166,7 +1173,7 @@
       "user": "Usuari",
       "system": "Sistema",
       "action": "Acció",
-      "table": "Taula",
+      "table": "Registre",
       "details": "Detalls",
       "showDetails": "Mostra els detalls",
       "empty": "No hi ha activitat amb estos filtres",
@@ -1294,7 +1301,7 @@
         "zones": "Les zones del santuari i les qualificacions que demanen algunes tasques.",
         "shiftTemplates": "Els torns que es fan (matí, vesprada…), el seu horari i quantes persones necessita cada zona.",
         "absences": "Vacances, baixes i altres absències. En registrar-ne una, es lleven els torns d’eixa persona en eixos dies.",
-        "alertSettings": "Tria quins avisos del personal arriben també per correu i si s’envia un resum del dia.",
+        "alertSettings": "Tria quins avisos del personal arriben també per correu, si s’envia un resum del dia i quan s’avisa que un animal menja poc.",
         "users": "Tots els comptes: adoptants i personal. Busca algú pel nom o l'email i obri la seua fitxa per a veure'n les adopcions i els pagaments, desactivar-lo, canviar-ne el rol, tancar-ne les sessions, esborrar-ne les dades personals o eliminar-lo. Des d'ací també es dona d'alta un treballador nou.",
         "adoptions": "Totes les adopcions, amb els pagaments i les notes. Pots pausar-les, reprendre-les o donar-les d’alta a mà.",
         "payments": "Els cobraments de les quotes. Pots filtrar-los, exportar-los i tornar un pagament.",
@@ -1642,10 +1649,11 @@
     },
     "settings": {
       "title": "Configuració del treball diari",
-      "lateMargin": "Marge per a considerar endarrerida una tasca (minuts)",
       "saved": "Configuració guardada",
-      "lowIntakeMeals": "Preses seguides menjant poc per a avisar",
-      "lowIntakeMealsHelp": "Compten «Menys de la meitat» i «Res»."
+      "lateMarginBefore": "Una tasca passa a «Endarrerida» si continua sense fer-se",
+      "lateMarginAfter": "minuts després de la seua hora",
+      "lateMarginLabel": "Minuts de marge abans de marcar una tasca com a «Endarrerida»",
+      "lateMarginHelp": "Amb 0, tan prompte com passa la seua hora."
     },
     "absenceTypes": {
       "vacation": "Vacances",
@@ -1754,8 +1762,8 @@
     "care": {
       "title": "Cures de {{name}}",
       "loadError": "No s'han pogut carregar les cures.",
-      "lowIntakeWarning_one": "Ha menjat poc en la seua última presa.",
-      "lowIntakeWarning_other": "Ha menjat poc en les seues {{count}} últimes preses.",
+      "lowIntakeWarning_one": "Ha menjat poc en la seua última menjada.",
+      "lowIntakeWarning_other": "Ha menjat poc en les seues {{count}} últimes menjades.",
       "period": "Vigència",
       "from": "Des de",
       "until": "Fins a",
@@ -1966,12 +1974,12 @@
       "gaps": "Zones sense cobrir",
       "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
       "lowIntake": "Animals que mengen poc",
-      "streak_one": "{{count}} presa menjant poc",
-      "streak_other": "{{count}} preses menjant poc",
+      "streak_one": "{{count}} menjada menjant poc",
+      "streak_other": "{{count}} menjades seguides menjant poc",
       "vetVisits": "Visites veterinàries de hui"
     },
     "alertSettings": {
-      "title": "Avisos per correu",
+      "title": "Avisos",
       "loadError": "No s’han pogut carregar els ajustos dels avisos.",
       "saved": "Ajustos guardats",
       "emailLegend": "Avisos que també s’envien per correu",
@@ -1986,7 +1994,12 @@
       "summaryLegend": "Resum del dia",
       "summaryHelp": "Un correu a l’administració amb les tasques, la medicació, les incidències i els buits del dia.",
       "summaryEnabled": "Enviar el resum del dia",
-      "summaryTime": "Hora del resum"
+      "summaryTime": "Hora del resum",
+      "lowIntakeLegend": "Animals que mengen poc",
+      "lowIntakeBefore": "Avisar si un animal menja poc en",
+      "lowIntakeAfter": "menjades seguides",
+      "lowIntakeLabel": "Menjades seguides menjant poc abans d’avisar",
+      "lowIntakeHelp": "«Menjar poc» és anotar «Menys de la meitat» o «Res». Exemple: amb 2, si un animal menja poc en l’esmorzar i en el dinar, la campana avisa els administradors i qui tinga torn en la seua zona."
     },
     "clock": {
       "title": "Fitxatge",
@@ -2032,8 +2045,7 @@
     "tooMany": "Com a màxim {{count}} fotos."
   },
   "time": {
-    "hours": "Hores",
-    "minutes": "Minuts",
+    "new": "Nova hora",
     "add": "Afig una hora",
     "remove": "Lleva {{time}}"
   }

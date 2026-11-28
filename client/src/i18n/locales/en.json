@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "This animal is no longer at the sanctuary.",
     "ANIMAL_WITHOUT_ZONE": "This animal has no zone: assign one in \"Details\" so its tasks appear in \"My day\".",
     "MEDICATION_PLAN_HAS_HISTORY": "This plan already has resolved doses: end it instead of deleting it.",
+    "PLAN_HAS_HISTORY": "This plan has already been used in adoptions or payments: deactivate it instead of deleting it.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "The default plan cannot be deleted: first mark another plan as the default.",
     "MEDICATION_PLAN_NOT_STARTED": "This plan has not started yet: delete it instead of ending it.",
     "MEDICATION_PLAN_ENDED": "This plan has already ended.",
     "VET_VISIT_NOT_SCHEDULED": "This visit has already been recorded or cancelled.",
@@ -668,7 +670,7 @@
       "absences": "Absences",
       "today": "Today",
       "incidents": "Incidents",
-      "alertSettings": "Email alerts",
+      "alertSettings": "Alerts",
       "pending_one": "{{count}} pending",
       "pending_other": "{{count}} pending"
     },
@@ -918,7 +920,12 @@
       "unsavedTitle": "You have unsaved changes",
       "unsavedText": "If you leave now, the changes to the plans will be lost.",
       "unsavedStay": "Keep editing",
-      "unsavedLeave": "Leave without saving"
+      "unsavedLeave": "Leave without saving",
+      "saveBarLabel": "Plan changes",
+      "deleted": "Plan deleted",
+      "confirmDelete": "Delete the {{name}} plan?",
+      "confirmDeleteText": "It will be deleted for good. This cannot be undone.",
+      "deleteBlocked": "Save or discard your changes before deleting a plan."
     },
     "users": {
       "title": "Users",
@@ -1166,7 +1173,7 @@
       "user": "User",
       "system": "System",
       "action": "Action",
-      "table": "Table",
+      "table": "Record",
       "details": "Details",
       "showDetails": "Show details",
       "empty": "No activity matches these filters",
@@ -1294,7 +1301,7 @@
         "zones": "The sanctuary’s zones and the qualifications some tasks require.",
         "shiftTemplates": "The shifts worked (morning, afternoon…), their hours and how many people each zone needs.",
         "absences": "Holidays, sick leave and other absences. Recording one removes that person’s shifts on those days.",
-        "alertSettings": "Choose which staff alerts also arrive by email and whether a daily summary is sent.",
+        "alertSettings": "Choose which staff alerts also arrive by email, whether a daily summary is sent and when to warn that an animal is eating little.",
         "users": "All accounts: adopters and staff. Search for someone by name or email and open their record to see their adoptions and payments, deactivate it, change their role, close their sessions, erase their personal data or delete it. New workers are also added from here.",
         "adoptions": "All adoptions, with their payments and notes. You can pause, resume or create them manually.",
         "payments": "Fee payments. You can filter them, export them and refund a payment.",
@@ -1642,10 +1649,11 @@
     },
     "settings": {
       "title": "Daily work settings",
-      "lateMargin": "Margin before a task counts as late (minutes)",
       "saved": "Settings saved",
-      "lowIntakeMeals": "Meals in a row eating little before warning",
-      "lowIntakeMealsHelp": "\"Less than half\" and \"Nothing\" count."
+      "lateMarginBefore": "A task becomes «Late» if it is still not done",
+      "lateMarginAfter": "minutes after its time",
+      "lateMarginLabel": "Minutes of margin before a task is marked «Late»",
+      "lateMarginHelp": "With 0, as soon as its time passes."
     },
     "absenceTypes": {
       "vacation": "Holiday",
@@ -1967,11 +1975,11 @@
       "gap": "{{zone}} · {{shift}}: {{assigned}} of {{required}}",
       "lowIntake": "Animals eating little",
       "streak_one": "{{count}} meal eating little",
-      "streak_other": "{{count}} meals eating little",
+      "streak_other": "{{count}} meals in a row eating little",
       "vetVisits": "Today’s vet visits"
     },
     "alertSettings": {
-      "title": "Email alerts",
+      "title": "Alerts",
       "loadError": "The alert settings could not be loaded.",
       "saved": "Settings saved",
       "emailLegend": "Alerts that are also sent by email",
@@ -1986,7 +1994,12 @@
       "summaryLegend": "Daily summary",
       "summaryHelp": "An email to the admins with the day’s tasks, medication, incidents and gaps.",
       "summaryEnabled": "Send the daily summary",
-      "summaryTime": "Summary time"
+      "summaryTime": "Summary time",
+      "lowIntakeLegend": "Animals eating little",
+      "lowIntakeBefore": "Warn if an animal eats little at",
+      "lowIntakeAfter": "meals in a row",
+      "lowIntakeLabel": "Meals in a row eating little before warning",
+      "lowIntakeHelp": "«Eating little» means recording «Less than half» or «Nothing». Example: with 2, if an animal eats little at breakfast and lunch, the bell warns the administrators and whoever is on shift in its zone."
     },
     "clock": {
       "title": "Clock in",
@@ -2032,8 +2045,7 @@
     "tooMany": "At most {{count}} photos."
   },
   "time": {
-    "hours": "Hours",
-    "minutes": "Minutes",
+    "new": "New time",
     "add": "Add time",
     "remove": "Remove {{time}}"
   }

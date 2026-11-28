@@ -54,7 +54,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-14 | El santuario se compromete a publicar al menos una actualización cada 14 días por cada animal con adoptantes activos. El panel avisa cuando quedan 2 días (12 días sin actualización) y muestra una alerta en rojo si se superan los 14. |
 | RN-15 | El contenido exclusivo (actualizaciones y fotos `adopters`, resumen de salud) solo lo ven los adoptantes con una adopción **activa** del animal y los trabajadores. |
 | RN-16 | El nombre de un adoptante aparece en la ficha pública solo si tiene una adopción activa del animal y ha activado `show_public_name`. Por defecto, no aparece. |
-| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. **Excepción:** un administrador puede borrar del todo una cuenta (CU-75); si tiene datos enlazados, solo confirmándolo, y se borran con ella. |
+| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. **Excepción:** un administrador puede borrar del todo una cuenta (CU-75); si tiene datos enlazados, solo confirmándolo, y se borran con ella. Un plan de adopción que nunca se ha usado (sin adopciones, pagos ni historial) sí se puede borrar (CU-40 A3). |
 | RN-18 | Los permisos se comprueban siempre en el servidor. |
 | RN-19 | Los emails de actualizaciones y resúmenes respetan las preferencias del usuario. Los emails de seguridad (verificación, contraseña) y de pagos se envían siempre. |
 | RN-20 | La baja de una cuenta anonimiza los datos personales y conserva los pagos y donaciones. |
@@ -70,7 +70,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-30 | Cada persona ficha solo sus turnos y solo el día del turno: primero la entrada y después la salida, una vez cada una. |
 | RN-31 | Una zona de un turno está **sin cubrir** si tiene menos personas de las que pide la plantilla del turno; se calcula al consultar, no se guarda. Cada hueco se avisa a los administradores una sola vez. |
 | RN-32 | La **dieta** es la ficha de qué come cada animal y no crea tareas. Al completar una tarea de alimentación se anota lo que ha comido cada animal (sus animales o, si no tiene, los que viven en su zona) en cuatro niveles: «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada». |
-| RN-33 | Un animal **come poco** si en sus últimas tomas seguidas (2 por defecto, configurable de 1 a 10) ha comido «Menos de la mitad» o «Nada». Cada racha se avisa una sola vez. |
+| RN-33 | Un animal **come poco** si en sus últimas comidas seguidas (2 por defecto, configurable de 1 a 10 en «Avisos») ha comido «Menos de la mitad» o «Nada». Cada racha se avisa una sola vez. |
 | RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
 | RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
 | RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
@@ -1441,7 +1441,7 @@ Sirve, por ejemplo, para quitar una cuenta creada por error. Es la excepción a 
 - **3b.** Importe menor o igual a 0: error en el campo.
 - **A1. Desactivar** un plan: deja de ofrecerse en nuevas adopciones; las existentes siguen con él. No se puede desactivar el plan por defecto sin elegir antes otro.
 - **A2. Crear** un plan nuevo: siempre mensual. No se pueden crear otras periodicidades.
-- **A3. Borrar:** no existe en la interfaz; los planes con adopciones no se pueden borrar (RN-17).
+- **A3. Borrar** un plan para siempre: solo uno que nunca se ha usado (sin adopciones, pagos ni historial de adopciones; RN-17) y que no es el plan por defecto. El sistema pide confirmación y lo anota en el registro de actividad. Con cambios sin guardar en los planes, primero hay que guardarlos o descartarlos. Los planes usados no se borran: se desactivan (A1).
 
 **Postcondiciones**
 
@@ -1494,7 +1494,7 @@ Sirve, por ejemplo, para quitar una cuenta creada por error. Es la excepción a 
 **Flujo principal**
 
 1. El administrador entra en «Actividad» (`/admin/activity`).
-2. El sistema muestra quién hizo qué, sobre qué registro y cuándo, de más reciente a más antiguo, con filtros por usuario, tabla, acción y fechas.
+2. El sistema muestra quién hizo qué, sobre qué registro y cuándo, de más reciente a más antiguo, con filtros por usuario, registro, acción y fechas.
 3. Al abrir una entrada se ven los detalles del cambio.
 
 **Postcondiciones**
@@ -1775,7 +1775,7 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 **Flujo principal**
 
 1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado y el orden «Por hora» o «Más recientes primero» (las 50 últimas creadas, de cualquier día, con su fecha; sirve para encontrar una creada por error), en dos bloques: «Tuyas» (las asignadas a él, con borde de color y el enlace «Hacerlas en «Mi día»») y «Del resto del personal» (todas las demás, también las sin asignar). Aquí se gestionan; no se marcan como hechas. Para cada una su hora, zona, insignias (tipo, atrasada, estado; «Resuelta» si es de una incidencia y está hecha), a quién está asignada y, si está resuelta, quién y cuándo y las observaciones.
-2. Crea una tarea puntual («Nueva tarea», sin plantilla): tipo, título, descripción, cualificación, día (hoy o después) y hora (elegida en dos desplegables) y, opcionalmente, zona, animales y persona. Sin zona elegida, toma la de sus animales si viven en la misma; si no, queda sin zona. Sin zona ni persona, la tarea es de todo el personal («Sin asignar» en «Mi día»).
+2. Crea una tarea puntual («Nueva tarea», sin plantilla): tipo, título, descripción, cualificación, día (hoy o después) y hora (con el campo de hora del navegador) y, opcionalmente, zona, animales y persona. Sin zona elegida, toma la de sus animales si viven en la misma; si no, queda sin zona. Sin zona ni persona, la tarea es de todo el personal («Sin asignar» en «Mi día»).
 3. Reasigna una tarea pendiente a un trabajador en activo, o le quita la asignación (vuelve a ser de la zona).
 4. Borra una tarea pendiente.
 
@@ -2012,7 +2012,7 @@ Cada día, para cada plantilla activa y en su propia transacción:
 **Flujos alternativos**
 
 - **3a.** Un animal que no es de esa comida, o anotar comida en una tarea que no es de alimentación: error en el campo.
-- **3b.** Si un animal llega a las tomas seguidas comiendo poco: CU-67.
+- **3b.** Si un animal llega a las comidas seguidas comiendo poco de los ajustes: CU-67.
 - **4.** «Deshacer» la tarea borra también lo anotado.
 
 **Postcondiciones:** la pestaña «Cuidados» muestra las comidas de los últimos 14 días.
@@ -2027,13 +2027,13 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 **Flujo principal**
 
-1. Al anotar una comida, el sistema cuenta las últimas tomas seguidas del animal en las que comió «Menos de la mitad» o «Nada».
-2. Si llegan al número de los ajustes (2 por defecto), avisa en la campana, en su idioma, a los administradores y a quien tiene turno ese día en la zona: «Carbón ha comido poco en sus 2 últimas tomas.», con enlace a su pestaña «Cuidados».
+1. Al anotar una comida, el sistema cuenta las últimas comidas seguidas del animal en las que comió «Menos de la mitad» o «Nada».
+2. Si llegan al número de los ajustes (2 por defecto), avisa en la campana, en su idioma, a los administradores y a quien tiene turno ese día en la zona: «Carbón ha comido poco en sus 2 últimas comidas.», con enlace a su pestaña «Cuidados».
 
 **Flujos alternativos**
 
-- **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una toma buena la corta y la siguiente racha sí se avisa.
-- **2b.** El administrador cambia el número de tomas en «Tareas del día» → «Ajustes» (de 1 a 10).
+- **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una comida buena la corta y la siguiente racha sí se avisa.
+- **2b.** El administrador cambia el número de comidas en «Avisos» (`/admin/alert-settings`), con la frase «Avisar si un animal come poco en [2] comidas seguidas» (de 1 a 10).
 
 **Postcondiciones:** el aviso queda en `staff_alerts`; si el administrador lo ha elegido, también sale por email (CU-73).
 
