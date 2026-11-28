@@ -78,7 +78,7 @@
   gap: var(--space-2);
 }
 
-/* Barra de guardar (DESIGN_SYSTEM §8.9): fija abajo, solo con cambios. */
+/* Barra de guardar (DESIGN_SYSTEM §8.9): fija abajo y siempre visible. */
 .saveBar {
   position: fixed;
   right: 0;
@@ -107,6 +107,11 @@
 
 .saveBarText {
   font-weight: 600;
+}
+
+/* Sin texto a la izquierda (no hay cambios), los botones siguen a la derecha. */
+.saveBarActions {
+  margin-left: auto;
 }
 
 .saveBarContent > [role='alert'],

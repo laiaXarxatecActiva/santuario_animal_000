@@ -29,7 +29,7 @@ import styles from './ProfilePage.module.css';
 
 // CU-23 Gestionar el perfil, CU-24 Cambiar la contraseña y CU-25 Eliminar la
 // cuenta (SCREENS §4.6). Datos y preferencias se guardan con un solo botón, en
-// una barra fija que solo aparece con cambios y que antes enseña un resumen;
+// una barra fija siempre visible (botones desactivados sin cambios) que antes enseña un resumen;
 // la contraseña conserva el suyo. El idioma se elige en la cabecera.
 export function ProfilePage() {
   const { t } = useTranslation();
@@ -311,30 +311,31 @@ function DatosYPreferencias({ perfil, onCambios }: { perfil: ProfileDto; onCambi
         </Seccion>
       )}
 
-      {(hayCambios || guardado) && (
-        <div role="region" aria-label={t('profile.saveBar.label')} className={styles.saveBar}>
-          <div className={styles.saveBarContent}>
-            {hayCambios ? (
-              <>
-                <p className={styles.saveBarText}>{t('profile.saveBar.unsaved')}</p>
-                <Resultado ok={false} error={guardar.error} mensaje="" />
-                <div className={styles.saveBarActions}>
-                  <Button variant="outline" onClick={descartar} disabled={guardar.isPending}>
-                    {t('profile.discard')}
-                  </Button>
-                  <Button type="submit" disabled={guardar.isPending}>
-                    {guardar.isPending ? t('profile.saving') : t('profile.saveChanges')}
-                  </Button>
-                </div>
-              </>
-            ) : (
+      {/* Siempre a la vista; sin cambios, los botones se ven pero no se pueden pulsar. */}
+      <div role="region" aria-label={t('profile.saveBar.label')} className={styles.saveBar}>
+        <div className={styles.saveBarContent}>
+          {hayCambios ? (
+            <>
+              <p className={styles.saveBarText}>{t('profile.saveBar.unsaved')}</p>
+              <Resultado ok={false} error={guardar.error} mensaje="" />
+            </>
+          ) : (
+            guardado && (
               <Alert type="success" onClose={() => setGuardado(false)}>
                 {t('profile.saved')}
               </Alert>
-            )}
+            )
+          )}
+          <div className={styles.saveBarActions}>
+            <Button variant="outline" onClick={descartar} disabled={!hayCambios || guardar.isPending}>
+              {t('profile.discard')}
+            </Button>
+            <Button type="submit" disabled={!hayCambios || guardar.isPending}>
+              {guardar.isPending ? t('profile.saving') : t('profile.saveChanges')}
+            </Button>
           </div>
         </div>
-      )}
+      </div>
 
       <Modal
         open={revisando !== null}

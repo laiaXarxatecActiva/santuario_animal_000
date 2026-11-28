@@ -33,8 +33,16 @@ function apiPerfil(perfil: ProfileDto = perfilLucia, extra: Parameters<typeof mo
 const seccion = async (titulo: string) =>
   (await screen.findByRole('heading', { level: 2, name: titulo })).closest('section') as HTMLElement;
 
-/** Barra fija con el único «Guardar cambios»: solo existe si hay algo que guardar. */
+/** Barra fija con el único «Guardar cambios»: siempre está. */
 const barra = () => screen.queryByRole('region', { name: 'Cambios del perfil' });
+
+/** Sin cambios, la barra sigue ahí con los dos botones visibles pero desactivados. */
+const sinCambiosQueGuardar = () => {
+  expect(barra()).toBeInTheDocument();
+  expect(barra()).not.toHaveTextContent('Tienes cambios sin guardar');
+  expect(within(barra()!).getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
+  expect(within(barra()!).getByRole('button', { name: 'Descartar cambios' })).toBeDisabled();
+};
 
 /** Guarda con la barra y confirma en el resumen. */
 async function guardar() {
@@ -88,21 +96,21 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
     expect(telefono).toHaveValue('712-34-56-78');
   });
 
-  it('un solo «Guardar cambios»: sin cambios no hay barra; aparece al cambiar algo y se va al deshacerlo', async () => {
+  it('un solo «Guardar cambios»: la barra está siempre; sus botones se activan al cambiar algo y se desactivan al deshacerlo', async () => {
     apiPerfil();
     renderRoute('/profile');
     const datos = await seccion('Tus datos');
-    expect(barra()).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Guardar/ })).not.toBeInTheDocument();
+    sinCambiosQueGuardar();
 
     await userEvent.type(within(datos).getByLabelText('Nombre'), ' María');
     expect(barra()).toHaveTextContent('Tienes cambios sin guardar');
     expect(within(barra()!).getByRole('button', { name: 'Guardar cambios' })).toBeEnabled();
+    expect(within(barra()!).getByRole('button', { name: 'Descartar cambios' })).toBeEnabled();
     expect(screen.getAllByRole('button', { name: 'Guardar cambios' })).toHaveLength(1);
 
     await userEvent.type(within(datos).getByLabelText('Nombre'), '{Backspace>6/}');
     expect(within(datos).getByLabelText('Nombre')).toHaveValue('Lucía');
-    expect(barra()).not.toBeInTheDocument();
+    sinCambiosQueGuardar();
   });
 
   it('«Descartar cambios» vuelve a lo guardado sin enviar nada', async () => {
@@ -114,7 +122,7 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
     await userEvent.click(within(barra()!).getByRole('button', { name: 'Descartar cambios' }));
     expect(within(datos).getByLabelText('Apellidos')).toHaveValue('Martínez Navarro');
     expect(within(await seccion('Privacidad')).getByRole('switch')).not.toBeChecked();
-    expect(barra()).not.toBeInTheDocument();
+    sinCambiosQueGuardar();
     expect(enviados('/api/me/profile').filter(Boolean)).toEqual([]);
   });
 
@@ -173,7 +181,8 @@ describe('CU-23 Gestionar el perfil y las preferencias', () => {
     await userEvent.click(within(await seccion('Privacidad')).getByRole('switch'));
     await guardar();
     expect(await within(barra()!).findByText('Cambios guardados')).toBeInTheDocument();
-    expect(within(barra()!).queryByRole('button', { name: 'Guardar cambios' })).not.toBeInTheDocument();
+    expect(within(barra()!).getByRole('button', { name: 'Guardar cambios' })).toBeDisabled();
+    expect(within(barra()!).getByRole('button', { name: 'Descartar cambios' })).toBeDisabled();
     // Una sola petición, solo con lo que ha cambiado.
     expect(enviados('/api/me/profile').filter(Boolean)).toEqual([
       { firstName: 'Lucía María', phone: '622334455', showPublicName: true },
