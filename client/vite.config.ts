@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       setupFiles: ['./tests/setup.ts'],
+      // Con toda la batería en marcha (más de 100 archivos a la vez), los tests que
+      // rellenan formularios largos pasan de los 5 s por defecto aunque solos tarden ~2 s.
+      testTimeout: 15000,
     },
   };
 });
