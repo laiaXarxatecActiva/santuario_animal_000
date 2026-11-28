@@ -1,5 +1,6 @@
 import {
   alertSettingsBodySchema,
+  MAX_LOW_INTAKE_MEALS,
   STAFF_EMAIL_ALERT_TYPES,
   type AlertSettingsBody,
   type AlertSettingsDto,
@@ -12,14 +13,23 @@ import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { Checkbox, TextField } from '../../components/FormFields';
+import { Checkbox, InlineField, InlineSelect } from '../../components/FormFields';
+import { TimeField } from '../../components/TimeField';
+
 import { useAlertSettings, WORK_KEY } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
 import { erroresDeApi, erroresPorCampo } from '../../utils/erroresPorCampo';
 import styles from './AdminPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
 
-// CU-73 y CU-74: qué avisos del personal van también por email y el resumen diario (SCREENS §5.7).
+// CU-73, CU-74 y CU-67: qué avisos del personal van también por email, el resumen
+// diario y tras cuántas comidas seguidas comiendo poco se avisa (SCREENS §5.7).
+
+/** 1 a 10 comidas, como admite el servidor. */
+const OPCIONES_COMIDAS = Array.from({ length: MAX_LOW_INTAKE_MEALS }, (_, i) => {
+  const n = String(i + 1);
+  return { value: n, label: n };
+});
 export function AlertSettingsPage() {
   const { t } = useTranslation();
   const ajustes = useAlertSettings();
@@ -55,6 +65,7 @@ function Formulario({ inicial }: { inicial: AlertSettingsDto }) {
   const [tipos, setTipos] = useState<StaffEmailAlertType[]>(inicial.emailAlertTypes);
   const [resumen, setResumen] = useState(inicial.dailySummaryEnabled);
   const [hora, setHora] = useState(inicial.dailySummaryTime);
+  const [comidas, setComidas] = useState(String(inicial.lowIntakeMeals));
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [aviso, setAviso] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -85,6 +96,7 @@ function Formulario({ inicial }: { inicial: AlertSettingsDto }) {
           emailAlertTypes: STAFF_EMAIL_ALERT_TYPES.filter((x) => tipos.includes(x)),
           dailySummaryEnabled: resumen,
           dailySummaryTime: hora,
+          lowIntakeMeals: Number(comidas),
         };
         const resultado = alertSettingsBodySchema.safeParse(datos);
         if (!resultado.success) {
@@ -120,14 +132,32 @@ function Formulario({ inicial }: { inicial: AlertSettingsDto }) {
           checked={resumen}
           onChange={(e) => setResumen(e.target.checked)}
         />
-        <TextField
+        <TimeField
           label={t('work.alertSettings.summaryTime')}
-          inputMode="numeric"
-          placeholder="HH:MM"
           value={hora}
           error={errores.dailySummaryTime}
-          onChange={(e) => setHora(e.target.value)}
+          onChange={setHora}
         />
+      </fieldset>
+      <fieldset>
+        <legend>{t('work.alertSettings.lowIntakeLegend')}</legend>
+        <InlineField
+          before={t('work.alertSettings.lowIntakeBefore')}
+          after={t('work.alertSettings.lowIntakeAfter')}
+          help={t('work.alertSettings.lowIntakeHelp')}
+          error={errores.lowIntakeMeals}
+        >
+          {({ describedBy, invalid }) => (
+            <InlineSelect
+              label={t('work.alertSettings.lowIntakeLabel')}
+              options={OPCIONES_COMIDAS}
+              value={comidas}
+              onChange={setComidas}
+              describedBy={describedBy}
+              invalid={invalid}
+            />
+          )}
+        </InlineField>
       </fieldset>
       <div>
         <Button type="submit" disabled={guardar.isPending}>

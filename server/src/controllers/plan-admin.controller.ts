@@ -39,5 +39,12 @@ export function createPlanAdminController(service: PlanAdminService, actividad: 
     }
     res.json(resultado);
   };
-  return { list, create, update, updateAll };
+  /** A3: borrar para siempre un plan sin uso. */
+  const remove: RequestHandler = async (req, res) => {
+    const { id } = validated(res, 'params', idParamsSchema);
+    const borrado = await service.remove(id);
+    await actividad.log(req.user!.id, 'delete', 'adoption_plans', id, borrado);
+    res.status(204).end();
+  };
+  return { list, create, update, updateAll, remove };
 }

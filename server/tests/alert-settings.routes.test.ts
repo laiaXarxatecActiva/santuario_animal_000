@@ -20,6 +20,7 @@ describe('CU-73 y CU-74 Ajustes de los avisos por email y del resumen diario', (
       emailAlertTypes: ['coverage_gap', 'low_intake', 'medication_missed', 'incident_reported'],
       dailySummaryEnabled: false,
       dailySummaryTime: '20:00',
+      lowIntakeMeals: 2,
     });
   });
 
@@ -34,6 +35,7 @@ describe('CU-73 y CU-74 Ajustes de los avisos por email y del resumen diario', (
       emailAlertTypes: ['vet_visit_today', 'incident_reported'],
       dailySummaryEnabled: true,
       dailySummaryTime: '19:30',
+      lowIntakeMeals: 2,
     });
     expect((await marta.get('/api/admin/alert-settings')).body).toEqual(res.body);
     // Los otros ajustes no cambian.
@@ -49,6 +51,26 @@ describe('CU-73 y CU-74 Ajustes de los avisos por email y del resumen diario', (
       dailySummaryEnabled: [false, true],
       dailySummaryTime: ['20:00', '19:30'],
     });
+  });
+
+  it('CU-67: aquí se elige tras cuántas comidas seguidas comiendo poco se avisa; si no se envía, no cambia', async () => {
+    const cuerpo = { emailAlertTypes: ['incident_reported'], dailySummaryEnabled: false, dailySummaryTime: '20:00' };
+    const res = await marta.put('/api/admin/alert-settings').send({ ...cuerpo, lowIntakeMeals: 3 });
+    expect(res.status).toBe(200);
+    expect(res.body.lowIntakeMeals).toBe(3);
+    const { rows } = await t.pool.query<{ details: Record<string, unknown> }>(
+      "SELECT details FROM activity_logs WHERE table_name = 'work_settings' ORDER BY id DESC LIMIT 1",
+    );
+    expect(rows[0]?.details).toMatchObject({ lowIntakeMeals: [2, 3] });
+
+    const sinCambio = await marta.put('/api/admin/alert-settings').send(cuerpo);
+    expect(sinCambio.body.lowIntakeMeals).toBe(3);
+
+    for (const fuera of [0, 11]) {
+      const mal = await marta.put('/api/admin/alert-settings').send({ ...cuerpo, lowIntakeMeals: fuera });
+      expect(mal.status).toBe(400);
+      expect(mal.body.error.details).toEqual([{ field: 'lowIntakeMeals', message: 'De 1 a 10 comidas.' }]);
+    }
   });
 
   it('valida los datos', async () => {

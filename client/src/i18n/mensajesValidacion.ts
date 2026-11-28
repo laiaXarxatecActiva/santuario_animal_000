@@ -21,6 +21,7 @@ const FIJOS: Record<string, Traduccion> = {
   'Escribe el código postal.': { ca: 'Escriu el codi postal.', en: 'Enter the postcode.' },
   'Escribe la provincia.': { ca: 'Escriu la província.', en: 'Enter the province.' },
   'Escribe el país.': { ca: 'Escriu el país.', en: 'Enter the country.' },
+  'Orden no válido.': { ca: 'Ordre no vàlid.', en: 'Invalid sort order.' },
   'El NIF no es válido.': { ca: 'El NIF no és vàlid.', en: 'The NIF is not valid.' },
   'El código postal no es válido.': { ca: 'El codi postal no és vàlid.', en: 'The postcode is not valid.' },
   'Debes aceptar la política de privacidad.': {
@@ -172,10 +173,6 @@ const FIJOS: Record<string, Traduccion> = {
     en: 'The end date cannot be before the start date.',
   },
   'Elige el día.': { ca: 'Tria el dia.', en: 'Choose the day.' },
-  'Elige una zona, un animal o una persona.': {
-    ca: 'Tria una zona, un animal o una persona.',
-    en: 'Choose an area, an animal or a person.',
-  },
   'Explica por qué no se ha podido hacer.': {
     ca: 'Explica per què no s’ha pogut fer.',
     en: 'Explain why it could not be done.',
@@ -295,7 +292,7 @@ const FIJOS: Record<string, Traduccion> = {
 
 /** Mensajes con un número (longitudes máximas y mínimas). */
 const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
-  [/^De 1 a (\d+) tomas\.$/, (n) => ({ ca: `D’1 a ${n} preses.`, en: `From 1 to ${n} meals.` })],
+  [/^De 1 a (\d+) comidas\.$/, (n) => ({ ca: `D’1 a ${n} menjades.`, en: `From 1 to ${n} meals.` })],
   [/^Como máximo (\d+) días\.$/, (n) => ({ ca: `Com a màxim ${n} dies.`, en: `At most ${n} days.` })],
   [
     /^La contraseña debe tener al menos (\d+) caracteres\.$/,

@@ -126,11 +126,9 @@ export interface MyDayDto {
   shifts: ShiftAssignmentDto[];
 }
 
-/** CU-73. */
+/** CU-55: ajustes del trabajo diario. */
 export interface WorkSettingsDto {
   lateMarginMinutes: number;
-  /** CU-67: tomas seguidas comiendo poco para avisar. */
-  lowIntakeMeals?: number;
 }
 
 /** CU-60. */
@@ -352,6 +350,8 @@ export interface AlertSettingsDto {
   dailySummaryEnabled: boolean;
   /** `HH:MM` de Madrid. */
   dailySummaryTime: string;
+  /** CU-67: comidas seguidas comiendo poco tras las que se avisa. */
+  lowIntakeMeals: number;
 }
 
 /** CU-72: un turno de hoy y si la persona ha fichado. */

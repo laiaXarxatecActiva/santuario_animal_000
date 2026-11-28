@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "Este animal ya no está en el santuario.",
     "ANIMAL_WITHOUT_ZONE": "Este animal no tiene zona: asígnale una en «Datos» para que sus tareas salgan en «Mi día».",
     "MEDICATION_PLAN_HAS_HISTORY": "Esta pauta ya tiene dosis resueltas: termínala en lugar de borrarla.",
+    "PLAN_HAS_HISTORY": "Este plan ya se ha usado en adopciones o pagos: desactívalo en lugar de borrarlo.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "El plan por defecto no se puede borrar: marca antes otro plan como plan por defecto.",
     "MEDICATION_PLAN_NOT_STARTED": "Esta pauta aún no ha empezado: bórrala en lugar de terminarla.",
     "MEDICATION_PLAN_ENDED": "Esta pauta ya ha terminado.",
     "VET_VISIT_NOT_SCHEDULED": "Esta visita ya está registrada o cancelada.",
@@ -566,7 +568,6 @@
     "title": "Mi perfil",
     "saved": "Cambios guardados",
     "saving": "Guardando…",
-    "save": "Guardar",
     "errorLoading": "No hemos podido cargar tu perfil",
     "data": {
       "title": "Tus datos",
@@ -575,8 +576,7 @@
       "phone": "Teléfono (opcional)",
       "phoneHelp": "Móvil español de 9 dígitos, sin el prefijo +34.",
       "email": "Email",
-      "emailHelp": "Si necesitas cambiarlo, escríbenos y lo haremos por ti.",
-      "submit": "Guardar cambios"
+      "emailHelp": "Si necesitas cambiarlo, escríbenos y lo haremos por ti."
     },
     "notifications": {
       "title": "Notificaciones",
@@ -610,10 +610,34 @@
       "submit": "Eliminar cuenta",
       "submitting": "Eliminando…"
     },
-    "language": {
-      "title": "Idioma",
-      "label": "Idioma de la web y de los emails",
-      "help": "También el de los certificados y recibos en PDF."
+    "saveChanges": "Guardar cambios",
+    "discard": "Descartar cambios",
+    "modified": "Modificado",
+    "saveBar": {
+      "label": "Cambios del perfil",
+      "unsaved": "Tienes cambios sin guardar"
+    },
+    "review": {
+      "title": "Revisa los cambios",
+      "intro": "Vas a guardar estos cambios:",
+      "back": "Volver",
+      "confirm": "Confirmar y guardar",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "Sin teléfono",
+      "fields": {
+        "firstName": "Nombre",
+        "lastName": "Apellidos",
+        "phone": "Teléfono",
+        "emailNotifications": "Recibir emails",
+        "emailFrequency": "Frecuencia de los emails",
+        "showPublicName": "Mostrar mi nombre en la ficha"
+      }
+    },
+    "unsaved": {
+      "title": "Tienes cambios sin guardar",
+      "text": "Si sales ahora, se perderán los cambios de tu perfil.",
+      "stay": "Seguir editando",
+      "leave": "Salir sin guardar"
     }
   },
   "admin": {
@@ -646,7 +670,7 @@
       "absences": "Ausencias",
       "today": "Hoy",
       "incidents": "Incidencias",
-      "alertSettings": "Avisos por email",
+      "alertSettings": "Avisos",
       "pending_one": "{{count}} pendiente",
       "pending_other": "{{count}} pendientes"
     },
@@ -668,11 +692,21 @@
       "publishUpdate": "Publicar actualización",
       "allUpToDate": "Todos los animales con adoptantes están al día",
       "loadError": "No hemos podido cargar el escritorio",
-      "quickLinks": "Accesos rápidos",
-      "newAnimal": "Nuevo animal",
       "revenueThisMonth": "este mes",
       "revenueDetail": "cuotas {{fees}} · donaciones {{donations}}",
-      "todayLink": "Ver el panel «Hoy» del santuario"
+      "todayLink": "Ver el panel «Hoy» del santuario",
+      "quickLinks": "Accesos rápidos",
+      "quickLinksCustomize": "Personalizar",
+      "quickLinksEmpty": "No tienes accesos rápidos.",
+      "quickLinksDialogTitle": "Personalizar accesos rápidos",
+      "quickLinksDialogHelp": "Marca lo que quieres tener a mano en el escritorio. Se guarda en este navegador.",
+      "quickLinksReset": "Restablecer",
+      "quickLinksSave": "Guardar",
+      "quickActions": "Acciones",
+      "newUpdate": "Nueva actualización",
+      "newAnimal": "Nuevo animal",
+      "newAdoption": "Nueva adopción",
+      "newDonation": "Registrar donación"
     },
     "common": {
       "save": "Guardar",
@@ -886,7 +920,12 @@
       "unsavedTitle": "Tienes cambios sin guardar",
       "unsavedText": "Si sales ahora, se perderán los cambios de los planes.",
       "unsavedStay": "Seguir editando",
-      "unsavedLeave": "Salir sin guardar"
+      "unsavedLeave": "Salir sin guardar",
+      "saveBarLabel": "Cambios de los planes",
+      "deleted": "Plan borrado",
+      "confirmDelete": "¿Borrar el plan {{name}}?",
+      "confirmDeleteText": "Se borrará para siempre. Esta acción no se puede deshacer.",
+      "deleteBlocked": "Guarda o descarta los cambios antes de borrar un plan."
     },
     "users": {
       "title": "Usuarios",
@@ -1134,8 +1173,7 @@
       "user": "Usuario",
       "system": "Sistema",
       "action": "Acción",
-      "table": "Tabla",
-      "record": "Registro",
+      "table": "Registro",
       "details": "Detalles",
       "showDetails": "Ver detalles",
       "empty": "No hay actividad con estos filtros",
@@ -1254,16 +1292,16 @@
         "species": "Las especies del santuario. Cada animal pertenece a una.",
         "vet": "El historial veterinario de todos los animales, solo para el personal.",
         "today": "Lo más importante de hoy de un vistazo: tareas, medicación, incidencias, turnos y huecos. Cada bloque lleva a su página.",
-        "myDay": "Tus tareas y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
+        "myDay": "Tus tareas, las que no tienen a nadie asignado y tu turno de hoy. Márcalas cuando las hagas, ficha la entrada y la salida, y lee o deja notas para el siguiente turno.",
         "myShifts": "Cuándo has fichado la entrada y la salida de cada turno y cuántas horas has trabajado. Sin fechas, las últimas 4 semanas.",
         "incidents": "Para comunicar problemas del santuario (un animal herido, una avería…) y seguir cómo se resuelven.",
         "shifts": "Aquí ves quién trabaja cada día de la semana y en qué zonas. Si falta personal en un turno, aparece en amarillo.",
-        "tasks": "Todas las tareas de un día. Puedes crear tareas puntuales, reasignarlas y cambiar los ajustes del trabajo diario.",
+        "tasks": "Aquí se organizan las tareas de un día: crearlas, reasignarlas y cambiar los ajustes del trabajo diario. Cada persona marca las suyas como hechas en «Mi día».",
         "taskTemplates": "Las tareas que se repiten (comidas, limpiezas…). Cada plantilla crea sus tareas solas cada día.",
         "zones": "Las zonas del santuario y las cualificaciones que piden algunas tareas.",
         "shiftTemplates": "Los turnos que se hacen (mañana, tarde…), su horario y cuántas personas necesita cada zona.",
         "absences": "Vacaciones, bajas y otras ausencias. Al registrar una, se quitan los turnos de esa persona en esos días.",
-        "alertSettings": "Elige qué avisos del personal llegan también por email y si se envía un resumen del día.",
+        "alertSettings": "Elige qué avisos del personal llegan también por email, si se envía un resumen del día y cuándo se avisa de que un animal come poco.",
         "users": "Todas las cuentas: adoptantes y personal. Busca a alguien por nombre o email y abre su ficha para ver sus adopciones y pagos, desactivarla, cambiar su rol, cerrar sus sesiones, borrar sus datos personales o eliminarla. Desde aquí también se da de alta a un trabajador nuevo.",
         "adoptions": "Todas las adopciones, con sus pagos y notas. Puedes pausarlas, reanudarlas o darlas de alta a mano.",
         "payments": "Los cobros de las cuotas. Puedes filtrarlos, exportarlos y devolver un pago.",
@@ -1377,7 +1415,8 @@
       "deleteTitle": "Cómo borrarlas",
       "deleteText": "Puedes borrarlas cuando quieras desde la configuración de tu navegador, en el apartado de privacidad o de datos de sitios. Si borras la cookie de sesión, tendrás que volver a iniciar sesión.",
       "panelMenuPurpose": "Solo en el panel del personal: qué apartados del menú tienes abiertos.",
-      "pageIntroPurpose": "Solo en el panel del personal: en qué páginas has ocultado la explicación."
+      "pageIntroPurpose": "Solo en el panel del personal: en qué páginas has ocultado la explicación.",
+      "quickLinksPurpose": "Solo en el panel del personal: qué accesos rápidos has elegido para el escritorio."
     }
   },
   "notifications": {
@@ -1454,10 +1493,10 @@
     "status": {
       "pending": "Pendiente",
       "completed": "Hecha",
-      "not_done": "No realizada"
+      "not_done": "No realizada",
+      "resolved": "Resuelta"
     },
     "late": "Atrasada",
-    "oneOff": "Puntual",
     "resolvedBy": "{{name}}, a las {{time}}",
     "resolvedBySystem": "Cerrada por el sistema al acabar el día",
     "assignedTo": "Asignada a {{name}}",
@@ -1488,8 +1527,8 @@
     },
     "myDay": {
       "title": "Mi día",
-      "mine": "Asignadas a ti",
-      "rest": "Tareas del día",
+      "mine": "Tus tareas",
+      "rest": "Sin asignar",
       "empty": "No hay tareas para este día.",
       "prevDay": "Día anterior",
       "nextDay": "Día siguiente",
@@ -1510,7 +1549,15 @@
     },
     "tasks": {
       "title": "Tareas del día",
-      "new": "Nueva tarea puntual",
+      "new": "Nueva tarea",
+      "sort": "Ordenar",
+      "sortByTime": "Por hora",
+      "sortRecent": "Más recientes primero",
+      "recentHelp": "Las {{count}} últimas creadas, de cualquier día.",
+      "noZone": "Sin zona",
+      "mineTitle": "Tuyas",
+      "othersTitle": "Del resto del personal",
+      "doInMyDay": "Hacerlas en «Mi día»",
       "created": "Tarea creada",
       "day": "Día",
       "time": "Hora",
@@ -1546,7 +1593,7 @@
       "saved": "Plantilla guardada",
       "deleted": "Plantilla borrada",
       "zoneFromAnimals": "Según sus animales",
-      "times": "Horas (HH:MM, separadas por comas)",
+      "times": "Horas",
       "recurrence": "Se repite",
       "recurrences": {
         "daily": "Cada día",
@@ -1602,10 +1649,11 @@
     },
     "settings": {
       "title": "Ajustes del trabajo diario",
-      "lateMargin": "Margen para considerar atrasada una tarea (minutos)",
       "saved": "Ajustes guardados",
-      "lowIntakeMeals": "Tomas seguidas comiendo poco para avisar",
-      "lowIntakeMealsHelp": "Cuentan «Menos de la mitad» y «Nada»."
+      "lateMarginBefore": "Una tarea pasa a «Atrasada» si sigue sin hacerse",
+      "lateMarginAfter": "minutos después de su hora",
+      "lateMarginLabel": "Minutos de margen antes de marcar una tarea como «Atrasada»",
+      "lateMarginHelp": "Con 0, en cuanto pasa su hora."
     },
     "absenceTypes": {
       "vacation": "Vacaciones",
@@ -1714,8 +1762,8 @@
     "care": {
       "title": "Cuidados de {{name}}",
       "loadError": "No se han podido cargar los cuidados.",
-      "lowIntakeWarning_one": "Ha comido poco en su última toma.",
-      "lowIntakeWarning_other": "Ha comido poco en sus {{count}} últimas tomas.",
+      "lowIntakeWarning_one": "Ha comido poco en su última comida.",
+      "lowIntakeWarning_other": "Ha comido poco en sus {{count}} últimas comidas.",
       "period": "Vigencia",
       "from": "Desde",
       "until": "Hasta",
@@ -1777,7 +1825,7 @@
         "medication": "Medicamento",
         "dose": "Dosis",
         "route": "Vía",
-        "times": "Horas (HH:MM, separadas por comas)",
+        "times": "Horas",
         "qualification": "Cualificación necesaria",
         "qualificationHelp": "Normalmente, «Administrar medicación».",
         "noQualification": "Ninguna",
@@ -1881,7 +1929,7 @@
       "resolve": "Resolver",
       "reopen": "Reabrir",
       "resolveTitle": "Resolver la incidencia",
-      "pendingTaskWillClose": "Su tarea pendiente «{{title}}» se cerrará: ya no hará falta.",
+      "pendingTaskWillClose": "Su tarea pendiente «{{title}}» se marcará como resuelta: ya no hará falta.",
       "resolveSubmit": "Marcar como resuelta",
       "resolveNote": "¿Cómo se ha resuelto?",
       "resolvedOk": "Incidencia resuelta",
@@ -1926,12 +1974,12 @@
       "gaps": "Zonas sin cubrir",
       "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
       "lowIntake": "Animales que comen poco",
-      "streak_one": "{{count}} toma comiendo poco",
-      "streak_other": "{{count}} tomas comiendo poco",
+      "streak_one": "{{count}} comida comiendo poco",
+      "streak_other": "{{count}} comidas seguidas comiendo poco",
       "vetVisits": "Visitas veterinarias de hoy"
     },
     "alertSettings": {
-      "title": "Avisos por email",
+      "title": "Avisos",
       "loadError": "No se han podido cargar los ajustes de los avisos.",
       "saved": "Ajustes guardados",
       "emailLegend": "Avisos que también se envían por email",
@@ -1946,7 +1994,12 @@
       "summaryLegend": "Resumen del día",
       "summaryHelp": "Un email a la administración con las tareas, la medicación, las incidencias y los huecos del día.",
       "summaryEnabled": "Enviar el resumen del día",
-      "summaryTime": "Hora del resumen"
+      "summaryTime": "Hora del resumen",
+      "lowIntakeLegend": "Animales que comen poco",
+      "lowIntakeBefore": "Avisar si un animal come poco en",
+      "lowIntakeAfter": "comidas seguidas",
+      "lowIntakeLabel": "Comidas seguidas comiendo poco antes de avisar",
+      "lowIntakeHelp": "«Comer poco» es anotar «Menos de la mitad» o «Nada». Ejemplo: con 2, si un animal come poco en el desayuno y en la comida, la campana avisa a los administradores y a quien tenga turno en su zona."
     },
     "clock": {
       "title": "Fichaje",
@@ -1990,5 +2043,10 @@
     "removeOne": "Quitar {{name}}",
     "chosen": "Fotos elegidas",
     "tooMany": "Como mucho {{count}} fotos."
+  },
+  "time": {
+    "new": "Nueva hora",
+    "add": "Añadir hora",
+    "remove": "Quitar {{time}}"
   }
 }

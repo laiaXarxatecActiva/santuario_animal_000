@@ -141,7 +141,7 @@ export function createIncidentService({ db, reloj, media, crearTarea }: Incident
 
     /**
      * Resolverla o reabrirla. Al resolverla, su tarea pendiente (si la tiene) se
-     * cierra como «no realizada»: ya no hace falta. Devuelve el estado anterior para
+     * cierra como hecha (en el panel, «Resuelta»): ya no hace falta. Devuelve el estado anterior para
      * el registro de actividad.
      */
     async setStatus(
@@ -165,7 +165,7 @@ export function createIncidentService({ db, reloj, media, crearTarea }: Incident
         const pendiente = datos.status === 'resolved' ? await taskModel.findPendingOfIncident(client, id) : null;
         if (pendiente !== null) {
           await taskModel.resolve(client, pendiente, {
-            status: 'not_done',
+            status: 'completed',
             resolvedBy: userId,
             resolvedAt: reloj.ahora(),
             observations: TAREA_YA_NO_HACE_FALTA,

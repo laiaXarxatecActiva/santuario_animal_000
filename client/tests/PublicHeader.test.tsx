@@ -64,14 +64,7 @@ describe('PublicHeader', () => {
     mockApi({ '/api/auth/me': { body: { user: sessionUser() } } });
     pintar();
     const menu = await screen.findByRole('button', { name: 'Menú de Lucía' });
-    expect(textos(navegacion())).toEqual([
-      'Animales',
-      'Cómo funciona',
-      'Mis animales',
-      'Novedades',
-      'Mis aportaciones',
-      'Donar',
-    ]);
+    expect(textos(navegacion())).toEqual(['Animales', 'Mis animales', 'Novedades', 'Mis aportaciones', 'Donar']);
     expect(screen.queryByRole('link', { name: 'Entrar' })).not.toBeInTheDocument();
 
     expect(menu).toHaveAttribute('aria-expanded', 'false');

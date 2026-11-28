@@ -123,6 +123,8 @@ export const adminApi = {
     create: (body: PlanCreateBody) => apiPost<AdminPlanDto>('/api/admin/plans', body),
     /** Todos los planes a la vez (un solo «Guardar cambios»). */
     updateAll: (body: PlansUpdateBody) => apiPut<{ data: AdminPlanDto[] }>('/api/admin/plans', body),
+    /** A3: solo un plan que nunca se ha usado. */
+    remove: (id: number) => apiDelete(`/api/admin/plans/${id}`),
   },
 
   species: {

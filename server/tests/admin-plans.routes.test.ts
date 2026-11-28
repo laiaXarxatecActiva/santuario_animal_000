@@ -127,6 +127,7 @@ describe('CU-40 Gestionar planes de adopción', () => {
       isDefault: false,
       isActive: true,
       activeAdoptions: 0,
+      deletable: true,
     });
     expect((await publicos()).at(-1)?.name).toBe('Padrino de honor');
 
@@ -154,5 +155,71 @@ describe('CU-40 Gestionar planes de adopción', () => {
     expect((await marta.post('/api/admin/plans').send({ name: '', monthlyAmount: '3' })).status).toBe(400);
     const res = await marta.put('/api/admin/plans/999').send(await edicion(2, {}));
     expect(res.status).toBe(404);
+  });
+});
+
+describe('CU-40 A3 Borrar un plan que nunca se ha usado', () => {
+  const ruta = (id: number) => `/api/admin/plans/${id}`;
+  const nuevo = async (name: string, extra: Record<string, unknown> = {}): Promise<number> => {
+    const res = await marta.post('/api/admin/plans').send({ name, monthlyAmount: '3', ...extra });
+    expect(res.status).toBe(201);
+    return res.body.id as number;
+  };
+
+  it('solo el administrador: sin sesión 401; cuidadora y adoptante 403, sin borrar nada', async () => {
+    const id = await nuevo('Sin uso para permisos');
+    expect((await request(t.app).delete(ruta(id)).send({})).status).toBe(401);
+    for (const quien of ['nuria', 'lucia'] as const) {
+      const agente = await entrarComo(t.app, quien);
+      expect((await agente.delete(ruta(id)).send({})).status).toBe(403);
+    }
+    expect(await plan(id)).toBeDefined();
+  });
+
+  it('cada plan dice si se puede borrar: solo los que nunca se han usado y no son el de por defecto', async () => {
+    const id = await nuevo('Recién creado');
+    const lista = await planes();
+    expect(lista.find((p) => p.id === id)?.deletable).toBe(true);
+    // Los planes de RN-04 tienen adopciones y pagos; Usual, además, es el de por defecto.
+    for (const p of lista.filter((x) => x.id <= 3)) expect(p.deletable).toBe(false);
+  });
+
+  it('borra para siempre un plan sin uso, deja de ofrecerse y queda en el registro de actividad', async () => {
+    const id = await nuevo('Para borrar');
+    const res = await marta.delete(ruta(id)).send({});
+    expect(res.status).toBe(204);
+    expect(await plan(id)).toBeUndefined();
+    expect((await publicos()).some((p) => p.id === id)).toBe(false);
+    const { rows } = await t.pool.query(
+      "SELECT action, details FROM activity_logs WHERE table_name = 'adoption_plans' AND record_id = $1",
+      [id],
+    );
+    expect(rows).toEqual([
+      { action: 'create', details: expect.anything() },
+      { action: 'delete', details: { name: 'Para borrar', monthlyAmount: '3.00' } },
+    ]);
+  });
+
+  it('un plan con adopciones, pagos o historial no se borra (409): se desactiva', async () => {
+    for (const id of [1, 3]) {
+      const res = await marta.delete(ruta(id)).send({});
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe('PLAN_HAS_HISTORY');
+      expect(await plan(id)).toBeDefined();
+    }
+  });
+
+  it('el plan por defecto no se borra (422), aunque no se haya usado', async () => {
+    const id = await nuevo('Nuevo por defecto', { isDefault: true });
+    expect((await planes()).find((p) => p.id === id)?.deletable).toBe(false);
+    const res = await marta.delete(ruta(id)).send({});
+    expect(res.status).toBe(422);
+    expect(res.body.error.code).toBe('DEFAULT_PLAN_CANNOT_BE_DELETED');
+    expect(await plan(id)).toBeDefined();
+  });
+
+  it('un plan que no existe responde 404 y un id no válido, 400', async () => {
+    expect((await marta.delete(ruta(9999)).send({})).status).toBe(404);
+    expect((await marta.delete('/api/admin/plans/abc').send({})).status).toBe(400);
   });
 });

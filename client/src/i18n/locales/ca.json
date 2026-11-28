@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "Aquest animal ja no és al santuari.",
     "ANIMAL_WITHOUT_ZONE": "Aquest animal no té zona: assigna-li’n una a «Dades» perquè les seues tasques isquen a «El meu dia».",
     "MEDICATION_PLAN_HAS_HISTORY": "Aquesta pauta ja té dosis resoltes: acaba-la en lloc d’esborrar-la.",
+    "PLAN_HAS_HISTORY": "Aquest pla ja s'ha fet servir en adopcions o pagaments: desactiva'l en lloc d'esborrar-lo.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "El pla per defecte no es pot esborrar: marca abans un altre pla com a pla per defecte.",
     "MEDICATION_PLAN_NOT_STARTED": "Aquesta pauta encara no ha començat: esborra-la en lloc d’acabar-la.",
     "MEDICATION_PLAN_ENDED": "Aquesta pauta ja ha acabat.",
     "VET_VISIT_NOT_SCHEDULED": "Aquesta visita ja està registrada o cancel·lada.",
@@ -566,7 +568,6 @@
     "title": "El meu perfil",
     "saved": "Canvis guardats",
     "saving": "Guardant…",
-    "save": "Guarda",
     "errorLoading": "No hem pogut carregar el teu perfil",
     "data": {
       "title": "Les teues dades",
@@ -575,8 +576,7 @@
       "phone": "Telèfon (opcional)",
       "phoneHelp": "Mòbil espanyol de 9 xifres, sense el prefix +34.",
       "email": "Correu electrònic",
-      "emailHelp": "Si necessites canviar-lo, escriu-nos i ho farem per tu.",
-      "submit": "Guarda els canvis"
+      "emailHelp": "Si necessites canviar-lo, escriu-nos i ho farem per tu."
     },
     "notifications": {
       "title": "Notificacions",
@@ -610,10 +610,34 @@
       "submit": "Elimina el compte",
       "submitting": "Eliminant…"
     },
-    "language": {
-      "title": "Idioma",
-      "label": "Idioma de la web i dels correus",
-      "help": "També el dels certificats i els rebuts en PDF."
+    "saveChanges": "Guardar els canvis",
+    "discard": "Descartar els canvis",
+    "modified": "Modificat",
+    "saveBar": {
+      "label": "Canvis del perfil",
+      "unsaved": "Tens canvis sense guardar"
+    },
+    "review": {
+      "title": "Revisa els canvis",
+      "intro": "Guardaràs estos canvis:",
+      "back": "Tornar",
+      "confirm": "Confirmar i guardar",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "Sense telèfon",
+      "fields": {
+        "firstName": "Nom",
+        "lastName": "Cognoms",
+        "phone": "Telèfon",
+        "emailNotifications": "Rebre correus",
+        "emailFrequency": "Freqüència dels correus",
+        "showPublicName": "Mostrar el meu nom en la fitxa"
+      }
+    },
+    "unsaved": {
+      "title": "Tens canvis sense guardar",
+      "text": "Si ixes ara, es perdran els canvis del teu perfil.",
+      "stay": "Continuar editant",
+      "leave": "Eixir sense guardar"
     }
   },
   "admin": {
@@ -646,7 +670,7 @@
       "absences": "Absències",
       "today": "Hui",
       "incidents": "Incidències",
-      "alertSettings": "Avisos per correu",
+      "alertSettings": "Avisos",
       "pending_one": "{{count}} pendent",
       "pending_other": "{{count}} pendents"
     },
@@ -668,11 +692,21 @@
       "publishUpdate": "Publica una actualització",
       "allUpToDate": "Tots els animals amb adoptants estan al dia",
       "loadError": "No hem pogut carregar l'escriptori",
-      "quickLinks": "Accessos ràpids",
-      "newAnimal": "Animal nou",
       "revenueThisMonth": "este mes",
       "revenueDetail": "quotes {{fees}} · donacions {{donations}}",
-      "todayLink": "Vore el panell «Hui» del santuari"
+      "todayLink": "Vore el panell «Hui» del santuari",
+      "quickLinks": "Accessos ràpids",
+      "quickLinksCustomize": "Personalitzar",
+      "quickLinksEmpty": "No tens accessos ràpids.",
+      "quickLinksDialogTitle": "Personalitzar els accessos ràpids",
+      "quickLinksDialogHelp": "Marca el que vols tindre a mà a l'escriptori. Es guarda en este navegador.",
+      "quickLinksReset": "Restablir",
+      "quickLinksSave": "Guardar",
+      "quickActions": "Accions",
+      "newUpdate": "Nova actualització",
+      "newAnimal": "Nou animal",
+      "newAdoption": "Nova adopció",
+      "newDonation": "Registrar una donació"
     },
     "common": {
       "save": "Guarda",
@@ -886,7 +920,12 @@
       "unsavedTitle": "Tens canvis sense desar",
       "unsavedText": "Si ixes ara, es perdran els canvis dels plans.",
       "unsavedStay": "Continuar editant",
-      "unsavedLeave": "Eixir sense desar"
+      "unsavedLeave": "Eixir sense desar",
+      "saveBarLabel": "Canvis dels plans",
+      "deleted": "Pla esborrat",
+      "confirmDelete": "Vols esborrar el pla {{name}}?",
+      "confirmDeleteText": "S'esborrarà per sempre. Aquesta acció no es pot desfer.",
+      "deleteBlocked": "Guarda o descarta els canvis abans d'esborrar un pla."
     },
     "users": {
       "title": "Usuaris",
@@ -1134,8 +1173,7 @@
       "user": "Usuari",
       "system": "Sistema",
       "action": "Acció",
-      "table": "Taula",
-      "record": "Registre",
+      "table": "Registre",
       "details": "Detalls",
       "showDetails": "Mostra els detalls",
       "empty": "No hi ha activitat amb estos filtres",
@@ -1254,16 +1292,16 @@
         "species": "Les espècies del santuari. Cada animal pertany a una.",
         "vet": "L’historial veterinari de tots els animals, només per al personal.",
         "today": "El més important de hui d’un colp d’ull: tasques, medicació, incidències, torns i buits. Cada bloc porta a la seua pàgina.",
-        "myDay": "Les teues tasques i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
+        "myDay": "Les teues tasques, les que no tenen ningú assignat i el teu torn de hui. Marca-les quan les faces, fitxa l’entrada i l’eixida, i llig o deixa notes per al torn següent.",
         "myShifts": "Quan has fitxat l’entrada i l’eixida de cada torn i quantes hores has treballat. Sense dates, les últimes 4 setmanes.",
         "incidents": "Per a comunicar problemes del santuari (un animal ferit, una avaria…) i seguir com es resolen.",
         "shifts": "Ací veus qui treballa cada dia de la setmana i en quines zones. Si falta personal en un torn, apareix en groc.",
-        "tasks": "Totes les tasques d’un dia. Pots crear tasques puntuals, reassignar-les i canviar els ajustos del treball diari.",
+        "tasks": "Ací s’organitzen les tasques d’un dia: crear-les, reassignar-les i canviar els ajustos del treball diari. Cada persona marca les seues com a fetes en «El meu dia».",
         "taskTemplates": "Les tasques que es repetixen (menjars, neteges…). Cada plantilla crea les seues tasques soles cada dia.",
         "zones": "Les zones del santuari i les qualificacions que demanen algunes tasques.",
         "shiftTemplates": "Els torns que es fan (matí, vesprada…), el seu horari i quantes persones necessita cada zona.",
         "absences": "Vacances, baixes i altres absències. En registrar-ne una, es lleven els torns d’eixa persona en eixos dies.",
-        "alertSettings": "Tria quins avisos del personal arriben també per correu i si s’envia un resum del dia.",
+        "alertSettings": "Tria quins avisos del personal arriben també per correu, si s’envia un resum del dia i quan s’avisa que un animal menja poc.",
         "users": "Tots els comptes: adoptants i personal. Busca algú pel nom o l'email i obri la seua fitxa per a veure'n les adopcions i els pagaments, desactivar-lo, canviar-ne el rol, tancar-ne les sessions, esborrar-ne les dades personals o eliminar-lo. Des d'ací també es dona d'alta un treballador nou.",
         "adoptions": "Totes les adopcions, amb els pagaments i les notes. Pots pausar-les, reprendre-les o donar-les d’alta a mà.",
         "payments": "Els cobraments de les quotes. Pots filtrar-los, exportar-los i tornar un pagament.",
@@ -1377,7 +1415,8 @@
       "deleteTitle": "Com esborrar-les",
       "deleteText": "Pots esborrar-les quan vulgues des de la configuració del teu navegador, a l'apartat de privadesa o de dades de llocs. Si esborres la galeta de sessió, hauràs de tornar a iniciar la sessió.",
       "panelMenuPurpose": "Només al panell del personal: quins apartats del menú tens oberts.",
-      "pageIntroPurpose": "Només al panell del personal: en quines pàgines has amagat l’explicació."
+      "pageIntroPurpose": "Només al panell del personal: en quines pàgines has amagat l’explicació.",
+      "quickLinksPurpose": "Només al tauler del personal: quins accessos ràpids has triat per a l'escriptori."
     }
   },
   "notifications": {
@@ -1454,10 +1493,10 @@
     "status": {
       "pending": "Pendent",
       "completed": "Feta",
-      "not_done": "No feta"
+      "not_done": "No feta",
+      "resolved": "Resolta"
     },
     "late": "Endarrerida",
-    "oneOff": "Puntual",
     "resolvedBy": "{{name}}, a les {{time}}",
     "resolvedBySystem": "Tancada pel sistema en acabar el dia",
     "assignedTo": "Assignada a {{name}}",
@@ -1488,8 +1527,8 @@
     },
     "myDay": {
       "title": "El meu dia",
-      "mine": "Assignades a tu",
-      "rest": "Tasques del dia",
+      "mine": "Les teues tasques",
+      "rest": "Sense assignar",
       "empty": "No hi ha tasques per a este dia.",
       "prevDay": "Dia anterior",
       "nextDay": "Dia següent",
@@ -1510,7 +1549,15 @@
     },
     "tasks": {
       "title": "Tasques del dia",
-      "new": "Nova tasca puntual",
+      "new": "Nova tasca",
+      "sort": "Ordena",
+      "sortByTime": "Per hora",
+      "sortRecent": "Més recents primer",
+      "recentHelp": "Les {{count}} últimes creades, de qualsevol dia.",
+      "noZone": "Sense zona",
+      "mineTitle": "Teues",
+      "othersTitle": "De la resta del personal",
+      "doInMyDay": "Fes-les en «El meu dia»",
       "created": "Tasca creada",
       "day": "Dia",
       "time": "Hora",
@@ -1546,7 +1593,7 @@
       "saved": "Plantilla guardada",
       "deleted": "Plantilla esborrada",
       "zoneFromAnimals": "Segons els seus animals",
-      "times": "Hores (HH:MM, separades per comes)",
+      "times": "Hores",
       "recurrence": "Es repetix",
       "recurrences": {
         "daily": "Cada dia",
@@ -1602,10 +1649,11 @@
     },
     "settings": {
       "title": "Configuració del treball diari",
-      "lateMargin": "Marge per a considerar endarrerida una tasca (minuts)",
       "saved": "Configuració guardada",
-      "lowIntakeMeals": "Preses seguides menjant poc per a avisar",
-      "lowIntakeMealsHelp": "Compten «Menys de la meitat» i «Res»."
+      "lateMarginBefore": "Una tasca passa a «Endarrerida» si continua sense fer-se",
+      "lateMarginAfter": "minuts després de la seua hora",
+      "lateMarginLabel": "Minuts de marge abans de marcar una tasca com a «Endarrerida»",
+      "lateMarginHelp": "Amb 0, tan prompte com passa la seua hora."
     },
     "absenceTypes": {
       "vacation": "Vacances",
@@ -1714,8 +1762,8 @@
     "care": {
       "title": "Cures de {{name}}",
       "loadError": "No s'han pogut carregar les cures.",
-      "lowIntakeWarning_one": "Ha menjat poc en la seua última presa.",
-      "lowIntakeWarning_other": "Ha menjat poc en les seues {{count}} últimes preses.",
+      "lowIntakeWarning_one": "Ha menjat poc en la seua última menjada.",
+      "lowIntakeWarning_other": "Ha menjat poc en les seues {{count}} últimes menjades.",
       "period": "Vigència",
       "from": "Des de",
       "until": "Fins a",
@@ -1777,7 +1825,7 @@
         "medication": "Medicament",
         "dose": "Dosi",
         "route": "Via",
-        "times": "Hores (HH:MM, separades per comes)",
+        "times": "Hores",
         "qualification": "Qualificació necessària",
         "qualificationHelp": "Normalment, «Administrar medicació».",
         "noQualification": "Cap",
@@ -1881,7 +1929,7 @@
       "resolve": "Resoldre",
       "reopen": "Reobrir",
       "resolveTitle": "Resoldre la incidència",
-      "pendingTaskWillClose": "La seua tasca pendent «{{title}}» es tancarà: ja no caldrà.",
+      "pendingTaskWillClose": "La seua tasca pendent «{{title}}» es marcarà com a resolta: ja no caldrà.",
       "resolveSubmit": "Marcar com a resolta",
       "resolveNote": "Com s’ha resolt?",
       "resolvedOk": "Incidència resolta",
@@ -1926,12 +1974,12 @@
       "gaps": "Zones sense cobrir",
       "gap": "{{zone}} · {{shift}}: {{assigned}} de {{required}}",
       "lowIntake": "Animals que mengen poc",
-      "streak_one": "{{count}} presa menjant poc",
-      "streak_other": "{{count}} preses menjant poc",
+      "streak_one": "{{count}} menjada menjant poc",
+      "streak_other": "{{count}} menjades seguides menjant poc",
       "vetVisits": "Visites veterinàries de hui"
     },
     "alertSettings": {
-      "title": "Avisos per correu",
+      "title": "Avisos",
       "loadError": "No s’han pogut carregar els ajustos dels avisos.",
       "saved": "Ajustos guardats",
       "emailLegend": "Avisos que també s’envien per correu",
@@ -1946,7 +1994,12 @@
       "summaryLegend": "Resum del dia",
       "summaryHelp": "Un correu a l’administració amb les tasques, la medicació, les incidències i els buits del dia.",
       "summaryEnabled": "Enviar el resum del dia",
-      "summaryTime": "Hora del resum"
+      "summaryTime": "Hora del resum",
+      "lowIntakeLegend": "Animals que mengen poc",
+      "lowIntakeBefore": "Avisar si un animal menja poc en",
+      "lowIntakeAfter": "menjades seguides",
+      "lowIntakeLabel": "Menjades seguides menjant poc abans d’avisar",
+      "lowIntakeHelp": "«Menjar poc» és anotar «Menys de la meitat» o «Res». Exemple: amb 2, si un animal menja poc en l’esmorzar i en el dinar, la campana avisa els administradors i qui tinga torn en la seua zona."
     },
     "clock": {
       "title": "Fitxatge",
@@ -1990,5 +2043,10 @@
     "removeOne": "Lleva {{name}}",
     "chosen": "Fotos triades",
     "tooMany": "Com a màxim {{count}} fotos."
+  },
+  "time": {
+    "new": "Nova hora",
+    "add": "Afig una hora",
+    "remove": "Lleva {{time}}"
   }
 }

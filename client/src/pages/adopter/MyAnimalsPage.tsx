@@ -8,7 +8,7 @@ import {
   type SimulatedOutcome,
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { adoptionsApi } from '../../api/adoptions';
@@ -266,6 +266,7 @@ function TarjetaAdopcion({
   const { t } = useTranslation();
   const { animal, plan } = adopcion;
   const importe = formatCurrency(plan.monthlyAmount);
+  const botonPlan = useRef<HTMLButtonElement>(null);
 
   // Las acciones que ofrece la API (CU-20 1a, CU-21): el servidor vuelve a comprobarlas.
   const activaSinBaja = adopcion.status === 'active' && !adopcion.cancelRequested;
@@ -321,12 +322,6 @@ function TarjetaAdopcion({
           <p className={styles.muted}>{t('adoption.nextUpdate', { date: formatDate(adopcion.nextUpdateExpected) })}</p>
         )}
         <EstadoPago adopcion={adopcion} onPay={onPay} />
-        {editandoPlan && activaSinBaja && (
-          <CambioDePlan adopcion={adopcion} saving={guardandoPlan} onSave={onSavePlan} onClose={onClosePlan} />
-        )}
-        {editandoForma && abiertaSinBaja && (
-          <CambioDeFormaDePago adopcion={adopcion} saving={guardandoForma} onSave={onSaveMode} onClose={onCloseMode} />
-        )}
         <div className={styles.actions}>
           <ButtonLink to={`/my-animals/${animal.id}`}>{t('myAnimals.seeProfile', { name: animal.name })}</ButtonLink>
           {/* CU-22: el certificado en PDF se abre en otra pestaña; la descarga va en «⋯». */}
@@ -344,11 +339,29 @@ function TarjetaAdopcion({
             </ButtonLink>
           )}
           {activaSinBaja && (
-            <Button variant="outline" aria-expanded={editandoPlan} onClick={editandoPlan ? onClosePlan : onChangePlan}>
+            <Button
+              ref={botonPlan}
+              variant="outline"
+              aria-expanded={editandoPlan}
+              onClick={editandoPlan ? onClosePlan : onChangePlan}
+            >
               {t('manageAdoption.changePlan')}
             </Button>
           )}
         </div>
+        {/* Debajo de los botones, para que no cambien de sitio al abrirse (SCREENS §4.2). */}
+        {editandoPlan && activaSinBaja && (
+          <CambioDePlan
+            adopcion={adopcion}
+            saving={guardandoPlan}
+            onSave={onSavePlan}
+            onClose={onClosePlan}
+            boton={botonPlan}
+          />
+        )}
+        {editandoForma && abiertaSinBaja && (
+          <CambioDeFormaDePago adopcion={adopcion} saving={guardandoForma} onSave={onSaveMode} onClose={onCloseMode} />
+        )}
       </div>
     </article>
   );
@@ -385,20 +398,55 @@ function EstadoPago({ adopcion, onPay }: { adopcion: AdoptionDto; onPay: () => v
   );
 }
 
+/**
+ * Cierra el desplegable de la tarjeta sin guardar al pulsar fuera de él o con
+ * Escape (SCREENS §4.2). El botón que lo abre no cuenta como «fuera»: ese ya lo
+ * cierra con su propio clic. Mientras se guarda, no se cierra.
+ */
+function useCerrarDesplegable(
+  panel: RefObject<HTMLElement | null>,
+  { saving, onClose, boton }: { saving: boolean; onClose: () => void; boton?: RefObject<HTMLElement | null> },
+) {
+  useEffect(() => {
+    if (saving) return;
+    const alPulsarTecla = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      onClose();
+      boton?.current?.focus();
+    };
+    const alPulsarFuera = (e: MouseEvent) => {
+      if (!(e.target instanceof Node)) return;
+      if (panel.current?.contains(e.target) || boton?.current?.contains(e.target)) return;
+      onClose();
+    };
+    document.addEventListener('keydown', alPulsarTecla);
+    document.addEventListener('mousedown', alPulsarFuera);
+    return () => {
+      document.removeEventListener('keydown', alPulsarTecla);
+      document.removeEventListener('mousedown', alPulsarFuera);
+    };
+  }, [panel, saving, onClose, boton]);
+}
+
 /** CU-20 pasos 2-3: desplegable en la tarjeta con los planes activos (SCREENS §4.2). */
 function CambioDePlan({
   adopcion,
   saving,
   onSave,
   onClose,
+  boton,
 }: {
   adopcion: AdoptionDto;
   saving: boolean;
   onSave: (planId: number) => void;
   onClose: () => void;
+  /** Botón «Cambiar plan»: no cierra como un clic fuera y recibe el foco con Escape. */
+  boton: RefObject<HTMLButtonElement | null>;
 }) {
   const { t } = useTranslation();
   const planes = usePlans();
+  const panel = useRef<HTMLFormElement>(null);
+  useCerrarDesplegable(panel, { saving, onClose, boton });
   const nombre = useId();
   const inicial = adopcion.nextPlan?.id ?? adopcion.plan.id;
   const [elegido, setElegido] = useState(inicial);
@@ -409,6 +457,7 @@ function CambioDePlan({
 
   return (
     <form
+      ref={panel}
       onSubmit={(e) => {
         e.preventDefault();
         // Elegir lo que ya estaba no cambia nada (3a): se cierra sin llamar a la API.
@@ -463,9 +512,12 @@ function CambioDeFormaDePago({
   const { t } = useTranslation();
   const nombre = useId();
   const [elegida, setElegida] = useState<PaymentMode>(adopcion.paymentMode);
+  const panel = useRef<HTMLFormElement>(null);
+  useCerrarDesplegable(panel, { saving, onClose });
 
   return (
     <form
+      ref={panel}
       onSubmit={(e) => {
         e.preventDefault();
         // Elegir la que ya tenía no cambia nada: se cierra sin llamar a la API.

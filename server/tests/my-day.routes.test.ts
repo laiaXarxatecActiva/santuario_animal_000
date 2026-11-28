@@ -79,7 +79,19 @@ describe('CU-56 Consultar «Mi día»', () => {
   it('2: una tarea reasignada a alguien es suya y de nadie más', async () => {
     const puerta = (agente: Agente) => miDia(agente).then((d) => buscar(d, 'Reparar la puerta del almacén'));
     expect(await puerta(andres)).toMatchObject({ mine: true, isOneOff: true, assignedTo: { id: 4 } });
-    expect((await puerta(nuria)).mine).toBe(false);
+    await expect(puerta(nuria)).rejects.toThrow(/No está/);
+  });
+
+  it('RN-40: solo le llegan sus tareas y las que no tienen a nadie; tampoco al administrador las de otros', async () => {
+    for (const [agente, id] of [
+      [nuria, 3],
+      [marta, 1],
+    ] as const) {
+      const dia = await miDia(agente);
+      expect(dia.tasks.length).toBeGreaterThan(0);
+      expect(dia.tasks.every((x) => x.assignedTo === null || x.assignedTo.id === id)).toBe(true);
+      expect(dia.tasks.some((x) => x.title === 'Reparar la puerta del almacén')).toBe(false);
+    }
   });
 
   it('3: se puede consultar otro día; las tareas de mañana no se pueden hacer todavía', async () => {
@@ -200,6 +212,51 @@ describe('CU-55 Tareas puntuales y reasignación (administrador)', () => {
     expect(buscar(await miDia(nuria), 'Cambiar la bombilla de la cámara').blockedReason).toBeNull();
   });
 
+  it('1-2: zona, animales y persona son opcionales; sin ellas, la ve todo el personal en «Sin asignar»', async () => {
+    const res = await marta.post('/api/admin/tasks').send({
+      type: 'maintenance',
+      title: 'Revisar los extintores',
+      dueDate: t.hoy,
+      dueTime: '18:30',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ zone: null, animals: [], assignedTo: null });
+    for (const agente of [nuria, andres]) {
+      expect(buscar(await miDia(agente), 'Revisar los extintores')).toMatchObject({ mine: false, blockedReason: null });
+    }
+  });
+
+  it('1-2: con animales de zonas distintas y sin zona elegida, la tarea queda sin zona', async () => {
+    const res = await marta.post('/api/admin/tasks').send({
+      type: 'health_check',
+      title: 'Pesar a Olmo y a otro',
+      animalIds: [4, 1],
+      dueDate: t.hoy,
+      dueTime: '18:45',
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.zone).toBeNull();
+    expect(res.body.animals).toHaveLength(2);
+  });
+
+  it('se ordenan por las creadas más recientemente, de cualquier día (las 50 últimas)', async () => {
+    const crear = (title: string, dueDate: string) =>
+      marta.post('/api/admin/tasks').send({ type: 'cleaning', title, zoneId: 5, dueDate, dueTime: '11:00' });
+    expect((await crear('Creada primero, para mañana', sumarDias(t.hoy, 1))).status).toBe(201);
+    expect((await crear('Creada después, para dentro de 3 días', sumarDias(t.hoy, 3))).status).toBe(201);
+    const res = await marta.get('/api/admin/tasks').query({ sort: '-createdAt', date: t.hoy });
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeLessThanOrEqual(50);
+    expect(res.body.data.slice(0, 2).map((x: MyDayTaskDto) => x.title)).toEqual([
+      'Creada después, para dentro de 3 días',
+      'Creada primero, para mañana',
+    ]);
+    // La zona y el estado siguen filtrando.
+    const otraZona = await marta.get('/api/admin/tasks').query({ sort: '-createdAt', zoneId: 4 });
+    expect(otraZona.body.data.every((x: MyDayTaskDto) => x.zone?.id === 4)).toBe(true);
+    expect((await marta.get('/api/admin/tasks').query({ sort: 'title' })).status).toBe(400);
+  });
+
   it('3: reasigna una tarea a una persona con la cualificación necesaria', async () => {
     const id = await tareaDe(11, sumarDias(t.hoy, 1), '09:00');
     expect((await nuria.patch(`/api/admin/tasks/${id}/assignee`).send({ userId: 3 })).status).toBe(403);
@@ -222,5 +279,38 @@ describe('CU-55 Tareas puntuales y reasignación (administrador)', () => {
     expect((await marta.delete(`/api/admin/tasks/${hecha}`).send({})).status).toBe(409);
     const pendiente = await tareaDe(7, t.hoy, '16:00');
     expect((await marta.delete(`/api/admin/tasks/${pendiente}`).send({})).status).toBe(204);
+  });
+});
+
+describe('RN-40 Una tarea asignada solo la resuelve su persona', () => {
+  const puerta = async (): Promise<number> => {
+    const { rows } = await t.pool.query<{ id: number }>(
+      "SELECT id FROM task_instances WHERE title = 'Reparar la puerta del almacén'",
+    );
+    return rows[0]!.id;
+  };
+
+  it('otra persona, también el administrador, recibe 403 al completarla o marcarla como no realizada', async () => {
+    const id = await puerta();
+    for (const agente of [nuria, marta]) {
+      const hecha = await agente.post(`/api/admin/tasks/${id}/complete`).send({});
+      expect(hecha.status).toBe(403);
+      expect(hecha.body.error.code).toBe('TASK_NOT_YOURS');
+      const noHecha = await agente.post(`/api/admin/tasks/${id}/not-done`).send({ reason: 'No me toca.' });
+      expect(noHecha.status).toBe(403);
+      expect(noHecha.body.error.code).toBe('TASK_NOT_YOURS');
+    }
+    const { rows } = await t.pool.query<{ status: string }>('SELECT status FROM task_instances WHERE id = $1', [id]);
+    expect(rows).toEqual([{ status: 'pending' }]);
+  });
+
+  it('su persona sí; y una sin asignar la resuelve cualquiera', async () => {
+    const res = await andres.post(`/api/admin/tasks/${await puerta()}/complete`).send({});
+    expect(res.status).toBe(200);
+    expect(res.body.resolvedBy).toMatchObject({ id: 4 });
+    // La de la bombilla (CU-55) no tiene a nadie asignado.
+    const bombilla = buscar(await miDia(marta), 'Cambiar la bombilla de la cámara');
+    expect(bombilla.assignedTo).toBeNull();
+    expect((await marta.post(`/api/admin/tasks/${bombilla.id}/complete`).send({})).status).toBe(200);
   });
 });

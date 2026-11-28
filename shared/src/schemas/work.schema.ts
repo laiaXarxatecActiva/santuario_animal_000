@@ -14,6 +14,7 @@ import {
   MAX_TEMPLATE_TIMES,
   STAFF_EMAIL_ALERT_TYPES,
   TASK_RECURRENCES,
+  TASK_SORTS,
   TASK_STATUSES,
   TASK_TYPES,
 } from '../constants/work.js';
@@ -122,25 +123,23 @@ export const adminTasksQuerySchema = z.object({
   date: fecha('La fecha no es válida.').optional(),
   zoneId: z.coerce.number().int().positive().optional(),
   status: z.enum(TASK_STATUSES).optional(),
+  /** `-createdAt`: las 50 últimas creadas, de cualquier día (sin él, las del día por hora). */
+  sort: z.enum(TASK_SORTS, { error: 'Orden no válido.' }).optional(),
 });
 export type AdminTasksQuery = z.infer<typeof adminTasksQuerySchema>;
 
-export const oneOffTaskBodySchema = z
-  .object({
-    type: z.enum(TASK_TYPES, { error: 'Elige el tipo de tarea.' }),
-    title: textoObligatorio(150, 'Escribe el título.'),
-    description: textoOpcional(2000),
-    zoneId: idOpcional,
-    animalIds: idsUnicos,
-    qualificationId: idOpcional,
-    dueDate: fecha('Elige el día.'),
-    dueTime: hora,
-    assignedTo: idOpcional,
-  })
-  .refine((t) => t.zoneId !== null || t.assignedTo !== null || t.animalIds.length > 0, {
-    path: ['zoneId'],
-    message: 'Elige una zona, un animal o una persona.',
-  });
+export const oneOffTaskBodySchema = z.object({
+  type: z.enum(TASK_TYPES, { error: 'Elige el tipo de tarea.' }),
+  title: textoObligatorio(150, 'Escribe el título.'),
+  description: textoOpcional(2000),
+  zoneId: idOpcional,
+  animalIds: idsUnicos,
+  qualificationId: idOpcional,
+  dueDate: fecha('Elige el día.'),
+  dueTime: hora,
+  // Zona, animales y persona son opcionales: sin ninguno, la tarea es de todo el personal.
+  assignedTo: idOpcional,
+});
 export type OneOffTaskBody = z.input<typeof oneOffTaskBodySchema>;
 export type OneOffTaskData = z.output<typeof oneOffTaskBodySchema>;
 
@@ -179,20 +178,14 @@ export const myDayQuerySchema = z.object({
 });
 export type MyDayQuery = z.infer<typeof myDayQuerySchema>;
 
-// CU-73: ajustes del trabajo diario.
-export const workSettingsBodySchema = z.object({
+// CU-55: ajustes del trabajo diario (el margen de «atrasada»). El número de comidas
+// del aviso CU-67 está en los ajustes de los avisos: aquí es un campo desconocido.
+export const workSettingsBodySchema = z.strictObject({
   lateMarginMinutes: z.coerce
     .number({ error: 'Indica los minutos.' })
     .int({ error: 'Indica los minutos.' })
     .min(0, { error: 'Entre 0 y 240 minutos.' })
     .max(240, { error: 'Entre 0 y 240 minutos.' }),
-  /** CU-67: tomas seguidas comiendo poco para avisar. Si falta, no cambia. */
-  lowIntakeMeals: z.coerce
-    .number({ error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
-    .int({ error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
-    .min(1, { error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
-    .max(MAX_LOW_INTAKE_MEALS, { error: `De 1 a ${MAX_LOW_INTAKE_MEALS} tomas.` })
-    .optional(),
 });
 export type WorkSettingsBody = z.input<typeof workSettingsBodySchema>;
 export type WorkSettingsData = z.output<typeof workSettingsBodySchema>;
@@ -445,13 +438,22 @@ export const handoverNoteBodySchema = z.object({
 export type HandoverNoteBody = z.input<typeof handoverNoteBodySchema>;
 export type HandoverNoteData = z.output<typeof handoverNoteBodySchema>;
 
-// CU-73 y CU-74: avisos por email y resumen diario.
+const comidasDelAviso = `De 1 a ${MAX_LOW_INTAKE_MEALS} comidas.`;
+
+// CU-73, CU-74 y CU-67: avisos por email, resumen diario y tras cuántas comidas
+// seguidas comiendo poco se avisa (si falta, no cambia).
 export const alertSettingsBodySchema = z.object({
   emailAlertTypes: z
     .array(z.enum(STAFF_EMAIL_ALERT_TYPES, { error: 'Este aviso no existe.' }))
     .transform((tipos) => STAFF_EMAIL_ALERT_TYPES.filter((t) => tipos.includes(t))),
   dailySummaryEnabled: z.boolean(),
   dailySummaryTime: hora,
+  lowIntakeMeals: z.coerce
+    .number({ error: comidasDelAviso })
+    .int({ error: comidasDelAviso })
+    .min(1, { error: comidasDelAviso })
+    .max(MAX_LOW_INTAKE_MEALS, { error: comidasDelAviso })
+    .optional(),
 });
 export type AlertSettingsBody = z.input<typeof alertSettingsBodySchema>;
 export type AlertSettingsData = z.output<typeof alertSettingsBodySchema>;

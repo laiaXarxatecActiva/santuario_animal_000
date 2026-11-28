@@ -258,6 +258,7 @@ export const adminPlans: AdminPlanDto[] = [
     isDefault: false,
     isActive: true,
     activeAdoptions: 0,
+    deletable: false,
   },
   {
     id: 2,
@@ -267,6 +268,7 @@ export const adminPlans: AdminPlanDto[] = [
     isDefault: true,
     isActive: true,
     activeAdoptions: 5,
+    deletable: false,
   },
   {
     id: 3,
@@ -276,6 +278,7 @@ export const adminPlans: AdminPlanDto[] = [
     isDefault: false,
     isActive: false,
     activeAdoptions: 1,
+    deletable: false,
   },
 ];
 

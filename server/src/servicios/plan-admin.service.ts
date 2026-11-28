@@ -1,14 +1,22 @@
 import type { AdminPlanDto } from '@sanctuary/shared';
 import type { Pool, PoolClient } from 'pg';
 import { withTransaction } from '../db/transaction.js';
-import { comprobarAltaPlan, comprobarEdicionPlan, comprobarPlanes, type ProblemaPlan } from '../dominio/planes.js';
+import {
+  comprobarAltaPlan,
+  comprobarBorradoPlan,
+  comprobarEdicionPlan,
+  comprobarPlanes,
+  type ProblemaPlan,
+} from '../dominio/planes.js';
 import {
   AppError,
+  DefaultPlanCannotBeDeletedError,
   DefaultPlanMustBeActiveError,
   DefaultPlanNeedsReplacementError,
   DefaultPlanNotUniqueError,
   NotFoundError,
   PlanAmountChangeUnconfirmedError,
+  PlanHasHistoryError,
 } from '../errors/app-error.js';
 import * as planModel from '../models/adoption-plan.model.js';
 import type { PlanData } from '../models/adoption-plan.model.js';
@@ -104,6 +112,22 @@ export function createPlanAdminService({ db }: PlanAdminServiceDeps) {
           }
         }
         return { data: await planModel.listWithCounts(client) };
+      });
+    },
+
+    /**
+     * A3: borra para siempre un plan que nunca se ha usado (RN-17) y que no es el
+     * de por defecto. Devuelve lo que tenía, para el registro de actividad.
+     */
+    async remove(id: number): Promise<{ name: string; monthlyAmount: string }> {
+      return withTransaction(db, async (client) => {
+        const plan = await planModel.findForDeletion(client, id);
+        if (!plan) throw new NotFoundError('Este plan no existe.');
+        const problema = comprobarBorradoPlan(plan);
+        if (problema === 'DEFAULT_CANNOT_BE_DELETED') throw new DefaultPlanCannotBeDeletedError();
+        if (problema === 'HAS_HISTORY') throw new PlanHasHistoryError();
+        await planModel.remove(client, id);
+        return { name: plan.name, monthlyAmount: plan.monthlyAmount };
       });
     },
   };

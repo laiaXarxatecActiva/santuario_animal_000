@@ -7,22 +7,23 @@ import {
   isWorkerRole,
   oneOffTaskBodySchema,
   workSettingsBodySchema,
-  MAX_LOW_INTAKE_MEALS,
   type WorkSettingsData,
   type OneOffTaskBody,
   type TaskDto,
   type TaskStatus,
   type TaskType,
+  RECENT_TASKS_LIMIT,
+  type TaskSort,
 } from '@sanctuary/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { InlineField, InlineNumberInput, SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import iconStyles from '../../components/IconButton.module.css';
 import { Modal } from '../../components/Modal';
 import { CheckboxGroup } from '../../components/work/CheckboxGroup';
@@ -31,8 +32,11 @@ import { Resolucion } from '../../components/work/TaskCard';
 import { useAdminAnimals, useAdminUsers } from '../../hooks/useAdmin';
 import { useAdminTasks, useQualifications, useWorkSettings, useZones, WORK_KEY } from '../../hooks/useWork';
 import { errorMessage } from '../../utils/apiErrors';
-import { todayInSanctuary } from '../../utils/format';
+import { formatShortDate, todayInSanctuary } from '../../utils/format';
+import { TimeField } from '../../components/TimeField';
 import styles from './AdminPage.module.css';
+import tareasStyles from './TasksAdminPage.module.css';
+import { useSession } from '../../hooks/useSession';
 import { PageIntro } from '../../components/admin/PageIntro';
 
 type Aviso = { type: 'success' | 'error'; message: string };
@@ -64,6 +68,7 @@ function useTrabajadores() {
 // CU-55 y CU-73: tareas del día para el administrador (SCREENS §5.18).
 export function TasksAdminPage() {
   const { t } = useTranslation();
+  const { user } = useSession();
   const queryClient = useQueryClient();
   const zonas = useZones();
   // `?date=` abre otro día (p. ej., desde las tareas de una incidencia, CU-70).
@@ -74,10 +79,14 @@ export function TasksAdminPage() {
   });
   const [zona, setZona] = useState('');
   const [estado, setEstado] = useState<TaskStatus | ''>('');
+  // CU-55: «Más recientes primero» muestra las últimas creadas de cualquier día.
+  const [orden, setOrden] = useState<TaskSort | ''>('');
+  const recientes = orden === '-createdAt';
   const tareas = useAdminTasks({
-    date: fecha || undefined,
+    date: recientes ? undefined : fecha || undefined,
     zoneId: zona ? Number(zona) : undefined,
     status: estado || undefined,
+    sort: orden || undefined,
   });
   const [aviso, setAviso] = useState<Aviso | null>(null);
   const [nueva, setNueva] = useState(false);
@@ -103,6 +112,69 @@ export function TasksAdminPage() {
     },
   });
 
+  // RN-40: las del administrador van aparte («Tuyas»); se hacen en «Mi día».
+  const mias = (tareas.data ?? []).filter((tarea) => tarea.assignedTo?.id === user?.id);
+  const resto = (tareas.data ?? []).filter((tarea) => tarea.assignedTo?.id !== user?.id);
+  const tablaDe = (lista: TaskDto[]) => (
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th scope="col">{t('work.tasks.time')}</th>
+          <th scope="col">{t('work.tasks.task')}</th>
+          <th scope="col">{t('work.tasks.zone')}</th>
+          <th scope="col">{t('work.tasks.status')}</th>
+          <th scope="col">{t('work.tasks.assignee')}</th>
+          <th scope="col">{t('work.tasks.result')}</th>
+          <th scope="col">
+            <span className="visually-hidden">{t('admin.common.actions')}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {lista.map((tarea) => (
+          <tr key={tarea.id}>
+            <td className={styles.numeric}>
+              {tarea.dueTime}
+              {recientes && <span className={tareasStyles.date}>{formatShortDate(tarea.dueDate)}</span>}
+            </td>
+            <td className={styles.nameLink}>{tarea.title}</td>
+            <td data-label={t('work.tasks.zone')}>{tarea.zone?.name ?? '—'}</td>
+            <td data-label={t('work.tasks.status')}>
+              <TaskBadges tarea={tarea} />
+            </td>
+            <td data-label={t('work.tasks.assignee')}>{tarea.assignedTo?.name ?? '—'}</td>
+            <td data-label={t('work.tasks.result')}>{tarea.status !== 'pending' && <Resolucion tarea={tarea} />}</td>
+            <td>
+              {tarea.status === 'pending' && (
+                <div className={styles.rowActions}>
+                  <button
+                    type="button"
+                    className={iconStyles.iconButton}
+                    aria-label={t('work.tasks.reassign', { title: tarea.title })}
+                    onClick={() => setAReasignar(tarea)}
+                  >
+                    <FontAwesomeIcon icon={faUserPen} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className={iconStyles.iconButton}
+                    aria-label={t('admin.common.deleteNamed', { name: tarea.title })}
+                    onClick={() => {
+                      setAviso(null);
+                      setABorrar(tarea);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
@@ -124,7 +196,9 @@ export function TasksAdminPage() {
       )}
 
       <div className={styles.filters}>
-        <TextField type="date" label={t('work.tasks.day')} value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        {!recientes && (
+          <TextField type="date" label={t('work.tasks.day')} value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        )}
         <SelectField label={t('work.tasks.zone')} value={zona} onChange={(e) => setZona(e.target.value)}>
           <option value="">{t('work.tasks.all')}</option>
           {zonas.data?.map((z) => (
@@ -145,7 +219,16 @@ export function TasksAdminPage() {
             </option>
           ))}
         </SelectField>
+        <SelectField
+          label={t('work.tasks.sort')}
+          value={orden}
+          onChange={(e) => setOrden(e.target.value as TaskSort | '')}
+        >
+          <option value="">{t('work.tasks.sortByTime')}</option>
+          <option value="-createdAt">{t('work.tasks.sortRecent')}</option>
+        </SelectField>
       </div>
+      {recientes && <p className={styles.muted}>{t('work.tasks.recentHelp', { count: RECENT_TASKS_LIMIT })}</p>}
 
       {tareas.isError ? (
         <Alert
@@ -163,62 +246,21 @@ export function TasksAdminPage() {
       ) : tareas.data.length === 0 ? (
         <p>{t('work.tasks.empty')}</p>
       ) : (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th scope="col">{t('work.tasks.time')}</th>
-              <th scope="col">{t('work.tasks.task')}</th>
-              <th scope="col">{t('work.tasks.zone')}</th>
-              <th scope="col">{t('work.tasks.status')}</th>
-              <th scope="col">{t('work.tasks.assignee')}</th>
-              <th scope="col">{t('work.tasks.result')}</th>
-              <th scope="col">
-                <span className="visually-hidden">{t('admin.common.actions')}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {tareas.data.map((tarea) => (
-              <tr key={tarea.id}>
-                <td className={styles.numeric}>{tarea.dueTime}</td>
-                <td className={styles.nameLink}>{tarea.title}</td>
-                <td data-label={t('work.tasks.zone')}>{tarea.zone?.name ?? '—'}</td>
-                <td data-label={t('work.tasks.status')}>
-                  <TaskBadges tarea={tarea} />
-                </td>
-                <td data-label={t('work.tasks.assignee')}>{tarea.assignedTo?.name ?? '—'}</td>
-                <td data-label={t('work.tasks.result')}>
-                  {tarea.status !== 'pending' && <Resolucion tarea={tarea} />}
-                </td>
-                <td>
-                  {tarea.status === 'pending' && (
-                    <div className={styles.rowActions}>
-                      <button
-                        type="button"
-                        className={iconStyles.iconButton}
-                        aria-label={t('work.tasks.reassign', { title: tarea.title })}
-                        onClick={() => setAReasignar(tarea)}
-                      >
-                        <FontAwesomeIcon icon={faUserPen} aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        className={iconStyles.iconButton}
-                        aria-label={t('admin.common.deleteNamed', { name: tarea.title })}
-                        onClick={() => {
-                          setAviso(null);
-                          setABorrar(tarea);
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <>
+          {mias.length > 0 && (
+            <section aria-labelledby="tareas-tuyas" className={`${tareasStyles.group} ${tareasStyles.mine}`}>
+              <div className={tareasStyles.groupHeader}>
+                <h2 id="tareas-tuyas">{t('work.tasks.mineTitle')}</h2>
+                <Link to="/admin/my-day">{t('work.tasks.doInMyDay')}</Link>
+              </div>
+              {tablaDe(mias)}
+            </section>
+          )}
+          <section aria-labelledby="tareas-resto" className={tareasStyles.group}>
+            <h2 id="tareas-resto">{t('work.tasks.othersTitle')}</h2>
+            {resto.length > 0 ? tablaDe(resto) : <p>{t('work.tasks.empty')}</p>}
+          </section>
+        </>
       )}
 
       {nueva && <NuevaTarea onClose={() => setNueva(false)} onSaved={terminar('work.tasks.created')} />}
@@ -404,12 +446,12 @@ export function NuevaTarea({
         onChange={(e) => cambiar('description', e.target.value)}
       />
       <SelectField
-        label={t('work.tasks.zone')}
+        label={opcional('work.tasks.zone')}
         value={campos.zoneId}
         error={errores.zoneId}
         onChange={(e) => cambiar('zoneId', e.target.value)}
       >
-        <option value="">{t('form.choose')}</option>
+        <option value="">{t('work.tasks.noZone')}</option>
         {zonas.data
           ?.filter((z) => z.isActive)
           .map((z) => (
@@ -446,13 +488,11 @@ export function NuevaTarea({
         error={errores.dueDate}
         onChange={(e) => cambiar('dueDate', e.target.value)}
       />
-      <TextField
+      <TimeField
         label={t('work.tasks.time')}
-        inputMode="numeric"
-        placeholder="HH:MM"
         value={campos.dueTime}
         error={errores.dueTime}
-        onChange={(e) => cambiar('dueTime', e.target.value)}
+        onChange={(v) => cambiar('dueTime', v)}
       />
       <SelectField
         label={opcional('work.tasks.person')}
@@ -517,16 +557,17 @@ function Reasignar({ tarea, onClose, onSaved }: { tarea: TaskDto; onClose: () =>
   );
 }
 
-/** CU-73 y CU-67: margen para considerar atrasada una tarea y tomas comiendo poco para avisar. */
+/**
+ * CU-55: margen para considerar atrasada una tarea. El aviso de comer poco (CU-67)
+ * se ajusta en «Avisos».
+ */
 function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation();
   const ajustes = useWorkSettings();
   const [margen, setMargen] = useState<string | null>(null);
-  const [tomas, setTomas] = useState<string | null>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState<string | null>(null);
   const valor = margen ?? (ajustes.data ? String(ajustes.data.lateMarginMinutes) : '');
-  const valorTomas = tomas ?? (ajustes.data?.lowIntakeMeals !== undefined ? String(ajustes.data.lowIntakeMeals) : '');
   const guardar = useMutation({
     mutationFn: (datos: WorkSettingsData) => workApi.settings.update(datos),
     onSuccess: onSaved,
@@ -545,10 +586,7 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
       onClose={onClose}
       onSubmit={() => {
         setError(null);
-        const resultado = workSettingsBodySchema.safeParse({
-          lateMarginMinutes: valor,
-          ...(valorTomas !== '' ? { lowIntakeMeals: valorTomas } : {}),
-        });
+        const resultado = workSettingsBodySchema.safeParse({ lateMarginMinutes: valor });
         if (!resultado.success) {
           setErrores(erroresPorCampo(resultado.error.issues));
           return;
@@ -557,25 +595,24 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
         guardar.mutate(resultado.data);
       }}
     >
-      <TextField
-        type="number"
-        min={0}
-        max={240}
-        label={t('work.settings.lateMargin')}
-        value={valor}
+      <InlineField
+        before={t('work.settings.lateMarginBefore')}
+        after={t('work.settings.lateMarginAfter')}
+        help={t('work.settings.lateMarginHelp')}
         error={errores.lateMarginMinutes}
-        onChange={(e) => setMargen(e.target.value)}
-      />
-      <TextField
-        type="number"
-        min={1}
-        max={MAX_LOW_INTAKE_MEALS}
-        label={t('work.settings.lowIntakeMeals')}
-        help={t('work.settings.lowIntakeMealsHelp')}
-        value={valorTomas}
-        error={errores.lowIntakeMeals}
-        onChange={(e) => setTomas(e.target.value)}
-      />
+      >
+        {({ describedBy, invalid }) => (
+          <InlineNumberInput
+            label={t('work.settings.lateMarginLabel')}
+            min={0}
+            max={240}
+            value={valor}
+            aria-describedby={describedBy}
+            aria-invalid={invalid || undefined}
+            onChange={(e) => setMargen(e.target.value)}
+          />
+        )}
+      </InlineField>
     </VentanaFormulario>
   );
 }

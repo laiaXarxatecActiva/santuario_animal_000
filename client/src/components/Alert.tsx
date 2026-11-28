@@ -20,7 +20,7 @@ const ICONOS = {
   error: faCircleExclamation,
 } as const;
 
-// Los avisos de éxito se cierran solos a los 6 segundos.
+// Los avisos de éxito (y los que piden `autoClose`) se cierran solos a los 6 segundos.
 const CIERRE_AUTOMATICO_MS = 6000;
 
 interface AlertProps {
@@ -31,6 +31,8 @@ interface AlertProps {
   action?: ReactNode;
   /** Si se indica, el aviso se puede cerrar (y el de éxito se cierra solo). */
   onClose?: () => void;
+  /** Se cierra solo a los 6 segundos (con `onClose`). Por defecto, solo los de éxito. */
+  autoClose?: boolean;
   /**
    * Avisos fijos que ya están al cargar la página (p. ej., el de cookies): se
    * exponen como una región con este nombre en lugar de anunciarse en directo.
@@ -38,7 +40,7 @@ interface AlertProps {
   label?: string;
 }
 
-export function Alert({ type, title, children, action, onClose, label }: AlertProps) {
+export function Alert({ type, title, children, action, onClose, autoClose, label }: AlertProps) {
   const { t } = useTranslation();
   const [pausado, setPausado] = useState(false);
   const cerrar = useRef(onClose);
@@ -46,7 +48,7 @@ export function Alert({ type, title, children, action, onClose, label }: AlertPr
     cerrar.current = onClose;
   });
 
-  const cierraSolo = type === 'success' && onClose !== undefined;
+  const cierraSolo = (autoClose ?? type === 'success') && onClose !== undefined;
   useEffect(() => {
     if (!cierraSolo || pausado) return;
     const id = setTimeout(() => cerrar.current?.(), CIERRE_AUTOMATICO_MS);

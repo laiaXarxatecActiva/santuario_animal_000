@@ -158,7 +158,7 @@
     "alreadyAdopting": "You already adopt {{name}}",
     "seeFullProfile": "See their full profile",
     "enlargePhoto": "Show photo {{n}} of {{total}} full size",
-    "openInPanel": "View in the panel",
+    "openInPanel": "View in the dashboard",
     "staffCannotAdopt": "Staff accounts cannot adopt."
   },
   "howItWorks": {
@@ -276,6 +276,8 @@
     "CARE_ANIMAL_ARCHIVED": "This animal is no longer at the sanctuary.",
     "ANIMAL_WITHOUT_ZONE": "This animal has no zone: assign one in \"Details\" so its tasks appear in \"My day\".",
     "MEDICATION_PLAN_HAS_HISTORY": "This plan already has resolved doses: end it instead of deleting it.",
+    "PLAN_HAS_HISTORY": "This plan has already been used in adoptions or payments: deactivate it instead of deleting it.",
+    "DEFAULT_PLAN_CANNOT_BE_DELETED": "The default plan cannot be deleted: first mark another plan as the default.",
     "MEDICATION_PLAN_NOT_STARTED": "This plan has not started yet: delete it instead of ending it.",
     "MEDICATION_PLAN_ENDED": "This plan has already ended.",
     "VET_VISIT_NOT_SCHEDULED": "This visit has already been recorded or cancelled.",
@@ -566,7 +568,6 @@
     "title": "My profile",
     "saved": "Changes saved",
     "saving": "Saving…",
-    "save": "Save",
     "errorLoading": "We could not load your profile",
     "data": {
       "title": "Your details",
@@ -575,8 +576,7 @@
       "phone": "Phone (optional)",
       "phoneHelp": "Spanish mobile number with 9 digits, without the +34 prefix.",
       "email": "Email",
-      "emailHelp": "If you need to change it, write to us and we will do it for you.",
-      "submit": "Save changes"
+      "emailHelp": "If you need to change it, write to us and we will do it for you."
     },
     "notifications": {
       "title": "Notifications",
@@ -610,10 +610,34 @@
       "submit": "Delete account",
       "submitting": "Deleting…"
     },
-    "language": {
-      "title": "Language",
-      "label": "Language of the website and emails",
-      "help": "Also for the PDF certificates and receipts."
+    "saveChanges": "Save changes",
+    "discard": "Discard changes",
+    "modified": "Changed",
+    "saveBar": {
+      "label": "Profile changes",
+      "unsaved": "You have unsaved changes"
+    },
+    "review": {
+      "title": "Review your changes",
+      "intro": "You are about to save these changes:",
+      "back": "Go back",
+      "confirm": "Confirm and save",
+      "line": "{{field}}: {{before}} → {{after}}",
+      "noPhone": "No phone",
+      "fields": {
+        "firstName": "First name",
+        "lastName": "Last name",
+        "phone": "Phone",
+        "emailNotifications": "Receive emails",
+        "emailFrequency": "Email frequency",
+        "showPublicName": "Show my name on the animal's page"
+      }
+    },
+    "unsaved": {
+      "title": "You have unsaved changes",
+      "text": "If you leave now, the changes to your profile will be lost.",
+      "stay": "Keep editing",
+      "leave": "Leave without saving"
     }
   },
   "admin": {
@@ -646,7 +670,7 @@
       "absences": "Absences",
       "today": "Today",
       "incidents": "Incidents",
-      "alertSettings": "Email alerts",
+      "alertSettings": "Alerts",
       "pending_one": "{{count}} pending",
       "pending_other": "{{count}} pending"
     },
@@ -668,11 +692,21 @@
       "publishUpdate": "Publish update",
       "allUpToDate": "All animals with adopters are up to date",
       "loadError": "We could not load the overview",
-      "quickLinks": "Quick links",
-      "newAnimal": "New animal",
       "revenueThisMonth": "this month",
       "revenueDetail": "fees {{fees}} · donations {{donations}}",
-      "todayLink": "See the sanctuary’s «Today» panel"
+      "todayLink": "See the sanctuary’s «Today» panel",
+      "quickLinks": "Quick links",
+      "quickLinksCustomize": "Customise",
+      "quickLinksEmpty": "You have no quick links.",
+      "quickLinksDialogTitle": "Customise quick links",
+      "quickLinksDialogHelp": "Tick what you want to have at hand on the overview. It is saved in this browser.",
+      "quickLinksReset": "Reset",
+      "quickLinksSave": "Save",
+      "quickActions": "Actions",
+      "newUpdate": "New update",
+      "newAnimal": "New animal",
+      "newAdoption": "New adoption",
+      "newDonation": "Record a donation"
     },
     "common": {
       "save": "Save",
@@ -886,7 +920,12 @@
       "unsavedTitle": "You have unsaved changes",
       "unsavedText": "If you leave now, the changes to the plans will be lost.",
       "unsavedStay": "Keep editing",
-      "unsavedLeave": "Leave without saving"
+      "unsavedLeave": "Leave without saving",
+      "saveBarLabel": "Plan changes",
+      "deleted": "Plan deleted",
+      "confirmDelete": "Delete the {{name}} plan?",
+      "confirmDeleteText": "It will be deleted for good. This cannot be undone.",
+      "deleteBlocked": "Save or discard your changes before deleting a plan."
     },
     "users": {
       "title": "Users",
@@ -1134,8 +1173,7 @@
       "user": "User",
       "system": "System",
       "action": "Action",
-      "table": "Table",
-      "record": "Record",
+      "table": "Record",
       "details": "Details",
       "showDetails": "Show details",
       "empty": "No activity matches these filters",
@@ -1254,16 +1292,16 @@
         "species": "The sanctuary’s species. Every animal belongs to one.",
         "vet": "The vet history of all the animals, for staff only.",
         "today": "Today’s key points at a glance: tasks, medication, incidents, shifts and gaps. Each block links to its page.",
-        "myDay": "Your tasks and shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
+        "myDay": "Your tasks, the unassigned ones and your shift for today. Mark them when done, check in and out, and read or leave notes for the next shift.",
         "myShifts": "When you clocked in and out of each shift and how many hours you worked. Without dates, the last 4 weeks.",
         "incidents": "To report problems at the sanctuary (an injured animal, a breakdown…) and follow how they are solved.",
         "shifts": "See who works each day of the week and in which zones. If a shift is short of staff, it shows in yellow.",
-        "tasks": "All the tasks of a day. You can create one-off tasks, reassign them and change the daily work settings.",
+        "tasks": "This is where the day’s tasks are organised: create them, reassign them and change the daily work settings. Each person marks their own as done in “My day”.",
         "taskTemplates": "Recurring tasks (meals, cleaning…). Each template creates its tasks automatically every day.",
         "zones": "The sanctuary’s zones and the qualifications some tasks require.",
         "shiftTemplates": "The shifts worked (morning, afternoon…), their hours and how many people each zone needs.",
         "absences": "Holidays, sick leave and other absences. Recording one removes that person’s shifts on those days.",
-        "alertSettings": "Choose which staff alerts also arrive by email and whether a daily summary is sent.",
+        "alertSettings": "Choose which staff alerts also arrive by email, whether a daily summary is sent and when to warn that an animal is eating little.",
         "users": "All accounts: adopters and staff. Search for someone by name or email and open their record to see their adoptions and payments, deactivate it, change their role, close their sessions, erase their personal data or delete it. New workers are also added from here.",
         "adoptions": "All adoptions, with their payments and notes. You can pause, resume or create them manually.",
         "payments": "Fee payments. You can filter them, export them and refund a payment.",
@@ -1377,7 +1415,8 @@
       "deleteTitle": "How to delete them",
       "deleteText": "You can delete them whenever you like from your browser settings, in the privacy or site data section. If you delete the session cookie, you will have to log in again.",
       "panelMenuPurpose": "Staff panel only: which menu groups you have open.",
-      "pageIntroPurpose": "Staff panel only: on which pages you have hidden the explanation."
+      "pageIntroPurpose": "Staff panel only: on which pages you have hidden the explanation.",
+      "quickLinksPurpose": "Staff panel only: which quick links you have chosen for the overview."
     }
   },
   "notifications": {
@@ -1454,10 +1493,10 @@
     "status": {
       "pending": "Pending",
       "completed": "Done",
-      "not_done": "Not done"
+      "not_done": "Not done",
+      "resolved": "Resolved"
     },
     "late": "Late",
-    "oneOff": "One-off",
     "resolvedBy": "{{name}}, at {{time}}",
     "resolvedBySystem": "Closed by the system at the end of the day",
     "assignedTo": "Assigned to {{name}}",
@@ -1488,8 +1527,8 @@
     },
     "myDay": {
       "title": "My day",
-      "mine": "Assigned to you",
-      "rest": "The day's tasks",
+      "mine": "Your tasks",
+      "rest": "Unassigned",
       "empty": "There are no tasks for this day.",
       "prevDay": "Previous day",
       "nextDay": "Next day",
@@ -1510,7 +1549,15 @@
     },
     "tasks": {
       "title": "Today's tasks",
-      "new": "New one-off task",
+      "new": "New task",
+      "sort": "Sort",
+      "sortByTime": "By time",
+      "sortRecent": "Newest first",
+      "recentHelp": "The {{count}} most recently created, from any day.",
+      "noZone": "No zone",
+      "mineTitle": "Yours",
+      "othersTitle": "Rest of the staff",
+      "doInMyDay": "Do them in “My day”",
       "created": "Task created",
       "day": "Day",
       "time": "Time",
@@ -1546,7 +1593,7 @@
       "saved": "Template saved",
       "deleted": "Template deleted",
       "zoneFromAnimals": "From its animals",
-      "times": "Times (HH:MM, comma-separated)",
+      "times": "Times",
       "recurrence": "Repeats",
       "recurrences": {
         "daily": "Every day",
@@ -1602,10 +1649,11 @@
     },
     "settings": {
       "title": "Daily work settings",
-      "lateMargin": "Margin before a task counts as late (minutes)",
       "saved": "Settings saved",
-      "lowIntakeMeals": "Meals in a row eating little before warning",
-      "lowIntakeMealsHelp": "\"Less than half\" and \"Nothing\" count."
+      "lateMarginBefore": "A task becomes «Late» if it is still not done",
+      "lateMarginAfter": "minutes after its time",
+      "lateMarginLabel": "Minutes of margin before a task is marked «Late»",
+      "lateMarginHelp": "With 0, as soon as its time passes."
     },
     "absenceTypes": {
       "vacation": "Holiday",
@@ -1777,7 +1825,7 @@
         "medication": "Medicine",
         "dose": "Dose",
         "route": "Route",
-        "times": "Times (HH:MM, separated by commas)",
+        "times": "Times",
         "qualification": "Required qualification",
         "qualificationHelp": "Usually, \"Give medication\".",
         "noQualification": "None",
@@ -1881,7 +1929,7 @@
       "resolve": "Resolve",
       "reopen": "Reopen",
       "resolveTitle": "Resolve the incident",
-      "pendingTaskWillClose": "Its pending task “{{title}}” will be closed: it is no longer needed.",
+      "pendingTaskWillClose": "Its pending task “{{title}}” will be marked as resolved: it is no longer needed.",
       "resolveSubmit": "Mark as resolved",
       "resolveNote": "How was it resolved?",
       "resolvedOk": "Incident resolved",
@@ -1927,11 +1975,11 @@
       "gap": "{{zone}} · {{shift}}: {{assigned}} of {{required}}",
       "lowIntake": "Animals eating little",
       "streak_one": "{{count}} meal eating little",
-      "streak_other": "{{count}} meals eating little",
+      "streak_other": "{{count}} meals in a row eating little",
       "vetVisits": "Today’s vet visits"
     },
     "alertSettings": {
-      "title": "Email alerts",
+      "title": "Alerts",
       "loadError": "The alert settings could not be loaded.",
       "saved": "Settings saved",
       "emailLegend": "Alerts that are also sent by email",
@@ -1946,7 +1994,12 @@
       "summaryLegend": "Daily summary",
       "summaryHelp": "An email to the admins with the day’s tasks, medication, incidents and gaps.",
       "summaryEnabled": "Send the daily summary",
-      "summaryTime": "Summary time"
+      "summaryTime": "Summary time",
+      "lowIntakeLegend": "Animals eating little",
+      "lowIntakeBefore": "Warn if an animal eats little at",
+      "lowIntakeAfter": "meals in a row",
+      "lowIntakeLabel": "Meals in a row eating little before warning",
+      "lowIntakeHelp": "«Eating little» means recording «Less than half» or «Nothing». Example: with 2, if an animal eats little at breakfast and lunch, the bell warns the administrators and whoever is on shift in its zone."
     },
     "clock": {
       "title": "Clock in",
@@ -1990,5 +2043,10 @@
     "removeOne": "Remove {{name}}",
     "chosen": "Chosen photos",
     "tooMany": "At most {{count}} photos."
+  },
+  "time": {
+    "new": "New time",
+    "add": "Add time",
+    "remove": "Remove {{time}}"
   }
 }

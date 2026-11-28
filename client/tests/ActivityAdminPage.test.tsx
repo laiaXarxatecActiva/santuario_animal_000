@@ -69,6 +69,20 @@ describe('CU-42 Consultar el registro de actividad', () => {
     expect(within(sistema).getByText('Modificación')).toBeInTheDocument();
   });
 
+  it('2: la columna con la tabla afectada se llama «Registro», como su filtro (no «Tabla»)', async () => {
+    api();
+    renderRoute('/admin/activity');
+    await screen.findByText('Nuria Peris Gil', { selector: 'td *, td' });
+    expect(screen.getAllByRole('columnheader').map((th) => th.textContent)).toEqual([
+      'Fecha',
+      'Usuario',
+      'Acción',
+      'Registro',
+      'Detalles',
+    ]);
+    expect(screen.queryByRole('columnheader', { name: 'Tabla' })).not.toBeInTheDocument();
+  });
+
   it('3: al abrir una entrada se ven los detalles del cambio', async () => {
     api();
     renderRoute('/admin/activity');
@@ -78,12 +92,12 @@ describe('CU-42 Consultar el registro de actividad', () => {
     expect(within(fila).getByText('payment_failed')).toBeVisible();
   });
 
-  it('2: filtra por usuario (o «Sistema»), tabla, acción y fechas', async () => {
+  it('2: filtra por usuario (o «Sistema»), registro, acción y fechas', async () => {
     const { pedidas } = api();
     renderRoute('/admin/activity');
     await screen.findByRole('heading', { level: 1 });
     await elegirOpcion(await screen.findByLabelText('Usuario'), 'Sistema');
-    await elegirOpcion(screen.getByLabelText('Tabla'), 'Adopciones');
+    await elegirOpcion(screen.getByLabelText('Registro'), 'Adopciones');
     await elegirOpcion(screen.getByLabelText('Acción'), 'Modificación');
     await userEvent.type(screen.getByLabelText('Desde'), '2026-11-01');
     await userEvent.type(screen.getByLabelText('Hasta'), '2026-11-30');

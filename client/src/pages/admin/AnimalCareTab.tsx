@@ -27,6 +27,8 @@ import { Alert } from '../../components/Alert';
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { TimeField, TimesField } from '../../components/TimeField';
+
 import iconStyles from '../../components/IconButton.module.css';
 import { Modal } from '../../components/Modal';
 import cardStyles from '../../components/work/TaskCard.module.css';
@@ -758,7 +760,7 @@ function FormularioPauta({
     medication: pauta?.medication ?? '',
     dose: pauta?.dose ?? '',
     route: (pauta?.route ?? 'oral') as MedicationRoute,
-    times: pauta?.times.join(', ') ?? '',
+    times: pauta?.times ?? [],
     startDate: pauta?.startDate ?? todayInSanctuary(),
     endDate: pauta?.endDate ?? '',
     qualificationId: pauta?.qualification ? String(pauta.qualification.id) : '',
@@ -783,10 +785,7 @@ function FormularioPauta({
       onSubmit={() =>
         f.validarYEnviar({
           ...campos,
-          times: campos.times
-            .split(',')
-            .map((h) => h.trim())
-            .filter(Boolean),
+          times: campos.times,
           endDate: campos.endDate || null,
           qualificationId: campos.qualificationId ? Number(campos.qualificationId) : null,
         })
@@ -820,11 +819,11 @@ function FormularioPauta({
           ))}
         </SelectField>
       </div>
-      <TextField
+      <TimesField
         label={t('work.care.medication.times')}
         value={campos.times}
         error={f.errores.times}
-        onChange={(e) => cambiar('times', e.target.value)}
+        onChange={(v) => cambiar('times', v)}
       />
       <div className={styles.formGrid}>
         <TextField
@@ -912,12 +911,11 @@ function FormularioVisita({
           error={f.errores.date}
           onChange={(e) => cambiar('date', e.target.value)}
         />
-        <TextField
+        <TimeField
           label={t('work.care.visits.time')}
-          placeholder="HH:MM"
           value={campos.time}
           error={f.errores.time}
-          onChange={(e) => cambiar('time', e.target.value)}
+          onChange={(v) => cambiar('time', v)}
         />
       </div>
       <TextAreaField

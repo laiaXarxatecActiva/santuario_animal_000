@@ -54,7 +54,7 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-14 | El santuario se compromete a publicar al menos una actualización cada 14 días por cada animal con adoptantes activos. El panel avisa cuando quedan 2 días (12 días sin actualización) y muestra una alerta en rojo si se superan los 14. |
 | RN-15 | El contenido exclusivo (actualizaciones y fotos `adopters`, resumen de salud) solo lo ven los adoptantes con una adopción **activa** del animal y los trabajadores. |
 | RN-16 | El nombre de un adoptante aparece en la ficha pública solo si tiene una adopción activa del animal y ha activado `show_public_name`. Por defecto, no aparece. |
-| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. **Excepción:** un administrador puede borrar del todo una cuenta (CU-75); si tiene datos enlazados, solo confirmándolo, y se borran con ella. |
+| RN-17 | Lo que tiene historial económico o afectivo (animales, adopciones, pagos, donaciones, usuarios) no se borra: se archiva con un estado o se anonimiza. **Excepción:** un administrador puede borrar del todo una cuenta (CU-75); si tiene datos enlazados, solo confirmándolo, y se borran con ella. Un plan de adopción que nunca se ha usado (sin adopciones, pagos ni historial) sí se puede borrar (CU-40 A3). |
 | RN-18 | Los permisos se comprueban siempre en el servidor. |
 | RN-19 | Los emails de actualizaciones y resúmenes respetan las preferencias del usuario. Los emails de seguridad (verificación, contraseña) y de pagos se envían siempre. |
 | RN-20 | La baja de una cuenta anonimiza los datos personales y conserva los pagos y donaciones. |
@@ -70,13 +70,14 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
 | RN-30 | Cada persona ficha solo sus turnos y solo el día del turno: primero la entrada y después la salida, una vez cada una. |
 | RN-31 | Una zona de un turno está **sin cubrir** si tiene menos personas de las que pide la plantilla del turno; se calcula al consultar, no se guarda. Cada hueco se avisa a los administradores una sola vez. |
 | RN-32 | La **dieta** es la ficha de qué come cada animal y no crea tareas. Al completar una tarea de alimentación se anota lo que ha comido cada animal (sus animales o, si no tiene, los que viven en su zona) en cuatro niveles: «Todo» (por defecto), «Más de la mitad», «Menos de la mitad» y «Nada». |
-| RN-33 | Un animal **come poco** si en sus últimas tomas seguidas (2 por defecto, configurable de 1 a 10) ha comido «Menos de la mitad» o «Nada». Cada racha se avisa una sola vez. |
+| RN-33 | Un animal **come poco** si en sus últimas comidas seguidas (2 por defecto, configurable de 1 a 10 en «Avisos») ha comido «Menos de la mitad» o «Nada». Cada racha se avisa una sola vez. |
 | RN-34 | Los avisos de cuidados (come poco, medicación no dada y visita de hoy) van a los administradores en activo y a quien tiene turno ese día en la zona del animal, una sola vez cada uno. |
 | RN-35 | Las **pautas de medicación** generan una dosis (tarea) por día y hora, como las plantillas, con la cualificación que se elija. Una pauta con dosis resueltas no se borra: se termina. Una dosis no dada es una pendiente pasada su hora más el margen, o una marcada como no realizada. |
 | RN-36 | Una **visita veterinaria** programada no es de un día pasado y tiene su tarea en «Mi día». Solo se registra desde su día, con el formulario del historial veterinario. Dietas, pautas y visitas las gestionan cuidadores y administradores, y no se crean para animales fallecidos o trasladados; pautas y visitas necesitan que el animal tenga zona. |
-| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona y animal opcionales, un título corto de 3 a 80 caracteres, la descripción y hasta 5 fotos opcionales) y ve todas. Todo el personal la resuelve (con una nota obligatoria) y la reabre si el problema vuelve; queda quién la resolvió, cómo y cuándo, y cada cambio en el registro de actividad. Solo el administrador crea una tarea puntual a partir de ella; puede tener varias a lo largo del tiempo, pero solo una pendiente a la vez. **La incidencia sigue a su tarea:** «en curso» quiere decir que tiene una tarea pendiente; si la tarea se hace, la incidencia se resuelve sola; si no se puede hacer (o el sistema la cierra al acabar el día) o se borra, vuelve a «abierta»; si se reabre la tarea, vuelve a «en curso»; y si se resuelve la incidencia a mano, su tarea pendiente se cierra como «no realizada». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona (si tiene zona), sin contar a quien la comunica. |
+| RN-37 | Cualquier trabajador comunica una **incidencia** (tipo, gravedad, zona y animal opcionales, un título corto de 3 a 80 caracteres, la descripción y hasta 5 fotos opcionales) y ve todas. Todo el personal la resuelve (con una nota obligatoria) y la reabre si el problema vuelve; queda quién la resolvió, cómo y cuándo, y cada cambio en el registro de actividad. Solo el administrador crea una tarea puntual a partir de ella; puede tener varias a lo largo del tiempo, pero solo una pendiente a la vez. **La incidencia sigue a su tarea:** «en curso» quiere decir que tiene una tarea pendiente; si la tarea se hace, la incidencia se resuelve sola; si no se puede hacer (o el sistema la cierra al acabar el día) o se borra, vuelve a «abierta»; si se reabre la tarea, vuelve a «en curso»; y si se resuelve la incidencia a mano, su tarea pendiente se cierra como hecha y se ve «Resuelta» (ya no hace falta hacerla). En el panel, toda tarea de una incidencia hecha se ve «Resuelta» en vez de «Hecha». Solo las de gravedad **alta** se avisan al momento, a los administradores en activo y a quien tiene turno hoy en la zona (si tiene zona), sin contar a quien la comunica. |
 | RN-38 | Las **notas de relevo** son de una zona: las escribe quien tiene turno hoy en ella (el administrador, en cualquiera) y las ve durante 24 horas quien tiene turno hoy en esa zona y los administradores. Cada persona las marca como leídas; las propias cuentan como leídas. |
 | RN-39 | Los avisos del personal (huecos, come poco, medicación no dada, visita de hoy e incidencia grave) siempre van a la campana; el administrador elige cuáles van **también por email**, para todo el personal (todos menos la visita de hoy, por defecto). El email se envía aparte (`staff-emails`), así que un fallo del correo nunca deshace la operación. El **resumen diario** por email a los administradores está desactivado por defecto (a las 20:00 si se activa) y se envía una vez al día. |
+| RN-40 | Cada **tarea asignada es de su persona**: solo ella la ve en «Mi día» y solo ella la completa o la marca como no realizada (403 `TASK_NOT_YOURS` para cualquier otra, también el administrador, que si hace falta la reasigna). Una tarea sin asignar la ve todo el personal y la resuelve cualquiera con la cualificación que pida. Las tareas se **gestionan** (crear, reasignar, borrar) en «Tareas del día», solo el administrador, y se **hacen** en «Mi día». |
 
 ## 4. Web pública y cuenta
 
@@ -764,14 +765,16 @@ Errores comunes a todos los casos que no se repiten en cada ficha:
    - recibir emails: sí o no (`email_notifications`);
    - frecuencia: un email por actualización o un resumen mensual (`email_frequency`);
    - aparecer como adoptante en la ficha pública de sus animales (`show_public_name`);
-   - idioma de la web, de los emails y de los PDF: castellano, valenciano o inglés (`preferred_language`, Fase 3; también para los trabajadores).
-3. El usuario modifica los datos y guarda.
-4. El sistema valida y guarda los cambios y muestra «Cambios guardados».
+   - el idioma de la web, de los emails y de los PDF (`preferred_language`, Fase 3; también para los trabajadores) no está en el perfil: se elige con el selector de la cabecera, que lo guarda en la cuenta.
+3. El usuario modifica los datos y pulsa «Guardar cambios» (uno solo para datos y preferencias, que solo aparece si hay cambios; lo cambiado se marca «Modificado»).
+4. El sistema valida, muestra un resumen de los cambios («antes → después») y, al confirmarlo, guarda solo lo cambiado y muestra «Cambios guardados».
 
 **Flujos alternativos**
 
 - **3a.** Datos no válidos (teléfono con formato incorrecto, nombre vacío): errores en los campos.
 - **3b.** El email no se puede cambiar desde aquí en esta versión. Si hace falta, se pide al santuario.
+- **3c.** El usuario descarta los cambios o vuelve desde el resumen: no se guarda nada.
+- **3d.** El usuario sale de la página con cambios sin guardar (o con algo escrito en la contraseña): se le pregunta si quiere seguir editando o salir sin guardar.
 
 **Postcondiciones**
 
@@ -1438,7 +1441,7 @@ Sirve, por ejemplo, para quitar una cuenta creada por error. Es la excepción a 
 - **3b.** Importe menor o igual a 0: error en el campo.
 - **A1. Desactivar** un plan: deja de ofrecerse en nuevas adopciones; las existentes siguen con él. No se puede desactivar el plan por defecto sin elegir antes otro.
 - **A2. Crear** un plan nuevo: siempre mensual. No se pueden crear otras periodicidades.
-- **A3. Borrar:** no existe en la interfaz; los planes con adopciones no se pueden borrar (RN-17).
+- **A3. Borrar** un plan para siempre: solo uno que nunca se ha usado (sin adopciones, pagos ni historial de adopciones; RN-17) y que no es el plan por defecto. El sistema pide confirmación y lo anota en el registro de actividad. Con cambios sin guardar en los planes, primero hay que guardarlos o descartarlos. Los planes usados no se borran: se desactivan (A1).
 
 **Postcondiciones**
 
@@ -1491,7 +1494,7 @@ Sirve, por ejemplo, para quitar una cuenta creada por error. Es la excepción a 
 **Flujo principal**
 
 1. El administrador entra en «Actividad» (`/admin/activity`).
-2. El sistema muestra quién hizo qué, sobre qué registro y cuándo, de más reciente a más antiguo, con filtros por usuario, tabla, acción y fechas.
+2. El sistema muestra quién hizo qué, sobre qué registro y cuándo, de más reciente a más antiguo, con filtros por usuario, registro, acción y fechas.
 3. Al abrir una entrada se ven los detalles del cambio.
 
 **Postcondiciones**
@@ -1771,14 +1774,14 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 
 **Flujo principal**
 
-1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado, y para cada una su hora, zona, insignias (tipo, atrasada, puntual, estado), a quién está asignada y, si está resuelta, quién y cuándo y las observaciones.
-2. Crea una tarea puntual (sin plantilla): tipo, título, descripción, zona, animales, cualificación, día (hoy o después), hora y, opcionalmente, una persona.
+1. El administrador abre «Tareas del día»: las de un día (hoy por defecto), con filtros por zona y estado y el orden «Por hora» o «Más recientes primero» (las 50 últimas creadas, de cualquier día, con su fecha; sirve para encontrar una creada por error), en dos bloques: «Tuyas» (las asignadas a él, con borde de color y el enlace «Hacerlas en «Mi día»») y «Del resto del personal» (todas las demás, también las sin asignar). Aquí se gestionan; no se marcan como hechas. Para cada una su hora, zona, insignias (tipo, atrasada, estado; «Resuelta» si es de una incidencia y está hecha), a quién está asignada y, si está resuelta, quién y cuándo y las observaciones.
+2. Crea una tarea puntual («Nueva tarea», sin plantilla): tipo, título, descripción, cualificación, día (hoy o después) y hora (con el campo de hora del navegador) y, opcionalmente, zona, animales y persona. Sin zona elegida, toma la de sus animales si viven en la misma; si no, queda sin zona. Sin zona ni persona, la tarea es de todo el personal («Sin asignar» en «Mi día»).
 3. Reasigna una tarea pendiente a un trabajador en activo, o le quita la asignación (vuelve a ser de la zona).
 4. Borra una tarea pendiente.
 
 **Flujos alternativos**
 
-- **2a.** Sin zona, animales ni persona, o en un día pasado: error en el campo.
+- **2a.** En un día pasado: error en el campo.
 - **3a.** Persona que no es un trabajador activo o que no tiene la cualificación que exige la tarea: error en el campo.
 - **3b, 4a.** La tarea ya está resuelta (`TASK_NOT_PENDING`).
 
@@ -1795,8 +1798,8 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 **Flujo principal**
 
 1. El cuidador entra en la aplicación y llega a «Mi día» (el administrador, al escritorio; también la tiene en el menú).
-2. Si tiene turno ese día, lo ve arriba («Tu turno»: horario y zonas) con los botones para fichar (CU-63). Después, las tareas en tarjetas, ordenadas por hora: primero «Asignadas a ti» y después las demás del día. Son suyas las asignadas a él y, si la tarea no está asignada a nadie, las de una zona de su turno cuya hora cae dentro del turno (de la hora de inicio, incluida, a la de fin, sin incluir).
-3. Cada tarjeta muestra la hora, el título, el tipo, si está atrasada o es puntual, la zona, los animales, la cualificación que exige y, si está resuelta, quién y a qué hora.
+2. Si tiene turno ese día, lo ve arriba («Tu turno»: horario y zonas) con los botones para fichar (CU-63). Después, las tareas en tarjetas, ordenadas por hora: primero «Tus tareas» (con borde de color) y después «Sin asignar». Son suyas las asignadas a él y, si la tarea no está asignada a nadie, las de una zona de su turno cuya hora cae dentro del turno (de la hora de inicio, incluida, a la de fin, sin incluir). Las asignadas a otra persona no aparecen (RN-40), tampoco para el administrador.
+3. Cada tarjeta muestra la hora, el título, el tipo, si está atrasada, la zona, los animales, la cualificación que exige y, si está resuelta, quién y a qué hora.
 4. Puede pasar al día anterior o al siguiente y volver a hoy.
 
 **Flujos alternativos**
@@ -1822,9 +1825,10 @@ Zonas, cualificaciones, plantillas de tareas y «Mi día» (Bloque A, CU-52 a CU
 - **A1.** «No se ha podido hacer»: el motivo es obligatorio y queda en las observaciones; la tarea pasa a `not_done`.
 - **A2.** «Deshacer»: quien la resolvió, el mismo día, o un administrador en cualquier momento, la devuelve a pendiente; se borran las observaciones.
 - **2a.** Ya resuelta (`TASK_NOT_PENDING`), de otro día (`TASK_FUTURE_DAY`) o sin la cualificación (`MISSING_QUALIFICATION`, 403).
-- Una tarea de otra zona también se puede completar (para ayudar a un compañero).
+- **2b.** Asignada a otra persona (`TASK_NOT_YOURS`, 403), también para el administrador: primero se la reasigna en «Tareas del día».
+- Una tarea sin asignar de otra zona también se puede completar (para ayudar a un compañero).
 
-**Reglas de negocio:** RN-25, RN-26.
+**Reglas de negocio:** RN-25, RN-26, RN-40.
 
 ### CU-58 — Generar las tareas
 
@@ -2008,7 +2012,7 @@ Cada día, para cada plantilla activa y en su propia transacción:
 **Flujos alternativos**
 
 - **3a.** Un animal que no es de esa comida, o anotar comida en una tarea que no es de alimentación: error en el campo.
-- **3b.** Si un animal llega a las tomas seguidas comiendo poco: CU-67.
+- **3b.** Si un animal llega a las comidas seguidas comiendo poco de los ajustes: CU-67.
 - **4.** «Deshacer» la tarea borra también lo anotado.
 
 **Postcondiciones:** la pestaña «Cuidados» muestra las comidas de los últimos 14 días.
@@ -2023,13 +2027,13 @@ Cada día, para cada plantilla activa y en su propia transacción:
 
 **Flujo principal**
 
-1. Al anotar una comida, el sistema cuenta las últimas tomas seguidas del animal en las que comió «Menos de la mitad» o «Nada».
-2. Si llegan al número de los ajustes (2 por defecto), avisa en la campana, en su idioma, a los administradores y a quien tiene turno ese día en la zona: «Carbón ha comido poco en sus 2 últimas tomas.», con enlace a su pestaña «Cuidados».
+1. Al anotar una comida, el sistema cuenta las últimas comidas seguidas del animal en las que comió «Menos de la mitad» o «Nada».
+2. Si llegan al número de los ajustes (2 por defecto), avisa en la campana, en su idioma, a los administradores y a quien tiene turno ese día en la zona: «Carbón ha comido poco en sus 2 últimas comidas.», con enlace a su pestaña «Cuidados».
 
 **Flujos alternativos**
 
-- **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una toma buena la corta y la siguiente racha sí se avisa.
-- **2b.** El administrador cambia el número de tomas en «Tareas del día» → «Ajustes» (de 1 a 10).
+- **2a.** La misma racha no se vuelve a avisar aunque siga comiendo poco; una comida buena la corta y la siguiente racha sí se avisa.
+- **2b.** El administrador cambia el número de comidas en «Avisos» (`/admin/alert-settings`), con la frase «Avisar si un animal come poco en [2] comidas seguidas» (de 1 a 10).
 
 **Postcondiciones:** el aviso queda en `staff_alerts`; si el administrador lo ha elegido, también sale por email (CU-73).
 
@@ -2094,7 +2098,7 @@ Cada día, para cada plantilla activa y en su propia transacción:
 2. El sistema la guarda como «Abierta». Si se eligió un animal, la zona es la del animal (si la tiene).
 3. Si la gravedad es alta, avisa al momento en la campana a los administradores en activo y a quien tiene turno hoy en la zona (sin contar a quien la comunica): «Incidencia grave en «Clínica y recuperación»: …». Sin zona ni animal, solo a los administradores: «Incidencia grave: …».
 4. Todo el personal ve el listado (por defecto, las pendientes: abiertas y en curso; filtros por estado, gravedad y zona) y la ficha. El menú muestra junto a «Incidencias» cuántas quedan pendientes.
-5. Cualquier trabajador la resuelve («Resolver», explicando cómo) desde el listado o la ficha. No hay que «empezarla»: si existe, ya ha ocurrido; «En curso» lo pone su tarea. Si tiene una tarea pendiente, la ventana avisa de que se cerrará, y se cierra como «No realizada» con la observación «Ya no hace falta: la incidencia se ha resuelto.». Al resolverla deja de estar entre las pendientes; en «Resueltas» se ve cómo se resolvió, quién y cuándo, y se puede reabrir (vuelve a «Abierta» y admite una tarea nueva).
+5. Cualquier trabajador la resuelve («Resolver», explicando cómo) desde el listado o la ficha. No hay que «empezarla»: si existe, ya ha ocurrido; «En curso» lo pone su tarea. Si tiene una tarea pendiente, la ventana avisa de que se marcará como resuelta, y se cierra como hecha (insignia «Resuelta») a nombre de quien resuelve la incidencia, con la observación «Ya no hace falta: la incidencia se ha resuelto.». Al resolverla deja de estar entre las pendientes; en «Resueltas» se ve cómo se resolvió, quién y cuándo, y se puede reabrir (vuelve a «Abierta» y admite una tarea nueva).
 6. El administrador puede crear una tarea puntual a partir de ella (con el tipo, el título, la zona y el animal ya puestos) si no está resuelta ni tiene otra pendiente; la incidencia pasa a «En curso». La ficha muestra todas sus tareas con su estado.
 7. **La incidencia sigue a su tarea:** si alguien la hace, la incidencia se resuelve sola, con quien la hizo y, como resolución, su nota o «Resuelta con la tarea «…».»; si «no se ha podido hacer» (o el sistema la cierra al acabar el día, CU-59) o se borra, la incidencia vuelve a «Abierta» y se puede crear otra; si se reabre la tarea, vuelve a «En curso». Cada cambio queda en el registro de actividad, con quien cambió la tarea («Sistema» si fue el cierre automático).
 

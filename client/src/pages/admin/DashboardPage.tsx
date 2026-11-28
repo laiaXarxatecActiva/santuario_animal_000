@@ -1,4 +1,3 @@
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import type { DashboardDto, UpdateAlertDto } from '@sanctuary/shared';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +9,7 @@ import { useSession } from '../../hooks/useSession';
 import { formatCurrency } from '../../utils/format';
 import styles from './DashboardPage.module.css';
 import { PageIntro } from '../../components/admin/PageIntro';
+import { QuickLinks } from '../../components/admin/QuickLinks';
 
 const PLAZO_DIAS = 14;
 
@@ -45,6 +45,7 @@ export function DashboardPage() {
       ) : (
         <div className={styles.skeleton} aria-busy="true" aria-label={t('common.loading')} />
       )}
+      {user && <QuickLinks userId={user.id} role={user.role} />}
     </div>
   );
 }
@@ -66,7 +67,7 @@ function Contenido({ datos }: { datos: DashboardDto }) {
         />
         <Cifra valor={datos.pendingAdoptions} etiqueta={t('admin.dashboard.pendingAdoptions')} />
         {datos.revenue && (
-          <Cifra valor={formatCurrency(datos.revenue.total)} etiqueta={t('admin.dashboard.revenueThisMonth')}>
+          <Cifra valor={formatCurrency(datos.revenue.total)} etiqueta={t('admin.dashboard.revenueThisMonth')} ancha>
             {t('admin.dashboard.revenueDetail', {
               fees: formatCurrency(datos.revenue.fees),
               donations: formatCurrency(datos.revenue.donations),
@@ -83,22 +84,24 @@ function Contenido({ datos }: { datos: DashboardDto }) {
           datos.updateAlerts.map((alerta) => <AlertaActualizacion key={alerta.animal.id} alerta={alerta} />)
         )}
       </section>
-
-      <section className={styles.quickLinks} aria-labelledby="accesos">
-        <h2 id="accesos">{t('admin.dashboard.quickLinks')}</h2>
-        <div className={styles.quickLinksList}>
-          <ButtonLink to="/admin/animals/new" variant="outline" icon={faPlus}>
-            {t('admin.dashboard.newAnimal')}
-          </ButtonLink>
-        </div>
-      </section>
     </>
   );
 }
 
-function Cifra({ valor, etiqueta, children }: { valor: number | string; etiqueta: string; children?: ReactNode }) {
+function Cifra({
+  valor,
+  etiqueta,
+  ancha = false,
+  children,
+}: {
+  valor: number | string;
+  etiqueta: string;
+  /** El doble de ancha (los ingresos: importe y desglose son largos). */
+  ancha?: boolean;
+  children?: ReactNode;
+}) {
   return (
-    <li className={styles.stat}>
+    <li className={ancha ? `${styles.stat} ${styles.wide}` : styles.stat}>
       <span className={styles.value}>{valor}</span>
       <span className={styles.label}>{etiqueta}</span>
       {children && <span className={styles.detail}>{children}</span>}

@@ -9,6 +9,11 @@
   background: var(--color-surface);
 }
 
+/* RN-40: las tuyas, con el borde del color principal. */
+.card[data-mine] {
+  border: 2px solid var(--color-primary);
+}
+
 /* Atrasada: borde izquierdo en el color de error (la insignia lo dice con texto). */
 .card[data-late] {
   border-left: 4px solid var(--color-error);

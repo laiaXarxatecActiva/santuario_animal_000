@@ -22,6 +22,12 @@ export const TASK_GENERATION_DAYS = 7;
 export const MAX_TEMPLATE_TIMES = 12;
 
 /** CU-57: por qué un trabajador no puede resolver una tarea. */
+// CU-55: orden de «Tareas del día» (lista blanca de `?sort=`).
+export const TASK_SORTS = ['-createdAt'] as const;
+export type TaskSort = (typeof TASK_SORTS)[number];
+/** CU-55: cuántas tareas muestra «Más recientes primero». */
+export const RECENT_TASKS_LIMIT = 50;
+
 export const TASK_BLOCK_REASONS = ['NOT_PENDING', 'FUTURE_DAY', 'MISSING_QUALIFICATION'] as const;
 export type TaskBlockReason = (typeof TASK_BLOCK_REASONS)[number];
 
@@ -65,7 +71,7 @@ export type IntakeLevel = (typeof INTAKE_LEVELS)[number];
 /** CU-67: niveles que cuentan como «come poco». */
 export const LOW_INTAKE_LEVELS = ['little', 'none'] as const satisfies readonly IntakeLevel[];
 
-/** CU-67: tomas seguidas comiendo poco para avisar (por defecto y límites de los ajustes). */
+/** CU-67: comidas seguidas comiendo poco para avisar (por defecto y límites de los ajustes). */
 export const DEFAULT_LOW_INTAKE_MEALS = 2;
 export const MAX_LOW_INTAKE_MEALS = 10;
 

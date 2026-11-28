@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { card, caretaker, dashboard, page, sessionUser } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
-import { elegirOpcion } from './helpers/select';
 
 const portada = { featured: [card()], stats: { animalCount: 1 } };
 
@@ -106,7 +105,7 @@ describe('Fase 3 Idioma en el registro, el perfil y los errores', () => {
     expect(await screen.findByText('Enter your email.')).toBeInTheDocument();
   });
 
-  it('CU-23: el perfil tiene la sección «Idioma» y la guarda', async () => {
+  it('CU-23: el perfil ya no tiene la sección «Idioma»; se elige en la cabecera', async () => {
     const perfil = {
       firstName: 'Lucía',
       lastName: 'Martínez',
@@ -118,17 +117,15 @@ describe('Fase 3 Idioma en el registro, el perfil y los errores', () => {
       showPublicName: false,
       preferredLanguage: 'es',
     };
-    const { enviados } = mockApi({
+    mockApi({
       '/api/auth/me': { body: { user: sessionUser({ preferredLanguage: 'es' }) } },
-      '/api/me/profile': (_url: URL, p: Peticion) => ({ body: { ...perfil, ...(p.body as object) } }),
+      '/api/me/profile': { body: perfil },
     });
     renderRoute('/profile');
-    const seccion = (await screen.findByRole('heading', { level: 2, name: 'Idioma' })).closest(
-      'section',
-    ) as HTMLElement;
-    await elegirOpcion(within(seccion).getByLabelText('Idioma de la web y de los emails'), 'English');
-    await userEvent.click(within(seccion).getByRole('button', { name: 'Guardar' }));
-    await waitFor(() => expect(enviados('/api/me/profile')).toContainEqual({ preferredLanguage: 'en' }));
+    await screen.findByRole('heading', { level: 2, name: 'Tus datos' });
+    expect(screen.queryByRole('heading', { level: 2, name: 'Idioma' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Idioma de la web y de los emails')).not.toBeInTheDocument();
+    expect(screen.getByRole('banner').querySelector('svg[data-icon="language"]')).not.toBeNull();
   });
 
   // El botón muestra solo el icono y la flecha en todas las cabeceras; el nombre

@@ -1,0 +1,33 @@
+/* «Tareas del día» (CU-55, SCREENS §5.18): las del administrador y las del resto del personal. */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.group h2 {
+  margin: 0;
+}
+
+.groupHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* RN-40: las tuyas, con el borde del color principal (DESIGN_SYSTEM §8.9). */
+.mine {
+  padding: var(--space-4);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+}
+
+/* «Más recientes primero»: la fecha de la tarea bajo su hora. */
+.date {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+}

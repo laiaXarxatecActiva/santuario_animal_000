@@ -9,13 +9,13 @@ import type {
   WorkSettingsData,
   WorkSettingsDto,
 } from '@sanctuary/shared';
-import { isWorkerRole } from '@sanctuary/shared';
+import { isWorkerRole, RECENT_TASKS_LIMIT } from '@sanctuary/shared';
 import type { Pool } from 'pg';
 import type { Queryable } from '../db/pool.js';
 import { withTransaction } from '../db/transaction.js';
 import { completarIngestas, esIngestaBaja, type Ingesta } from '../dominio/cuidados.js';
 import { fechaEnZonaSantuario, instanteEnZonaSantuario, type Reloj } from '../dominio/reloj.js';
-import { comprobarResolucion } from '../dominio/tareas.js';
+import { asignadaAOtraPersona, comprobarResolucion } from '../dominio/tareas.js';
 import { esDeMiTurno } from '../dominio/turnos.js';
 import {
   ForbiddenError,
@@ -24,6 +24,7 @@ import {
   TaskFutureDayError,
   TaskIsPendingError,
   TaskNotPendingError,
+  TaskNotYoursError,
   ValidationError,
   VetVisitNeedsRecordError,
   IncidentHasTaskError,
@@ -51,6 +52,11 @@ export interface TaskServiceDeps {
 }
 
 export type TaskService = ReturnType<typeof createTaskService>;
+
+/** RN-40: una tarea asignada a otra persona no se resuelve. */
+function lanzarSiAjena(tarea: TaskDto, userId: number): void {
+  if (asignadaAOtraPersona(tarea.assignedTo?.id ?? null, userId)) throw new TaskNotYoursError();
+}
 
 const noExiste = () => new NotFoundError('Esta tarea no existe.');
 const enCampo = (field: string, message: string) => new ValidationError([{ field, message }]);
@@ -121,10 +127,13 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
   ): Promise<TaskDto> {
     const cualificaciones = await qualificationModel.idsOfUser(db, user.id);
     const tarea = await buscar(db, id);
+    lanzarSiAjena(tarea, user.id);
     lanzarSiBloqueada(bloqueo(tarea, cualificaciones));
     const ingestas = datos.status === 'completed' ? ingestasAlCompletar(tarea, datos.intakes ?? []) : [];
     await withTransaction(db, async (client) => {
-      lanzarSiBloqueada(bloqueo(await buscar(client, id, true), cualificaciones));
+      const actual = await buscar(client, id, true);
+      lanzarSiAjena(actual, user.id);
+      lanzarSiBloqueada(bloqueo(actual, cualificaciones));
       await taskModel.resolve(client, id, {
         status: datos.status,
         resolvedBy: user.id,
@@ -134,7 +143,7 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
       // CU-70: hecha, resuelve su incidencia; no hecha, la vuelve a abrir.
       await seguirALaTarea(client, tareaQueCambia(tarea, datos.observations), datos.status, user.id, reloj.ahora());
       if (ingestas.length === 0) return;
-      // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
+      // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias comidas seguidas comiendo poco.
       await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
       const { lowIntakeMeals } = await settingsModel.get(client);
       for (const animal of tarea.feedingAnimals ?? []) {
@@ -164,19 +173,26 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
         fin: a.shift.endTime,
         zoneIds: a.zones.map((z) => z.id),
       }));
-      // Asignada a alguien, solo es suya; si no, de quien tiene turno en su zona a esa hora (CU-56).
-      const tasks: MyDayTaskDto[] = tareas.map((tarea) => ({
-        ...tarea,
-        mine: tarea.assignedTo
-          ? tarea.assignedTo.id === user.id
-          : esDeMiTurno({ zoneId: tarea.zone?.id ?? null, dueTime: tarea.dueTime }, franjas),
-        blockedReason: tarea.status === 'pending' ? bloqueo(tarea, cualificaciones) : null,
-      }));
+      // RN-40: las asignadas a otra persona no se ven. Asignada a alguien, solo es suya;
+      // si no, de quien tiene turno en su zona a esa hora (CU-56).
+      const tasks: MyDayTaskDto[] = tareas
+        .filter((tarea) => !asignadaAOtraPersona(tarea.assignedTo?.id ?? null, user.id))
+        .map((tarea) => ({
+          ...tarea,
+          mine: tarea.assignedTo
+            ? tarea.assignedTo.id === user.id
+            : esDeMiTurno({ zoneId: tarea.zone?.id ?? null, dueTime: tarea.dueTime }, franjas),
+          blockedReason: tarea.status === 'pending' ? bloqueo(tarea, cualificaciones) : null,
+        }));
       return { date, tasks, shifts: turnos };
     },
 
     /** CU-55: listado del día para el administrador. */
     async list(query: AdminTasksQuery): Promise<{ data: TaskDto[] }> {
+      if (query.sort === '-createdAt') {
+        const filtros = { zoneId: query.zoneId, status: query.status, limit: RECENT_TASKS_LIMIT };
+        return { data: await taskModel.listRecent(db, filtros, await contexto()) };
+      }
       const filtros = { date: query.date ?? reloj.hoy(), zoneId: query.zoneId, status: query.status };
       return { data: await taskModel.listByDay(db, filtros, await contexto()) };
     },
@@ -211,7 +227,8 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
     /** CU-55 pasos 1-2: tarea puntual (sin plantilla); con `incidentId`, la de una incidencia (CU-70). */
     async createOneOff(datos: OneOffTaskData, autorId: number, incidentId: number | null = null): Promise<TaskDto> {
       if (datos.dueDate < reloj.hoy()) throw enCampo('dueDate', 'No se pueden crear tareas de días pasados.');
-      const zona = datos.zoneId === null && datos.animalIds.length === 0 ? null : await resolverZona(db, datos);
+      // Zona, animales y persona son opcionales; sin zona elegida, la de sus animales si viven juntos.
+      const zona = await resolverZona(db, datos, { sinZonaPermitida: true });
       if (datos.assignedTo !== null) await validarPersona('assignedTo', datos.assignedTo, datos.qualificationId);
       const id = await withTransaction(db, (client) =>
         taskModel.insert(client, {
@@ -256,7 +273,9 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
     },
 
     /** CU-73. */
-    settings: (): Promise<WorkSettingsDto> => settingsModel.get(db),
+    settings: async (): Promise<WorkSettingsDto> => ({
+      lateMarginMinutes: (await settingsModel.get(db)).lateMarginMinutes,
+    }),
     updateSettings: (datos: WorkSettingsData, userId: number) => settingsModel.update(db, datos, userId),
   };
 }

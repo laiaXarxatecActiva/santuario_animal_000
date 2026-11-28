@@ -110,7 +110,7 @@ describe('CU-67 Aviso si un animal come poco', () => {
     expect(avisos.map((a) => a.user_id)).toEqual([1, 2, 3, 5]);
     expect(avisos[0]).toEqual({
       user_id: 1,
-      message: 'Carbón ha comido poco en sus 2 últimas tomas.',
+      message: 'Carbón ha comido poco en sus 2 últimas comidas.',
       link: '/admin/animals/10/care',
     });
   });
@@ -122,14 +122,12 @@ describe('CU-67 Aviso si un animal come poco', () => {
     expect(await avisosComePoco()).toHaveLength(4);
   });
 
-  it('el número de tomas se cambia en los ajustes (solo el administrador) y se conserva si no se envía', async () => {
+  it('el número de comidas ya no está en los ajustes del trabajo diario (está en los de los avisos)', async () => {
+    expect((await marta.get('/api/admin/work-settings')).body).toEqual({ lateMarginMinutes: 30 });
     const res = await marta.put('/api/admin/work-settings').send({ lateMarginMinutes: 30, lowIntakeMeals: 3 });
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ lateMarginMinutes: 30, lowIntakeMeals: 3 });
-    const sinCambio = await marta.put('/api/admin/work-settings').send({ lateMarginMinutes: 45 });
-    expect(sinCambio.body).toEqual({ lateMarginMinutes: 45, lowIntakeMeals: 3 });
-    const fuera = await marta.put('/api/admin/work-settings').send({ lateMarginMinutes: 30, lowIntakeMeals: 0 });
-    expect(fuera.status).toBe(400);
-    expect(fuera.body.error.details[0].field).toBe('lowIntakeMeals');
+    expect(res.status).toBe(400);
+    expect((await marta.get('/api/admin/alert-settings')).body.lowIntakeMeals).toBe(2);
+    const margen = await marta.put('/api/admin/work-settings').send({ lateMarginMinutes: 45 });
+    expect(margen.body).toEqual({ lateMarginMinutes: 45 });
   });
 });

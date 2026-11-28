@@ -55,11 +55,14 @@ describe('CU-56 Mi día', () => {
     api();
     renderRoute('/admin/my-day');
     expect(await screen.findByRole('heading', { level: 1, name: 'Mi día' })).toBeInTheDocument();
-    const mias = await screen.findByRole('region', { name: 'Asignadas a ti' });
-    expect(within(mias).getByRole('article', { name: /Reparar la puerta/ })).toBeInTheDocument();
-    expect(within(mias).getByText('Puntual')).toBeInTheDocument();
-    const resto = screen.getByRole('region', { name: 'Tareas del día' });
+    const mias = await screen.findByRole('region', { name: 'Tus tareas' });
+    const puerta = within(mias).getByRole('article', { name: /Reparar la puerta/ });
+    // RN-40: las tuyas llevan el borde de color.
+    expect(puerta).toHaveAttribute('data-mine');
+    expect(within(mias).queryByText('Puntual')).not.toBeInTheDocument();
+    const resto = screen.getByRole('region', { name: 'Sin asignar' });
     const revision = within(resto).getByRole('article', { name: /Revisión de la clínica/ });
+    expect(revision).not.toHaveAttribute('data-mine');
     expect(within(revision).getByText('Atrasada')).toBeInTheDocument();
     expect(within(revision).getByText('Revisión de salud')).toBeInTheDocument();
     expect(within(revision).getByText('08:30')).toBeInTheDocument();

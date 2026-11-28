@@ -1,7 +1,8 @@
 import type { AdminPlanDto, AdoptionPlanDto } from '@sanctuary/shared';
 import type { Queryable } from '../db/pool.js';
-import { esErrorPg, PG_UNIQUE_VIOLATION } from '../db/pg-errors.js';
-import { PlanAlreadyExistsError } from '../errors/app-error.js';
+import { esErrorPg, PG_FOREIGN_KEY_VIOLATION, PG_RESTRICT_VIOLATION, PG_UNIQUE_VIOLATION } from '../db/pg-errors.js';
+import { comprobarBorradoPlan } from '../dominio/planes.js';
+import { PlanAlreadyExistsError, PlanHasHistoryError } from '../errors/app-error.js';
 
 interface AdoptionPlanRow {
   id: number;
@@ -61,15 +62,28 @@ export interface PlanData {
 interface AdminPlanRow extends AdoptionPlanRow {
   is_active: boolean;
   active_adoptions: number;
+  in_use: boolean;
 }
 
 function mapAdminRow(row: AdminPlanRow): AdminPlanDto {
-  return { ...mapRow(row), isActive: row.is_active, activeAdoptions: row.active_adoptions };
+  return {
+    ...mapRow(row),
+    isActive: row.is_active,
+    activeAdoptions: row.active_adoptions,
+    deletable: comprobarBorradoPlan({ isDefault: row.is_default, enUso: row.in_use }) === null,
+  };
 }
+
+/** A3: el plan aparece en alguna adopción, pago o suceso del historial (todas las claves que lo apuntan). */
+const EN_USO = `(
+     EXISTS (SELECT 1 FROM adoptions a WHERE a.plan_id = p.id OR a.next_plan_id = p.id)
+  OR EXISTS (SELECT 1 FROM payments pa WHERE pa.plan_id = p.id)
+  OR EXISTS (SELECT 1 FROM adoption_events e WHERE e.from_plan_id = p.id OR e.to_plan_id = p.id))`;
 
 const SELECT_ADMIN = `
   SELECT p.id, p.name, p.monthly_amount, p.description, p.is_default, p.is_active,
-         (SELECT count(*)::int FROM adoptions a WHERE a.plan_id = p.id AND a.status = 'active') AS active_adoptions
+         (SELECT count(*)::int FROM adoptions a WHERE a.plan_id = p.id AND a.status = 'active') AS active_adoptions,
+         ${EN_USO} AS in_use
     FROM adoption_plans p`;
 
 /** 3: el índice único `adoption_plans_name_lower_key` impide nombres repetidos. */
@@ -121,5 +135,33 @@ export async function update(db: Queryable, id: number, datos: PlanData): Promis
     );
   } catch (error) {
     traducirError(error);
+  }
+}
+
+/** A3: si el plan está en uso, con la fila bloqueada hasta el final de la transacción. */
+export async function findForDeletion(
+  db: Queryable,
+  id: number,
+): Promise<{ name: string; monthlyAmount: string; isDefault: boolean; enUso: boolean } | null> {
+  const { rows } = await db.query<{ name: string; monthly_amount: string; is_default: boolean; in_use: boolean }>(
+    `SELECT p.name, p.monthly_amount, p.is_default, ${EN_USO} AS in_use
+       FROM adoption_plans p
+      WHERE p.id = $1
+      FOR UPDATE OF p`,
+    [id],
+  );
+  const row = rows[0];
+  return row
+    ? { name: row.name, monthlyAmount: row.monthly_amount, isDefault: row.is_default, enUso: row.in_use }
+    : null;
+}
+
+/** A3: las claves `ON DELETE RESTRICT` impiden borrar un plan en uso (RN-17). */
+export async function remove(db: Queryable, id: number): Promise<void> {
+  try {
+    await db.query('DELETE FROM adoption_plans WHERE id = $1', [id]);
+  } catch (error) {
+    if (esErrorPg(error, PG_FOREIGN_KEY_VIOLATION) || esErrorPg(error, PG_RESTRICT_VIOLATION)) throw new PlanHasHistoryError();
+    throw error;
   }
 }

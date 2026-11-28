@@ -3,6 +3,7 @@ import {
   changePasswordFormSchema,
   changePasswordSchema,
   profileDataSchema,
+  profileFormSchema,
   updateProfileSchema,
 } from '../src/schemas/profile.schema.js';
 
@@ -81,5 +82,39 @@ describe('CU-23 profileDataSchema', () => {
       'firstName',
       'lastName',
     ]);
+  });
+});
+
+describe('CU-23 profileFormSchema (un solo formulario para datos y preferencias)', () => {
+  it('valida los datos como profileDataSchema y conserva las preferencias', () => {
+    expect(
+      profileFormSchema.parse({
+        firstName: ' Lucía ',
+        lastName: 'Martínez',
+        phone: '612-34-56-78',
+        emailNotifications: false,
+        emailFrequency: 'monthly_digest',
+        showPublicName: true,
+      }),
+    ).toEqual({
+      firstName: 'Lucía',
+      lastName: 'Martínez',
+      phone: '612345678',
+      emailNotifications: false,
+      emailFrequency: 'monthly_digest',
+      showPublicName: true,
+    });
+  });
+
+  it('3a: rechaza un nombre vacío y una frecuencia desconocida', () => {
+    const resultado = profileFormSchema.safeParse({
+      firstName: '',
+      lastName: 'Martínez',
+      phone: '',
+      emailNotifications: true,
+      emailFrequency: 'weekly',
+      showPublicName: false,
+    });
+    expect(errores(resultado)).toEqual(['firstName', 'emailFrequency']);
   });
 });

@@ -94,3 +94,14 @@ export function comprobarPlanes(
   }
   return null;
 }
+
+export type ProblemaBorradoPlan = 'DEFAULT_CANNOT_BE_DELETED' | 'HAS_HISTORY';
+
+/**
+ * A3: borrar un plan para siempre. Solo si nunca se ha usado (sin adopciones,
+ * pagos ni historial: RN-17) y no es el de por defecto (siempre tiene que haber uno).
+ */
+export function comprobarBorradoPlan(plan: { isDefault: boolean; enUso: boolean }): ProblemaBorradoPlan | null {
+  if (plan.isDefault) return 'DEFAULT_CANNOT_BE_DELETED';
+  return plan.enUso ? 'HAS_HISTORY' : null;
+}

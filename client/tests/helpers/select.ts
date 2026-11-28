@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 /**
@@ -26,4 +26,22 @@ export const listaAbierta = () => screen.queryByRole('listbox');
 export function opcionesDe(campo: HTMLElement): string[] {
   const lista = document.getElementById(campo.getAttribute('aria-controls') ?? '');
   return Array.from(lista?.querySelectorAll('[role="option"]') ?? [], (o) => o.textContent ?? '');
+}
+
+/**
+ * Escribe una hora en un campo de hora nativo (`<input type="time">`): el de un
+ * `TimeField` (se pasa el campo) o el de «Nueva hora» de un `TimesField` (se pasa su grupo).
+ */
+export async function elegirHora(campo: HTMLElement, hora: string) {
+  const entrada =
+    campo instanceof HTMLInputElement ? campo : campo.querySelector<HTMLInputElement>('input[type="time"]');
+  if (!entrada) throw new Error('No hay ningún campo de hora');
+  await userEvent.clear(entrada);
+  await userEvent.type(entrada, hora);
+}
+
+/** Añade una hora a un `TimesField`. */
+export async function anadirHora(grupo: HTMLElement, hora: string) {
+  await elegirHora(grupo, hora);
+  await userEvent.click(within(grupo).getByRole('button', { name: 'Añadir hora' }));
 }

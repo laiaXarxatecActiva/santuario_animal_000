@@ -49,6 +49,8 @@ export interface AdminPlanDto {
   isDefault: boolean;
   isActive: boolean;
   activeAdoptions: number;
+  /** A3: se puede borrar (nunca se ha usado y no es el plan por defecto). */
+  deletable: boolean;
 }
 
 /** Especie en el panel (CU-30). */

@@ -426,7 +426,7 @@ describe('CU-70 La incidencia sigue a su tarea', () => {
     });
   });
 
-  it('al resolverla a mano, su tarea pendiente se cierra sola', async () => {
+  it('al resolverla a mano, su tarea pendiente se cierra sola como hecha (se ve «Resuelta»)', async () => {
     const id = await nuevaIncidencia('Gotera en el almacén');
     const tareaId = await crearTarea(id, 'Tapar la gotera');
     const res = await nuria
@@ -435,7 +435,7 @@ describe('CU-70 La incidencia sigue a su tarea', () => {
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ status: 'resolved', resolution: 'Ya no gotea.' });
     expect(await estadoDeLaTarea(tareaId)).toEqual({
-      status: 'not_done',
+      status: 'completed',
       observations: 'Ya no hace falta: la incidencia se ha resuelto.',
     });
   });

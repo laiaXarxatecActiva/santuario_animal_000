@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, caretaker, page } from './helpers/fixtures';
 import { errorApi, mockApi, renderRoute, type Peticion } from './helpers/render';
 import { incidencia, tarea, zonas } from './helpers/work-fixtures';
-import { elegirOpcion } from './helpers/select';
+import { elegirOpcion, elegirHora } from './helpers/select';
 
 const ABIERTA = incidencia({
   id: 1,
@@ -180,7 +180,7 @@ describe('CU-70 Ficha de una incidencia', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Crear tarea' }));
     const ventana = screen.getByRole('dialog', { name: 'Tarea de la incidencia n.º 2' });
     expect(within(ventana).getByLabelText('Título')).toHaveValue('Cojera de Pipa');
-    await userEvent.type(within(ventana).getByLabelText('Hora'), '16:00');
+    await elegirHora(within(ventana).getByLabelText('Hora'), '16:00');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Tarea creada')).toBeInTheDocument();
     expect(enviados('/api/admin/incidents/2/task')).toEqual([
@@ -234,31 +234,36 @@ describe('CU-70 Ficha de una incidencia', () => {
     ]);
   });
 
-  it('muestra sus tareas con su estado; con una pendiente no deja crear otra y «Resolver» avisa de que se cerrará', async () => {
+  it('muestra sus tareas con su estado; con una pendiente no deja crear otra y «Resolver» avisa de que se marcará como resuelta', async () => {
     const enCurso = incidencia({
       status: 'in_progress',
       tasks: [
         { id: 78, title: 'Revisar la pata de Pipa', dueDate: '2026-11-24', status: 'pending' },
         { id: 77, title: 'Vendar la pata', dueDate: '2026-11-23', status: 'not_done' },
+        { id: 76, title: 'Mirar la pata', dueDate: '2026-11-22', status: 'completed' },
       ],
     });
     api(admin(), { '/api/admin/incidents/2': () => ({ body: enCurso }) });
     renderRoute('/admin/incidents/2');
     const tareas = within(await screen.findByRole('region', { name: 'Tareas' }));
     const filas = tareas.getAllByRole('listitem');
-    expect(filas).toHaveLength(2);
+    expect(filas).toHaveLength(3);
     expect(within(filas[0]!).getByRole('link', { name: 'Revisar la pata de Pipa' })).toHaveAttribute(
       'href',
       '/admin/tasks?date=2026-11-24',
     );
     expect(within(filas[0]!).getByText('Pendiente')).toBeInTheDocument();
     expect(within(filas[1]!).getByText('No realizada')).toBeInTheDocument();
+    expect(within(filas[2]!).getByText('Resuelta')).toBeInTheDocument();
+    expect(within(filas[2]!).queryByText('Hecha')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Crear tarea' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Resolver' }));
     const ventana = screen.getByRole('dialog', { name: 'Resolver la incidencia' });
     expect(
-      within(ventana).getByText('Su tarea pendiente «Revisar la pata de Pipa» se cerrará: ya no hará falta.'),
+      within(ventana).getByText(
+        'Su tarea pendiente «Revisar la pata de Pipa» se marcará como resuelta: ya no hará falta.',
+      ),
     ).toBeInTheDocument();
   });
 

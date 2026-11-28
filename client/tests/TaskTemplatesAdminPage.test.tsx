@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { admin, adminAnimal } from './helpers/fixtures';
 import { mockApi, renderRoute, type Peticion } from './helpers/render';
 import { cualificaciones, plantilla, zonas } from './helpers/work-fixtures';
-import { elegirOpcion } from './helpers/select';
+import { anadirHora, elegirOpcion } from './helpers/select';
 
 type Handler = (u: URL, p: Peticion) => { status?: number; body?: unknown };
 
@@ -73,7 +73,9 @@ describe('CU-54 Gestionar plantillas de tareas', () => {
     await elegirOpcion(within(dialogo).getByLabelText('Tipo'), 'Limpieza');
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Barrer la cocina');
     await elegirOpcion(within(dialogo).getByLabelText('Zona'), 'Cocina y almacén');
-    await userEvent.type(within(dialogo).getByLabelText('Horas (HH:MM, separadas por comas)'), '16:00, 08:00');
+    const horas = within(dialogo).getByRole('group', { name: 'Horas' });
+    await anadirHora(horas, '16:00');
+    await anadirHora(horas, '08:00');
     await elegirOpcion(within(dialogo).getByLabelText('Se repite'), 'Algunos días de la semana');
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Lunes' }));
     await userEvent.click(within(dialogo).getByRole('checkbox', { name: 'Jueves' }));
@@ -86,7 +88,7 @@ describe('CU-54 Gestionar plantillas de tareas', () => {
       title: 'Barrer la cocina',
       zoneId: 5,
       animalIds: [],
-      times: ['16:00', '08:00'],
+      times: ['08:00', '16:00'],
       recurrence: 'weekdays',
       weekdays: [1, 4],
       startDate: '2026-12-01',
@@ -129,7 +131,12 @@ describe('CU-54 Gestionar plantillas de tareas', () => {
     expect(
       within(dialogo).getByText('Al guardar, las tareas pendientes de hoy en adelante se vuelven a generar.'),
     ).toBeInTheDocument();
-    expect(within(dialogo).getByLabelText('Horas (HH:MM, separadas por comas)')).toHaveValue('09:00, 17:00');
+    const horas = within(dialogo).getByRole('group', { name: 'Horas' });
+    expect(
+      within(horas)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toEqual(['09:00', '17:00']);
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     await waitFor(() => expect(enviados('/api/admin/task-templates/4').filter(Boolean)).toHaveLength(1));
   });

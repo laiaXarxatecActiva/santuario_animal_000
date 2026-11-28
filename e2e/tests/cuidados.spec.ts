@@ -21,12 +21,12 @@ test.describe('CU-66, CU-67 Lo que come cada animal', () => {
     await ventana.getByRole('button', { name: t('work.myDay.completeSubmit'), exact: true }).click();
     await expect(page.getByText(t('work.myDay.markedDone'))).toBeVisible();
 
-    // CU-67: dos tomas seguidas comiendo poco → aviso a la administradora.
+    // CU-67: dos comidas seguidas comiendo poco → aviso a la administradora.
     await page.context().clearCookies();
     await iniciarSesion(page, MARTA);
     await page.goto('/notifications');
     await expect(
-      page.getByRole('main').getByRole('link', { name: 'Carbón ha comido poco en sus 2 últimas tomas.' }),
+      page.getByRole('main').getByRole('link', { name: 'Carbón ha comido poco en sus 2 últimas comidas.' }),
     ).toBeVisible();
 
     // En su pestaña «Cuidados» se ve la comida anotada y el aviso.

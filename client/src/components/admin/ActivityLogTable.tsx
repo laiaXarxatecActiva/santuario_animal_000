@@ -32,7 +32,7 @@ export function ActivityLogTable({ entries, showUser = true }: { entries: Activi
           <th scope="col">{t('admin.activity.when')}</th>
           {showUser && <th scope="col">{t('admin.activity.user')}</th>}
           <th scope="col">{t('admin.activity.action')}</th>
-          <th scope="col">{t('admin.activity.record')}</th>
+          <th scope="col">{t('admin.activity.table')}</th>
           <th scope="col">{t('admin.activity.details')}</th>
         </tr>
       </thead>
@@ -47,7 +47,7 @@ export function ActivityLogTable({ entries, showUser = true }: { entries: Activi
               <td>{formatShortInstant(e.createdAt)}</td>
               {showUser && <td data-label={t('admin.activity.user')}>{e.user?.name ?? t('admin.activity.system')}</td>}
               <td data-label={t('admin.activity.action')}>{t(`admin.activity.actions.${e.action}`)}</td>
-              <td data-label={t('admin.activity.record')}>
+              <td data-label={t('admin.activity.table')}>
                 {ruta && e.action !== 'delete' ? (
                   <Link to={`${ruta}${e.recordId}`} className={styles.nameLink}>
                     {registro}

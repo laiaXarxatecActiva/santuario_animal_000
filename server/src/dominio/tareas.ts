@@ -110,6 +110,15 @@ export function comprobarResolucion(
   return null;
 }
 
+/**
+ * RN-40: una tarea asignada es de su persona. Nadie más la ve en «Mi día» ni la
+ * resuelve (tampoco el administrador, que la reasigna si hace falta). Una sin
+ * asignar es de todos.
+ */
+export function asignadaAOtraPersona(asignadaA: number | null, userId: number): boolean {
+  return asignadaA !== null && asignadaA !== userId;
+}
+
 export const MENSAJE_BLOQUEO: Record<TaskBlockReason, string> = {
   NOT_PENDING: 'Esta tarea ya está resuelta.',
   FUTURE_DAY: 'Todavía no se puede hacer: es de otro día.',

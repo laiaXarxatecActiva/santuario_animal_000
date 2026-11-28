@@ -25,6 +25,8 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'childr
   label: string;
   error?: string;
   help?: ReactNode;
+  /** Insignia junto a la etiqueta (p. ej. «Modificado»); también forma parte de la descripción. */
+  badge?: ReactNode;
   ref?: Ref<HTMLInputElement>;
 }
 
@@ -40,22 +42,36 @@ export function FieldError({ id, children }: { id: string; children: ReactNode }
   );
 }
 
-function useIds(id: string | undefined, help: unknown, error: unknown) {
+function useIds(id: string | undefined, help: unknown, error: unknown, badge?: unknown) {
   const auto = useId();
   const inputId = id ?? auto;
   const helpId = `${inputId}-help`;
   const errorId = `${inputId}-error`;
-  const describedBy = [help ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined;
-  return { inputId, helpId, errorId, describedBy };
+  const badgeId = `${inputId}-badge`;
+  const describedBy =
+    [badge ? badgeId : '', help ? helpId : '', error ? errorId : ''].filter(Boolean).join(' ') || undefined;
+  return { inputId, helpId, errorId, badgeId, describedBy };
 }
 
-function Field({ label, error, help, id, className, adornment, ...rest }: FieldProps & { adornment?: ReactNode }) {
-  const { inputId, helpId, errorId, describedBy } = useIds(id, help, error);
+function Field({
+  label,
+  error,
+  help,
+  badge,
+  id,
+  className,
+  adornment,
+  ...rest
+}: FieldProps & { adornment?: ReactNode }) {
+  const { inputId, helpId, errorId, badgeId, describedBy } = useIds(id, help, error, badge);
   return (
     <div className={`${styles.field} ${className ?? ''}`}>
-      <label htmlFor={inputId} className={styles.label}>
-        {label}
-      </label>
+      <div className={styles.labelRow}>
+        <label htmlFor={inputId} className={styles.label}>
+          {label}
+        </label>
+        {badge && <span id={badgeId}>{badge}</span>}
+      </div>
       <div className={styles.control}>
         <input
           id={inputId}
@@ -275,5 +291,84 @@ export function RadioGroup<T extends string>({ legend, name, options, value, onC
         );
       })}
     </fieldset>
+  );
+}
+
+/**
+ * Campo dentro de una frase (DESIGN_SYSTEM §8.5): «Avisar si un animal come poco en
+ * [2 ▼] comidas seguidas». El texto de alrededor se ve pero no se lee dos veces: el
+ * campo lleva su propia etiqueta (oculta), y la ayuda y el error van debajo de la frase.
+ */
+export function InlineField({
+  before,
+  after,
+  help,
+  error,
+  children,
+}: {
+  before: string;
+  after: string;
+  help?: ReactNode;
+  error?: string;
+  children: (campo: { describedBy: string | undefined; invalid: boolean }) => ReactNode;
+}) {
+  const { helpId, errorId, describedBy } = useIds(undefined, help, error);
+  return (
+    <div className={styles.field}>
+      <div className={styles.phrase}>
+        <span aria-hidden="true">{before}</span>
+        {children({ describedBy, invalid: Boolean(error) })}
+        <span aria-hidden="true">{after}</span>
+      </div>
+      {help && (
+        <p id={helpId} className={styles.help}>
+          {help}
+        </p>
+      )}
+      {error && <FieldError id={errorId}>{error}</FieldError>}
+    </div>
+  );
+}
+
+/** Número corto dentro de una frase (`InlineField`), con su etiqueta en `aria-label`. */
+export function InlineNumberInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & { label: string }) {
+  const { label, className, ...rest } = props;
+  return (
+    <input
+      type="number"
+      aria-label={label}
+      className={`${styles.input} ${styles.inlineInput} ${className ?? ''}`}
+      {...rest}
+    />
+  );
+}
+
+/** Desplegable corto dentro de una frase (`InlineField`), con su etiqueta oculta. */
+export function InlineSelect<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+  describedBy,
+  invalid,
+}: {
+  label: string;
+  options: readonly FilterOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  describedBy?: string;
+  invalid?: boolean;
+}) {
+  return (
+    <FilterSelect
+      label={label}
+      labelClassName="visually-hidden"
+      className={styles.inlineSelect}
+      options={options}
+      value={value}
+      onChange={onChange}
+      describedBy={describedBy}
+      invalid={invalid}
+    />
   );
 }
