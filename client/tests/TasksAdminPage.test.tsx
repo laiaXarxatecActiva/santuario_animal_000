@@ -142,7 +142,7 @@ describe('CU-55 Tareas del día (administrador)', () => {
     await elegirOpcion(within(dialogo).getByLabelText('Zona (opcional)'), 'Cocina y almacén');
     await userEvent.clear(within(dialogo).getByLabelText('Día'));
     await userEvent.type(within(dialogo).getByLabelText('Día'), '2026-11-24');
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora' }), '10:00');
+    await elegirHora(within(dialogo).getByLabelText('Hora'), '10:00');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Tarea creada')).toBeInTheDocument();
     expect(enviados('/api/admin/tasks').filter(Boolean)[0]).toMatchObject({
@@ -167,7 +167,7 @@ describe('CU-55 Tareas del día (administrador)', () => {
     expect(within(dialogo).getByLabelText('Zona (opcional)')).toHaveTextContent('Sin zona');
     await elegirOpcion(within(dialogo).getByLabelText('Tipo'), 'Mantenimiento');
     await userEvent.type(within(dialogo).getByLabelText('Título'), 'Revisar los extintores');
-    await elegirHora(within(dialogo).getByRole('group', { name: 'Hora' }), '18:30');
+    await elegirHora(within(dialogo).getByLabelText('Hora'), '18:30');
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Tarea creada')).toBeInTheDocument();
     expect(enviados('/api/admin/tasks').filter(Boolean)[0]).toMatchObject({
@@ -250,7 +250,13 @@ describe('CU-73 Ajustes del trabajo diario', () => {
     renderRoute('/admin/tasks');
     await userEvent.click(await screen.findByRole('button', { name: 'Ajustes' }));
     const dialogo = screen.getByRole('dialog', { name: 'Ajustes del trabajo diario' });
-    const margen = await within(dialogo).findByLabelText('Margen para considerar atrasada una tarea (minutos)');
+    // Se lee como una frase: «Una tarea pasa a «Atrasada» si sigue sin hacerse [30] minutos después de su hora».
+    expect(dialogo).toHaveTextContent('Una tarea pasa a «Atrasada» si sigue sin hacerse');
+    expect(dialogo).toHaveTextContent('minutos después de su hora');
+    const margen = await within(dialogo).findByLabelText('Minutos de margen antes de marcar una tarea como «Atrasada»');
+    expect(margen).toHaveAccessibleDescription('Con 0, en cuanto pasa su hora.');
+    // El número de comidas para avisar ya no está aquí: está en «Avisos».
+    expect(within(dialogo).queryByText(/comiendo poco|Tomas/)).not.toBeInTheDocument();
     await waitFor(() => expect(margen).toHaveValue(30));
     await userEvent.clear(margen);
     await userEvent.type(margen, '45');

@@ -93,7 +93,7 @@ describe('Pestaña «Cuidados» (CU-65 a CU-69)', () => {
     renderRoute('/admin/animals/1/care');
     const pestanas = await screen.findByRole('navigation', { name: 'Secciones del animal' });
     expect(within(pestanas).getByRole('link', { name: 'Cuidados' })).toHaveAttribute('aria-current', 'page');
-    expect(await screen.findByText('Ha comido poco en su última toma.')).toBeInTheDocument();
+    expect(await screen.findByText('Ha comido poco en su última comida.')).toBeInTheDocument();
 
     const dieta = await seccion('Dieta');
     const pollo = within(dieta).getByText('Carne de pollo sin hueso').closest('tr') as HTMLElement;
@@ -204,7 +204,7 @@ describe('CU-68 Visitas veterinarias', () => {
     const dia = within(ventana).getByLabelText('Día');
     await userEvent.clear(dia);
     await userEvent.type(dia, '2026-12-01');
-    await elegirHora(within(ventana).getByRole('group', { name: 'Hora' }), '11:00');
+    await elegirHora(within(ventana).getByLabelText('Hora'), '11:00');
     await userEvent.type(within(ventana).getByLabelText('Motivo'), 'Revisión del ala');
     await userEvent.click(within(ventana).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('Visita programada')).toBeInTheDocument();

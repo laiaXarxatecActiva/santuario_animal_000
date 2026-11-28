@@ -7,7 +7,6 @@ import {
   isWorkerRole,
   oneOffTaskBodySchema,
   workSettingsBodySchema,
-  MAX_LOW_INTAKE_MEALS,
   type WorkSettingsData,
   type OneOffTaskBody,
   type TaskDto,
@@ -24,7 +23,7 @@ import { ApiError } from '../../api/client';
 import { workApi } from '../../api/work';
 import { Alert } from '../../components/Alert';
 import { Button } from '../../components/Button';
-import { SelectField, TextAreaField, TextField } from '../../components/FormFields';
+import { InlineField, InlineNumberInput, SelectField, TextAreaField, TextField } from '../../components/FormFields';
 import iconStyles from '../../components/IconButton.module.css';
 import { Modal } from '../../components/Modal';
 import { CheckboxGroup } from '../../components/work/CheckboxGroup';
@@ -558,16 +557,17 @@ function Reasignar({ tarea, onClose, onSaved }: { tarea: TaskDto; onClose: () =>
   );
 }
 
-/** CU-73 y CU-67: margen para considerar atrasada una tarea y tomas comiendo poco para avisar. */
+/**
+ * CU-55: margen para considerar atrasada una tarea. El aviso de comer poco (CU-67)
+ * se ajusta en «Avisos».
+ */
 function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Promise<void> }) {
   const { t } = useTranslation();
   const ajustes = useWorkSettings();
   const [margen, setMargen] = useState<string | null>(null);
-  const [tomas, setTomas] = useState<string | null>(null);
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState<string | null>(null);
   const valor = margen ?? (ajustes.data ? String(ajustes.data.lateMarginMinutes) : '');
-  const valorTomas = tomas ?? (ajustes.data?.lowIntakeMeals !== undefined ? String(ajustes.data.lowIntakeMeals) : '');
   const guardar = useMutation({
     mutationFn: (datos: WorkSettingsData) => workApi.settings.update(datos),
     onSuccess: onSaved,
@@ -586,10 +586,7 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
       onClose={onClose}
       onSubmit={() => {
         setError(null);
-        const resultado = workSettingsBodySchema.safeParse({
-          lateMarginMinutes: valor,
-          ...(valorTomas !== '' ? { lowIntakeMeals: valorTomas } : {}),
-        });
+        const resultado = workSettingsBodySchema.safeParse({ lateMarginMinutes: valor });
         if (!resultado.success) {
           setErrores(erroresPorCampo(resultado.error.issues));
           return;
@@ -598,25 +595,24 @@ function Ajustes({ onClose, onSaved }: { onClose: () => void; onSaved: () => Pro
         guardar.mutate(resultado.data);
       }}
     >
-      <TextField
-        type="number"
-        min={0}
-        max={240}
-        label={t('work.settings.lateMargin')}
-        value={valor}
+      <InlineField
+        before={t('work.settings.lateMarginBefore')}
+        after={t('work.settings.lateMarginAfter')}
+        help={t('work.settings.lateMarginHelp')}
         error={errores.lateMarginMinutes}
-        onChange={(e) => setMargen(e.target.value)}
-      />
-      <TextField
-        type="number"
-        min={1}
-        max={MAX_LOW_INTAKE_MEALS}
-        label={t('work.settings.lowIntakeMeals')}
-        help={t('work.settings.lowIntakeMealsHelp')}
-        value={valorTomas}
-        error={errores.lowIntakeMeals}
-        onChange={(e) => setTomas(e.target.value)}
-      />
+      >
+        {({ describedBy, invalid }) => (
+          <InlineNumberInput
+            label={t('work.settings.lateMarginLabel')}
+            min={0}
+            max={240}
+            value={valor}
+            aria-describedby={describedBy}
+            aria-invalid={invalid || undefined}
+            onChange={(e) => setMargen(e.target.value)}
+          />
+        )}
+      </InlineField>
     </VentanaFormulario>
   );
 }

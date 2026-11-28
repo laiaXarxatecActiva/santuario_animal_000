@@ -19,11 +19,11 @@ export const avisos = {
         en: `“${zona}” is short-staffed on the ${turno} shift on ${dia}: ${hay} of ${hacen}.`,
       }[idioma];
     }),
-  /** CU-67: un animal lleva varias tomas seguidas comiendo poco. */
-  comePoco: (a: string, tomas: number): Textos => ({
-    es: `${a} ha comido poco en sus ${tomas} últimas tomas.`,
-    ca: `${a} ha menjat poc en les ${tomas} últimes preses.`,
-    en: `${a} has eaten little at the last ${tomas} meals.`,
+  /** CU-67: un animal lleva varias comidas seguidas comiendo poco. */
+  comePoco: (a: string, comidas: number): Textos => ({
+    es: `${a} ha comido poco en sus ${comidas} últimas comidas.`,
+    ca: `${a} ha menjat poc en les seues ${comidas} últimes menjades.`,
+    en: `${a} has eaten little at the last ${comidas} meals.`,
   }),
   /** CU-69: una dosis de medicación no dada. */
   medicacionNoDada: (a: string, hora: string, dosis: string): Textos => ({

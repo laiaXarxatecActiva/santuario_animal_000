@@ -143,7 +143,7 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
       // CU-70: hecha, resuelve su incidencia; no hecha, la vuelve a abrir.
       await seguirALaTarea(client, tareaQueCambia(tarea, datos.observations), datos.status, user.id, reloj.ahora());
       if (ingestas.length === 0) return;
-      // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias tomas comiendo poco.
+      // CU-66 y CU-67: se anota la comida y se avisa si un animal lleva varias comidas seguidas comiendo poco.
       await feedingModel.insertMany(client, id, ingestas, { recordedBy: user.id, recordedAt: reloj.ahora() });
       const { lowIntakeMeals } = await settingsModel.get(client);
       for (const animal of tarea.feedingAnimals ?? []) {
@@ -273,7 +273,9 @@ export function createTaskService({ db, reloj }: TaskServiceDeps) {
     },
 
     /** CU-73. */
-    settings: (): Promise<WorkSettingsDto> => settingsModel.get(db),
+    settings: async (): Promise<WorkSettingsDto> => ({
+      lateMarginMinutes: (await settingsModel.get(db)).lateMarginMinutes,
+    }),
     updateSettings: (datos: WorkSettingsData, userId: number) => settingsModel.update(db, datos, userId),
   };
 }

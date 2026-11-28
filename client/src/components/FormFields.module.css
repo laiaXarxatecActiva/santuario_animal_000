@@ -118,3 +118,19 @@
   flex-direction: column;
   gap: var(--space-1);
 }
+
+/* Campo dentro de una frase (`InlineField`): texto, campo y texto en una línea que se parte si no cabe. */
+.phrase {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.inlineInput {
+  width: 6rem;
+}
+
+.inlineSelect {
+  width: 6rem;
+}

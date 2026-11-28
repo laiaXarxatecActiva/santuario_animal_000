@@ -69,7 +69,12 @@ describe('CU-72 Panel «Hoy» del administrador', () => {
 
   it('los animales que comen poco según los ajustes y las visitas de hoy', async () => {
     expect((await hoy()).lowIntake).toEqual([]);
-    await marta.put('/api/admin/work-settings').send({ lateMarginMinutes: 30, lowIntakeMeals: 1 });
+    await marta.put('/api/admin/alert-settings').send({
+      emailAlertTypes: [],
+      dailySummaryEnabled: false,
+      dailySummaryTime: '20:00',
+      lowIntakeMeals: 1,
+    });
     expect((await hoy()).lowIntake).toEqual([{ animal: { id: 10, name: 'Carbón' }, streak: 1 }]);
 
     expect((await hoy()).vetVisits).toEqual([]);

@@ -292,7 +292,7 @@ const FIJOS: Record<string, Traduccion> = {
 
 /** Mensajes con un número (longitudes máximas y mínimas). */
 const CON_NUMERO: [RegExp, (n: string) => Traduccion][] = [
-  [/^De 1 a (\d+) tomas\.$/, (n) => ({ ca: `D’1 a ${n} preses.`, en: `From 1 to ${n} meals.` })],
+  [/^De 1 a (\d+) comidas\.$/, (n) => ({ ca: `D’1 a ${n} menjades.`, en: `From 1 to ${n} meals.` })],
   [/^Como máximo (\d+) días\.$/, (n) => ({ ca: `Com a màxim ${n} dies.`, en: `At most ${n} days.` })],
   [
     /^La contraseña debe tener al menos (\d+) caracteres\.$/,

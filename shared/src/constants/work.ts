@@ -71,7 +71,7 @@ export type IntakeLevel = (typeof INTAKE_LEVELS)[number];
 /** CU-67: niveles que cuentan como «come poco». */
 export const LOW_INTAKE_LEVELS = ['little', 'none'] as const satisfies readonly IntakeLevel[];
 
-/** CU-67: tomas seguidas comiendo poco para avisar (por defecto y límites de los ajustes). */
+/** CU-67: comidas seguidas comiendo poco para avisar (por defecto y límites de los ajustes). */
 export const DEFAULT_LOW_INTAKE_MEALS = 2;
 export const MAX_LOW_INTAKE_MEALS = 10;
 

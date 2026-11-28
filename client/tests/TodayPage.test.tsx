@@ -85,7 +85,7 @@ describe('CU-72 Panel «Hoy»', () => {
     expect(within(turnos.getByText('Nuria Peris Gil').closest('li')!).getByText('Sin fichar')).toBeInTheDocument();
     expect(within(turnos.getByText('Andrés Climent Mas').closest('li')!).queryByText('Sin fichar')).toBeNull();
     expect((await region('Zonas sin cubrir')).getByText(/Gran voladero · Tarde: 1 de 2/)).toBeInTheDocument();
-    expect((await region('Animales que comen poco')).getByText(/2 tomas/)).toBeInTheDocument();
+    expect((await region('Animales que comen poco')).getByText(/2 comidas/)).toBeInTheDocument();
     expect((await region('Visitas veterinarias de hoy')).getByText(/11:00 · Pipa/)).toBeInTheDocument();
   });
 
@@ -122,10 +122,7 @@ describe('CU-72 Panel «Hoy»', () => {
     const menu = await screen.findByRole('navigation', { name: 'Menú del panel' });
     expect(within(menu).getByRole('link', { name: 'Hoy' })).toHaveAttribute('href', '/admin/today');
     expect(within(menu).getByRole('link', { name: 'Incidencias' })).toHaveAttribute('href', '/admin/incidents');
-    expect(within(menu).getByRole('link', { name: 'Avisos por email' })).toHaveAttribute(
-      'href',
-      '/admin/alert-settings',
-    );
+    expect(within(menu).getByRole('link', { name: 'Avisos' })).toHaveAttribute('href', '/admin/alert-settings');
     await userEvent.click(within(menu).getByRole('link', { name: 'Incidencias' }));
   });
 });
